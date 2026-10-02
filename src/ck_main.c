@@ -29,6 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ck_def.h"
 #include "ck_game.h"
 #include "ck_play.h"
+#include "kw_world.h"
 #ifdef WITH_KEEN4
 #include "ck4_ep.h"
 #endif
@@ -107,6 +108,29 @@ void CK_ShutdownID(void)
 #endif
 }
 
+// Cache and lock the graphics needed everywhere: font, 8x8 tiles and the
+// status window. (KEEN WORLDS: split out so it can be redone after switching
+// episode.)
+void CK_CacheCoreChunks(void)
+{
+	// Mark some chunks we'll need.
+	CA_ClearMarks();
+	CA_MarkGrChunk(CK_CHUNKNUM(FON_MAINFONT));
+	CA_MarkGrChunk(ca_gfxInfoE.offTiles8);
+	CA_MarkGrChunk(ca_gfxInfoE.offTiles8m);
+	CA_MarkGrChunk(CK_CHUNKNUM(MPIC_STATUSLEFT));
+	CA_MarkGrChunk(CK_CHUNKNUM(MPIC_STATUSRIGHT));
+	CA_MarkGrChunk(CK_CHUNKNUM(PIC_TITLESCREEN)); // Moved from CA_Startup
+	CA_CacheMarks(0);
+
+	// Lock them chunks in memory.
+	CA_LockGrChunk(CK_CHUNKNUM(FON_MAINFONT));
+	CA_LockGrChunk(ca_gfxInfoE.offTiles8);
+	CA_LockGrChunk(ca_gfxInfoE.offTiles8m);
+	CA_LockGrChunk(CK_CHUNKNUM(MPIC_STATUSLEFT));
+	CA_LockGrChunk(CK_CHUNKNUM(MPIC_STATUSRIGHT));
+}
+
 /*
  * Start the game!
  */
@@ -137,22 +161,7 @@ void CK_InitGame()
 	ca_updateCacheBox = CK_UpdateCacheBox;
 	ca_finishCacheBox = CK_FinishCacheBox;
 
-	// Mark some chunks we'll need.
-	CA_ClearMarks();
-	CA_MarkGrChunk(CK_CHUNKNUM(FON_MAINFONT));
-	CA_MarkGrChunk(ca_gfxInfoE.offTiles8);
-	CA_MarkGrChunk(ca_gfxInfoE.offTiles8m);
-	CA_MarkGrChunk(CK_CHUNKNUM(MPIC_STATUSLEFT));
-	CA_MarkGrChunk(CK_CHUNKNUM(MPIC_STATUSRIGHT));
-	CA_MarkGrChunk(CK_CHUNKNUM(PIC_TITLESCREEN)); // Moved from CA_Startup
-	CA_CacheMarks(0);
-
-	// Lock them chunks in memory.
-	CA_LockGrChunk(CK_CHUNKNUM(FON_MAINFONT));
-	CA_LockGrChunk(ca_gfxInfoE.offTiles8);
-	CA_LockGrChunk(ca_gfxInfoE.offTiles8m);
-	CA_LockGrChunk(CK_CHUNKNUM(MPIC_STATUSLEFT));
-	CA_LockGrChunk(CK_CHUNKNUM(MPIC_STATUSRIGHT));
+	CK_CacheCoreChunks();
 
 	// Setup the screen
 	VL_Startup();
@@ -757,6 +766,12 @@ int main(int argc, char *argv[])
 			ck_gameState.levelState = LS_Playing;
 
 			CK_PlayDemo(atoi(argv[i + 1]));
+			Quit(0);
+		}
+		else if (!CK_Cross_strcasecmp(argv[i], "/KWTEST"))
+		{
+			// KEEN WORLDS: world-switching self-test.
+			KW_SelfTest();
 			Quit(0);
 		}
 		else if (!CK_Cross_strcasecmp(argv[i], "/ASLEV"))

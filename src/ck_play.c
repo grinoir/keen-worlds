@@ -19,6 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 //#inclucd "id_heads.h"
 #include "ck_play.h"
+#include "kw_world.h"
 #include "id_ca.h"
 #include "id_fs.h"
 #include "id_in.h"
@@ -1259,6 +1260,9 @@ void CK_CheckKeys()
 			SD_SetLastTimeCount(SD_GetTimeCount());
 		}
 	}
+
+	// KEEN WORLDS: Megarocket travel menu (and the W + 4/5/6 debug shortcut).
+	KW_PlayLoopHook();
 
 	// BAT ITEM CHEAT
 	if (IN_GetKeyState(IN_SC_B) && IN_GetKeyState(IN_SC_A) && IN_GetKeyState(IN_SC_T))

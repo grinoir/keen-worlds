@@ -239,6 +239,7 @@ typedef enum CK_LevelState
 	LS_TeleportToKorath = 13, // Keen teleported to Korath III Base (Keen 5)
 	LS_KorathFuse = 14,	  // Keen broke the Korath III fuse (Keen 5)
 	LS_DestroyedQED = 15,     // Destroyed QED (Keen 5)
+	LS_SwitchWorld = 16,      // KEEN WORLDS: Travel to another episode
 } CK_LevelState;
 
 // This struct is 0x58 bytes big in Keen5
@@ -257,7 +258,9 @@ typedef struct CK_GameState
 	// The episode-specific variables come here
 	// They were probably conditionally compiled in the DOS version
 	// so that the Gamestate struct is variably sized between eps.
-	union {
+	// KEEN WORLDS: A struct rather than a union, so Keen carries every
+	// world's items at once when he travels (decision 12).
+	struct {
 		struct
 		{
 			int16_t wetsuit;
@@ -481,6 +484,7 @@ extern bool ck_storeDemo;
 
 void CK_MeasureMultiline(const char *str, uint16_t *w, uint16_t *h);
 void CK_ShutdownID();
+void CK_CacheCoreChunks(void); // KEEN WORLDS
 
 /* ck_map.c */
 extern chunk_id_t ck_mapKeenBaseFrame[];

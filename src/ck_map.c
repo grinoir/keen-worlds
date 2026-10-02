@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ck_game.h"
 #include "ck_phys.h"
 #include "ck_play.h"
+#include "kw_world.h"
 #include "ck4_ep.h"
 #include "ck5_ep.h"
 
@@ -281,6 +282,9 @@ static int ck_mapKeenAnimFrame[] = {1, 2, 0, 2};
 
 void CK_SpawnMapKeen(int tileX, int tileY)
 {
+	// KEEN WORLDS: Keen starts each world beside the Megarocket.
+	KW_SetLaunchSpot(tileX, tileY);
+
 #ifdef WITH_KEEN4
 	if (ck_currentEpisode->ep == EP_CK4 && ck_gameState.levelState == LS_Foot)
 	{
@@ -357,6 +361,9 @@ void CK_ScanForLevelEntry(CK_object *obj)
 			}
 		}
 	}
+
+	// KEEN WORLDS: Not a level; maybe Keen wants to board the Megarocket.
+	KW_TryLaunch(obj);
 }
 
 void CK_MapKeenStill(CK_object *obj)

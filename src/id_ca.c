@@ -1026,6 +1026,7 @@ void CA_InitLumps(void)
 {
 	int numLumps = CK_INT(NUMLUMPS, 0);
 	MM_GetPtr((mm_ptr_t*)&ca_lumpsNeeded, sizeof(bool) * numLumps);
+	memset(ca_lumpsNeeded, 0, sizeof(bool) * numLumps); // KEEN WORLDS: was uninitialised
 
 }
 
@@ -1396,6 +1397,60 @@ void CA_Shutdown(void)
 }
 
 uint8_t *CA_audio[CA_MAX_AUDIO_CHUNKS];
+
+// KEEN WORLDS: Free everything loaded from one episode's data files (graphics,
+// maps, tile info, audio and the headers/dictionaries) and close the files, so
+// that CA_Startup() can load another episode in its place.
+void CA_UnloadEpisodeData(void)
+{
+	for (int i = 0; i < CA_MAX_GRAPH_CHUNKS; ++i)
+	{
+		if (ca_graphChunks[i])
+			MM_FreePtr(&ca_graphChunks[i]);
+		ca_graphChunkNeeded[i] = 0;
+	}
+	for (int i = 0; i < CA_MAX_AUDIO_CHUNKS; ++i)
+	{
+		if (CA_audio[i])
+			MM_FreePtr((void **)&CA_audio[i]);
+	}
+	for (int i = 0; i < CA_NUMMAPS; ++i)
+	{
+		if (CA_MapHeaders[i])
+			MM_FreePtr((void **)&CA_MapHeaders[i]);
+	}
+	for (int plane = 0; plane < CA_NUMMAPPLANES; ++plane)
+	{
+		if (CA_mapPlanes[plane])
+			MM_FreePtr((void **)&CA_mapPlanes[plane]);
+	}
+
+	// TileInfo either has its own block, or lives at the end of MAPHEAD.
+	if (ti_tileInfo && ti_tileInfo != (uint8_t *)(ca_MapHead + 1))
+		MM_FreePtr((void **)&ti_tileInfo);
+	ti_tileInfo = NULL;
+
+	if (ca_MapHead)
+		MM_FreePtr((void **)&ca_MapHead);
+	if (ca_gr_huffdict)
+		MM_FreePtr((void **)&ca_gr_huffdict);
+	if (ca_graphStarts)
+		MM_FreePtr(&ca_graphStarts);
+	if (ca_audiohuffman)
+		MM_FreePtr((void **)&ca_audiohuffman);
+	if (ca_audiostarts)
+		MM_FreePtr((void **)&ca_audiostarts);
+	if (ca_lumpsNeeded)
+		MM_FreePtr((void **)&ca_lumpsNeeded);
+
+	CA_Shutdown();
+	ca_GameMaps = 0;
+	ca_graphHandle = 0;
+	ca_audiohandle = 0;
+
+	// All sounds are gone, so the next CA_LoadAllSounds() has nothing to purge.
+	oldsoundmode = sdm_Off;
+}
 
 void CA_CacheAudioChunk(int16_t chunk)
 {

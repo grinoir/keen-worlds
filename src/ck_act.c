@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "ck_act.h"
 #include "ck_cross.h"
 #include "ck_def.h"
@@ -127,6 +128,17 @@ void CK_VAR_Startup()
 	MM_GetPtr((mm_ptr_t *)&ck_actionData, sizeof(CK_action) * CK_VAR_MAXACTIONS);
 	ck_actionsUsed = 0;
 	ck_varsLocked = false;
+}
+
+// KEEN WORLDS: Throw away all variables and actions, ready to load another
+// episode's EPISODE.CKx.
+void CK_VAR_Reset()
+{
+	MM_SetLock((mm_ptr_t *)&ck_varTable, false);
+	MM_FreePtr((mm_ptr_t *)&ck_varTable);
+	MM_ArenaDestroy(ck_varArena);
+	MM_FreePtr((mm_ptr_t *)&ck_actionData);
+	CK_VAR_Startup();
 }
 
 void CK_VAR_SetEntry(const char *name, void *val)
@@ -482,7 +494,18 @@ void CK_VAR_ParseFunction(STR_ParserState *ps)
 		CK_Cross_LogMessage(CK_LOG_MSG_WARNING, "Function \"%s\" (referred to by \"%s\") doesn't seem to exist on line %d.\n", valName, varName, ps->linecount);
 
 	// NOTE: Functions are _still_ stored in the separate function table.
-	CK_ACT_AddFunction(MM_ArenaStrDup(ck_varArena, varName), fn);
+	// KEEN WORLDS: The function table outlives the variable arena (which is
+	// rebuilt on every episode switch), so the name needs its own allocation.
+	// Re-registering an existing name reuses the stored one.
+	size_t idx = STR_GetEntryIndex(ck_functionTable, varName);
+	const char *storedName = (idx != ID_STR_INVALID_INDEX) ? ck_functionTable->arr[idx].str : NULL;
+	if (!storedName)
+	{
+		char *dup = (char *)malloc(strlen(varName) + 1);
+		strcpy(dup, varName);
+		storedName = dup;
+	}
+	CK_ACT_AddFunction(storedName, fn);
 }
 
 bool CK_VAR_ParseAction(STR_ParserState *ps)
@@ -722,6 +745,10 @@ void CK_VAR_LoadVars(const char *filename)
 
 	while (CK_VAR_ParseVar(&parserstate))
 		numVarsParsed++;
+
+	// KEEN WORLDS: Parsed values are copied out, so the file can go. (Matters
+	// now that episodes are loaded again on every world switch.)
+	MM_FreePtr((mm_ptr_t *)&parserstate.data);
 
 	CK_Cross_LogMessage(CK_LOG_MSG_NORMAL, "Parsed %d vars from \"%s\" over %d lines (%d actions created).\n", numVarsParsed, filename, parserstate.linecount, ck_actionsUsed);
 }

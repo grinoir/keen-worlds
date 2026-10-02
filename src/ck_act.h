@@ -34,6 +34,7 @@ void CK_ACT_AddColFunction(const char *fnName, CK_ACT_ColFunction fn);
 CK_ACT_Function CK_ACT_GetFunction(const char *fnName);
 CK_ACT_ColFunction CK_ACT_GetColFunction(const char *fnName);
 void CK_VAR_Startup();
+void CK_VAR_Reset(); // KEEN WORLDS
 const char *CK_VAR_GetString(const char *name, const char *def);
 intptr_t CK_VAR_GetInt(const char *name, intptr_t def);
 intptr_t *CK_VAR_GetIntArray(const char *name);

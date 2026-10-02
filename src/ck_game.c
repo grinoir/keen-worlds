@@ -36,6 +36,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ck_game.h"
 #include "ck_play.h"
 #include "ck_text.h"
+#include "kw_world.h"
 #include "ck4_ep.h"
 #include "ck5_ep.h"
 #include "ck6_ep.h"
@@ -78,6 +79,7 @@ void CK_NewGame()
 	ck_gameState.numShots = 5;
 	ck_gameState.currentLevel = 0;
 	ck_gameState.levelState = ls;
+	KW_ResetWorlds();
 }
 
 void CK_GameOver()
@@ -969,6 +971,11 @@ void CK_GameLoop()
 
 		case LS_ResetGame:
 			goto resetDifficultyAndLevel;
+
+		case LS_SwitchWorld:
+			// KEEN WORLDS: Travel, then load the new world's map below.
+			KW_SwitchWorld(kw_pendingWorld);
+			break;
 
 		case LS_LoadedGame:
 			goto replayLevel;
