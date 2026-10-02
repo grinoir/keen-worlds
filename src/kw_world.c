@@ -13,7 +13,6 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 #include "id_vh.h"
 #include "id_vl.h"
 #include "id_sd.h"
-#include "id_ti.h"
 #include "ck_act.h"
 #include "ck_cross.h"
 #include "ck_game.h"
@@ -79,26 +78,6 @@ void KW_ResetWorlds(void)
 	kw_pendingWorld = 0;
 }
 
-void KW_ApplyWorldPatches(void)
-{
-	if (ck_currentEpisode->ep != EP_CK5)
-		return;
-
-	/*
-	 * Keen 5 has no Megarocket level. Its launch dock is immediately east of
-	 * the map-Keen spawn at (28, 95), but the two foreground tiles which form
-	 * the gangway are solid. They occur nowhere else in the Keen 5 maps:
-	 *
-	 *   tile 0x62F at (29, 95), tile 0x665 at (30, 95)
-	 *
-	 * Clearing their collision lets Keen walk from the station to his ship.
-	 * TileInfo is reloaded whenever an episode changes, so this is an
-	 * in-memory Keen Worlds overlay and leaves TILEINFO.CK5 untouched.
-	 */
-	TI_ClearForeCollision(0x62F);
-	TI_ClearForeCollision(0x665);
-}
-
 void KW_RequestWorld(int episode)
 {
 	CK_EpisodeDef *target = KW_EpisodeDef(episode);
@@ -140,7 +119,6 @@ void KW_SwitchWorld(int episode)
 	ck_episodeFile = target->episodeFile;
 	CK_VAR_LoadVars(ck_episodeFile);
 	CA_Startup();
-	KW_ApplyWorldPatches();
 	CA_InitLumps();
 	CK_CacheCoreChunks();
 
@@ -200,8 +178,16 @@ void KW_SetLaunchSpot(int tileX, int tileY)
 {
 	if (ck_currentEpisode->ep == EP_CK5)
 	{
-		// The opened gangway ends at Keen's docked ship, three tiles east of
-		// the normal map-Keen spawn.
+		/*
+		 * Build a two-tile metal gangway from existing Keen 5 ship/platform
+		 * art. The replacement tiles are naturally non-solid. This is a
+		 * runtime map overlay, so GAMEMAPS.CK5 remains unchanged.
+		 */
+		CA_SetTileAtPos(tileX + 1, tileY, 1, 0x64A);
+		CA_SetTileAtPos(tileX + 2, tileY, 1, 0x64B);
+
+		// The gangway ends at Keen's docked ship, three tiles east of the
+		// normal map-Keen spawn.
 		kw_launchSpotX = tileX + 3;
 		kw_launchSpotY = tileY;
 	}
@@ -210,6 +196,20 @@ void KW_SetLaunchSpot(int tileX, int tileY)
 		// Keen 4 and 6 use their playable Megarocket levels, not map tiles.
 		kw_launchSpotX = kw_launchSpotY = -1;
 	}
+}
+
+void KW_ConstrainKeen5Dock(CK_object *mapKeen)
+{
+	if (ck_currentEpisode->ep != EP_CK5 || ca_mapOn != 0)
+		return;
+
+	int x = mapKeen->posX >> 8;
+	// Once Keen is on the bridge, it is a horizontal boarding route only.
+	if (x >= 29)
+		mapKeen->yDirection = IN_motion_None;
+	// Stop at the docked ship; the player can still walk left back inside.
+	if (x >= 31 && mapKeen->xDirection == IN_motion_Right)
+		mapKeen->xDirection = IN_motion_None;
 }
 
 void KW_TryLaunch(CK_object *mapKeen)
@@ -249,9 +249,9 @@ static bool KW_IsAtShipHatch(void)
 	int x = ck_keenObj->clipRects.tileXmid;
 	int y = (ck_keenObj->clipRects.tileY1 + ck_keenObj->clipRects.tileY2) / 2;
 	if (ck_currentEpisode->ep == EP_CK4)
-		return x >= 12 && x <= 16 && y >= 10 && y <= 14;
+		return x >= 3 && x <= 19 && y >= 9 && y <= 14;
 	if (ck_currentEpisode->ep == EP_CK6)
-		return x >= 13 && x <= 16 && y >= 19 && y <= 23;
+		return x >= 3 && x <= 18 && y >= 18 && y <= 23;
 	return false;
 }
 
@@ -396,10 +396,6 @@ void KW_SelfTest(void)
 				(route[i] == EP_CK5 && ck_gameState.currentLevel != 0) ||
 				(route[i] == EP_CK6 && ck_gameState.currentLevel != KW_CK6_SHIP_LEVEL))
 				Quit("KW_SelfTest: wrong arrival location!");
-			if (route[i] == EP_CK5 &&
-				(TI_ForeTop(0x62F) || TI_ForeRight(0x62F) || TI_ForeBottom(0x62F) || TI_ForeLeft(0x62F) ||
-					TI_ForeTop(0x665) || TI_ForeRight(0x665) || TI_ForeBottom(0x665) || TI_ForeLeft(0x665)))
-				Quit("KW_SelfTest: Keen 5 launch dock is still blocked!");
 			for (int level = 0; level <= 2; ++level)
 			{
 				ck_gameState.currentLevel = level;

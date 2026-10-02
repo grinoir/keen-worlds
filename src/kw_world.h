@@ -23,13 +23,13 @@ void KW_SwitchWorld(int episode);
 // Forget every world's progress (called when a new game starts).
 void KW_ResetWorlds(void);
 
-// Apply Keen Worlds' small, in-memory map adjustments after an episode's
-// files have loaded. This does not alter the supplied game data files.
-void KW_ApplyWorldPatches(void);
-
 // The world map's starting tile, where the Megarocket stands. Set when the
 // map spawns Keen.
 void KW_SetLaunchSpot(int tileX, int tileY);
+
+// Keep map Keen on the short, visible Keen 5 boarding bridge instead of
+// allowing a route into the unused exterior space around the station.
+void KW_ConstrainKeen5Dock(struct CK_object *mapKeen);
 
 // Called when Keen presses a button on the world map without standing on a
 // level entrance. Near the launch spot this asks for the travel menu.

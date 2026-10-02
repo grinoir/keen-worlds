@@ -131,18 +131,3 @@ uint8_t TI_ForeAnimTime(uint16_t tile)
 	}
 	return ti_tileInfo[index];
 }
-
-void TI_ClearForeCollision(uint16_t tile)
-{
-	if (tile > ca_gfxInfoE.numTiles16m)
-	{
-		TI_WARN_ON_OOB();
-		return;
-	}
-
-	const int base = ca_gfxInfoE.numTiles16 * 2;
-	ti_tileInfo[base + tile] = 0; // top
-	ti_tileInfo[base + ca_gfxInfoE.numTiles16m + tile] = 0; // right
-	ti_tileInfo[base + ca_gfxInfoE.numTiles16m * 2 + tile] = 0; // bottom
-	ti_tileInfo[base + ca_gfxInfoE.numTiles16m * 3 + tile] = 0; // left
-}

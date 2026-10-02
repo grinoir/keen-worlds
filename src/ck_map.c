@@ -389,6 +389,7 @@ void CK_MapKeenWalk(CK_object *obj)
 	{
 		obj->xDirection = ck_inputFrame.xDirection;
 		obj->yDirection = ck_inputFrame.yDirection;
+		KW_ConstrainKeen5Dock(obj);
 		if (ck_keenState.pogoIsPressed || ck_keenState.jumpIsPressed || ck_keenState.shootIsPressed)
 			CK_ScanForLevelEntry(obj);
 
