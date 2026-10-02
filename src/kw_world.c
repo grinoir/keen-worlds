@@ -42,6 +42,11 @@ static KW_WorldState kw_worlds[3];
 
 int kw_pendingWorld = 0;
 
+// Existing BWB Megarocket levels. Keen 5 has no equivalent level: its ship
+// remains docked on the world map.
+#define KW_CK4_SHIP_LEVEL 18
+#define KW_CK6_SHIP_LEVEL 17
+
 static CK_EpisodeDef *KW_EpisodeDef(int episode)
 {
 	switch (episode)
@@ -111,11 +116,16 @@ void KW_SwitchWorld(int episode)
 	if (!target || target == ck_currentEpisode)
 		return;
 
-	// Remember where Keen was in the world he is leaving.
+	// Remember where Keen was in the world he is leaving. While he is inside a
+	// ship level, mapPos is already the world-map position of that level's
+	// entrance; do not replace it with an in-level coordinate.
 	KW_WorldState *from = KW_StateFor(ck_currentEpisode);
 	from->visited = true;
-	from->mapPosX = ck_gameState.mapPosX;
-	from->mapPosY = ck_gameState.mapPosY;
+	if (ca_mapOn == 0)
+	{
+		from->mapPosX = ck_gameState.mapPosX;
+		from->mapPosY = ck_gameState.mapPosY;
+	}
 	memcpy(from->levelsDone, ck_gameState.levelsDone, sizeof(from->levelsDone));
 
 	// Nothing may keep playing from the old world's audio data.
@@ -157,7 +167,14 @@ void KW_SwitchWorld(int episode)
 		memset(ck_gameState.levelsDone, 0, sizeof(ck_gameState.levelsDone));
 	}
 
-	ck_gameState.currentLevel = 0;
+	// Arrive by boarding the destination's ship. Keen 4 and 6 already have
+	// playable Megarocket levels; Keen 5 arrives at its docked ship on map 0.
+	if (target->ep == EP_CK4)
+		ck_gameState.currentLevel = KW_CK4_SHIP_LEVEL;
+	else if (target->ep == EP_CK6)
+		ck_gameState.currentLevel = KW_CK6_SHIP_LEVEL;
+	else
+		ck_gameState.currentLevel = 0;
 }
 
 // ---- The Megarocket ----
@@ -181,8 +198,18 @@ static const struct
 
 void KW_SetLaunchSpot(int tileX, int tileY)
 {
-	kw_launchSpotX = tileX;
-	kw_launchSpotY = tileY;
+	if (ck_currentEpisode->ep == EP_CK5)
+	{
+		// The opened gangway ends at Keen's docked ship, three tiles east of
+		// the normal map-Keen spawn.
+		kw_launchSpotX = tileX + 3;
+		kw_launchSpotY = tileY;
+	}
+	else
+	{
+		// Keen 4 and 6 use their playable Megarocket levels, not map tiles.
+		kw_launchSpotX = kw_launchSpotY = -1;
+	}
 }
 
 void KW_TryLaunch(CK_object *mapKeen)
@@ -206,6 +233,26 @@ static void KW_WaitForButtonsUp(void)
 	} while (frame.jump || frame.pogo || frame.button2 || IN_GetKeyState(IN_SC_Enter) || IN_GetKeyState(IN_SC_Space));
 	IN_ClearKeysDown();
 	ck_keenState.jumpIsPressed = ck_keenState.pogoIsPressed = ck_keenState.shootIsPressed = false;
+}
+
+static bool KW_IsShipLevel(void)
+{
+	return (ck_currentEpisode->ep == EP_CK4 && ca_mapOn == KW_CK4_SHIP_LEVEL) ||
+		(ck_currentEpisode->ep == EP_CK6 && ca_mapOn == KW_CK6_SHIP_LEVEL);
+}
+
+static bool KW_IsAtShipHatch(void)
+{
+	if (!ck_keenObj)
+		return false;
+
+	int x = ck_keenObj->clipRects.tileXmid;
+	int y = (ck_keenObj->clipRects.tileY1 + ck_keenObj->clipRects.tileY2) / 2;
+	if (ck_currentEpisode->ep == EP_CK4)
+		return x >= 12 && x <= 16 && y >= 10 && y <= 14;
+	if (ck_currentEpisode->ep == EP_CK6)
+		return x >= 13 && x <= 16 && y >= 19 && y <= 23;
+	return false;
 }
 
 // Draws the destination menu and returns the chosen episode, or 0 to stay.
@@ -292,11 +339,15 @@ static int KW_TravelMenu(void)
 
 void KW_PlayLoopHook(void)
 {
-	if (ca_mapOn != 0)
+	if (ca_mapOn != 0 && !KW_IsShipLevel())
 	{
 		kw_launchRequested = false;
 		return;
 	}
+	if (KW_IsShipLevel() &&
+		(ck_keenState.jumpIsPressed || ck_keenState.pogoIsPressed || ck_keenState.shootIsPressed) &&
+		KW_IsAtShipHatch())
+		kw_launchRequested = true;
 
 	if (kw_launchRequested)
 	{
@@ -341,6 +392,14 @@ void KW_SelfTest(void)
 		for (int i = 0; i < (int)(sizeof(route) / sizeof(route[0])); ++i)
 		{
 			KW_SwitchWorld(route[i]);
+			if ((route[i] == EP_CK4 && ck_gameState.currentLevel != KW_CK4_SHIP_LEVEL) ||
+				(route[i] == EP_CK5 && ck_gameState.currentLevel != 0) ||
+				(route[i] == EP_CK6 && ck_gameState.currentLevel != KW_CK6_SHIP_LEVEL))
+				Quit("KW_SelfTest: wrong arrival location!");
+			if (route[i] == EP_CK5 &&
+				(TI_ForeTop(0x62F) || TI_ForeRight(0x62F) || TI_ForeBottom(0x62F) || TI_ForeLeft(0x62F) ||
+					TI_ForeTop(0x665) || TI_ForeRight(0x665) || TI_ForeBottom(0x665) || TI_ForeLeft(0x665)))
+				Quit("KW_SelfTest: Keen 5 launch dock is still blocked!");
 			for (int level = 0; level <= 2; ++level)
 			{
 				ck_gameState.currentLevel = level;

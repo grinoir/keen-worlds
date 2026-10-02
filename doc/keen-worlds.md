@@ -32,6 +32,22 @@ by TileInfo, and community tooling such as Abiathar exposes a Tile Property
 Modifier for changing it. Sources: [KeenWiki's Galaxy modding tutorial](https://keenwiki.shikadi.net/wiki/Keen_Galaxy_Modding_Tutorial_%28patch_based%29)
 and [Abiathar's documentation](https://abiathar.keenmodding.org/AbiatharHelp.pdf).
 
+## Ship launch locations
+
+The original generic launch location is replaced as follows:
+
+| Episode | Depart from | Arrive at |
+| --- | --- | --- |
+| Keen 4 | Megarocket hatch, level 18 | Megarocket level 18 |
+| Keen 5 | Docked ship, three tiles east of the map spawn | Keen 5 map / dock |
+| Keen 6 | Megarocket hatch, level 17 | Megarocket level 17 |
+
+The hatch interaction boxes are deliberately wider than a single tile so a
+player can stand naturally at the visible entrance. Press jump, pogo or fire
+there to open the existing destination menu. On departure from a ship level,
+Keen Worlds retains the map position saved when that level was entered; it
+does not mistakenly save the in-level coordinate as a world-map coordinate.
+
 ## Validation and rollback
 
 - `make -C src -j2` must build without warnings or errors.
