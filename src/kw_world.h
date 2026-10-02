@@ -23,6 +23,10 @@ void KW_SwitchWorld(int episode);
 // Forget every world's progress (called when a new game starts).
 void KW_ResetWorlds(void);
 
+// Apply Keen Worlds' small, in-memory map adjustments after an episode's
+// files have loaded. This does not alter the supplied game data files.
+void KW_ApplyWorldPatches(void);
+
 // The world map's starting tile, where the Megarocket stands. Set when the
 // map spawns Keen.
 void KW_SetLaunchSpot(int tileX, int tileY);

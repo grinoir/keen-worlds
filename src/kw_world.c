@@ -13,6 +13,7 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 #include "id_vh.h"
 #include "id_vl.h"
 #include "id_sd.h"
+#include "id_ti.h"
 #include "ck_act.h"
 #include "ck_cross.h"
 #include "ck_game.h"
@@ -73,6 +74,26 @@ void KW_ResetWorlds(void)
 	kw_pendingWorld = 0;
 }
 
+void KW_ApplyWorldPatches(void)
+{
+	if (ck_currentEpisode->ep != EP_CK5)
+		return;
+
+	/*
+	 * Keen 5 has no Megarocket level. Its launch dock is immediately east of
+	 * the map-Keen spawn at (28, 95), but the two foreground tiles which form
+	 * the gangway are solid. They occur nowhere else in the Keen 5 maps:
+	 *
+	 *   tile 0x62F at (29, 95), tile 0x665 at (30, 95)
+	 *
+	 * Clearing their collision lets Keen walk from the station to his ship.
+	 * TileInfo is reloaded whenever an episode changes, so this is an
+	 * in-memory Keen Worlds overlay and leaves TILEINFO.CK5 untouched.
+	 */
+	TI_ClearForeCollision(0x62F);
+	TI_ClearForeCollision(0x665);
+}
+
 void KW_RequestWorld(int episode)
 {
 	CK_EpisodeDef *target = KW_EpisodeDef(episode);
@@ -109,6 +130,7 @@ void KW_SwitchWorld(int episode)
 	ck_episodeFile = target->episodeFile;
 	CK_VAR_LoadVars(ck_episodeFile);
 	CA_Startup();
+	KW_ApplyWorldPatches();
 	CA_InitLumps();
 	CK_CacheCoreChunks();
 

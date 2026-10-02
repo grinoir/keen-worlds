@@ -149,6 +149,7 @@ void CK_InitGame()
 
 	// Load the core datafiles
 	CA_Startup();
+	KW_ApplyWorldPatches();
 	CA_InitLumps();
 	// Setup saved games handling
 	US_Setup();

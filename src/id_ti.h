@@ -40,4 +40,8 @@ int8_t TI_ForeAnimTile(uint16_t tile);
 
 uint8_t TI_ForeAnimTime(uint16_t tile);
 
+// Keen Worlds uses this for its one map-only collision adjustment. This
+// changes the in-memory TileInfo table, never the player's data files.
+void TI_ClearForeCollision(uint16_t tile);
+
 #endif
