@@ -200,6 +200,8 @@ and writes `src/kw_tavern_art.h` (tile edits + art); the engine applies it in
   The left door sits on the fourth house's door tiles (x 77–78) and still
   leads to its original room; the right one (x 85–86) is the tavern's. Door
   tiles stay under the art so both keep their door flags.
+- **The BAR sign**: a big sign (5×2 tiles) hanging under the roof over the
+  tavern door — crossed out with red planks before liberation, clean after.
 - **Before liberation**: boards over the door (art with `clearMisc`, so the
   door flag is gone) and no door destination — it can't be entered.
 - **After**: the door destinations are written (street door ↔ room door) and
@@ -209,8 +211,11 @@ and writes `src/kw_tavern_art.h` (tile edits + art); the engine applies it in
   camera never shows the existing room below (rows 43–48). Inside: the creator's
   portrait just inside the door (`tools/kw_portrait_art.py`), two tables with
   stools, and the bar along the right end — shelves of bottles, a BAR sign,
-  barrels, the counter, and the barmaid behind it drying a glass (4 animation
-  frames). Talk to her with **up** at the bar (a "painted" resident: part of
+  the counter, two barrels on the floor, and the barmaid behind the counter
+  drying a glass (4 animation frames). She is drawn in the style and at the
+  size of Keen's sprites (black outlines, about Princess Lindsey's size);
+  `tools/kw_barhouse.py preview` shows the bar with Keen's real sprite for
+  scale (`keenrender.Sprites`). Talk to her with **up** at the bar (a "painted" resident: part of
   the art, with a talk spot instead of a character object).
 - Map edits have a `when` (always / after), level art a rule (after — the
   default — before, or always).
