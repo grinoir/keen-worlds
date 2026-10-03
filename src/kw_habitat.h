@@ -29,9 +29,13 @@ void KW_CheckPeacefulExit(void);
 
 struct CK_object;
 struct KW_Art;
-// Border Village's art (for /KWTEST): the creator's portrait and the bar
-// (after completion), the boarded-up stall (before).
-extern const struct KW_Art kw_portraitArt, kw_barArt, kw_stallArt;
+// Border Village's tavern art (for /KWTEST): boards on the door (before);
+// the bar with the barmaid, furniture and the creator's portrait (after).
+extern const struct KW_Art kw_tavernBoardsArt, kw_tavernBarArt, kw_tavernFurnitureArt, kw_portraitArt;
+
+// For /KWTEST: the tavern's door positions and destinations.
+void KW_TavernDoors(int *streetX, int *streetY, int *roomX, int *roomY);
+int KW_TavernBarmaidX(void);
 // For /KWTEST: count hostile objects and residents in the loaded level.
 void KW_CountLevelPeople(int *hostiles, int *residents, struct CK_object **firstResident);
 

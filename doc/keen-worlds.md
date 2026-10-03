@@ -186,17 +186,32 @@ Keen Worlds art**: the villagers are back with their things), `KW_ART_BEFORE`
 tile slots in its generator (`SLOT_RANGE` / `*_SLOTS`) so pieces never share
 slots.
 
-### Border Village art
+### Border Village's tavern
 
-- **The creator's portrait** (after): a 48×64 framed EGA rendering of
-  `assets/creator-portrait-source.jpg` (project root) on the basement hall's
-  cave wall right of the big statue, tiles 50–52 × 46–49
-  (`tools/kw_portrait_art.py`, slots 1–299).
-- **The bar** (after) and **the boarded-up stall** (before) share one spot on
-  the street just inside the entrance, tiles 84–87 × 12–15
-  (`tools/kw_bar_art.py`, slots 300–599 and 600–899). The bar: "BAR" sign,
-  striped awning, bottle shelf, counter with a mug. The stall: crossed boards
-  and a "CLOSED" sign.
+`tools/kw_barhouse.py` builds it from Border Village's own tiles plus new art
+and writes `src/kw_tavern_art.h` (tile edits + art); the engine applies it in
+`KW_ChangeLevel()` (`src/kw_habitat.c`).
+
+- **The house**: the first house's foreground tiles rearranged two storeys
+  tall on the street at x 83–91, rows 7–15 (always there).
+- **Before liberation**: boards over the door (art with `clearMisc`, so the
+  door flag is gone) and no door destination — it can't be entered.
+- **After**: the door destinations are written (street door ↔ room door) and
+  the room is furnished.
+- **The room**: the first house's room widened (pole columns left out),
+  carved into the rock band at x 58–81, rows 33–39. Inside: the creator's
+  portrait just inside the door (`tools/kw_portrait_art.py`), two tables with
+  stools, and the bar along the right end — shelves of bottles, a BAR sign,
+  barrels, the counter, and the barmaid behind it drying a glass (4 animation
+  frames). Talk to her with **up** at the bar (a "painted" resident: part of
+  the art, with a talk spot instead of a character object).
+- Map edits have a `when` (always / after), level art a rule (after — the
+  default — before, or always).
+
+Tile slots: art never uses a tile slot that has graphics, appears on a level,
+or is the target of an original animation link (Keen 4's tile 1275 links to
+the empty 1276; reusing it broke the world map's animation chain).
+`/KWTEST` loads every Keen 4 level after the changes.
 
 ### Leaving a peaceful level
 

@@ -793,13 +793,28 @@ void KW_SelfTest(void)
 		KW_CountLevelPeople(&hostiles, &residents, &elder);
 		if (!hostiles || residents || KW_IsLevelPeaceful())
 			Quit("KW_SelfTest: an uncompleted Border Village should keep its enemies!");
-		if (!KW_IsArtPlaced(&kw_stallArt) || KW_IsArtPlaced(&kw_barArt) || KW_IsArtPlaced(&kw_portraitArt))
-			Quit("KW_SelfTest: before completion only the closed stall should be there!");
+		// The tavern: boarded up and not enterable before liberation.
+		int streetX, streetY, roomX, roomY;
+		KW_TavernDoors(&streetX, &streetY, &roomX, &roomY);
+		if (!KW_IsArtPlaced(&kw_tavernBoardsArt) || KW_IsArtPlaced(&kw_tavernBarArt) ||
+			KW_IsArtPlaced(&kw_tavernFurnitureArt) || KW_IsArtPlaced(&kw_portraitArt))
+			Quit("KW_SelfTest: before completion only the tavern's boards should be there!");
+		if (TI_ForeMisc(CA_TileAtPos(streetX, streetY, 1)) || CA_TileAtPos(streetX, streetY, 2))
+			Quit("KW_SelfTest: the boarded-up tavern door can be entered!");
 		ck_gameState.levelsDone[1] = 1;
 		CK_LoadLevel(true, true);
 		KW_CountLevelPeople(&hostiles, &residents, &elder);
-		if (!KW_IsArtPlaced(&kw_portraitArt) || !KW_IsArtPlaced(&kw_barArt) || KW_IsArtPlaced(&kw_stallArt))
-			Quit("KW_SelfTest: after completion the bar and portrait should be there, not the stall!");
+		if (!KW_IsArtPlaced(&kw_tavernBarArt) || !KW_IsArtPlaced(&kw_tavernFurnitureArt) ||
+			!KW_IsArtPlaced(&kw_portraitArt) || KW_IsArtPlaced(&kw_tavernBoardsArt))
+			Quit("KW_SelfTest: after completion the tavern should be open and furnished!");
+		// Its doors lead in and out, and the barmaid is animated.
+		if ((TI_ForeMisc(CA_TileAtPos(streetX, streetY, 1)) & 0x7F) != MISCFLAG_DOOR ||
+			CA_TileAtPos(streetX, streetY, 2) != ((roomX << 8) | roomY) ||
+			(TI_ForeMisc(CA_TileAtPos(roomX, roomY - 1, 1)) & 0x7F) != MISCFLAG_DOOR ||
+			CA_TileAtPos(roomX, roomY, 2) != ((streetX << 8) | streetY))
+			Quit("KW_SelfTest: the tavern doors don't connect the street and the room!");
+		if (!TI_ForeAnimTile(CA_TileAtPos(KW_TavernBarmaidX(), roomY - 1, 1)))
+			Quit("KW_SelfTest: the barmaid is not animated!");
 		if (hostiles || residents != 1 || !KW_IsLevelPeaceful() ||
 			RF_UnitToTile(elder->posX) != 4 || RF_UnitToTile(elder->posY) < 46 || RF_UnitToTile(elder->posY) > 48)
 			Quit("KW_SelfTest: a completed Border Village should be peaceful with one elder in the house!");
@@ -814,6 +829,15 @@ void KW_SelfTest(void)
 					entrance = true;
 		if (!entrance)
 			Quit("KW_SelfTest: completed Border Village can't be entered from the map!");
+
+		// Keen Worlds changes to Keen 4's tile properties must not break any
+		// level (e.g. an original animation chain).
+		for (int lv = 0; lv <= 18; ++lv)
+		{
+			ck_gameState.currentLevel = lv;
+			CK_LoadLevel(true, true);
+		}
+		ck_gameState.currentLevel = 0;
 	}
 
 	if (!ck_gameState.ep.ck4.wetsuit || !ck_gameState.ep.ck6.sandwich)
