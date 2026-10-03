@@ -190,12 +190,12 @@ void KW_SetLaunchSpot(int tileX, int tileY)
 {
 	if (ck_currentEpisode->ep == EP_CK5)
 	{
-		// Replace Keen 5's unused yellow map border with the starfield tile
-		// already used beside the dock. This affects only the loaded map.
+		// Replace Keen 5's unused yellow map border with a sparse starfield
+		// tile already used beside the dock. This affects only the loaded map.
 		for (int y = 0; y < CA_GetMapHeight(); ++y)
 			for (int x = 0; x < CA_GetMapWidth(); ++x)
 				if (CA_TileAtPos(x, y, 0) == 0x352)
-					CA_SetTileAtPos(x, y, 0, 0x339);
+					CA_SetTileAtPos(x, y, 0, 0x327);
 
 		/*
 		 * Build a two-tile metal gangway from existing Keen 5 ship/platform
@@ -225,12 +225,14 @@ void KW_PlaceArrivalAtShip(void)
 	int tileX, tileY;
 	if (ck_currentEpisode->ep == EP_CK4 && ca_mapOn == KW_CK4_SHIP_LEVEL)
 	{
-		tileX = 12;
+		// Clear ground just right of the ship: Keen can walk both ways.
+		tileX = 18;
 		tileY = 12;
 	}
 	else if (ck_currentEpisode->ep == EP_CK6 && ca_mapOn == KW_CK6_SHIP_LEVEL)
 	{
-		tileX = 13;
+		// Clear ground just right of the ship: not inside its scenery tiles.
+		tileX = 19;
 		tileY = 22;
 	}
 	else
@@ -443,8 +445,8 @@ void KW_SelfTest(void)
 				(route[i] == EP_CK6 && ck_gameState.currentLevel != KW_CK6_SHIP_LEVEL))
 				Quit("KW_SelfTest: wrong arrival location!");
 			CK_LoadLevel(true, true);
-			if ((route[i] == EP_CK4 && (ck_keenObj->posX != RF_TileToUnit(12) || ck_keenObj->posY != RF_TileToUnit(12))) ||
-				(route[i] == EP_CK6 && (ck_keenObj->posX != RF_TileToUnit(13) || ck_keenObj->posY != RF_TileToUnit(22))))
+			if ((route[i] == EP_CK4 && (ck_keenObj->posX != RF_TileToUnit(18) || ck_keenObj->posY != RF_TileToUnit(12))) ||
+				(route[i] == EP_CK6 && (ck_keenObj->posX != RF_TileToUnit(19) || ck_keenObj->posY != RF_TileToUnit(22))))
 				Quit("KW_SelfTest: wrong ship arrival spawn!");
 			for (int level = 0; level <= 2; ++level)
 			{

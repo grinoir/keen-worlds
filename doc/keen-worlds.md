@@ -31,8 +31,9 @@ the decompressed runtime map, rather than by editing `GAMEMAPS.CK5` or
 `TILEINFO.CK5`; reloading the map restores the supplied data.
 
 The unused yellow map-border background (`0x352`) is also replaced in memory
-with the black starfield tile (`0x339`) used beside the dock. This removes the
-yellow void visible while boarding without changing any supplied data.
+with a sparse black starfield tile (`0x327`) used beside the dock. This removes
+the yellow void without producing a dense, repetitive star pattern or changing
+any supplied data.
 
 This follows normal Galaxy modding practice: foreground collision is defined
 by TileInfo, and community tooling such as Abiathar exposes a Tile Property
@@ -58,9 +59,9 @@ The Keen 4 and 6 interaction bounds intentionally cover the complete visible
 spaceship, rather than only the hatch tile.
 
 When Keen arrives from another world, a one-shot flag moves the already-spawned
-player to a safe floor coordinate beside the ship: `(12, 12)` in Keen 4's
-level 18 and `(13, 22)` in Keen 6's level 17. Entering these levels normally
-from their own world maps continues to use their original entrance spawns.
+player to clear floor just right of the ship: `(18, 12)` in Keen 4's level 18
+and `(19, 22)` in Keen 6's level 17. Entering these levels normally from their
+own world maps continues to use their original entrance spawns.
 
 ## Validation and rollback
 
