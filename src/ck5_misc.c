@@ -649,7 +649,9 @@ void CK5_ScanInfoLayer()
 	// Mark all of the chunks for needed lumps.
 	CA_MarkAllLumps();
 
-	if (ck_gameState.currentLevel == 0)
+	// KEEN WORLDS: ck5_mapElevators 0 for mods without the Omegamatic's map
+	// elevators (Keen 9 moves them off its map).
+	if (ck_gameState.currentLevel == 0 && CK_INT(ck5_mapElevators, 1))
 	{
 		int keenYTilePos = ck_keenObj->posY >> 8;
 

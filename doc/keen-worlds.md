@@ -50,10 +50,11 @@ game built on one of them. `kw_worldDefs[]` in `src/kw_world.c` lists them:
 | `keen6` | Fribbulus Xax | 6 | (game path) | `EPISODE.CK6` |
 | `keen7` | Krodacia | 4 | `mods/keen7` | `MOD.CK4` |
 | `keen8` | Calidune | 6 | `mods/keen8` | `MOD.CK6` (ours) |
+| `keen9` | The Universe | 5 | `mods/keen9` | `MOD.CK5` (ours) |
 
 - **Installed or not**: a fan game is installed when its folder holds its
   variable file (`KW_IsWorldPresent`). The Megarocket menu lists only
-  installed worlds; the W + 4/5/6/7/8 debug keys ignore missing ones.
+  installed worlds; the W + 4…9 debug keys ignore missing ones.
 - **Its files**: while a fan-game world is loaded its folder is searched
   first (`fs_worldPath` in `id_fs.c`), then the game path — so the mod's
   levels, graphics, sounds, headers and variable files replace the base
@@ -74,7 +75,7 @@ game built on one of them. `kw_worldDefs[]` in `src/kw_world.c` lists them:
   its world map's starting spot.
 - **Starting in a world**: `/WORLD <id>` starts new games there
   (`play/run.sh 7` = `/EPISODE 4 /WORLD keen7`, `play/run.sh 8` =
-  `/EPISODE 6 /WORLD keen8`).
+  `/EPISODE 6 /WORLD keen8`, `play/run.sh 9` = `/EPISODE 5 /WORLD keen9`).
 
 ### Keen 8: Dead in the Desert (conversion in progress)
 
@@ -98,6 +99,23 @@ new-code patches (Nospike triggers the ending like Molly, Bip kills Keen,
 Bobba's extra shooting frames, Orbatrix gives the red key, the boss) that
 need C in Omnispeak, keyed to the `keen8` world. Keen 8 boards at its map
 start until its own ship spot is set.
+
+### Keen 9: Battle of the Brains (conversion in progress)
+
+The same for Ceilick's Keen 5 mod (2011, patching by Levellass and Lemm):
+`play/mods/keen9/` holds the mod's files (`EGAGRAPH.CK5`, `EGAHEAD.CK5`,
+`AUDIO.CK5`, `AUDIOHED.CK5`, `AUDIODCT.CK5`, `editmaps.ck5`, `maphead.ck5`,
+`Keen9.tli`, `story.ck5`, `PATCH5.PAT`) plus Keen 5 v1.4's `EGADICT.CK5`,
+`GFXINFOE.CK5`, `AUDINFOE.CK5` from `omnispeak/data/keen5`, and our
+`MOD.CK5`: texts, high scores on map 16, and `ck5_mapElevators 0` (a new
+variable, default 1: Keen 9 moves the Omegamatic's map elevators off its
+map, so their code in `CK5_ScanInfoLayer` is skipped). All 18 maps load and
+are peaceful once completed.
+
+Still Keen 5's: behaviour. `PATCH5.PAT` is about three times Keen 8's
+(394 value, 66 code/table patches): fuses become the friends' messages
+(Spot, Lindsey, Barker, the Janitor) and the QED moves to level 15, new
+enemy actions, the Shikadi Master, and more.
 
 ### Adding a fan game
 
