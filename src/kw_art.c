@@ -37,6 +37,10 @@ static void KW_ComposeArtTile(uint16_t slot, uint16_t under, const uint8_t *art)
 	if (ca_graphChunks[chunk])
 		MM_FreePtr(&ca_graphChunks[chunk]);
 	MM_GetPtr(&ca_graphChunks[chunk], 160);
+	// Art exists only in memory (its slot has no data in EGAGRAPH), so it
+	// must never be purged when memory blocks run short (e.g. while a
+	// dialogue caches its pictures).
+	MM_SetLock(&ca_graphChunks[chunk], true);
 	uint8_t *dst = (uint8_t *)ca_graphChunks[chunk];
 
 	if (under)

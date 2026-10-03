@@ -827,6 +827,26 @@ void KW_SelfTest(void)
 			Quit("KW_SelfTest: the inn broke the fourth house's door after liberation!");
 		if (!TI_ForeAnimTile(CA_TileAtPos(KW_TavernBarmaidX(), roomY - 1, 1)))
 			Quit("KW_SelfTest: the barmaid is not animated!");
+
+		// A conversation pushes a cache level (the level's graphics become
+		// purgeable) and caches pictures; if memory blocks run short the
+		// memory manager purges. Art exists only in memory, so it must
+		// survive that. Force it: use up every free block, then give them back.
+		{
+			CA_UpLevel();
+			CA_CacheMarks(NULL);
+			int want = 8192 - MM_UsedBlocks() + 300;
+			mm_ptr_t *hog = (mm_ptr_t *)calloc(want, sizeof(mm_ptr_t));
+			for (int b = 0; b < want; ++b)
+				MM_GetPtr(&hog[b], 16);
+			for (int b = 0; b < want; ++b)
+				MM_FreePtr(&hog[b]);
+			free(hog);
+			CA_DownLevel();
+			if (!KW_IsArtPlaced(&kw_tavernBarArt) || !KW_IsArtPlaced(&kw_tavernFurnitureArt) ||
+				!KW_IsArtPlaced(&kw_portraitArt) || !KW_IsArtCellPlaced(&kw_innArt, 77, 15))
+				Quit("KW_SelfTest: art was purged from memory (a conversation would crash)!");
+		}
 		if (hostiles || residents != 1 || !KW_IsLevelPeaceful() ||
 			RF_UnitToTile(elder->posX) != 4 || RF_UnitToTile(elder->posY) < 46 || RF_UnitToTile(elder->posY) > 48)
 			Quit("KW_SelfTest: a completed Border Village should be peaceful with one elder in the house!");

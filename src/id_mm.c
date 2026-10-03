@@ -35,7 +35,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 mm_ptr_t buffer; // Misc buffer
 
-#define MM_MAXBLOCKS 2048 //1200 in Keen5
+#define MM_MAXBLOCKS 8192 //1200 in Keen5; KEEN WORLDS: raised from 2048 for added art
 
 typedef struct ID_MM_MemBlock
 {
