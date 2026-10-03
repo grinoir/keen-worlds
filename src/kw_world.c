@@ -564,7 +564,8 @@ static const KW_Art kw_keen9ShipArt = {
 	-1, 0, NULL, true, true,
 };
 
-// The hatch replaces a piece of the bay's wall.
+// The hatch and the gangway tube below it replace the bay's wall (and so
+// are walkable all the way down to the ship).
 static bool KW_HatchDropsUnderlay(int x, int y)
 {
 	(void)x;
@@ -573,7 +574,7 @@ static bool KW_HatchDropsUnderlay(int x, int y)
 }
 
 static const KW_Art kw_keen9HatchArt = {
-	KW_KEEN9_HATCH_X, KW_KEEN9_HATCH_Y, 1, 1, 1,
+	KW_KEEN9_HATCH_X, KW_KEEN9_HATCH_Y, KW_HATCH_TILES_W, KW_HATCH_TILES_H, 1,
 	&kw_keen9HatchSlots[0][0][0], &kw_keen9HatchTiles[0][0][0][0],
 	0, 0, KW_HatchDropsUnderlay, true, false,
 };
@@ -592,8 +593,9 @@ static const KW_MapShip kw_mapShips[] = {
 	// The Universe: Keen 9 draws its ship into the landing bay's floor,
 	// right where the Command Center's entrance is (35-36 x 23-25), so it
 	// is moved below the bay: the floor there becomes plain bay floor
-	// (background tile 50) and Keen boards through a hatch in the bay wall.
-	{KW_KEEN9, &kw_keen9ShipArt, &kw_keen9HatchArt, KW_KEEN9_HATCH_X, KW_KEEN9_HATCH_Y, 23, 35, 3, 2, 50},
+	// (background tile 50) and Keen boards through a hatch in the bay's
+	// floor and down a gangway tube, at its bottom.
+	{KW_KEEN9, &kw_keen9ShipArt, &kw_keen9HatchArt, KW_KEEN9_HATCH_X, KW_KEEN9_HATCH_Y + KW_HATCH_TILES_H - 1, 23, 35, 3, 2, 50},
 };
 
 static const KW_MapShip *KW_MapShipFor(int world)
@@ -672,7 +674,25 @@ void KW_PlaceArrivalAtShip(void)
 
 void KW_ConstrainKeen5Dock(CK_object *mapKeen)
 {
-	if (kw_currentWorld != KW_KEEN5 || ca_mapOn != 0)
+	if (ca_mapOn != 0)
+		return;
+
+	// A gangway down to a parked ship (Keen 9): straight down and back up,
+	// stopping at the ship.
+	const KW_MapShip *ms = KW_MapShipFor(kw_currentWorld);
+	if (ms && ms->hatch)
+	{
+		int bottom = mapKeen->clipRects.tileY2, top = ms->hatch->originY;
+		if (mapKeen->clipRects.tileXmid != ms->hatch->originX)
+			return;
+		if (bottom >= top)
+			mapKeen->xDirection = IN_motion_None;
+		if (bottom >= top + ms->hatch->tilesH - 1 && mapKeen->yDirection == IN_motion_Down)
+			mapKeen->yDirection = IN_motion_None;
+		return;
+	}
+
+	if (kw_currentWorld != KW_KEEN5)
 		return;
 
 	int x = mapKeen->posX >> 8;
@@ -1203,8 +1223,10 @@ void KW_SelfTest(void)
 			for (int x = kw_launchSpotX - KW_LAUNCH_RANGE - 1; x <= kw_launchSpotX + KW_LAUNCH_RANGE + 1; ++x)
 				if ((CA_TileAtPos(x, y, 2) & 0xFF00) == 0xC000)
 					Quit("KW_SelfTest: a parked Megarocket's boarding spot is next to a level entrance!");
-		if (ms->hatch && TI_ForeTop(CA_TileAtPos(ms->hatch->originX, ms->hatch->originY, 1)))
-			Quit("KW_SelfTest: Keen 9's boarding hatch isn't walkable!");
+		if (ms->hatch)
+			for (int r = 0; r < ms->hatch->tilesH; ++r)
+				if (TI_ForeTop(CA_TileAtPos(ms->hatch->originX, ms->hatch->originY + r, 1)))
+					Quit("KW_SelfTest: Keen 9's boarding hatch or gangway isn't walkable!");
 	}
 
 	// Habitable levels: Border Village is peaceful once completed, with an
