@@ -88,3 +88,23 @@ keep their original facing.
 - Each focused step is committed separately. Use `git revert <commit>` to
   reverse just that checkpoint, or return to `9011ebd` for the previously
   play-tested connected-world build.
+
+## Keen 5 boarding gate (our own art)
+
+The bridge from the Omegamatic dock to Keen's ship is new EGA art, not stock
+tiles: a gate with a pulsing energy field, a ribbed tube with running lights,
+and a collar clamped onto the ship's nose. Three animation frames.
+
+- Art: `tools/kw_gate_art.py` in the project root (outside this repo) draws
+  it in the 16 EGA colours on a 48×48 canvas covering map tiles 29–31 ×
+  94–96. `python3 tools/kw_gate_art.py preview OUT.png` shows it over the real
+  dock; `csource src/kw_gate_art.h` regenerates the engine data.
+- Engine: `KW_BuildKeen5Gate()` in `src/kw_world.c`, run when the Keen 5 map
+  spawns Keen. Each gate tile is the art laid over the original tile beneath
+  it, stored in an empty, unused masked-tile slot (990–1029). Those slots have
+  no data in `EGAGRAPH.CK5`, so the cache never overwrites them. Tile
+  properties are set at runtime: Keen's walkway row is walkable, other rows
+  copy the original collision, and the frames link as a foreground
+  animation. Player data files stay untouched.
+- `/KWTEST` checks the gate is placed, all tiles exist and the walkway is
+  walkable.
