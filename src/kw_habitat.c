@@ -81,22 +81,63 @@ bool KW_IsLevelPeaceful(void)
 	return kw_levelIsPeaceful;
 }
 
-// ---- Art in the houses ----
+// ---- Art in the levels ----
+// Keen Worlds art belongs to the village after it is freed: by default it
+// only appears once the level is completed ("the villagers are back with
+// their things"). A piece can instead be shown only before, or always.
 
-// The creator's portrait (tools/kw_portrait_art.py): Border Village, first
-// house, on the wall between the left window and the door.
 #include "kw_portrait_art.h"
+#include "kw_bar_art.h"
+#include "kw_stall_art.h"
 
+typedef enum KW_ArtWhen
+{
+	KW_ART_AFTER,  // Only once the level is completed (the default).
+	KW_ART_BEFORE, // Only until the level is completed.
+	KW_ART_ALWAYS,
+} KW_ArtWhen;
+
+// The creator's portrait (tools/kw_portrait_art.py): Border Village's
+// basement hall, on the cave wall right of the big statue.
 const KW_Art kw_portraitArt = {
 	KW_PORTRAIT_ORIGIN_X, KW_PORTRAIT_ORIGIN_Y, KW_PORTRAIT_TILES_W, KW_PORTRAIT_TILES_H, 1,
-	&kw_portraitSlots[0][0][0], &kw_portraitTiles[0][0][0][0],
-	-1, 0, NULL,
+	&kw_portraitSlots[0][0][0], &kw_portraitTiles[0][0][0][0], -1, 0, NULL,
+};
+
+// The bar and, on the same spot, the boarded-up stall it used to be
+// (tools/kw_bar_art.py): Border Village's street, just inside the entrance.
+const KW_Art kw_barArt = {
+	KW_BAR_ORIGIN_X, KW_BAR_ORIGIN_Y, KW_BAR_TILES_W, KW_BAR_TILES_H, 1,
+	&kw_barSlots[0][0][0], &kw_barTiles[0][0][0][0], -1, 0, NULL,
+};
+const KW_Art kw_stallArt = {
+	KW_STALL_ORIGIN_X, KW_STALL_ORIGIN_Y, KW_STALL_TILES_W, KW_STALL_TILES_H, 1,
+	&kw_stallSlots[0][0][0], &kw_stallTiles[0][0][0][0], -1, 0, NULL,
+};
+
+static const struct
+{
+	int episode, level;
+	const KW_Art *art;
+	KW_ArtWhen when;
+} kw_levelArt[] = {
+	{4, 1, &kw_portraitArt, KW_ART_AFTER},
+	{4, 1, &kw_barArt, KW_ART_AFTER},
+	{4, 1, &kw_stallArt, KW_ART_BEFORE},
 };
 
 static void KW_PlaceLevelArt(void)
 {
-	if (KW_CurrentEpisode() == 4 && ca_mapOn == 1)
-		KW_PlaceArt(&kw_portraitArt);
+	bool completed = ca_mapOn != 0 && ck_gameState.levelsDone[ca_mapOn];
+	for (int i = 0; i < (int)(sizeof(kw_levelArt) / sizeof(kw_levelArt[0])); ++i)
+	{
+		if (kw_levelArt[i].episode != KW_CurrentEpisode() || kw_levelArt[i].level != ca_mapOn)
+			continue;
+		if ((kw_levelArt[i].when == KW_ART_AFTER && !completed) ||
+			(kw_levelArt[i].when == KW_ART_BEFORE && completed))
+			continue;
+		KW_PlaceArt(kw_levelArt[i].art);
+	}
 }
 
 // ---- Clearing out enemies ----
@@ -253,4 +294,18 @@ void KW_CountLevelPeople(int *hostiles, int *residents, CK_object **firstResiden
 			++*residents;
 		}
 	}
+}
+
+// In a peaceful level Keen can also leave through the right side: walking
+// right into the wall at the map's right edge ends the level, as walking off
+// the left side does.
+#define KW_RIGHT_EXIT_ZONE 5 // tiles from the right edge of the map
+
+void KW_CheckPeacefulExit(void)
+{
+	if (!kw_levelIsPeaceful || !ck_keenObj || ck_gameState.levelState != LS_Playing)
+		return;
+	if (ck_inputFrame.xDirection == IN_motion_Right && ck_keenObj->rightTI &&
+		ck_keenObj->clipRects.tileX2 >= CA_GetMapWidth() - KW_RIGHT_EXIT_ZONE)
+		ck_gameState.levelState = LS_LevelComplete;
 }

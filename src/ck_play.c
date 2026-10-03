@@ -1265,6 +1265,7 @@ void CK_CheckKeys()
 	// KEEN WORLDS: Megarocket travel menu (and the W + 4/5/6 debug shortcut).
 	KW_PlayLoopHook();
 	KW_CheckTalk();
+	KW_CheckPeacefulExit();
 
 	// BAT ITEM CHEAT
 	if (IN_GetKeyState(IN_SC_B) && IN_GetKeyState(IN_SC_A) && IN_GetKeyState(IN_SC_T))

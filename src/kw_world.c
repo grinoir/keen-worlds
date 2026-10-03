@@ -790,11 +790,13 @@ void KW_SelfTest(void)
 		KW_CountLevelPeople(&hostiles, &residents, &elder);
 		if (!hostiles || residents || KW_IsLevelPeaceful())
 			Quit("KW_SelfTest: an uncompleted Border Village should keep its enemies!");
+		if (!KW_IsArtPlaced(&kw_stallArt) || KW_IsArtPlaced(&kw_barArt) || KW_IsArtPlaced(&kw_portraitArt))
+			Quit("KW_SelfTest: before completion only the closed stall should be there!");
 		ck_gameState.levelsDone[1] = 1;
 		CK_LoadLevel(true, true);
 		KW_CountLevelPeople(&hostiles, &residents, &elder);
-		if (!KW_IsArtPlaced(&kw_portraitArt))
-			Quit("KW_SelfTest: the portrait is missing from Border Village!");
+		if (!KW_IsArtPlaced(&kw_portraitArt) || !KW_IsArtPlaced(&kw_barArt) || KW_IsArtPlaced(&kw_stallArt))
+			Quit("KW_SelfTest: after completion the bar and portrait should be there, not the stall!");
 		if (hostiles || residents != 1 || !KW_IsLevelPeaceful() ||
 			RF_UnitToTile(elder->posX) != 4 || RF_UnitToTile(elder->posY) < 46 || RF_UnitToTile(elder->posY) > 48)
 			Quit("KW_SelfTest: a completed Border Village should be peaceful with one elder in the house!");

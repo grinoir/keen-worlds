@@ -177,12 +177,29 @@ To add art: write a generator like `tools/kw_portrait_art.py` (draw on a
 canvas, `preview` it over the real level, `csource` it into a header), then
 describe it with a `KW_Art` and call `KW_PlaceArt()` when that level loads.
 
-### The creator's portrait
+### When art appears
 
-Border Village (Keen 4 level 1), first house, on the wall between the left
-window and the door (tiles 5–6, rows 44–46): a framed EGA rendering of the
-photo `assets/creator-portrait-source.jpg` in the project root. The generator
-crops it to hat, face and folded arms, smooths it, and uses Bayer dithering
-over the four EGA greys; crop and tone settings are at the top of
-`tools/kw_portrait_art.py`. It hangs there whether or not the village has been
-completed.
+Level art is listed in `kw_levelArt[]` in `src/kw_habitat.c`, each with a
+rule: `KW_ART_AFTER` (only once the level is completed — **the default for
+Keen Worlds art**: the villagers are back with their things), `KW_ART_BEFORE`
+(only until then) or `KW_ART_ALWAYS`. Each piece reserves its own range of
+tile slots in its generator (`SLOT_RANGE` / `*_SLOTS`) so pieces never share
+slots.
+
+### Border Village art
+
+- **The creator's portrait** (after): a 48×64 framed EGA rendering of
+  `assets/creator-portrait-source.jpg` (project root) on the basement hall's
+  cave wall right of the big statue, tiles 50–52 × 46–49
+  (`tools/kw_portrait_art.py`, slots 1–299).
+- **The bar** (after) and **the boarded-up stall** (before) share one spot on
+  the street just inside the entrance, tiles 84–87 × 12–15
+  (`tools/kw_bar_art.py`, slots 300–599 and 600–899). The bar: "BAR" sign,
+  striped awning, bottle shelf, counter with a mug. The stall: crossed boards
+  and a "CLOSED" sign.
+
+### Leaving a peaceful level
+
+Peaceful levels can also be left through the right side: walking right into
+the wall at the map's right edge (within 5 tiles of it) ends the level, like
+walking off the left side (`KW_CheckPeacefulExit`).

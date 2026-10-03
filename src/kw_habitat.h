@@ -23,10 +23,15 @@ bool KW_IsLevelPeaceful(void);
 // stands next to one and presses up.
 void KW_CheckTalk(void);
 
+// Called every frame from the play loop: in a peaceful level, walking into
+// the map's right edge leaves the level.
+void KW_CheckPeacefulExit(void);
+
 struct CK_object;
 struct KW_Art;
-// The creator's portrait in Border Village (for /KWTEST).
-extern const struct KW_Art kw_portraitArt;
+// Border Village's art (for /KWTEST): the creator's portrait and the bar
+// (after completion), the boarded-up stall (before).
+extern const struct KW_Art kw_portraitArt, kw_barArt, kw_stallArt;
 // For /KWTEST: count hostile objects and residents in the loaded level.
 void KW_CountLevelPeople(int *hostiles, int *residents, struct CK_object **firstResident);
 
