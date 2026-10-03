@@ -326,6 +326,10 @@ bool CK_SaveGame(FS_File fp)
 
 	/* This saves the game */
 
+	/* KEEN WORLDS: every world's progress and all items */
+	if (!KW_WriteSaveBlock(fp))
+		return false;
+
 	/* Write out Keen stats */
 	ck_keenState.platform = NULL;
 	if (!CK_SaveGameState(fp, &ck_gameState))
@@ -373,6 +377,14 @@ bool CK_LoadGame(FS_File fp, bool fromMenu)
 	int16_t prevFuses;
 	CK_object *objprev, *objnext, *moreObj;
 	uint8_t *buf;
+
+	// KEEN WORLDS: A save from another world finishes loading after the menu
+	// closes (KW_FinishDeferredLoad), once that world is loaded.
+	bool deferred;
+	if (!KW_ReadSaveBlock(fp, &deferred))
+		return false;
+	if (deferred)
+		return true;
 
 	if (!CK_LoadGameState(fp, &ck_gameState))
 		return false;
@@ -885,6 +897,8 @@ void CK_GameLoop()
 		if (ck_gameState.levelState != LS_LoadedGame)
 		{
 		resetDifficultyAndLevel:
+			// KEEN WORLDS: A new game begins in the start world.
+			KW_ReturnToStartWorld();
 			ck_gameState.difficulty = ck_startingDifficulty;
 			ck_startingDifficulty = D_NotPlaying;
 		loadLevel:
@@ -894,6 +908,8 @@ void CK_GameLoop()
 		}
 
 	replayLevel:
+		// KEEN WORLDS: Finish loading a save made in another world.
+		KW_FinishDeferredLoad();
 		ck_scrollDisabled = false;
 		SD_WaitSoundDone();
 		CK_PlayLoop();

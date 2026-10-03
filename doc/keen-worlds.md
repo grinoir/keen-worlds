@@ -108,3 +108,31 @@ and a collar clamped onto the ship's nose. Three animation frames.
   animation. Player data files stay untouched.
 - `/KWTEST` checks the gate is placed, all tiles exist and the walkway is
   walkable.
+
+## Saved games, settings and high scores
+
+- **One set of save slots** for all worlds: `KWORLDS0.SAV` … `KWORLDS9.SAV`
+  (pattern `KW_SAVE_FILE_PATTERN` in `src/kw_world.h`), instead of
+  `SAVEGAM?.CKx` per episode. Slot headers carry the tag `KWS` instead of the
+  episode extension, so every save is listed in every world. Original
+  Omnispeak/DOS saves are not loaded.
+- **Save contents**: a Keen Worlds block (`KW_WriteSaveBlock`: id `KWLD`,
+  version, the world it was saved in, every world's map position / levels
+  done / visited / completed, and all episode items), followed by the normal
+  Omnispeak save of the current level. Bump `KW_SAVE_VERSION` when the block
+  changes (for example when RPG data is added).
+- **Loading a save from another world** cannot switch episodes while the menu
+  is open (it would free the menu's graphics). `CK_LoadGame` stops after the
+  block and remembers the file; `KW_FinishDeferredLoad()` runs when play
+  resumes, switches world and loads the save there.
+- **One config file**, `KWORLDS.CFG` (settings and the single high-score
+  table), instead of `CONFIG.CKx` per episode. Old per-episode configs are not
+  read, so key bindings start at their defaults once.
+- **New games** start in the world the program was launched in
+  (`play/run.sh` → Keen 4; `run.sh 5` / `6` for testing), even if the last run
+  ended elsewhere.
+- **Endings**: after a world's original ending the run continues on that
+  world's map; the world is marked completed. High scores are submitted at
+  game over.
+
+`/KWTEST` covers a cross-world and a same-world save/load round trip.

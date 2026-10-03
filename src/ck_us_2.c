@@ -33,6 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ck_act.h"
 #include "ck_cross.h"
 #include "ck_def.h"
+#include "kw_world.h"
 #include "ck_play.h"
 
 #define US_MAX_JOYSTICK_NAME_LENGTH 28
@@ -273,6 +274,7 @@ static bool US_LoadMain(int i, bool fromMenu)
 
 	e = &us_savefiles[i];
 	fname = US_GetSavefileName(i);
+	kw_loadingFileName = fname; // KEEN WORLDS: for loads into another world
 	fp = FS_OpenUserFile(fname);
 	if (FS_IsFileValid(fp))
 	{
@@ -449,6 +451,9 @@ static bool US_SaveMain(int i)
 	US_Savefile *e;
 
 	e = &us_savefiles[i];
+	// KEEN WORLDS: Saves are marked as Keen Worlds saves, not per episode.
+	CK_Cross_strscpy(e->id, KW_SAVE_TAG, sizeof(e->id));
+	e->printXOffset = KW_SAVE_MAGIC;
 	fname = US_GetSavefileName(i);
 	fp = FS_CreateUserFile(fname);
 	if (FS_IsFileValid(fp))

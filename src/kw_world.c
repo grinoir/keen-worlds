@@ -3,9 +3,12 @@ Keen Worlds: travelling between Keen 4, 5 and 6 in one running game.
 Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 */
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "id_ca.h"
+#include "id_fs.h"
 #include "id_in.h"
 #include "id_mm.h"
 #include "id_rf.h"
@@ -15,6 +18,7 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 #include "id_sd.h"
 #include "id_ti.h"
 #include "ck_act.h"
+#include "ck_config.h"
 #include "ck_cross.h"
 #include "ck_game.h"
 #include "ck_phys.h"
@@ -101,6 +105,168 @@ bool KW_IsWorldCompleted(int episode)
 	if (episode < 4 || episode > 6)
 		return false;
 	return kw_worlds[episode - 4].completed;
+}
+
+// ---- Saved games ----
+
+#define KW_SAVE_BLOCK_ID "KWLD"
+#define KW_SAVE_VERSION 1
+
+typedef struct KW_SaveBlock
+{
+	int16_t episode;
+	KW_WorldState worlds[3];
+	int16_t items[9];
+} KW_SaveBlock;
+
+const char *kw_loadingFileName = NULL;
+static int kw_deferredEpisode = 0;
+static char kw_deferredFile[FS_MAX_FILENAME_LEN];
+
+// Every episode item, in a fixed order, so the block holds all of them.
+static int16_t *KW_ItemField(int i)
+{
+	int16_t *fields[] = {
+		&ck_gameState.ep.ck4.wetsuit, &ck_gameState.ep.ck4.membersRescued,
+		&ck_gameState.ep.ck5.securityCard, &ck_gameState.ep.ck5.word_4729C, &ck_gameState.ep.ck5.fusesRemaining,
+		&ck_gameState.ep.ck6.sandwich, &ck_gameState.ep.ck6.rope, &ck_gameState.ep.ck6.passcard, &ck_gameState.ep.ck6.inRocket,
+	};
+	return fields[i];
+}
+
+static bool KW_WriteWorld(FS_File fp, KW_WorldState *w)
+{
+	int16_t visited = w->visited, completed = w->completed;
+	return FS_WriteInt16LE(&visited, 1, fp) == 1 &&
+		FS_WriteInt16LE(&w->mapPosX, 1, fp) == 1 &&
+		FS_WriteInt16LE(&w->mapPosY, 1, fp) == 1 &&
+		FS_WriteInt16LE(w->levelsDone, 25, fp) == 25 &&
+		FS_WriteInt16LE(&completed, 1, fp) == 1;
+}
+
+static bool KW_ReadWorld(FS_File fp, KW_WorldState *w)
+{
+	int16_t visited, completed;
+	if (FS_ReadInt16LE(&visited, 1, fp) != 1 ||
+		FS_ReadInt16LE(&w->mapPosX, 1, fp) != 1 ||
+		FS_ReadInt16LE(&w->mapPosY, 1, fp) != 1 ||
+		FS_ReadInt16LE(w->levelsDone, 25, fp) != 25 ||
+		FS_ReadInt16LE(&completed, 1, fp) != 1)
+		return false;
+	w->visited = visited;
+	w->completed = completed;
+	return true;
+}
+
+bool KW_WriteSaveBlock(FS_File fp)
+{
+	int16_t version = KW_SAVE_VERSION, episode = ck_currentEpisode->ep - EP_CK4 + 4;
+
+	// The current world's live progress is in ck_gameState, not kw_worlds.
+	KW_WorldState current = kw_worlds[episode - 4];
+	current.visited = true;
+	current.mapPosX = ck_gameState.mapPosX;
+	current.mapPosY = ck_gameState.mapPosY;
+	memcpy(current.levelsDone, ck_gameState.levelsDone, sizeof(current.levelsDone));
+
+	if (FS_Write(KW_SAVE_BLOCK_ID, 4, 1, fp) != 1 ||
+		FS_WriteInt16LE(&version, 1, fp) != 1 ||
+		FS_WriteInt16LE(&episode, 1, fp) != 1)
+		return false;
+	for (int i = 0; i < 3; ++i)
+		if (!KW_WriteWorld(fp, i == episode - 4 ? &current : &kw_worlds[i]))
+			return false;
+	for (int i = 0; i < 9; ++i)
+		if (FS_WriteInt16LE(KW_ItemField(i), 1, fp) != 1)
+			return false;
+	return true;
+}
+
+int KW_ReadSaveBlock(FS_File fp, bool *deferred)
+{
+	char id[4];
+	int16_t version;
+	KW_SaveBlock block;
+	*deferred = false;
+
+	if (FS_Read(id, 4, 1, fp) != 1 || memcmp(id, KW_SAVE_BLOCK_ID, 4) ||
+		FS_ReadInt16LE(&version, 1, fp) != 1 || version != KW_SAVE_VERSION ||
+		FS_ReadInt16LE(&block.episode, 1, fp) != 1 || !KW_EpisodeDef(block.episode))
+		return 0;
+	for (int i = 0; i < 3; ++i)
+		if (!KW_ReadWorld(fp, &block.worlds[i]))
+			return 0;
+	if (FS_ReadInt16LE(block.items, 9, fp) != 9)
+		return 0;
+
+	if (KW_EpisodeDef(block.episode) != ck_currentEpisode)
+	{
+		// Finish after the menu has closed, in the save's own world.
+		if (!kw_loadingFileName)
+			return 0;
+		CK_Cross_strscpy(kw_deferredFile, kw_loadingFileName, sizeof(kw_deferredFile));
+		kw_deferredEpisode = block.episode;
+		*deferred = true;
+		return block.episode;
+	}
+
+	memcpy(kw_worlds, block.worlds, sizeof(kw_worlds));
+	for (int i = 0; i < 9; ++i)
+		*KW_ItemField(i) = block.items[i];
+	kw_pendingWorld = 0;
+	kw_placeArrivalAtShip = false;
+	return block.episode;
+}
+
+bool KW_FinishDeferredLoad(void)
+{
+	if (!kw_deferredEpisode)
+		return false;
+	int episode = kw_deferredEpisode;
+	kw_deferredEpisode = 0;
+
+	KW_SwitchWorld(episode);
+	kw_placeArrivalAtShip = false; // The save says where Keen is.
+
+	// Same layout as US_LoadMain(): the slot header, then the game.
+	FS_File fp = FS_OpenUserFile(kw_deferredFile);
+	US_Savefile header;
+	uint8_t padding;
+	bool ok = FS_IsFileValid(fp) &&
+		FS_Read(header.id, sizeof(header.id), 1, fp) == 1 &&
+		FS_ReadInt16LE(&header.printXOffset, 1, fp) == 1 &&
+		FS_ReadBoolFrom16LE(&header.used, 1, fp) == 1 &&
+		FS_Read(header.name, sizeof(header.name), 1, fp) == 1 &&
+		FS_Read(&padding, sizeof(padding), 1, fp) == 1 &&
+		CK_LoadGame(fp, false);
+	if (FS_IsFileValid(fp))
+		FS_CloseFile(fp);
+	if (!ok)
+		QuitF("Couldn't load saved game %s", kw_deferredFile);
+	ck_gameState.levelState = LS_LoadedGame;
+	return true;
+}
+
+// ---- New games ----
+
+static int kw_startWorld = 4;
+
+void KW_SetStartWorld(void)
+{
+	kw_startWorld = ck_currentEpisode->ep - EP_CK4 + 4;
+}
+
+void KW_ReturnToStartWorld(void)
+{
+	// CK_NewGame() has already cleared Keen's progress (and /TEDLEVEL may
+	// have chosen a level since), so only the world needs changing.
+	if (KW_EpisodeDef(kw_startWorld) != ck_currentEpisode)
+	{
+		KW_SwitchWorld(kw_startWorld);
+		ck_gameState.currentLevel = 0; // the map, not the ship arrival
+	}
+	KW_ResetWorlds();
+	kw_placeArrivalAtShip = false;
 }
 
 void KW_ResetWorlds(void)
@@ -628,6 +794,70 @@ void KW_SelfTest(void)
 		CK_LoadLevel(true, true);
 		if (ca_mapOn != 0)
 			Quit("KW_SelfTest: map did not load after an ending!");
+	}
+
+	// Saved games: one shared slot list; a save made in one world loads from
+	// any other (postponed until the world has switched).
+	{
+		const char *testFile = "KWTEST.SAV";
+		KW_SwitchWorld(5);
+		ck_gameState.currentLevel = 0;
+		CK_LoadLevel(true, true);
+		ck_gameState.keenScore = 12345;
+		ck_gameState.ep.ck6.rope = 1;
+		uint16_t savedMapX = ck_gameState.mapPosX;
+		bool completed[3];
+		for (int w = 0; w < 3; ++w)
+			completed[w] = KW_IsWorldCompleted(w + 4);
+
+		for (int pass = 0; pass < 2; ++pass)
+		{
+			FS_File fp = FS_CreateUserFile(testFile);
+			US_Savefile header = {KW_SAVE_TAG, KW_SAVE_MAGIC, true, "Self-test"};
+			uint8_t padding = 0;
+			if (!FS_IsFileValid(fp) ||
+				FS_Write(header.id, sizeof(header.id), 1, fp) != 1 ||
+				FS_WriteInt16LE(&header.printXOffset, 1, fp) != 1 ||
+				FS_WriteBoolTo16LE(&header.used, 1, fp) != 1 ||
+				FS_Write(header.name, sizeof(header.name), 1, fp) != 1 ||
+				FS_Write(&padding, 1, 1, fp) != 1 ||
+				!CK_SaveGame(fp))
+				Quit("KW_SelfTest: couldn't write a save!");
+			FS_CloseFile(fp);
+
+			// Pass 0 loads from Keen 6 (postponed); pass 1 from Keen 5 itself.
+			if (pass == 0)
+			{
+				KW_SwitchWorld(6);
+				ck_gameState.currentLevel = 0;
+				CK_LoadLevel(true, true);
+			}
+			ck_gameState.keenScore = 0;
+			ck_gameState.ep.ck6.rope = 0;
+
+			fp = FS_OpenUserFile(testFile);
+			kw_loadingFileName = testFile;
+			bool ok = FS_IsFileValid(fp) &&
+				FS_Read(header.id, sizeof(header.id), 1, fp) == 1 &&
+				FS_ReadInt16LE(&header.printXOffset, 1, fp) == 1 &&
+				FS_ReadBoolFrom16LE(&header.used, 1, fp) == 1 &&
+				FS_Read(header.name, sizeof(header.name), 1, fp) == 1 &&
+				FS_Read(&padding, 1, 1, fp) == 1 &&
+				CK_LoadGame(fp, false);
+			FS_CloseFile(fp);
+			if (!ok)
+				Quit("KW_SelfTest: couldn't read a save!");
+			if (KW_FinishDeferredLoad() != (pass == 0))
+				Quit("KW_SelfTest: cross-world load was not postponed (or same-world load was)!");
+
+			if (ck_currentEpisode->ep != EP_CK5 || ca_mapOn != 0 || ck_gameState.keenScore != 12345 ||
+				ck_gameState.ep.ck6.rope != 1 || ck_gameState.mapPosX != savedMapX)
+				Quit("KW_SelfTest: save did not load back correctly!");
+			for (int w = 0; w < 3; ++w)
+				if (KW_IsWorldCompleted(w + 4) != completed[w])
+					Quit("KW_SelfTest: save lost which worlds are completed!");
+		}
+		remove(testFile);
 	}
 
 	if (!ck_gameState.ep.ck4.wetsuit || !ck_gameState.ep.ck6.sandwich)

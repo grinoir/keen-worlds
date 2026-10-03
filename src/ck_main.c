@@ -748,6 +748,9 @@ int main(int argc, char *argv[])
 	if (overrideCopyProtection)
 		ck6_creatureQuestionDone = true;
 
+	// KEEN WORLDS: New games begin in the world the program was started in.
+	KW_SetStartWorld();
+
 	CK_InitGame();
 
 	for (int i = 1; i < argc; ++i)

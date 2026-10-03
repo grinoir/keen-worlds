@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ck_def.h"
 #include "ck_ep.h"
 #include "ck_play.h"
+#include "kw_world.h"
 
 #include <ctype.h>
 #include <stdarg.h>
@@ -694,7 +695,8 @@ void US_LoadConfig(void)
 	bool hadQuietSfx = false;
 	bool hadAdlib = false; // Originally this is not set to 0 directly
 	char fileExt[4];
-	const char *fileName = CK_FILENAME(us_configFile, "CONFIG.EXT");
+	// KEEN WORLDS: One config file (and high-score table) for all worlds.
+	const char *fileName = KW_CONFIG_FILE;
 	bool configFileLoaded;
 	FS_File f = FS_OpenUserFile(fileName);
 	if (FS_IsFileValid(f))
@@ -703,7 +705,7 @@ void US_LoadConfig(void)
 		FS_ReadInt16LE(&configRev, 1, f);
 		// FIXME: Dangerous function call comes here (to strcmp)
 		// (but true to the original and effectively safe)
-		if (strcmp(fileExt, ck_currentEpisode->ext) || (configRev != 4))
+		if (strncmp(fileExt, KW_CONFIG_TAG, sizeof(fileExt)) || (configRev != 4))
 		{
 			FS_CloseFile(f);
 			f = 0;
@@ -781,13 +783,14 @@ void US_LoadConfig(void)
 
 void US_SaveConfig(void)
 {
-	const char *fileName = CK_FILENAME(us_configFile, "CONFIG.EXT");
+	const char *fileName = KW_CONFIG_FILE; // KEEN WORLDS
 	int16_t intVal;
 	FS_File f = FS_CreateUserFile(fileName);
 	if (!FS_IsFileValid(f))
 		return;
 
-	FS_WriteInt8LE((ck_currentEpisode->ext), 4, f); // Config file extension
+	char tag[4] = KW_CONFIG_TAG;
+	FS_WriteInt8LE(tag, 4, f); // Config file tag (KEEN WORLDS: not per episode)
 	intVal = 4;
 	FS_WriteInt16LE(&intVal, 1, f); // Config file revision
 
@@ -859,7 +862,8 @@ US_Savefile us_savefiles[US_MAX_NUM_OF_SAVED_GAMES];
 /* as well as a similar internal buffer used by FS_AdjustExtension. */
 const char *US_GetSavefileName(int index)
 {
-	const char *filename_pattern = CK_FILENAME(us_saveFile, "SAVEGAM?.EXT");
+	// KEEN WORLDS: One set of save slots for all worlds.
+	const char *filename_pattern = KW_SAVE_FILE_PATTERN;
 	for (int i = 0; ; ++i)
 	{
 		if (i >= FS_MAX_FILENAME_LEN)
@@ -901,8 +905,8 @@ void US_GetSavefiles(void)
 				(FS_Read(psfe->name, sizeof(psfe->name), 1, handle) == 1) &&
 				(FS_Read(&padding, sizeof(padding), 1, handle) == 1))
 				//if( fread( psfe, sizeof( US_Savefile ), 1, handle) == 1 )
-				if (strncmp(psfe->id, ck_currentEpisode->ext, 4) == 0) /* AZ:46AA */
-					if (psfe->printXOffset == CK_INT(ck_exe_printXOffset, 0xF00D))
+				if (strncmp(psfe->id, KW_SAVE_TAG, 4) == 0) /* AZ:46AA */
+					if (psfe->printXOffset == KW_SAVE_MAGIC)
 						valid = 1;
 
 			FS_CloseFile(handle);
@@ -910,7 +914,7 @@ void US_GetSavefiles(void)
 
 		if (!valid)
 		{
-			CK_Cross_strscpy(psfe->id, ck_currentEpisode->ext, 4);
+			CK_Cross_strscpy(psfe->id, KW_SAVE_TAG, 4);
 			psfe->used = false;
 			CK_Cross_strscpy(psfe->name, "Empty", US_MAX_SAVEDGAMENAME_LEN + 1);
 		}

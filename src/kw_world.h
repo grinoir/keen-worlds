@@ -8,6 +8,16 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 
 #include <stdbool.h>
 
+#include "id_fs.h"
+
+// One config file (settings and the high-score table) and one set of save
+// slots for all worlds, instead of CONFIG.CKx and SAVEGAM?.CKx per episode.
+#define KW_CONFIG_FILE "KWORLDS.CFG"
+#define KW_CONFIG_TAG "KWC"
+#define KW_SAVE_FILE_PATTERN "KWORLDS?.SAV"
+#define KW_SAVE_TAG "KWS"
+#define KW_SAVE_MAGIC 0x574B // "KW"
+
 // Which episode (4, 5 or 6) the player has asked to travel to, or 0.
 extern int kw_pendingWorld;
 
@@ -50,6 +60,33 @@ void KW_TryLaunch(struct CK_object *mapKeen);
 // for, and handles the debug shortcut (on a world map, hold W and press 4, 5
 // or 6).
 void KW_PlayLoopHook(void);
+
+// ---- Saved games ----
+
+// Written at the start of every save: the world it was made in, every
+// world's progress and all of Keen's items.
+bool KW_WriteSaveBlock(FS_File fp);
+
+// Reads the block. Returns the episode the save was made in, or 0 if the file
+// is not a Keen Worlds save. If that is another world, the load is postponed
+// (*deferred is set): it finishes after the menu closes, via
+// KW_FinishDeferredLoad(). Otherwise the progress is applied at once.
+int KW_ReadSaveBlock(FS_File fp, bool *deferred);
+
+// The save file being loaded (set by the menu's load routine).
+extern const char *kw_loadingFileName;
+
+// Called before play resumes: completes a postponed load by switching world
+// and loading the save there. Returns true if it did so.
+bool KW_FinishDeferredLoad(void);
+
+// ---- New games ----
+
+// Remember the world the program was started in (the start world).
+void KW_SetStartWorld(void);
+
+// A new game always begins in the start world.
+void KW_ReturnToStartWorld(void);
 
 // Developer self-test, run with /KWTEST.
 void KW_SelfTest(void);
