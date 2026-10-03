@@ -1005,8 +1005,9 @@ void CK_GameLoop()
 					// RF_Reset();
 					VL_FixRefreshBuffer();
 					help_endgame();
-					CK_SubmitHighScore(ck_gameState.keenScore, ck_gameState.ep.ck4.membersRescued);
-					return;
+					// KEEN WORLDS: The run continues on this world's map
+					// (the score is submitted at game over instead).
+					KW_AfterWorldEnding();
 				}
 				else
 				{
@@ -1032,7 +1033,9 @@ void CK_GameLoop()
 			// RF_Reset();
 			VL_FixRefreshBuffer();
 			help_endgame();
-			goto highscores;
+			// KEEN WORLDS: Back to Fribbulus Xax's map.
+			KW_AfterWorldEnding();
+			break;
 #endif
 #ifdef WITH_KEEN5
 		case LS_KorathFuse:
@@ -1056,8 +1059,9 @@ void CK_GameLoop()
 			CK_EndingPurge();
 			VL_FixRefreshBuffer();
 			help_endgame();
-			CK_SubmitHighScore(ck_gameState.keenScore, 0);
-			return;
+			// KEEN WORLDS: Back to the Omegamatic's map.
+			KW_AfterWorldEnding();
+			break;
 #endif
 		}
 

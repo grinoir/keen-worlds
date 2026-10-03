@@ -20,6 +20,13 @@ void KW_RequestWorld(int episode);
 // world's map.
 void KW_SwitchWorld(int episode);
 
+// Called after a world's original ending has played: the run continues on
+// that world's map, and the world is remembered as completed.
+void KW_AfterWorldEnding(void);
+
+// Whether the current world's ending has been seen in this run.
+bool KW_IsWorldCompleted(int episode);
+
 // Forget every world's progress (called when a new game starts).
 void KW_ResetWorlds(void);
 

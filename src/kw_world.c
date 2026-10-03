@@ -37,6 +37,7 @@ typedef struct KW_WorldState
 	uint16_t mapPosX;
 	uint16_t mapPosY;
 	uint16_t levelsDone[25];
+	bool completed; // The world's ending has been seen.
 } KW_WorldState;
 
 static KW_WorldState kw_worlds[3];
@@ -81,6 +82,25 @@ static CK_EpisodeDef *KW_EpisodeDef(int episode)
 static KW_WorldState *KW_StateFor(CK_EpisodeDef *ep)
 {
 	return &kw_worlds[ep->ep - EP_CK4];
+}
+
+void KW_AfterWorldEnding(void)
+{
+	// help_endgame() pushes a cache level and, as in the original, never
+	// pops it: the original quit to the title afterwards. Pop it here.
+	CA_DownLevel();
+
+	kw_worlds[ck_currentEpisode->ep - EP_CK4].completed = true;
+	if (!ck_gameState.levelsDone[ca_mapOn])
+		ck_gameState.levelsDone[ca_mapOn] = 1;
+	ck_gameState.currentLevel = 0;
+}
+
+bool KW_IsWorldCompleted(int episode)
+{
+	if (episode < 4 || episode > 6)
+		return false;
+	return kw_worlds[episode - 4].completed;
 }
 
 void KW_ResetWorlds(void)
@@ -592,6 +612,22 @@ void KW_SelfTest(void)
 			CK_Cross_LogMessage(CK_LOG_MSG_NORMAL, "KW_SelfTest: round %d, Keen %d, map %d, %d bytes in %d blocks\n",
 				round, route[i], ca_mapOn, MM_UsedMemory(), MM_UsedBlocks());
 		}
+	}
+
+	// Ending behaviour: help_endgame() pushes a cache level; afterwards the
+	// run must continue on the map with the cache level restored.
+	{
+		int levelBefore = ca_levelnum;
+		ck_gameState.currentLevel = 3;
+		CK_LoadLevel(true, true);
+		CA_UpLevel(); // as help_endgame() does
+		KW_AfterWorldEnding();
+		if (ca_levelnum != levelBefore || ck_gameState.currentLevel != 0 ||
+			!KW_IsWorldCompleted(ck_currentEpisode->ep - EP_CK4 + 4) || !ck_gameState.levelsDone[3])
+			Quit("KW_SelfTest: ending did not return to the map properly!");
+		CK_LoadLevel(true, true);
+		if (ca_mapOn != 0)
+			Quit("KW_SelfTest: map did not load after an ending!");
 	}
 
 	if (!ck_gameState.ep.ck4.wetsuit || !ck_gameState.ep.ck6.sandwich)
