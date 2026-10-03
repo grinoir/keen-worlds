@@ -227,14 +227,14 @@ void KW_PlaceArrivalAtShip(void)
 	{
 		// Clear approach immediately left of the ship, rather than inside its
 		// decorative tiles or by the right-side level exit.
-		tileX = 3;
+		tileX = 4;
 		tileY = 12;
 	}
 	else if (ck_currentEpisode->ep == EP_CK6 && ca_mapOn == KW_CK6_SHIP_LEVEL)
 	{
 		// Clear approach immediately left of the ship and well clear of the
 		// map-transition marker at (15, 22).
-		tileX = 4;
+		tileX = 5;
 		tileY = 22;
 	}
 	else
@@ -449,8 +449,8 @@ void KW_SelfTest(void)
 				(route[i] == EP_CK6 && ck_gameState.currentLevel != KW_CK6_SHIP_LEVEL))
 				Quit("KW_SelfTest: wrong arrival location!");
 			CK_LoadLevel(true, true);
-			if ((route[i] == EP_CK4 && (ck_keenObj->posX != RF_TileToUnit(3) || ck_keenObj->posY != RF_TileToUnit(12) - 241)) ||
-				(route[i] == EP_CK6 && (ck_keenObj->posX != RF_TileToUnit(4) || ck_keenObj->posY != RF_TileToUnit(22) - 241)))
+			if ((route[i] == EP_CK4 && (ck_keenObj->posX != RF_TileToUnit(4) || ck_keenObj->posY != RF_TileToUnit(12) - 241)) ||
+				(route[i] == EP_CK6 && (ck_keenObj->posX != RF_TileToUnit(5) || ck_keenObj->posY != RF_TileToUnit(22) - 241)))
 				Quit("KW_SelfTest: wrong ship arrival spawn!");
 			for (int level = 0; level <= 2; ++level)
 			{

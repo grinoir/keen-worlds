@@ -35,6 +35,15 @@ with a sparse black starfield tile (`0x327`) used beside the dock. This removes
 the yellow void without producing a dense, repetitive star pattern or changing
 any supplied data.
 
+### Replacement gate art
+
+`assets/keen5-boarding-gate-concept.png` is an EGA-style visual brief for the
+eventual purpose-drawn dock gate: a solid, lit metal gangway connecting the
+station airlock to the Bean-with-Bacon. It is deliberately not packed into the
+game yet. It must first be reduced and cut into 16×16 EGA tiles, then imported
+through the Galaxy graphics toolchain; keeping it separate makes the current
+functional build safe to revert independently of the art experiment.
+
 This follows normal Galaxy modding practice: foreground collision is defined
 by TileInfo, and community tooling such as Abiathar exposes a Tile Property
 Modifier for changing it. Sources: [KeenWiki's Galaxy modding tutorial](https://keenwiki.shikadi.net/wiki/Keen_Galaxy_Modding_Tutorial_%28patch_based%29)
@@ -59,8 +68,8 @@ The Keen 4 and 6 interaction bounds intentionally cover the complete visible
 spaceship, rather than only the hatch tile.
 
 When Keen arrives from another world, a one-shot flag moves the already-spawned
-player to the clear approach just left of the ship: `(3, 12)` in Keen 4's
-level 18 and `(4, 22)` in Keen 6's level 17. The Keen 6 placement also avoids
+player to the clear approach immediately left of the ship: `(4, 12)` in Keen
+4's level 18 and `(5, 22)` in Keen 6's level 17. The Keen 6 placement also avoids
 the unrelated map-transition marker at `(15, 22)`. Entering these levels
 normally from their own world maps continues to use their original entrance
 spawns. The placement uses the same 241-unit vertical offset as
