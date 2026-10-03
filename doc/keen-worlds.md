@@ -49,10 +49,11 @@ game built on one of them. `kw_worldDefs[]` in `src/kw_world.c` lists them:
 | `keen5` | The Omegamatic | 5 | (game path) | `EPISODE.CK5` |
 | `keen6` | Fribbulus Xax | 6 | (game path) | `EPISODE.CK6` |
 | `keen7` | Krodacia | 4 | `mods/keen7` | `MOD.CK4` |
+| `keen8` | Calidune | 6 | `mods/keen8` | `MOD.CK6` (ours) |
 
 - **Installed or not**: a fan game is installed when its folder holds its
   variable file (`KW_IsWorldPresent`). The Megarocket menu lists only
-  installed worlds; the W + 4/5/6/7 debug keys ignore missing ones.
+  installed worlds; the W + 4/5/6/7/8 debug keys ignore missing ones.
 - **Its files**: while a fan-game world is loaded its folder is searched
   first (`fs_worldPath` in `id_fs.c`), then the game path — so the mod's
   levels, graphics, sounds, headers and variable files replace the base
@@ -72,7 +73,31 @@ game built on one of them. `kw_worldDefs[]` in `src/kw_world.c` lists them:
   its docked ship on the map. A world without either boards and arrives at
   its world map's starting spot.
 - **Starting in a world**: `/WORLD <id>` starts new games there
-  (`play/run.sh 7` = `/EPISODE 4 /WORLD keen7`).
+  (`play/run.sh 7` = `/EPISODE 4 /WORLD keen7`, `play/run.sh 8` =
+  `/EPISODE 6 /WORLD keen8`).
+
+### Keen 8: Dead in the Desert (conversion in progress)
+
+Ceilick's Keen 6 mod (2009, patching by Levellass) was never converted for
+Omnispeak, so `play/mods/keen8/MOD.CK6` is ours. The player puts the mod's
+own files in `play/mods/keen8/` (`EGAGRAPH.CK6`, `EGAHEAD.CK6`, `AUDIO.CK6`,
+`AUDIOHED.CK6`, `AUDIODCT.CK6`, `editmaps.ck6`, `maphead.ck6`, `Keen6.tli`,
+`story.ck6`, `PAT.PAT`) plus Keen 6 **v1.4**'s `EGADICT.CK6`, `GFXINFOE.CK6`
+and `AUDINFOE.CK6` from `omnispeak/data/keen6e14` (the mod's graphics are
+compressed with v1.4's dictionary). Never the archive's `KEEN6.EXE`.
+
+Done: levels, graphics, tile properties, sound and music, and all texts
+(level names, entry texts, story, item and character lines). All 19 maps
+load and every completed level is peaceful (`/KWTEST`).
+
+Still Keen 6's: creature behaviour. `PAT.PAT` has ~104 one/two-byte value
+patches (speeds, chances, which action follows which — most map to
+`%action`/`%int` overrides once each EXE offset is matched to Omnispeak's
+v1.4 data: the action table gives each action's data-segment offset) and 5
+new-code patches (Nospike triggers the ending like Molly, Bip kills Keen,
+Bobba's extra shooting frames, Orbatrix gives the red key, the boss) that
+need C in Omnispeak, keyed to the `keen8` world. Keen 8 boards at its map
+start until its own ship spot is set.
 
 ### Adding a fan game
 

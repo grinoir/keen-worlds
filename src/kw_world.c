@@ -53,6 +53,9 @@ static const KW_WorldDef kw_worldDefs[KW_NUM_WORLDS] = {
 	// in the Omnispeak modding kit (data/mod/keen7): the player copies that
 	// folder to play/mods/keen7.
 	{"keen7", "Krodacia", 4, "mods/keen7", "MOD.CK4"},
+	// Dead in the Desert ("Keen 8", Ceilick and Levellass): the player's copy
+	// of the mod's files in play/mods/keen8, with our MOD.CK6 (see there).
+	{"keen8", "Calidune", 6, "mods/keen8", "MOD.CK6"},
 };
 
 static CK_EpisodeDef *KW_EpisodeDef(int episode)
@@ -750,7 +753,7 @@ void KW_PlayLoopHook(void)
 		return;
 	}
 
-	// Debug shortcut: hold W and press 4, 5, 6 or 7.
+	// Debug shortcut: hold W and press 4, 5, 6, 7 or 8.
 	if (!IN_GetKeyState(IN_SC_W))
 		return;
 	if (IN_GetKeyState(IN_SC_Four))
@@ -761,6 +764,8 @@ void KW_PlayLoopHook(void)
 		KW_RequestWorld(KW_KEEN6);
 	else if (IN_GetKeyState(IN_SC_Seven))
 		KW_RequestWorld(KW_KEEN7);
+	else if (IN_GetKeyState(IN_SC_Eight))
+		KW_RequestWorld(KW_KEEN8);
 }
 
 // Developer self-test (/KWTEST): hop between all worlds several times, loading
@@ -1077,6 +1082,35 @@ void KW_SelfTest(void)
 				Quit("KW_SelfTest: a Keen 7 save didn't load back into Keen 7!");
 			remove(testFile);
 		}
+	}
+
+	// Keen 8 (when installed): every level loads, and every level when
+	// completed is peaceful.
+	if (KW_IsWorldPresent(KW_KEEN8))
+	{
+		KW_SwitchWorld(KW_KEEN8);
+		int loaded = 0;
+		for (int lv = 0; lv < CA_NUMMAPS; ++lv)
+		{
+			if (!CA_MapExists(lv))
+				continue;
+			ck_gameState.currentLevel = lv;
+			ck_gameState.levelsDone[lv] = 0;
+			CK_LoadLevel(true, true);
+			ck_gameState.levelsDone[lv] = 1;
+			CK_LoadLevel(true, true);
+			int hostiles, residents;
+			CK_object *first;
+			KW_CountLevelPeople(&hostiles, &residents, &first);
+			if (lv && (!KW_IsLevelPeaceful() || hostiles))
+				Quit("KW_SelfTest: a completed Keen 8 level isn't peaceful!");
+			CK_Cross_LogMessage(CK_LOG_MSG_NORMAL, "KW_SelfTest: Keen 8 level %d \"%s\" %dx%d, re-entry %d\n", lv,
+				CA_MapHeaders[lv]->name, CA_GetMapWidth(), CA_GetMapHeight(), (int)KW_LastRevisitPlacement());
+			ck_gameState.levelsDone[lv] = 0;
+			++loaded;
+		}
+		if (loaded < 18)
+			Quit("KW_SelfTest: Keen 8 is missing levels!");
 	}
 
 	// Habitable levels: Border Village is peaceful once completed, with an

@@ -30,6 +30,7 @@ typedef enum KW_World
 	KW_KEEN5,   // The Omegamatic
 	KW_KEEN6,   // Fribbulus Xax
 	KW_KEEN7,   // Krodacia: "The Keys of Krodacia" (fan game on Keen 4)
+	KW_KEEN8,   // Calidune: "Dead in the Desert" (fan game on Keen 6)
 	KW_NUM_WORLDS,
 	KW_NO_WORLD = -1,
 } KW_World;
