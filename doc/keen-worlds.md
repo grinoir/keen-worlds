@@ -200,8 +200,9 @@ and writes `src/kw_tavern_art.h` (tile edits + art); the engine applies it in
   The left door sits on the fourth house's door tiles (x 77–78) and still
   leads to its original room; the right one (x 85–86) is the tavern's. Door
   tiles stay under the art so both keep their door flags.
-- **The BAR sign**: a big sign (5×2 tiles) hanging under the roof over the
-  tavern door — crossed out with red planks before liberation, clean after.
+- **The BAR sign**: on an iron bracket fixed to the wall just right of the
+  tavern door, below the roof's shadow line (always there; the boarded door
+  already shows the tavern is closed).
 - **Before liberation**: boards over the door (art with `clearMisc`, so the
   door flag is gone) and no door destination — it can't be entered.
 - **After**: the door destinations are written (street door ↔ room door) and

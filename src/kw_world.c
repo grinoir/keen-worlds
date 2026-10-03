@@ -799,8 +799,8 @@ void KW_SelfTest(void)
 		if (!KW_IsArtPlaced(&kw_tavernBoardsArt) || KW_IsArtPlaced(&kw_tavernBarArt) ||
 			KW_IsArtPlaced(&kw_tavernFurnitureArt) || KW_IsArtPlaced(&kw_portraitArt))
 			Quit("KW_SelfTest: before completion only the tavern's boards should be there!");
-		if (!KW_IsArtPlaced(&kw_signClosedArt) || KW_IsArtPlaced(&kw_signOpenArt))
-			Quit("KW_SelfTest: before completion the BAR sign should be crossed out!");
+		if (!KW_IsArtPlaced(&kw_signArt))
+			Quit("KW_SelfTest: the inn's BAR sign is missing!");
 		if (TI_ForeMisc(CA_TileAtPos(streetX, streetY, 1)) || CA_TileAtPos(streetX, streetY, 2))
 			Quit("KW_SelfTest: the boarded-up tavern door can be entered!");
 		// The inn keeps the fourth house's original door (x 77, to 0x641e).
@@ -814,8 +814,8 @@ void KW_SelfTest(void)
 		if (!KW_IsArtPlaced(&kw_tavernBarArt) || !KW_IsArtPlaced(&kw_tavernFurnitureArt) ||
 			!KW_IsArtPlaced(&kw_portraitArt) || KW_IsArtPlaced(&kw_tavernBoardsArt))
 			Quit("KW_SelfTest: after completion the tavern should be open and furnished!");
-		if (!KW_IsArtPlaced(&kw_signOpenArt) || KW_IsArtPlaced(&kw_signClosedArt))
-			Quit("KW_SelfTest: after completion the BAR sign should be clean!");
+		if (!KW_IsArtPlaced(&kw_signArt))
+			Quit("KW_SelfTest: the inn's BAR sign is missing after liberation!");
 		// Its doors lead in and out, and the barmaid is animated.
 		if ((TI_ForeMisc(CA_TileAtPos(streetX, streetY, 1)) & 0x7F) != MISCFLAG_DOOR ||
 			CA_TileAtPos(streetX, streetY, 2) != ((roomX << 8) | roomY) ||

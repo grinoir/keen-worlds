@@ -31,7 +31,7 @@ struct CK_object;
 struct KW_Art;
 // Border Village's tavern art (for /KWTEST): boards on the door (before);
 // the bar with the barmaid, furniture and the creator's portrait (after).
-extern const struct KW_Art kw_innArt, kw_signClosedArt, kw_signOpenArt, kw_tavernBoardsArt, kw_tavernBarArt, kw_tavernFurnitureArt, kw_portraitArt;
+extern const struct KW_Art kw_innArt, kw_signArt, kw_tavernBoardsArt, kw_tavernBarArt, kw_tavernFurnitureArt, kw_portraitArt;
 
 // For /KWTEST: the tavern's door positions and destinations.
 void KW_TavernDoors(int *streetX, int *streetY, int *roomX, int *roomY);

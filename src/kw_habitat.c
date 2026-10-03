@@ -131,15 +131,11 @@ const KW_Art kw_innArt = {
 	KW_INN_ORIGIN_X, KW_INN_ORIGIN_Y, KW_INN_TILES_W, KW_INN_TILES_H, KW_INN_FRAMES,
 	&kw_innSlots[0][0][0], &kw_innTiles[0][0][0][0], -1, 0, NULL,
 };
-// The inn's big BAR sign over the tavern door: crossed out until the village
-// is freed, clean afterwards.
-const KW_Art kw_signClosedArt = {
-	KW_SIGNCLOSED_ORIGIN_X, KW_SIGNCLOSED_ORIGIN_Y, KW_SIGNCLOSED_TILES_W, KW_SIGNCLOSED_TILES_H, 1,
-	&kw_signclosedSlots[0][0][0], &kw_signclosedTiles[0][0][0][0], -1, 0, NULL,
-};
-const KW_Art kw_signOpenArt = {
-	KW_SIGNOPEN_ORIGIN_X, KW_SIGNOPEN_ORIGIN_Y, KW_SIGNOPEN_TILES_W, KW_SIGNOPEN_TILES_H, 1,
-	&kw_signopenSlots[0][0][0], &kw_signopenTiles[0][0][0][0], -1, 0, NULL,
+// The inn's BAR sign, on a wall bracket beside the tavern door (always
+// there; the boards on the door show it is closed).
+const KW_Art kw_signArt = {
+	KW_SIGN_ORIGIN_X, KW_SIGN_ORIGIN_Y, KW_SIGN_TILES_W, KW_SIGN_TILES_H, 1,
+	&kw_signSlots[0][0][0], &kw_signTiles[0][0][0][0], -1, 0, NULL,
 };
 const KW_Art kw_tavernBoardsArt = {
 	KW_BOARDS_ORIGIN_X, KW_BOARDS_ORIGIN_Y, KW_BOARDS_TILES_W, KW_BOARDS_TILES_H, KW_BOARDS_FRAMES,
@@ -178,8 +174,7 @@ static const struct
 } kw_levelArt[] = {
 	{4, 1, &kw_innArt, KW_ALWAYS},          // first: the boards go on top
 	{4, 1, &kw_tavernBoardsArt, KW_BEFORE},
-	{4, 1, &kw_signClosedArt, KW_BEFORE},
-	{4, 1, &kw_signOpenArt, KW_AFTER},
+	{4, 1, &kw_signArt, KW_ALWAYS},
 	{4, 1, &kw_tavernBarArt, KW_AFTER},
 	{4, 1, &kw_tavernFurnitureArt, KW_AFTER},
 	{4, 1, &kw_portraitArt, KW_AFTER},
