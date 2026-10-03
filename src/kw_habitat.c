@@ -63,7 +63,7 @@ typedef struct KW_Choice
 
 typedef struct KW_Resident
 {
-	int episode;
+	int episode; // the world (KW_World)
 	int level;
 	int tileX, tileY;
 	const char *says;                     // The resident's greeting.
@@ -74,7 +74,7 @@ typedef struct KW_Resident
 static const KW_Resident kw_residents[] = {
 	// Keen 4, Border Village: an elder of the Oracle Council has moved into
 	// the first house (its door leads to the small room at the bottom left).
-	{4, 1, 4, 48,
+	{KW_KEEN4, 1, 4, 48,
 		"Welcome back, Keen!\nThe Border Village\nis safe again,\nthanks to you.",
 		{
 			{"How's the village?", "Peaceful at last.\nThe villagers are\nback in their homes."},
@@ -84,7 +84,7 @@ static const KW_Resident kw_residents[] = {
 		KW_ELDER},
 	// Keen 4, Border Village: the barmaid behind the bar in the tavern
 	// (drawn and animated by tools/kw_barhouse.py).
-	{4, 1, KW_TAVERN_BARMAID_X + 1, KW_TAVERN_BARMAID_Y,
+	{KW_KEEN4, 1, KW_TAVERN_BARMAID_X + 1, KW_TAVERN_BARMAID_Y,
 		"Well, if it isn't the\nhero of the\nShadowlands! What\ncan I get you?",
 		{
 			{"A root beer, please.", "Coming right up!\nThe first one's on\nthe house, hon."},
@@ -105,9 +105,11 @@ static const KW_Resident kw_residents[] = {
 
 static bool kw_levelIsPeaceful = false;
 
+// Keen Worlds additions belong to a world (see KW_World), not to every world
+// sharing its engine episode: Keen 7 runs on Keen 4's code but is not Keen 4.
 static int KW_CurrentEpisode(void)
 {
-	return ck_currentEpisode->ep - EP_CK4 + 4;
+	return KW_CurrentWorld();
 }
 
 // A level becomes peaceful once completed, if anyone lives there.
@@ -184,7 +186,7 @@ static const struct
 	const KW_MapEdit *edits;
 	int numEdits;
 } kw_levelEdits[] = {
-	{4, 1, kw_tavernEdits, (int)(sizeof(kw_tavernEdits) / sizeof(kw_tavernEdits[0]))},
+	{KW_KEEN4, 1, kw_tavernEdits, (int)(sizeof(kw_tavernEdits) / sizeof(kw_tavernEdits[0]))},
 };
 
 static const struct
@@ -193,12 +195,12 @@ static const struct
 	const KW_Art *art;
 	KW_When when;
 } kw_levelArt[] = {
-	{4, 1, &kw_innArt, KW_ALWAYS},          // first: the boards go on top
-	{4, 1, &kw_tavernBoardsArt, KW_BEFORE},
-	{4, 1, &kw_signArt, KW_ALWAYS},
-	{4, 1, &kw_tavernBarArt, KW_AFTER},
-	{4, 1, &kw_tavernFurnitureArt, KW_AFTER},
-	{4, 1, &kw_portraitArt, KW_AFTER},
+	{KW_KEEN4, 1, &kw_innArt, KW_ALWAYS},          // first: the boards go on top
+	{KW_KEEN4, 1, &kw_tavernBoardsArt, KW_BEFORE},
+	{KW_KEEN4, 1, &kw_signArt, KW_ALWAYS},
+	{KW_KEEN4, 1, &kw_tavernBarArt, KW_AFTER},
+	{KW_KEEN4, 1, &kw_tavernFurnitureArt, KW_AFTER},
+	{KW_KEEN4, 1, &kw_portraitArt, KW_AFTER},
 };
 
 static bool KW_IsShown(KW_When when, bool completed)
@@ -237,7 +239,7 @@ static const struct
 	int episode, level;
 	int tileX, tileY; // as a Keen spawn marker: the row above the floor
 } kw_revisitStarts[] = {
-	{4, 1, 3, 16}, // Border Village: by the sign at the far left
+	{KW_KEEN4, 1, 3, 16}, // Border Village: by the sign at the far left
 };
 
 static void KW_PlaceRevisitStart(void)

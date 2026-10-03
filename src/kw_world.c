@@ -34,35 +34,26 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 
 extern const char *ck_episodeFile;
 
-// What each world remembers while Keen is somewhere else. Everything else in
-// ck_gameState (score, lives, ammo and all items, ck_gameState.ep) travels
-// with Keen (decision 12).
-typedef struct KW_WorldState
+// ---- The world registry ----
+
+typedef struct KW_WorldDef
 {
-	bool visited;
-	uint16_t mapPosX;
-	uint16_t mapPosY;
-	uint16_t levelsDone[25];
-	bool completed; // The world's ending has been seen.
-} KW_WorldState;
+	const char *id;          // short id: save files, /WORLD
+	const char *name;        // shown in the Megarocket menu
+	int episode;             // the engine episode it runs on (4, 5, 6)
+	const char *dir;         // own data folder under the game path, or NULL
+	const char *episodeFile; // variable file, or NULL for the episode's own
+} KW_WorldDef;
 
-static KW_WorldState kw_worlds[3];
-
-int kw_pendingWorld = 0;
-static bool kw_placeArrivalAtShip = false;
-
-// Existing BWB Megarocket levels. Keen 5 has no equivalent level: its ship
-// remains docked on the world map.
-#define KW_CK4_SHIP_LEVEL 18
-#define KW_CK6_SHIP_LEVEL 17
-
-// Where cross-world arrivals stand in those levels: at the ship's nose. The
-// hull at Keen's height is drawn in front of sprites (misc bit 0x80), so
-// standing under the ship would hide him; this is the closest visible spot.
-#define KW_CK4_ARRIVAL_X 3
-#define KW_CK4_ARRIVAL_Y 12
-#define KW_CK6_ARRIVAL_X 4
-#define KW_CK6_ARRIVAL_Y 22
+static const KW_WorldDef kw_worldDefs[KW_NUM_WORLDS] = {
+	{"keen4", "Gnosticus IV", 4, NULL, NULL},
+	{"keen5", "The Omegamatic", 5, NULL, NULL},
+	{"keen6", "Fribbulus Xax", 6, NULL, NULL},
+	// The Keys of Krodacia ("Keen 7", Ceilick), as converted for Omnispeak
+	// in the Omnispeak modding kit (data/mod/keen7): the player copies that
+	// folder to play/mods/keen7.
+	{"keen7", "Krodacia", 4, "mods/keen7", "MOD.CK4"},
+};
 
 static CK_EpisodeDef *KW_EpisodeDef(int episode)
 {
@@ -85,9 +76,122 @@ static CK_EpisodeDef *KW_EpisodeDef(int episode)
 	}
 }
 
-static KW_WorldState *KW_StateFor(CK_EpisodeDef *ep)
+static int kw_currentWorld = KW_KEEN4;
+
+int KW_CurrentWorld(void)
 {
-	return &kw_worlds[ep->ep - EP_CK4];
+	return kw_currentWorld;
+}
+
+const char *KW_WorldName(int world)
+{
+	return (world >= 0 && world < KW_NUM_WORLDS) ? kw_worldDefs[world].name : "";
+}
+
+const char *KW_WorldId(int world)
+{
+	return (world >= 0 && world < KW_NUM_WORLDS) ? kw_worldDefs[world].id : "";
+}
+
+// The world's data folder (under the game path), or NULL.
+static const char *KW_WorldPath(int world)
+{
+	static char path[KW_NUM_WORLDS][256];
+	const KW_WorldDef *def = &kw_worldDefs[world];
+	if (!def->dir)
+		return NULL;
+	snprintf(path[world], sizeof(path[world]), "%s/%s", fs_keenPath, def->dir);
+	return path[world];
+}
+
+bool KW_IsWorldPresent(int world)
+{
+	if (world < 0 || world >= KW_NUM_WORLDS)
+		return false;
+	const KW_WorldDef *def = &kw_worldDefs[world];
+	CK_EpisodeDef *ep = KW_EpisodeDef(def->episode);
+	if (!ep)
+		return false;
+	if (!def->dir)
+		return ep->isPresent();
+	// A fan game: its folder must hold its variable file (its levels,
+	// graphics and sounds come with it; Omnispeak's support files for the
+	// base episode come from the game path).
+	FS_File f = FSL_OpenFileInDirCaseInsensitive(KW_WorldPath(world), def->episodeFile, false);
+	if (!FS_IsFileValid(f))
+		return false;
+	FS_CloseFile(f);
+	return FS_IsOmniFilePresent(ep->episodeFile);
+}
+
+// What each world remembers while Keen is somewhere else: where he was on
+// its map, which levels are done, whether its ending was seen, and its story
+// items (wetsuit, keycard, sandwich...). The items belong to their world:
+// worlds sharing an engine episode (Keen 4 and Keen 7) use the same item
+// fields, so sharing them would mix up their stories. Score, lives and ammo
+// travel with Keen.
+#define KW_NUM_ITEMS 9
+
+typedef struct KW_WorldState
+{
+	bool visited;
+	uint16_t mapPosX;
+	uint16_t mapPosY;
+	uint16_t levelsDone[25];
+	bool completed; // The world's ending has been seen.
+	int16_t items[KW_NUM_ITEMS];
+} KW_WorldState;
+
+static KW_WorldState kw_worlds[KW_NUM_WORLDS];
+
+int kw_pendingWorld = KW_NO_WORLD;
+static bool kw_placeArrivalAtShip = false;
+
+// Existing BWB Megarocket levels. Keen 5 has no equivalent level: its ship
+// remains docked on the world map.
+#define KW_CK4_SHIP_LEVEL 18
+#define KW_CK6_SHIP_LEVEL 17
+
+// Where cross-world arrivals stand in those levels: at the ship's nose. The
+// hull at Keen's height is drawn in front of sprites (misc bit 0x80), so
+// standing under the ship would hide him; this is the closest visible spot.
+#define KW_CK4_ARRIVAL_X 3
+#define KW_CK4_ARRIVAL_Y 12
+#define KW_CK6_ARRIVAL_X 4
+#define KW_CK6_ARRIVAL_Y 22
+
+// Every episode item field, in a fixed order.
+static int16_t *KW_ItemField(int i)
+{
+	int16_t *fields[KW_NUM_ITEMS] = {
+		&ck_gameState.ep.ck4.wetsuit, &ck_gameState.ep.ck4.membersRescued,
+		&ck_gameState.ep.ck5.securityCard, &ck_gameState.ep.ck5.word_4729C, &ck_gameState.ep.ck5.fusesRemaining,
+		&ck_gameState.ep.ck6.sandwich, &ck_gameState.ep.ck6.rope, &ck_gameState.ep.ck6.passcard, &ck_gameState.ep.ck6.inRocket,
+	};
+	return fields[i];
+}
+
+// The current world's live state (in ck_gameState) as a world record.
+static KW_WorldState KW_LiveState(void)
+{
+	KW_WorldState w = kw_worlds[kw_currentWorld];
+	w.visited = true;
+	// mapPos is always a world-map position (inside a level: its entrance).
+	w.mapPosX = ck_gameState.mapPosX;
+	w.mapPosY = ck_gameState.mapPosY;
+	memcpy(w.levelsDone, ck_gameState.levelsDone, sizeof(w.levelsDone));
+	for (int i = 0; i < KW_NUM_ITEMS; ++i)
+		w.items[i] = *KW_ItemField(i);
+	return w;
+}
+
+static void KW_LoadState(const KW_WorldState *w)
+{
+	ck_gameState.mapPosX = w->mapPosX;
+	ck_gameState.mapPosY = w->mapPosY;
+	memcpy(ck_gameState.levelsDone, w->levelsDone, sizeof(w->levelsDone));
+	for (int i = 0; i < KW_NUM_ITEMS; ++i)
+		*KW_ItemField(i) = w->items[i];
 }
 
 void KW_AfterWorldEnding(void)
@@ -96,47 +200,41 @@ void KW_AfterWorldEnding(void)
 	// pops it: the original quit to the title afterwards. Pop it here.
 	CA_DownLevel();
 
-	kw_worlds[ck_currentEpisode->ep - EP_CK4].completed = true;
+	kw_worlds[kw_currentWorld].completed = true;
 	if (!ck_gameState.levelsDone[ca_mapOn])
 		ck_gameState.levelsDone[ca_mapOn] = 1;
 	ck_gameState.currentLevel = 0;
 }
 
-bool KW_IsWorldCompleted(int episode)
+bool KW_IsWorldCompleted(int world)
 {
-	if (episode < 4 || episode > 6)
+	if (world < 0 || world >= KW_NUM_WORLDS)
 		return false;
-	return kw_worlds[episode - 4].completed;
+	return kw_worlds[world].completed;
 }
 
 // ---- Saved games ----
+// Version 2: the current world's id, then each world's record by id (so a
+// save stays valid when fan games are added or removed). Version 1 (Keen
+// 4-6 only, items shared) is still read.
 
 #define KW_SAVE_BLOCK_ID "KWLD"
-#define KW_SAVE_VERSION 1
-
-typedef struct KW_SaveBlock
-{
-	int16_t episode;
-	KW_WorldState worlds[3];
-	int16_t items[9];
-} KW_SaveBlock;
+#define KW_SAVE_VERSION 2
+#define KW_SAVE_ID_LEN 8
 
 const char *kw_loadingFileName = NULL;
-static int kw_deferredEpisode = 0;
+static int kw_deferredWorld = KW_NO_WORLD;
 static char kw_deferredFile[FS_MAX_FILENAME_LEN];
 
-// Every episode item, in a fixed order, so the block holds all of them.
-static int16_t *KW_ItemField(int i)
+static int KW_WorldById(const char *id)
 {
-	int16_t *fields[] = {
-		&ck_gameState.ep.ck4.wetsuit, &ck_gameState.ep.ck4.membersRescued,
-		&ck_gameState.ep.ck5.securityCard, &ck_gameState.ep.ck5.word_4729C, &ck_gameState.ep.ck5.fusesRemaining,
-		&ck_gameState.ep.ck6.sandwich, &ck_gameState.ep.ck6.rope, &ck_gameState.ep.ck6.passcard, &ck_gameState.ep.ck6.inRocket,
-	};
-	return fields[i];
+	for (int w = 0; w < KW_NUM_WORLDS; ++w)
+		if (!strncmp(kw_worldDefs[w].id, id, KW_SAVE_ID_LEN))
+			return w;
+	return KW_NO_WORLD;
 }
 
-static bool KW_WriteWorld(FS_File fp, KW_WorldState *w)
+static bool KW_WriteWorld(FS_File fp, const KW_WorldState *w)
 {
 	int16_t visited = w->visited, completed = w->completed;
 	return FS_WriteInt16LE(&visited, 1, fp) == 1 &&
@@ -160,74 +258,114 @@ static bool KW_ReadWorld(FS_File fp, KW_WorldState *w)
 	return true;
 }
 
+static bool KW_WriteId(FS_File fp, const char *id)
+{
+	char buf[KW_SAVE_ID_LEN] = {0};
+	strncpy(buf, id, KW_SAVE_ID_LEN);
+	return FS_Write(buf, KW_SAVE_ID_LEN, 1, fp) == 1;
+}
+
 bool KW_WriteSaveBlock(FS_File fp)
 {
-	int16_t version = KW_SAVE_VERSION, episode = ck_currentEpisode->ep - EP_CK4 + 4;
-
-	// The current world's live progress is in ck_gameState, not kw_worlds.
-	KW_WorldState current = kw_worlds[episode - 4];
-	current.visited = true;
-	current.mapPosX = ck_gameState.mapPosX;
-	current.mapPosY = ck_gameState.mapPosY;
-	memcpy(current.levelsDone, ck_gameState.levelsDone, sizeof(current.levelsDone));
-
+	int16_t version = KW_SAVE_VERSION, count = KW_NUM_WORLDS;
 	if (FS_Write(KW_SAVE_BLOCK_ID, 4, 1, fp) != 1 ||
 		FS_WriteInt16LE(&version, 1, fp) != 1 ||
-		FS_WriteInt16LE(&episode, 1, fp) != 1)
+		!KW_WriteId(fp, kw_worldDefs[kw_currentWorld].id) ||
+		FS_WriteInt16LE(&count, 1, fp) != 1)
 		return false;
-	for (int i = 0; i < 3; ++i)
-		if (!KW_WriteWorld(fp, i == episode - 4 ? &current : &kw_worlds[i]))
+	for (int w = 0; w < KW_NUM_WORLDS; ++w)
+	{
+		KW_WorldState state = (w == kw_currentWorld) ? KW_LiveState() : kw_worlds[w];
+		if (!KW_WriteId(fp, kw_worldDefs[w].id) || !KW_WriteWorld(fp, &state) ||
+			FS_WriteInt16LE(state.items, KW_NUM_ITEMS, fp) != KW_NUM_ITEMS)
 			return false;
-	for (int i = 0; i < 9; ++i)
-		if (FS_WriteInt16LE(KW_ItemField(i), 1, fp) != 1)
-			return false;
+	}
 	return true;
 }
 
-int KW_ReadSaveBlock(FS_File fp, bool *deferred)
+bool KW_ReadSaveBlock(FS_File fp, bool *deferred)
 {
 	char id[4];
 	int16_t version;
-	KW_SaveBlock block;
+	KW_WorldState worlds[KW_NUM_WORLDS];
+	int world = KW_NO_WORLD;
+	memset(worlds, 0, sizeof(worlds));
 	*deferred = false;
 
 	if (FS_Read(id, 4, 1, fp) != 1 || memcmp(id, KW_SAVE_BLOCK_ID, 4) ||
-		FS_ReadInt16LE(&version, 1, fp) != 1 || version != KW_SAVE_VERSION ||
-		FS_ReadInt16LE(&block.episode, 1, fp) != 1 || !KW_EpisodeDef(block.episode))
-		return 0;
-	for (int i = 0; i < 3; ++i)
-		if (!KW_ReadWorld(fp, &block.worlds[i]))
-			return 0;
-	if (FS_ReadInt16LE(block.items, 9, fp) != 9)
-		return 0;
+		FS_ReadInt16LE(&version, 1, fp) != 1)
+		return false;
 
-	if (KW_EpisodeDef(block.episode) != ck_currentEpisode)
+	if (version == 1)
+	{
+		// Keen 4-6 only; items were shared, so every world gets the set.
+		int16_t episode, items[KW_NUM_ITEMS];
+		if (FS_ReadInt16LE(&episode, 1, fp) != 1 || episode < 4 || episode > 6)
+			return false;
+		for (int w = 0; w < 3; ++w)
+			if (!KW_ReadWorld(fp, &worlds[w]))
+				return false;
+		if (FS_ReadInt16LE(items, KW_NUM_ITEMS, fp) != KW_NUM_ITEMS)
+			return false;
+		for (int w = 0; w < 3; ++w)
+			memcpy(worlds[w].items, items, sizeof(items));
+		world = KW_KEEN4 + (episode - 4);
+	}
+	else if (version == KW_SAVE_VERSION)
+	{
+		char wid[KW_SAVE_ID_LEN];
+		int16_t count;
+		if (FS_Read(wid, KW_SAVE_ID_LEN, 1, fp) != 1 || FS_ReadInt16LE(&count, 1, fp) != 1)
+			return false;
+		world = KW_WorldById(wid);
+		for (int i = 0; i < count; ++i)
+		{
+			KW_WorldState state;
+			memset(&state, 0, sizeof(state));
+			if (FS_Read(wid, KW_SAVE_ID_LEN, 1, fp) != 1 || !KW_ReadWorld(fp, &state) ||
+				FS_ReadInt16LE(state.items, KW_NUM_ITEMS, fp) != KW_NUM_ITEMS)
+				return false;
+			int w = KW_WorldById(wid);
+			if (w != KW_NO_WORLD)
+				worlds[w] = state;   // worlds that are no longer known are dropped
+		}
+	}
+	else
+		return false;
+
+	// The save's world must be installed.
+	if (world == KW_NO_WORLD || !KW_IsWorldPresent(world))
+		return false;
+
+	if (world != kw_currentWorld)
 	{
 		// Finish after the menu has closed, in the save's own world.
 		if (!kw_loadingFileName)
-			return 0;
+			return false;
 		CK_Cross_strscpy(kw_deferredFile, kw_loadingFileName, sizeof(kw_deferredFile));
-		kw_deferredEpisode = block.episode;
+		kw_deferredWorld = world;
 		*deferred = true;
-		return block.episode;
+		return true;
 	}
 
-	memcpy(kw_worlds, block.worlds, sizeof(kw_worlds));
-	for (int i = 0; i < 9; ++i)
-		*KW_ItemField(i) = block.items[i];
-	kw_pendingWorld = 0;
+	memcpy(kw_worlds, worlds, sizeof(kw_worlds));
+	// The current world's items come from the record; the rest of its state
+	// (map position, levels done) from the normal save that follows.
+	for (int i = 0; i < KW_NUM_ITEMS; ++i)
+		*KW_ItemField(i) = kw_worlds[world].items[i];
+	kw_pendingWorld = KW_NO_WORLD;
 	kw_placeArrivalAtShip = false;
-	return block.episode;
+	return true;
 }
 
 bool KW_FinishDeferredLoad(void)
 {
-	if (!kw_deferredEpisode)
+	if (kw_deferredWorld == KW_NO_WORLD)
 		return false;
-	int episode = kw_deferredEpisode;
-	kw_deferredEpisode = 0;
+	int world = kw_deferredWorld;
+	kw_deferredWorld = KW_NO_WORLD;
 
-	KW_SwitchWorld(episode);
+	KW_SwitchWorld(world);
 	kw_placeArrivalAtShip = false; // The save says where Keen is.
 
 	// Same layout as US_LoadMain(): the slot header, then the game.
@@ -251,18 +389,31 @@ bool KW_FinishDeferredLoad(void)
 
 // ---- New games ----
 
-static int kw_startWorld = 4;
+static int kw_startWorld = KW_KEEN4;
 
 void KW_SetStartWorld(void)
 {
-	kw_startWorld = ck_currentEpisode->ep - EP_CK4 + 4;
+	// The running episode is one of the original worlds.
+	kw_currentWorld = KW_KEEN4 + (ck_currentEpisode->ep - EP_CK4);
+	kw_startWorld = kw_currentWorld;
+
+	// /WORLD <id> starts new games in another world (e.g. a fan game).
+	for (int i = 1; i < us_argc - 1; ++i)
+	{
+		if (CK_Cross_strcasecmp(us_argv[i], "/WORLD"))
+			continue;
+		int w = KW_WorldById(us_argv[i + 1]);
+		if (w == KW_NO_WORLD || !KW_IsWorldPresent(w))
+			QuitF("World \"%s\" is not installed.", us_argv[i + 1]);
+		kw_startWorld = w;
+	}
 }
 
 void KW_ReturnToStartWorld(void)
 {
 	// CK_NewGame() has already cleared Keen's progress (and /TEDLEVEL may
 	// have chosen a level since), so only the world needs changing.
-	if (KW_EpisodeDef(kw_startWorld) != ck_currentEpisode)
+	if (kw_startWorld != kw_currentWorld)
 	{
 		KW_SwitchWorld(kw_startWorld);
 		ck_gameState.currentLevel = 0; // the map, not the ship arrival
@@ -274,49 +425,46 @@ void KW_ReturnToStartWorld(void)
 void KW_ResetWorlds(void)
 {
 	memset(kw_worlds, 0, sizeof(kw_worlds));
-	kw_pendingWorld = 0;
+	kw_pendingWorld = KW_NO_WORLD;
 	kw_placeArrivalAtShip = false;
 }
 
-void KW_RequestWorld(int episode)
+void KW_RequestWorld(int world)
 {
-	CK_EpisodeDef *target = KW_EpisodeDef(episode);
-	if (!target || target == ck_currentEpisode || !target->isPresent())
+	if (world == kw_currentWorld || !KW_IsWorldPresent(world))
 		return;
 
-	kw_pendingWorld = episode;
+	kw_pendingWorld = world;
 	ck_gameState.levelState = LS_SwitchWorld;
 }
 
-void KW_SwitchWorld(int episode)
+void KW_SwitchWorld(int world)
 {
-	CK_EpisodeDef *target = KW_EpisodeDef(episode);
-	kw_pendingWorld = 0;
-	if (!target || target == ck_currentEpisode)
+	kw_pendingWorld = KW_NO_WORLD;
+	if (world < 0 || world >= KW_NUM_WORLDS || world == kw_currentWorld)
+		return;
+	const KW_WorldDef *def = &kw_worldDefs[world];
+	CK_EpisodeDef *target = KW_EpisodeDef(def->episode);
+	if (!target)
 		return;
 
-	// Remember where Keen was in the world he is leaving. While he is inside a
-	// ship level, mapPos is already the world-map position of that level's
-	// entrance; do not replace it with an in-level coordinate.
-	KW_WorldState *from = KW_StateFor(ck_currentEpisode);
-	from->visited = true;
-	if (ca_mapOn == 0)
-	{
-		from->mapPosX = ck_gameState.mapPosX;
-		from->mapPosY = ck_gameState.mapPosY;
-	}
-	memcpy(from->levelsDone, ck_gameState.levelsDone, sizeof(from->levelsDone));
+	// Remember the world Keen is leaving.
+	kw_worlds[kw_currentWorld] = KW_LiveState();
 
 	// Nothing may keep playing from the old world's audio data.
 	SD_MusicOff();
 	SD_StopSound();
 
-	// Swap the episode: data files, then variables, then data files again
-	// (their names come from the variables).
+	// Swap the world: data files, then variables, then data files again
+	// (their names come from the variables). A fan game's own folder is
+	// searched first, so its levels, graphics and variable files replace the
+	// base episode's.
 	CA_UnloadEpisodeData();
 	CK_VAR_Reset();
+	fs_worldPath = KW_WorldPath(world);
 	ck_currentEpisode = target;
-	ck_episodeFile = target->episodeFile;
+	ck_episodeFile = def->episodeFile ? def->episodeFile : target->episodeFile;
+	kw_currentWorld = world;
 	CK_VAR_LoadVars(ck_episodeFile);
 	CA_Startup();
 	CA_InitLumps();
@@ -331,28 +479,18 @@ void KW_SwitchWorld(int episode)
 
 	// Restore the destination world, or start it fresh. A map position of 0
 	// makes the map put Keen at the world's own starting point.
-	KW_WorldState *to = KW_StateFor(target);
-	if (to->visited)
-	{
-		ck_gameState.mapPosX = to->mapPosX;
-		ck_gameState.mapPosY = to->mapPosY;
-		memcpy(ck_gameState.levelsDone, to->levelsDone, sizeof(to->levelsDone));
-	}
-	else
-	{
-		ck_gameState.mapPosX = 0;
-		ck_gameState.mapPosY = 0;
-		memset(ck_gameState.levelsDone, 0, sizeof(ck_gameState.levelsDone));
-	}
+	KW_WorldState fresh;
+	memset(&fresh, 0, sizeof(fresh));
+	KW_LoadState(kw_worlds[world].visited ? &kw_worlds[world] : &fresh);
 
-	// Arrive by boarding the destination's ship. Keen 4 and 6 already have
-	// playable Megarocket levels; Keen 5 arrives at its docked ship on map 0.
-	if (target->ep == EP_CK4)
+	// Arrive by boarding the destination's ship. Keen 4 and 6 have playable
+	// Megarocket levels; Keen 5 and the fan games arrive on their world map.
+	if (world == KW_KEEN4)
 	{
 		ck_gameState.currentLevel = KW_CK4_SHIP_LEVEL;
 		kw_placeArrivalAtShip = true;
 	}
-	else if (target->ep == EP_CK6)
+	else if (world == KW_KEEN6)
 	{
 		ck_gameState.currentLevel = KW_CK6_SHIP_LEVEL;
 		kw_placeArrivalAtShip = true;
@@ -372,16 +510,6 @@ static bool kw_launchRequested = false;
 // How far (in tiles) from the launch spot Keen may stand to board the rocket.
 #define KW_LAUNCH_RANGE 1
 
-static const struct
-{
-	int episode;
-	const char *name;
-} kw_destinations[] = {
-	{4, "Gnosticus IV"},
-	{5, "The Omegamatic"},
-	{6, "Fribbulus Xax"},
-};
-#define KW_NUM_DESTINATIONS ((int)(sizeof(kw_destinations) / sizeof(kw_destinations[0])))
 
 // ---- Keen 5 boarding gate ----
 // Art drawn by tools/kw_gate_art.py, placed by kw_art.c. It covers map tiles
@@ -411,7 +539,7 @@ static void KW_BuildKeen5Gate(void)
 
 void KW_SetLaunchSpot(int tileX, int tileY)
 {
-	if (ck_currentEpisode->ep == EP_CK5)
+	if (kw_currentWorld == KW_KEEN5)
 	{
 		// Replace Keen 5's unused yellow map border with a sparse starfield
 		// tile already used beside the dock. This affects only the loaded map.
@@ -428,10 +556,16 @@ void KW_SetLaunchSpot(int tileX, int tileY)
 		kw_launchSpotX = tileX + 3;
 		kw_launchSpotY = tileY;
 	}
-	else
+	else if (kw_currentWorld == KW_KEEN4 || kw_currentWorld == KW_KEEN6)
 	{
 		// Keen 4 and 6 use their playable Megarocket levels, not map tiles.
 		kw_launchSpotX = kw_launchSpotY = -1;
+	}
+	else
+	{
+		// Fan games: the ship waits where Keen first lands on the world map.
+		kw_launchSpotX = tileX;
+		kw_launchSpotY = tileY;
 	}
 }
 
@@ -441,12 +575,12 @@ void KW_PlaceArrivalAtShip(void)
 		return;
 
 	int tileX, tileY;
-	if (ck_currentEpisode->ep == EP_CK4 && ca_mapOn == KW_CK4_SHIP_LEVEL)
+	if (kw_currentWorld == KW_KEEN4 && ca_mapOn == KW_CK4_SHIP_LEVEL)
 	{
 		tileX = KW_CK4_ARRIVAL_X;
 		tileY = KW_CK4_ARRIVAL_Y;
 	}
-	else if (ck_currentEpisode->ep == EP_CK6 && ca_mapOn == KW_CK6_SHIP_LEVEL)
+	else if (kw_currentWorld == KW_KEEN6 && ca_mapOn == KW_CK6_SHIP_LEVEL)
 	{
 		tileX = KW_CK6_ARRIVAL_X;
 		tileY = KW_CK6_ARRIVAL_Y;
@@ -470,7 +604,7 @@ void KW_PlaceArrivalAtShip(void)
 
 void KW_ConstrainKeen5Dock(CK_object *mapKeen)
 {
-	if (ck_currentEpisode->ep != EP_CK5 || ca_mapOn != 0)
+	if (kw_currentWorld != KW_KEEN5 || ca_mapOn != 0)
 		return;
 
 	int x = mapKeen->posX >> 8;
@@ -507,8 +641,8 @@ void KW_WaitForButtonsUp(void)
 
 static bool KW_IsShipLevel(void)
 {
-	return (ck_currentEpisode->ep == EP_CK4 && ca_mapOn == KW_CK4_SHIP_LEVEL) ||
-		(ck_currentEpisode->ep == EP_CK6 && ca_mapOn == KW_CK6_SHIP_LEVEL);
+	return (kw_currentWorld == KW_KEEN4 && ca_mapOn == KW_CK4_SHIP_LEVEL) ||
+		(kw_currentWorld == KW_KEEN6 && ca_mapOn == KW_CK6_SHIP_LEVEL);
 }
 
 static bool KW_IsAtShipHatch(void)
@@ -518,28 +652,26 @@ static bool KW_IsAtShipHatch(void)
 
 	int x = ck_keenObj->clipRects.tileXmid;
 	int y = (ck_keenObj->clipRects.tileY1 + ck_keenObj->clipRects.tileY2) / 2;
-	if (ck_currentEpisode->ep == EP_CK4)
+	if (kw_currentWorld == KW_KEEN4)
 		return x >= 3 && x <= 19 && y >= 9 && y <= 14;
-	if (ck_currentEpisode->ep == EP_CK6)
+	if (kw_currentWorld == KW_KEEN6)
 		return x >= 3 && x <= 18 && y >= 18 && y <= 23;
 	return false;
 }
 
-// Draws the destination menu and returns the chosen episode, or 0 to stay.
+// Draws the destination menu and returns the chosen world, or KW_NO_WORLD to
+// stay. Only installed worlds are listed.
 static int KW_TravelMenu(void)
 {
-	int lineY[KW_NUM_DESTINATIONS];
-	int available[KW_NUM_DESTINATIONS];
+	int lineY[KW_NUM_WORLDS];
+	int available[KW_NUM_WORLDS];
 	int numAvailable = 0;
 
-	for (int i = 0; i < KW_NUM_DESTINATIONS; ++i)
-	{
-		CK_EpisodeDef *def = KW_EpisodeDef(kw_destinations[i].episode);
-		if (def && def != ck_currentEpisode && def->isPresent())
-			available[numAvailable++] = i;
-	}
+	for (int w = 0; w < KW_NUM_WORLDS; ++w)
+		if (w != kw_currentWorld && KW_IsWorldPresent(w))
+			available[numAvailable++] = w;
 	if (!numAvailable)
-		return 0;
+		return KW_NO_WORLD;
 
 	SD_PlaySound(CK_SOUNDNUM(SOUND_UNKNOWN12));
 	VL_FixRefreshBuffer();
@@ -551,14 +683,14 @@ static int KW_TravelMenu(void)
 	for (int i = 0; i < numAvailable; ++i)
 	{
 		lineY[i] = US_GetPrintY() - 2;
-		US_CPrint(kw_destinations[available[i]].name);
+		US_CPrint(kw_worldDefs[available[i]].name);
 		US_SetPrintY(US_GetPrintY() + 4);
 	}
 
 	KW_WaitForButtonsUp();
 
 	// Same blinking selection box as the "Try Again" menu.
-	int sel = 0, result = 0;
+	int sel = 0, result = KW_NO_WORLD;
 	int x1 = US_GetWindowX() + 4, x2 = US_GetWindowX() + US_GetWindowW() - 4;
 	while (true)
 	{
@@ -586,7 +718,7 @@ static int KW_TravelMenu(void)
 			break;
 		if (ck_inputFrame.jump || ck_inputFrame.pogo || scan == IN_SC_Enter || scan == IN_SC_Space)
 		{
-			result = kw_destinations[available[sel]].episode;
+			result = available[sel];
 			break;
 		}
 		if ((ck_inputFrame.yDirection == -1 || scan == IN_SC_UpArrow) && sel > 0)
@@ -625,20 +757,22 @@ void KW_PlayLoopHook(void)
 		int destination = KW_TravelMenu();
 		RF_ForceRefresh();
 		SD_SetLastTimeCount(SD_GetTimeCount());
-		if (destination)
+		if (destination != KW_NO_WORLD)
 			KW_RequestWorld(destination);
 		return;
 	}
 
-	// Debug shortcut: hold W and press 4, 5 or 6.
+	// Debug shortcut: hold W and press 4, 5, 6 or 7.
 	if (!IN_GetKeyState(IN_SC_W))
 		return;
 	if (IN_GetKeyState(IN_SC_Four))
-		KW_RequestWorld(4);
+		KW_RequestWorld(KW_KEEN4);
 	else if (IN_GetKeyState(IN_SC_Five))
-		KW_RequestWorld(5);
+		KW_RequestWorld(KW_KEEN5);
 	else if (IN_GetKeyState(IN_SC_Six))
-		KW_RequestWorld(6);
+		KW_RequestWorld(KW_KEEN6);
+	else if (IN_GetKeyState(IN_SC_Seven))
+		KW_RequestWorld(KW_KEEN7);
 }
 
 // Developer self-test (/KWTEST): hop between all worlds several times, loading
@@ -646,31 +780,61 @@ void KW_PlayLoopHook(void)
 // so leaks show up as steady growth.
 void KW_SelfTest(void)
 {
-	static const int route[] = {5, 6, 4, 6, 5, 4};
+	static const int route[] = {KW_KEEN5, KW_KEEN6, KW_KEEN4, KW_KEEN7, KW_KEEN6, KW_KEEN5, KW_KEEN7, KW_KEEN4};
+	bool haveKeen7 = KW_IsWorldPresent(KW_KEEN7);
 	CK_NewGame();
 	// AdLib effects sit after the PC ones, so this mode catches stale offsets.
 	SD_SetSoundMode(sdm_AdLib);
 	CA_LoadAllSounds();
 	ck_gameState.difficulty = D_Normal;
 
-	// Items from two different games must travel with Keen.
+	// Story items belong to their world: Keen 4's wetsuit must stay in Keen 4
+	// (Keen 7 runs on the same episode code and item fields).
+	if (KW_CurrentWorld() != KW_KEEN4)
+		Quit("KW_SelfTest: run it with /EPISODE 4");
 	ck_gameState.ep.ck4.wetsuit = 1;
-	ck_gameState.ep.ck6.sandwich = 1;
+	ck_gameState.keenScore = 777; // score travels with Keen
 
 	for (int round = 0; round < 4; ++round)
 	{
 		for (int i = 0; i < (int)(sizeof(route) / sizeof(route[0])); ++i)
 		{
+			if (route[i] == KW_KEEN7 && !haveKeen7)
+				continue;
 			KW_SwitchWorld(route[i]);
-			if ((route[i] == EP_CK4 && ck_gameState.currentLevel != KW_CK4_SHIP_LEVEL) ||
-				(route[i] == EP_CK5 && ck_gameState.currentLevel != 0) ||
-				(route[i] == EP_CK6 && ck_gameState.currentLevel != KW_CK6_SHIP_LEVEL))
+			if (KW_CurrentWorld() != route[i] || ck_gameState.keenScore != 777)
+				Quit("KW_SelfTest: didn't arrive in the requested world (or lost the score)!");
+			if ((route[i] == KW_KEEN4 && ck_gameState.currentLevel != KW_CK4_SHIP_LEVEL) ||
+				(route[i] == KW_KEEN5 && ck_gameState.currentLevel != 0) ||
+				(route[i] == KW_KEEN6 && ck_gameState.currentLevel != KW_CK6_SHIP_LEVEL) ||
+				(route[i] == KW_KEEN7 && ck_gameState.currentLevel != 0))
 				Quit("KW_SelfTest: wrong arrival location!");
 			CK_LoadLevel(true, true);
-			if ((route[i] == EP_CK4 && (ck_keenObj->posX != RF_TileToUnit(KW_CK4_ARRIVAL_X) || ck_keenObj->posY != RF_TileToUnit(KW_CK4_ARRIVAL_Y) - 241)) ||
-				(route[i] == EP_CK6 && (ck_keenObj->posX != RF_TileToUnit(KW_CK6_ARRIVAL_X) || ck_keenObj->posY != RF_TileToUnit(KW_CK6_ARRIVAL_Y) - 241)))
+			if ((route[i] == KW_KEEN4 && (ck_keenObj->posX != RF_TileToUnit(KW_CK4_ARRIVAL_X) || ck_keenObj->posY != RF_TileToUnit(KW_CK4_ARRIVAL_Y) - 241)) ||
+				(route[i] == KW_KEEN6 && (ck_keenObj->posX != RF_TileToUnit(KW_CK6_ARRIVAL_X) || ck_keenObj->posY != RF_TileToUnit(KW_CK6_ARRIVAL_Y) - 241)))
 				Quit("KW_SelfTest: wrong ship arrival spawn!");
-			if (route[i] == EP_CK5)
+			if ((route[i] == KW_KEEN4) != (ck_gameState.ep.ck4.wetsuit == 1))
+				Quit("KW_SelfTest: Keen 4's wetsuit leaked into another world (or was lost)!");
+			if (route[i] == KW_KEEN7)
+			{
+				// Keen 7 is a world of its own: none of Keen 4's or Keen 5's
+				// Keen Worlds additions apply, and Keen boards on its map.
+				if (KW_IsArtPlaced(&kw_gateArt) || kw_launchSpotX < 0)
+					Quit("KW_SelfTest: Keen 7's map got another world's additions (or has no launch spot)!");
+				for (int lv = 0; lv <= 18; ++lv)
+				{
+					ck_gameState.currentLevel = lv;
+					ck_gameState.levelsDone[lv] = 1; // even "completed", nothing of Keen 4's appears
+					CK_LoadLevel(true, true);
+					int hostiles, residents;
+					CK_object *first;
+					KW_CountLevelPeople(&hostiles, &residents, &first);
+					if (residents || KW_IsLevelPeaceful() || KW_IsArtCellPlaced(&kw_innArt, 77, 15))
+						Quit("KW_SelfTest: Keen 4's residents or tavern appeared in Keen 7!");
+				}
+				memset(ck_gameState.levelsDone, 0, sizeof(ck_gameState.levelsDone));
+			}
+			if (route[i] == KW_KEEN5)
 			{
 				// The boarding gate must be on the map, drawable and walkable.
 				if (!KW_IsArtPlaced(&kw_gateArt))
@@ -696,8 +860,8 @@ void KW_SelfTest(void)
 			for (int sound = 0; sound < ca_audInfoE.numSounds; ++sound)
 				SD_PlaySound((soundnames)sound);
 			SD_StopSound();
-			CK_Cross_LogMessage(CK_LOG_MSG_NORMAL, "KW_SelfTest: round %d, Keen %d, map %d, %d bytes in %d blocks\n",
-				round, route[i], ca_mapOn, MM_UsedMemory(), MM_UsedBlocks());
+			CK_Cross_LogMessage(CK_LOG_MSG_NORMAL, "KW_SelfTest: round %d, %s, map %d, %d bytes in %d blocks\n",
+				round, KW_WorldId(route[i]), ca_mapOn, MM_UsedMemory(), MM_UsedBlocks());
 		}
 	}
 
@@ -710,7 +874,7 @@ void KW_SelfTest(void)
 		CA_UpLevel(); // as help_endgame() does
 		KW_AfterWorldEnding();
 		if (ca_levelnum != levelBefore || ck_gameState.currentLevel != 0 ||
-			!KW_IsWorldCompleted(ck_currentEpisode->ep - EP_CK4 + 4) || !ck_gameState.levelsDone[3])
+			!KW_IsWorldCompleted(KW_CurrentWorld()) || !ck_gameState.levelsDone[3])
 			Quit("KW_SelfTest: ending did not return to the map properly!");
 		CK_LoadLevel(true, true);
 		if (ca_mapOn != 0)
@@ -721,15 +885,15 @@ void KW_SelfTest(void)
 	// any other (postponed until the world has switched).
 	{
 		const char *testFile = "KWTEST.SAV";
-		KW_SwitchWorld(5);
+		KW_SwitchWorld(KW_KEEN5);
 		ck_gameState.currentLevel = 0;
 		CK_LoadLevel(true, true);
 		ck_gameState.keenScore = 12345;
 		ck_gameState.ep.ck6.rope = 1;
 		uint16_t savedMapX = ck_gameState.mapPosX;
-		bool completed[3];
-		for (int w = 0; w < 3; ++w)
-			completed[w] = KW_IsWorldCompleted(w + 4);
+		bool completed[KW_NUM_WORLDS];
+		for (int w = 0; w < KW_NUM_WORLDS; ++w)
+			completed[w] = KW_IsWorldCompleted(w);
 
 		for (int pass = 0; pass < 2; ++pass)
 		{
@@ -746,10 +910,10 @@ void KW_SelfTest(void)
 				Quit("KW_SelfTest: couldn't write a save!");
 			FS_CloseFile(fp);
 
-			// Pass 0 loads from Keen 6 (postponed); pass 1 from Keen 5 itself.
+			// Pass 0 loads from another world (postponed); pass 1 from Keen 5.
 			if (pass == 0)
 			{
-				KW_SwitchWorld(6);
+				KW_SwitchWorld(haveKeen7 ? KW_KEEN7 : KW_KEEN6);
 				ck_gameState.currentLevel = 0;
 				CK_LoadLevel(true, true);
 			}
@@ -771,14 +935,53 @@ void KW_SelfTest(void)
 			if (KW_FinishDeferredLoad() != (pass == 0))
 				Quit("KW_SelfTest: cross-world load was not postponed (or same-world load was)!");
 
-			if (ck_currentEpisode->ep != EP_CK5 || ca_mapOn != 0 || ck_gameState.keenScore != 12345 ||
+			if (KW_CurrentWorld() != KW_KEEN5 || ca_mapOn != 0 || ck_gameState.keenScore != 12345 ||
 				ck_gameState.ep.ck6.rope != 1 || ck_gameState.mapPosX != savedMapX)
 				Quit("KW_SelfTest: save did not load back correctly!");
-			for (int w = 0; w < 3; ++w)
-				if (KW_IsWorldCompleted(w + 4) != completed[w])
+			for (int w = 0; w < KW_NUM_WORLDS; ++w)
+				if (KW_IsWorldCompleted(w) != completed[w])
 					Quit("KW_SelfTest: save lost which worlds are completed!");
 		}
 		remove(testFile);
+
+		// A save made in Keen 7 (a fan game) loads back into Keen 7, with
+		// its own story items.
+		if (haveKeen7)
+		{
+			KW_SwitchWorld(KW_KEEN7);
+			ck_gameState.currentLevel = 0;
+			CK_LoadLevel(true, true);
+			ck_gameState.ep.ck4.membersRescued = 3;
+			FS_File fp = FS_CreateUserFile(testFile);
+			US_Savefile header = {KW_SAVE_TAG, KW_SAVE_MAGIC, true, "Keen 7"};
+			uint8_t padding = 0;
+			bool ok = FS_IsFileValid(fp) &&
+				FS_Write(header.id, sizeof(header.id), 1, fp) == 1 &&
+				FS_WriteInt16LE(&header.printXOffset, 1, fp) == 1 &&
+				FS_WriteBoolTo16LE(&header.used, 1, fp) == 1 &&
+				FS_Write(header.name, sizeof(header.name), 1, fp) == 1 &&
+				FS_Write(&padding, 1, 1, fp) == 1 && CK_SaveGame(fp);
+			FS_CloseFile(fp);
+			KW_SwitchWorld(KW_KEEN4);
+			ck_gameState.currentLevel = 0;
+			CK_LoadLevel(true, true);
+			if (ck_gameState.ep.ck4.membersRescued == 3)
+				Quit("KW_SelfTest: Keen 7's rescued elders count leaked into Keen 4!");
+			fp = FS_OpenUserFile(testFile);
+			kw_loadingFileName = testFile;
+			ok = ok && FS_IsFileValid(fp) &&
+				FS_Read(header.id, sizeof(header.id), 1, fp) == 1 &&
+				FS_ReadInt16LE(&header.printXOffset, 1, fp) == 1 &&
+				FS_ReadBoolFrom16LE(&header.used, 1, fp) == 1 &&
+				FS_Read(header.name, sizeof(header.name), 1, fp) == 1 &&
+				FS_Read(&padding, 1, 1, fp) == 1 &&
+				CK_LoadGame(fp, false);
+			FS_CloseFile(fp);
+			if (!ok || !KW_FinishDeferredLoad() || KW_CurrentWorld() != KW_KEEN7 ||
+				ck_gameState.ep.ck4.membersRescued != 3)
+				Quit("KW_SelfTest: a Keen 7 save didn't load back into Keen 7!");
+			remove(testFile);
+		}
 	}
 
 	// Habitable levels: Border Village is peaceful once completed, with an
@@ -786,7 +989,7 @@ void KW_SelfTest(void)
 	{
 		int hostiles, residents;
 		CK_object *elder;
-		KW_SwitchWorld(4);
+		KW_SwitchWorld(KW_KEEN4);
 		ck_gameState.currentLevel = 1;
 		ck_gameState.levelsDone[1] = 0;
 		CK_LoadLevel(true, true);
@@ -891,7 +1094,7 @@ void KW_SelfTest(void)
 		ck_gameState.currentLevel = 0;
 	}
 
-	if (!ck_gameState.ep.ck4.wetsuit || !ck_gameState.ep.ck6.sandwich)
-		Quit("KW_SelfTest: Keen lost his items while travelling!");
+	if (!ck_gameState.ep.ck4.wetsuit)
+		Quit("KW_SelfTest: Keen 4 lost its wetsuit while Keen travelled!");
 	CK_Cross_LogMessage(CK_LOG_MSG_NORMAL, "KW_SelfTest: passed\n");
 }

@@ -39,6 +39,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 const char *fs_keenPath;
 const char *fs_omniPath;
 const char *fs_userPath;
+// KEEN WORLDS: the current world's own data folder (e.g. a mod), searched
+// before the Keen and Omnispeak paths; NULL for the original games.
+const char *fs_worldPath = NULL;
 
 // NOTE: This will need to go into the per-platform bits below if we ever want
 // to use something other than a pointer on some platforms (e.g., a faw file
@@ -257,11 +260,24 @@ size_t FS_GetFileSize(FS_File file)
 
 FS_File FS_OpenKeenFile(const char *fileName)
 {
+	if (fs_worldPath)
+	{
+		FS_File file = FSL_OpenFileInDirCaseInsensitive(fs_worldPath, fileName, false);
+		if (FS_IsFileValid(file))
+			return file;
+	}
 	return FSL_OpenFileInDirCaseInsensitive(fs_keenPath, fileName, false);
 }
 
 FS_File FS_OpenOmniFile(const char *fileName)
 {
+	if (fs_worldPath)
+	{
+		// A mod world's own headers and variable files come first.
+		FS_File file = FSL_OpenFileInDirCaseInsensitive(fs_worldPath, fileName, false);
+		if (FS_IsFileValid(file))
+			return file;
+	}
 #ifdef FS_PREFER_KEEN_PATH
 	// We should look for Omnispeak files (headers, actions, etc) in the
 	// Keen drictory first, in case we're dealing with a game which has

@@ -30,6 +30,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 typedef FILE *FS_File;
 
+extern const char *fs_keenPath;
+// KEEN WORLDS: the current world's own data folder (searched first), or NULL.
+extern const char *fs_worldPath;
+// Open a file in one folder, ignoring case (used to check for mod files).
+FS_File FSL_OpenFileInDirCaseInsensitive(const char *dirPath, const char *fileName, bool forWrite);
+
 bool FS_IsFileValid(FS_File file);
 
 size_t FS_GetFileSize(FS_File file);

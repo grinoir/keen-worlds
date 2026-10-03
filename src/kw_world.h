@@ -1,5 +1,6 @@
 /*
-Keen Worlds: travelling between Keen 4, 5 and 6 in one running game.
+Keen Worlds: travelling between worlds (Keen 4, 5, 6 and fan games) in one
+running game.
 Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 */
 
@@ -18,24 +19,49 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 #define KW_SAVE_TAG "KWS"
 #define KW_SAVE_MAGIC 0x574B // "KW"
 
-// Which episode (4, 5 or 6) the player has asked to travel to, or 0.
+// ---- The world registry ----
+// A world is a game Keen can fly to: an original episode or a fan game built
+// on one of them. Each has its own progress, data folder and settings file;
+// Keen Worlds' own additions (ships, residents, art) belong to one world, not
+// to every world sharing its engine episode.
+typedef enum KW_World
+{
+	KW_KEEN4,   // Gnosticus IV
+	KW_KEEN5,   // The Omegamatic
+	KW_KEEN6,   // Fribbulus Xax
+	KW_KEEN7,   // Krodacia: "The Keys of Krodacia" (fan game on Keen 4)
+	KW_NUM_WORLDS,
+	KW_NO_WORLD = -1,
+} KW_World;
+
+// The world currently loaded.
+int KW_CurrentWorld(void);
+
+// Whether a world's files are installed (fan games: in play/mods/<id>/).
+bool KW_IsWorldPresent(int world);
+
+// The world's name in the Megarocket menu, and its short id (e.g. "keen7").
+const char *KW_WorldName(int world);
+const char *KW_WorldId(int world);
+
+// Which world the player has asked to travel to, or KW_NO_WORLD.
 extern int kw_pendingWorld;
 
-// Ask the game loop to travel to another episode (4, 5 or 6) once the
-// current play loop ends.
-void KW_RequestWorld(int episode);
+// Ask the game loop to travel to another world once the current play loop
+// ends.
+void KW_RequestWorld(int world);
 
-// Unload the current episode's data and load another one in its place,
-// swapping the per-world parts of the game state. Keen arrives on the new
-// world's map.
-void KW_SwitchWorld(int episode);
+// Unload the current world's data and load another in its place, swapping
+// the per-world parts of the game state. Keen arrives by its ship or on its
+// world map.
+void KW_SwitchWorld(int world);
 
 // Called after a world's original ending has played: the run continues on
 // that world's map, and the world is remembered as completed.
 void KW_AfterWorldEnding(void);
 
-// Whether the current world's ending has been seen in this run.
-bool KW_IsWorldCompleted(int episode);
+// Whether a world's ending has been seen in this run.
+bool KW_IsWorldCompleted(int world);
 
 // Forget every world's progress (called when a new game starts).
 void KW_ResetWorlds(void);
@@ -57,8 +83,8 @@ void KW_PlaceArrivalAtShip(void);
 void KW_TryLaunch(struct CK_object *mapKeen);
 
 // Called every frame from the play loop: opens the Megarocket menu when asked
-// for, and handles the debug shortcut (on a world map, hold W and press 4, 5
-// or 6).
+// for, and handles the debug shortcut (on a world map, hold W and press 4, 5,
+// 6 or 7).
 void KW_PlayLoopHook(void);
 
 // ---- Saved games ----
@@ -67,11 +93,11 @@ void KW_PlayLoopHook(void);
 // world's progress and all of Keen's items.
 bool KW_WriteSaveBlock(FS_File fp);
 
-// Reads the block. Returns the episode the save was made in, or 0 if the file
-// is not a Keen Worlds save. If that is another world, the load is postponed
+// Reads the block. Returns true if the file is a Keen Worlds save of a world
+// that is installed. If that is another world, the load is postponed
 // (*deferred is set): it finishes after the menu closes, via
 // KW_FinishDeferredLoad(). Otherwise the progress is applied at once.
-int KW_ReadSaveBlock(FS_File fp, bool *deferred);
+bool KW_ReadSaveBlock(FS_File fp, bool *deferred);
 
 // The save file being loaded (set by the menu's load routine).
 extern const char *kw_loadingFileName;
@@ -82,7 +108,8 @@ bool KW_FinishDeferredLoad(void);
 
 // ---- New games ----
 
-// Remember the world the program was started in (the start world).
+// Remember the world the program was started in (the start world): the
+// launch episode, or /WORLD <id> (e.g. /WORLD keen7).
 void KW_SetStartWorld(void);
 
 // A new game always begins in the start world.
