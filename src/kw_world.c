@@ -225,14 +225,16 @@ void KW_PlaceArrivalAtShip(void)
 	int tileX, tileY;
 	if (ck_currentEpisode->ep == EP_CK4 && ca_mapOn == KW_CK4_SHIP_LEVEL)
 	{
-		// Clear ground just right of the ship: Keen can walk both ways.
-		tileX = 18;
+		// Clear approach immediately left of the ship, rather than inside its
+		// decorative tiles or by the right-side level exit.
+		tileX = 3;
 		tileY = 12;
 	}
 	else if (ck_currentEpisode->ep == EP_CK6 && ca_mapOn == KW_CK6_SHIP_LEVEL)
 	{
-		// Clear ground just right of the ship: not inside its scenery tiles.
-		tileX = 19;
+		// Clear approach immediately left of the ship and well clear of the
+		// map-transition marker at (15, 22).
+		tileX = 4;
 		tileY = 22;
 	}
 	else
@@ -445,8 +447,8 @@ void KW_SelfTest(void)
 				(route[i] == EP_CK6 && ck_gameState.currentLevel != KW_CK6_SHIP_LEVEL))
 				Quit("KW_SelfTest: wrong arrival location!");
 			CK_LoadLevel(true, true);
-			if ((route[i] == EP_CK4 && (ck_keenObj->posX != RF_TileToUnit(18) || ck_keenObj->posY != RF_TileToUnit(12))) ||
-				(route[i] == EP_CK6 && (ck_keenObj->posX != RF_TileToUnit(19) || ck_keenObj->posY != RF_TileToUnit(22))))
+			if ((route[i] == EP_CK4 && (ck_keenObj->posX != RF_TileToUnit(3) || ck_keenObj->posY != RF_TileToUnit(12))) ||
+				(route[i] == EP_CK6 && (ck_keenObj->posX != RF_TileToUnit(4) || ck_keenObj->posY != RF_TileToUnit(22))))
 				Quit("KW_SelfTest: wrong ship arrival spawn!");
 			for (int level = 0; level <= 2; ++level)
 			{

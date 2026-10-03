@@ -59,9 +59,11 @@ The Keen 4 and 6 interaction bounds intentionally cover the complete visible
 spaceship, rather than only the hatch tile.
 
 When Keen arrives from another world, a one-shot flag moves the already-spawned
-player to clear floor just right of the ship: `(18, 12)` in Keen 4's level 18
-and `(19, 22)` in Keen 6's level 17. Entering these levels normally from their
-own world maps continues to use their original entrance spawns.
+player to the clear approach just left of the ship: `(3, 12)` in Keen 4's
+level 18 and `(4, 22)` in Keen 6's level 17. The Keen 6 placement also avoids
+the unrelated map-transition marker at `(15, 22)`. Entering these levels
+normally from their own world maps continues to use their original entrance
+spawns.
 
 ## Validation and rollback
 
