@@ -63,7 +63,8 @@ player to the clear approach just left of the ship: `(3, 12)` in Keen 4's
 level 18 and `(4, 22)` in Keen 6's level 17. The Keen 6 placement also avoids
 the unrelated map-transition marker at `(15, 22)`. Entering these levels
 normally from their own world maps continues to use their original entrance
-spawns.
+spawns. The placement uses the same 241-unit vertical offset as
+`CK_SpawnKeen()`, so Keen starts on the floor rather than embedded inside it.
 
 ## Validation and rollback
 

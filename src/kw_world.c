@@ -243,7 +243,9 @@ void KW_PlaceArrivalAtShip(void)
 	}
 
 	ck_keenObj->posX = RF_TileToUnit(tileX);
-	ck_keenObj->posY = RF_TileToUnit(tileY);
+	// Match CK_SpawnKeen: its origin is 241 units above the floor tile.
+	// Placing the origin directly at tileY embeds Keen in the ground.
+	ck_keenObj->posY = RF_TileToUnit(tileY) - 241;
 	CK_ResetClipRects(ck_keenObj);
 	kw_placeArrivalAtShip = false;
 }
@@ -447,8 +449,8 @@ void KW_SelfTest(void)
 				(route[i] == EP_CK6 && ck_gameState.currentLevel != KW_CK6_SHIP_LEVEL))
 				Quit("KW_SelfTest: wrong arrival location!");
 			CK_LoadLevel(true, true);
-			if ((route[i] == EP_CK4 && (ck_keenObj->posX != RF_TileToUnit(3) || ck_keenObj->posY != RF_TileToUnit(12))) ||
-				(route[i] == EP_CK6 && (ck_keenObj->posX != RF_TileToUnit(4) || ck_keenObj->posY != RF_TileToUnit(22))))
+			if ((route[i] == EP_CK4 && (ck_keenObj->posX != RF_TileToUnit(3) || ck_keenObj->posY != RF_TileToUnit(12) - 241)) ||
+				(route[i] == EP_CK6 && (ck_keenObj->posX != RF_TileToUnit(4) || ck_keenObj->posY != RF_TileToUnit(22) - 241)))
 				Quit("KW_SelfTest: wrong ship arrival spawn!");
 			for (int level = 0; level <= 2; ++level)
 			{
