@@ -879,7 +879,17 @@ void KW_SelfTest(void)
 		if (hostiles || residents != 1 || !KW_IsLevelPeaceful() ||
 			RF_UnitToTile(elder->posX) != 4 || RF_UnitToTile(elder->posY) < 46 || RF_UnitToTile(elder->posY) > 48)
 			Quit("KW_SelfTest: a completed Border Village should be peaceful with one elder in the house!");
+
+		// ...and its entrance must stay open on the world map.
 		ck_gameState.currentLevel = 0;
+		CK_LoadLevel(true, true);
+		bool entrance = false;
+		for (int y = 0; y < CA_GetMapHeight(); ++y)
+			for (int x = 0; x < CA_GetMapWidth(); ++x)
+				if (CA_TileAtPos(x, y, 2) == 0xC001)
+					entrance = true;
+		if (!entrance)
+			Quit("KW_SelfTest: completed Border Village can't be entered from the map!");
 	}
 
 	if (!ck_gameState.ep.ck4.wetsuit || !ck_gameState.ep.ck6.sandwich)

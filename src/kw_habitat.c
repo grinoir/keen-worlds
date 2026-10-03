@@ -67,6 +67,14 @@ static bool KW_LevelHasResidents(void)
 	return false;
 }
 
+bool KW_IsHabitableLevel(int level)
+{
+	for (int i = 0; i < KW_NUM_RESIDENTS; ++i)
+		if (kw_residents[i].episode == KW_CurrentEpisode() && kw_residents[i].level == level)
+			return true;
+	return false;
+}
+
 bool KW_IsLevelPeaceful(void)
 {
 	return kw_levelIsPeaceful;

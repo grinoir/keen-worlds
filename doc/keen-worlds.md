@@ -154,6 +154,10 @@ added. Stand next to a resident and press **up** to talk.
   carry a tag and their table index in `user4`, which is saved with the game.
 - The conversation reuses the council rescue layout: elder portrait and his
   line, then Keen's portrait and reply.
+- Completed levels normally lose their world-map entrance
+  (`CK_MapLevelMarkAsDone` clears the info tiles). Levels with residents keep
+  their `0xC0xx` entrance so Keen can visit; fences still open and the done
+  flag still shows. Other completed levels stay closed, as in the originals.
 - Known gap: Keen 4 dart guns share object type 1 with harmless objects and
   are not removed yet (Border Village has none).
 - `/KWTEST` checks Border Village before (enemies, no resident) and after

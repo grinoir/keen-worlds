@@ -12,6 +12,10 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 // has residents, remove the enemies and spawn the residents.
 void KW_SetupLevelResidents(void);
 
+// Whether a level of the current world has residents. Once completed, such a
+// level keeps its entrance on the world map so Keen can visit it.
+bool KW_IsHabitableLevel(int level);
+
 // Whether the current level is in its peaceful, inhabited state.
 bool KW_IsLevelPeaceful(void);
 

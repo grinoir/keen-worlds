@@ -558,6 +558,9 @@ void CK_MapLevelMarkAsDone(void)
 			{
 				/* Is this a level tile */
 				flags = w >> 8;
+				/* KEEN WORLDS: Habitable levels can be entered again. */
+				if (flags == 0xC0 && KW_IsHabitableLevel(level))
+					continue;
 				/* Set the info tile at this position to 0 */
 				*pw = 0;
 				if (flags == 0xD0)
