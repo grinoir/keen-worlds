@@ -153,6 +153,10 @@ static KW_WorldState kw_worlds[KW_NUM_WORLDS];
 int kw_pendingWorld = KW_NO_WORLD;
 static bool kw_placeArrivalAtShip = false;
 
+// Megarockets parked on fan games' world maps (see below).
+typedef struct KW_MapShip KW_MapShip;
+static const KW_MapShip *KW_MapShipFor(int world);
+
 // Worlds with a playable BWB Megarocket level: Keen boards inside it and
 // arrives there. Keen 5 has none (its ship is docked on the world map).
 // Arrivals stand at the ship's nose: the hull at Keen's height is drawn in
@@ -510,7 +514,7 @@ void KW_SwitchWorld(int world)
 	// one, otherwise on its world map (Keen 5's docked ship, other games).
 	const KW_Ship *ship = KW_ShipFor(world);
 	ck_gameState.currentLevel = ship ? ship->level : 0;
-	kw_placeArrivalAtShip = ship != NULL;
+	kw_placeArrivalAtShip = ship != NULL || KW_MapShipFor(world) != NULL;
 }
 
 // ---- The Megarocket ----
@@ -569,16 +573,17 @@ static const KW_Art kw_keen8ShipArt = {
 	-1, 0, NULL, true, true,
 };
 
-typedef struct KW_MapShip
+struct KW_MapShip
 {
 	int world;
 	const KW_Art *ship;
 	int launchX, launchY; // where Keen stands to board
-} KW_MapShip;
+};
 
 static const KW_MapShip kw_mapShips[] = {
-	// Calidune: on the sand, a few steps below where Keen lands.
-	{KW_KEEN8, &kw_keen8ShipArt, KW_KEEN8_SHIP_X - 1, KW_KEEN8_SHIP_Y + 1},
+	// Calidune: on the sand, a few steps below the map's own start; Keen
+	// lands (and starts a new game) right beside its nose.
+	{KW_KEEN8, &kw_keen8ShipArt, KW_KEEN8_SHIP_X - 1, KW_KEEN8_SHIP_Y},
 };
 
 static const KW_MapShip *KW_MapShipFor(int world)
@@ -626,6 +631,30 @@ void KW_SetLaunchSpot(int tileX, int tileY)
 		kw_launchSpotX = tileX;
 		kw_launchSpotY = tileY;
 	}
+}
+
+void KW_PlaceMapKeenAtShip(CK_object *mapKeen)
+{
+	const KW_MapShip *ms = KW_MapShipFor(kw_currentWorld);
+	if (!ms || ca_mapOn != 0)
+		return;
+	// On arrival, and when the world starts fresh (no map position yet),
+	// Keen stands right beside the ship's nose: his right edge just short of
+	// the (solid) ship, his feet on its row.
+	if (kw_placeArrivalAtShip || ck_gameState.mapPosX == 0)
+	{
+		mapKeen->posX = RF_TileToUnit(ms->ship->originX) - 0x100;
+		mapKeen->posY = RF_TileToUnit(ms->ship->originY) - 0x80;
+		CK_ResetClipRects(mapKeen);
+		int overlap = mapKeen->clipRects.unitX2 - (RF_TileToUnit(ms->ship->originX) - 1);
+		if (overlap > 0)
+		{
+			mapKeen->posX -= overlap;
+			CK_ResetClipRects(mapKeen);
+		}
+		mapKeen->xDirection = mapKeen->yDirection = IN_motion_None;
+	}
+	kw_placeArrivalAtShip = false;
 }
 
 void KW_PlaceArrivalAtShip(void)
@@ -1253,6 +1282,22 @@ void KW_SelfTest(void)
 			for (int x = kw_launchSpotX - KW_LAUNCH_RANGE - 1; x <= kw_launchSpotX + KW_LAUNCH_RANGE + 1; ++x)
 				if ((CA_TileAtPos(x, y, 2) & 0xFF00) == 0xC000)
 					Quit("KW_SelfTest: a parked Megarocket's boarding spot is next to a level entrance!");
+		// Keen lands right beside it (not on it) and can board at once.
+		{
+			int shipX = RF_TileToUnit(ms->ship->originX);
+			kw_launchRequested = false;
+			KW_TryLaunch(ck_keenObj);
+			if (ck_keenObj->clipRects.unitX2 >= shipX || ck_keenObj->clipRects.unitX2 < shipX - 64 ||
+				ck_keenObj->clipRects.tileY2 < ms->ship->originY || ck_keenObj->clipRects.tileY1 > ms->ship->originY ||
+				!kw_launchRequested)
+			{
+				CK_Cross_LogMessage(CK_LOG_MSG_ERROR, "KW_SelfTest: map ship: Keen %d-%d x %d-%d, ship at %d,%d, can board %d\n",
+					ck_keenObj->clipRects.unitX1, ck_keenObj->clipRects.unitX2, ck_keenObj->clipRects.tileY1,
+					ck_keenObj->clipRects.tileY2, shipX, ms->ship->originY, kw_launchRequested);
+				Quit("KW_SelfTest: Keen doesn't land right beside a fan game's parked Megarocket!");
+			}
+			kw_launchRequested = false;
+		}
 
 	}
 

@@ -77,8 +77,9 @@ game built on one of them. `kw_worldDefs[]` in `src/kw_world.c` lists them:
   parked on its world map** (`kw_mapShips[]`, solid): Keen 4's own
   world-map Megarocket (tiles 1012-1013 of the Keen 4 shareware data,
   copied by `tools/kw_mapship_art.py` into tile slots no Keen 8 level uses —
-  the mod has no empty slots left), on the sand a few steps below where
-  Keen lands, boarded standing at its left end. A world with none of these
+  the mod has no empty slots left), on the sand a few steps below the
+  map's own start. Keen lands right beside its nose — on arrival and when
+  a game starts there (`KW_PlaceMapKeenAtShip`) — and boards there. A world with none of these
   boards and arrives at its world map's starting spot.
 - **Starting in a world**: `/WORLD <id>` starts new games there
   (`play/run.sh 7` = `/EPISODE 4 /WORLD keen7`, `play/run.sh 8` =

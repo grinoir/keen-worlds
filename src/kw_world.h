@@ -92,6 +92,11 @@ void KW_PlayLoopHook(void);
 // Whether the loaded level is the current world's Megarocket level.
 bool KW_IsInShipLevel(void);
 
+// Called when map-Keen spawns: in a world with a Megarocket parked on its
+// map, arriving (or starting fresh) puts him right beside it.
+struct CK_object;
+void KW_PlaceMapKeenAtShip(struct CK_object *mapKeen);
+
 // ---- Saved games ----
 
 // Written at the start of every save: the world it was made in, every

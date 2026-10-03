@@ -336,6 +336,8 @@ void CK_SpawnMapKeen(int tileX, int tileY)
 	ck_keenObj->user3 = 0;
 	ck_keenObj->gfxChunk = CK_CHUNKNUM(SPR_MAPKEEN_STAND_W);
 	CK_SetAction(ck_keenObj, CK_ACTION(CK_ACT_MapKeenStart));
+	// KEEN WORLDS: arriving at a ship parked on the map.
+	KW_PlaceMapKeenAtShip(ck_keenObj);
 }
 
 //look for level entrry
