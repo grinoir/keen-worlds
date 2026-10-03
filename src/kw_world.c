@@ -801,6 +801,11 @@ void KW_SelfTest(void)
 			Quit("KW_SelfTest: before completion only the tavern's boards should be there!");
 		if (TI_ForeMisc(CA_TileAtPos(streetX, streetY, 1)) || CA_TileAtPos(streetX, streetY, 2))
 			Quit("KW_SelfTest: the boarded-up tavern door can be entered!");
+		// The inn keeps the fourth house's original door (x 77, to 0x641e).
+		// (The boards cover part of the inn, so check the door's own cell.)
+		if (!KW_IsArtCellPlaced(&kw_innArt, 77, 15) || (TI_ForeMisc(CA_TileAtPos(77, 15, 1)) & 0x7F) != MISCFLAG_DOOR ||
+			CA_TileAtPos(77, 15, 2) != 0x641E)
+			Quit("KW_SelfTest: the inn broke the fourth house's door!");
 		ck_gameState.levelsDone[1] = 1;
 		CK_LoadLevel(true, true);
 		KW_CountLevelPeople(&hostiles, &residents, &elder);
@@ -813,6 +818,9 @@ void KW_SelfTest(void)
 			(TI_ForeMisc(CA_TileAtPos(roomX, roomY - 1, 1)) & 0x7F) != MISCFLAG_DOOR ||
 			CA_TileAtPos(roomX, roomY, 2) != ((streetX << 8) | streetY))
 			Quit("KW_SelfTest: the tavern doors don't connect the street and the room!");
+		if (!KW_IsArtPlaced(&kw_innArt) || (TI_ForeMisc(CA_TileAtPos(77, 15, 1)) & 0x7F) != MISCFLAG_DOOR ||
+			CA_TileAtPos(77, 15, 2) != 0x641E)
+			Quit("KW_SelfTest: the inn broke the fourth house's door after liberation!");
 		if (!TI_ForeAnimTile(CA_TileAtPos(KW_TavernBarmaidX(), roomY - 1, 1)))
 			Quit("KW_SelfTest: the barmaid is not animated!");
 		if (hostiles || residents != 1 || !KW_IsLevelPeaceful() ||

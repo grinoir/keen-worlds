@@ -117,13 +117,20 @@ bool KW_IsLevelPeaceful(void)
 // their things"). A piece can instead be shown only before, or always.
 
 
-// Border Village's tavern (tools/kw_barhouse.py): a two-storey stone house on
-// the street, boarded up until the village is freed, and its bar room carved
-// into the rock below: portrait, tables, and the bar with the barmaid.
+// Border Village's tavern (tools/kw_barhouse.py): a long stone inn on the
+// street in place of the fourth house, its tavern door boarded up until the
+// village is freed, and the bar room carved into the rock below: portrait,
+// tables, and the bar with the barmaid.
 // (kw_tavern_art.h is included above, with the residents.)
 // The creator's portrait (tools/kw_portrait_art.py), in the tavern room.
 #include "kw_portrait_art.h"
 
+// The inn's front: one long stone house replacing the fourth house, with its
+// original door on the left and the tavern door on the right (always there).
+const KW_Art kw_innArt = {
+	KW_INN_ORIGIN_X, KW_INN_ORIGIN_Y, KW_INN_TILES_W, KW_INN_TILES_H, KW_INN_FRAMES,
+	&kw_innSlots[0][0][0], &kw_innTiles[0][0][0][0], -1, 0, NULL,
+};
 const KW_Art kw_tavernBoardsArt = {
 	KW_BOARDS_ORIGIN_X, KW_BOARDS_ORIGIN_Y, KW_BOARDS_TILES_W, KW_BOARDS_TILES_H, KW_BOARDS_FRAMES,
 	&kw_boardsSlots[0][0][0], &kw_boardsTiles[0][0][0][0], -1, 0, NULL,
@@ -159,6 +166,7 @@ static const struct
 	const KW_Art *art;
 	KW_When when;
 } kw_levelArt[] = {
+	{4, 1, &kw_innArt, KW_ALWAYS},          // first: the boards go on top
 	{4, 1, &kw_tavernBoardsArt, KW_BEFORE},
 	{4, 1, &kw_tavernBarArt, KW_AFTER},
 	{4, 1, &kw_tavernFurnitureArt, KW_AFTER},

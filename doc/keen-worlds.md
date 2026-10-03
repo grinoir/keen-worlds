@@ -192,14 +192,21 @@ slots.
 and writes `src/kw_tavern_art.h` (tile edits + art); the engine applies it in
 `KW_ChangeLevel()` (`src/kw_habitat.c`).
 
-- **The house**: the first house's foreground tiles rearranged two storeys
-  tall on the street at x 83–91, rows 7–15 (always there).
+- **The inn**: one long stone house replacing the fourth house, x 75–91,
+  rows 9–15 (always there). It is art: the first house's picture stretched
+  at the pixel level — a strip under a level stretch of roof is repeated, the
+  wall below filled with plain wall texture and the roof's underside drawn as
+  one straight band, so there are no seams — with a second door pasted on.
+  The left door sits on the fourth house's door tiles (x 77–78) and still
+  leads to its original room; the right one (x 85–86) is the tavern's. Door
+  tiles stay under the art so both keep their door flags.
 - **Before liberation**: boards over the door (art with `clearMisc`, so the
   door flag is gone) and no door destination — it can't be entered.
 - **After**: the door destinations are written (street door ↔ room door) and
   the room is furnished.
 - **The room**: the first house's room widened (pole columns left out),
-  carved into the rock band at x 58–81, rows 33–39. Inside: the creator's
+  carved into the rock band at x 58–81, rows 26–32 — high enough that the
+  camera never shows the existing room below (rows 43–48). Inside: the creator's
   portrait just inside the door (`tools/kw_portrait_art.py`), two tables with
   stools, and the bar along the right end — shelves of bottles, a BAR sign,
   barrels, the counter, and the barmaid behind it drying a glass (4 animation

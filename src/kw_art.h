@@ -9,7 +9,7 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 #include <stdbool.h>
 #include <stdint.h>
 
-#define KW_ART_MAX_TILES 64
+#define KW_ART_MAX_TILES 256
 
 typedef struct KW_Art
 {
@@ -33,5 +33,9 @@ void KW_PlaceArt(const KW_Art *art);
 
 // For /KWTEST: whether the art is on the map and all its tiles exist.
 bool KW_IsArtPlaced(const KW_Art *art);
+
+// For /KWTEST: whether one cell of the art is on the map (other art may
+// cover the rest).
+bool KW_IsArtCellPlaced(const KW_Art *art, int x, int y);
 
 #endif

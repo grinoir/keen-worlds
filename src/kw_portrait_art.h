@@ -2,7 +2,7 @@
 #define KW_PORTRAIT_TILES_W 3
 #define KW_PORTRAIT_TILES_H 4
 #define KW_PORTRAIT_ORIGIN_X 65
-#define KW_PORTRAIT_ORIGIN_Y 34
+#define KW_PORTRAIT_ORIGIN_Y 27
 // Empty, unused Keen 4 masked-tile slots that hold the art: [frame][row][column].
 static const uint16_t kw_portraitSlots[1][KW_PORTRAIT_TILES_H][KW_PORTRAIT_TILES_W] = {
 	{{39, 40, 41}, {69, 73, 76}, {83, 89, 90}, {91, 92, 93}},

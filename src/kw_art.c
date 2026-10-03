@@ -14,6 +14,7 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 #include "id_ca.h"
 #include "id_mm.h"
 #include "id_rf.h"
+#include "ck_def.h"
 #include "kw_art.h"
 
 extern uint8_t *ti_tileInfo;
@@ -81,7 +82,7 @@ void KW_PlaceArt(const KW_Art *art)
 {
 	uint16_t placed[KW_ART_MAX_TILES];
 	if (art->tilesW * art->tilesH > KW_ART_MAX_TILES)
-		return;
+		Quit("KW_PlaceArt: art is larger than KW_ART_MAX_TILES");
 
 	for (int r = 0; r < art->tilesH; ++r)
 	{
@@ -120,4 +121,13 @@ bool KW_IsArtPlaced(const KW_Art *art)
 					return false;
 		}
 	return true;
+}
+
+bool KW_IsArtCellPlaced(const KW_Art *art, int x, int y)
+{
+	int r = y - art->originY, c = x - art->originX;
+	if (r < 0 || c < 0 || r >= art->tilesH || c >= art->tilesW)
+		return false;
+	return CA_TileAtPos(x, y, 1) == KW_ArtSlot(art, 0, r, c) &&
+		ca_graphChunks[ca_gfxInfoE.offTiles16m + KW_ArtSlot(art, 0, r, c)];
 }
