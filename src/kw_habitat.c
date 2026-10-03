@@ -18,6 +18,7 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 #include "ck_def.h"
 #include "ck_ep.h"
 #include "ck_play.h"
+#include "kw_art.h"
 #include "kw_habitat.h"
 #include "kw_world.h"
 
@@ -80,6 +81,24 @@ bool KW_IsLevelPeaceful(void)
 	return kw_levelIsPeaceful;
 }
 
+// ---- Art in the houses ----
+
+// The creator's portrait (tools/kw_portrait_art.py): Border Village, first
+// house, on the wall between the left window and the door.
+#include "kw_portrait_art.h"
+
+const KW_Art kw_portraitArt = {
+	KW_PORTRAIT_ORIGIN_X, KW_PORTRAIT_ORIGIN_Y, KW_PORTRAIT_TILES_W, KW_PORTRAIT_TILES_H, 1,
+	&kw_portraitSlots[0][0][0], &kw_portraitTiles[0][0][0][0],
+	-1, 0, NULL,
+};
+
+static void KW_PlaceLevelArt(void)
+{
+	if (KW_CurrentEpisode() == 4 && ca_mapOn == 1)
+		KW_PlaceArt(&kw_portraitArt);
+}
+
 // ---- Clearing out enemies ----
 
 static bool KW_IsHostile(CK_object *obj)
@@ -134,6 +153,8 @@ static void KW_SpawnResident(int index)
 
 void KW_SetupLevelResidents(void)
 {
+	KW_PlaceLevelArt();
+
 	kw_levelIsPeaceful = ca_mapOn != 0 && ck_gameState.levelsDone[ca_mapOn] && KW_LevelHasResidents();
 	if (!kw_levelIsPeaceful)
 		return;

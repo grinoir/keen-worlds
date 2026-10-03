@@ -24,6 +24,9 @@ bool KW_IsLevelPeaceful(void);
 void KW_CheckTalk(void);
 
 struct CK_object;
+struct KW_Art;
+// The creator's portrait in Border Village (for /KWTEST).
+extern const struct KW_Art kw_portraitArt;
 // For /KWTEST: count hostile objects and residents in the loaded level.
 void KW_CountLevelPeople(int *hostiles, int *residents, struct CK_object **firstResident);
 

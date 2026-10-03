@@ -1,0 +1,120 @@
+/*
+Keen Worlds: new art placed into the original maps at load time.
+
+Art is drawn by scripts in the project's tools/ folder and generated into
+kw_*_art.h headers. Each art tile is laid over whatever original foreground
+tile is beneath it and stored in an empty, unused masked-tile slot, so the
+player's EGAGRAPH/GAMEMAPS files stay untouched. Tile properties (collision,
+animation) for those slots are set at runtime.
+Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
+*/
+
+#include <string.h>
+
+#include "id_ca.h"
+#include "id_mm.h"
+#include "id_rf.h"
+#include "kw_art.h"
+
+extern uint8_t *ti_tileInfo;
+
+static uint16_t KW_ArtSlot(const KW_Art *art, int frame, int row, int col)
+{
+	return art->slots[(frame * art->tilesH + row) * art->tilesW + col];
+}
+
+static const uint8_t *KW_ArtTile(const KW_Art *art, int frame, int row, int col)
+{
+	return art->tiles + ((frame * art->tilesH + row) * art->tilesW + col) * 160;
+}
+
+// Build one art tile in a masked-tile slot: the original tile underneath (if
+// any), with the art's opaque pixels on top.
+static void KW_ComposeArtTile(uint16_t slot, uint16_t under, const uint8_t *art)
+{
+	int chunk = ca_gfxInfoE.offTiles16m + slot;
+	if (ca_graphChunks[chunk])
+		MM_FreePtr(&ca_graphChunks[chunk]);
+	MM_GetPtr(&ca_graphChunks[chunk], 160);
+	uint8_t *dst = (uint8_t *)ca_graphChunks[chunk];
+
+	if (under)
+	{
+		int underChunk = ca_gfxInfoE.offTiles16m + under;
+		CA_CacheGrChunk(underChunk);
+		memcpy(dst, ca_graphChunks[underChunk], 160);
+	}
+	else
+	{
+		memset(dst, 0xFF, 32); // all transparent
+		memset(dst + 32, 0, 128);
+	}
+
+	// Plane 0 is the mask (1 = transparent), then four colour planes.
+	for (int i = 0; i < 32; ++i)
+	{
+		uint8_t opaque = (uint8_t)~art[i];
+		dst[i] &= (uint8_t)~opaque;
+		for (int plane = 1; plane <= 4; ++plane)
+			dst[plane * 32 + i] = (uint8_t)((dst[plane * 32 + i] & ~opaque) | (art[plane * 32 + i] & opaque));
+	}
+}
+
+// Tile properties for an art slot: collision copied from the original tile
+// (none if walkable), and an animation link to the next frame.
+static void KW_SetArtTileInfo(const KW_Art *art, uint16_t slot, uint16_t under, bool walkable, uint16_t nextSlot)
+{
+	int n16m = ca_gfxInfoE.numTiles16m;
+	uint8_t *fore = ti_tileInfo + ca_gfxInfoE.numTiles16 * 2;
+	// Blocking top/right/bottom/left and the misc flag.
+	for (int k = 0; k < 5; ++k)
+		fore[k * n16m + slot] = (walkable || !under) ? 0 : fore[k * n16m + under];
+	bool animated = art->frames > 1;
+	fore[5 * n16m + slot] = animated ? (uint8_t)(int8_t)(nextSlot - slot) : 0;
+	fore[6 * n16m + slot] = animated ? art->animTics : 0;
+}
+
+void KW_PlaceArt(const KW_Art *art)
+{
+	uint16_t placed[KW_ART_MAX_TILES];
+	if (art->tilesW * art->tilesH > KW_ART_MAX_TILES)
+		return;
+
+	for (int r = 0; r < art->tilesH; ++r)
+	{
+		for (int c = 0; c < art->tilesW; ++c)
+		{
+			int x = art->originX + c, y = art->originY + r;
+			uint16_t under = CA_TileAtPos(x, y, 1);
+			if (under == KW_ArtSlot(art, 0, r, c))
+				return; // Already placed on this copy of the map.
+			if (art->dropsUnderlay && art->dropsUnderlay(x, y))
+				under = 0;
+
+			for (int f = 0; f < art->frames; ++f)
+			{
+				uint16_t slot = KW_ArtSlot(art, f, r, c);
+				KW_ComposeArtTile(slot, under, KW_ArtTile(art, f, r, c));
+				KW_SetArtTileInfo(art, slot, under, r == art->walkableRow,
+					KW_ArtSlot(art, (f + 1) % art->frames, r, c));
+			}
+			placed[r * art->tilesW + c] = KW_ArtSlot(art, 0, r, c);
+		}
+	}
+	// Updates the map and anything already drawn; the graphics now exist.
+	RF_ReplaceTiles(placed, 1, art->originX, art->originY, art->tilesW, art->tilesH);
+}
+
+bool KW_IsArtPlaced(const KW_Art *art)
+{
+	for (int r = 0; r < art->tilesH; ++r)
+		for (int c = 0; c < art->tilesW; ++c)
+		{
+			if (CA_TileAtPos(art->originX + c, art->originY + r, 1) != KW_ArtSlot(art, 0, r, c))
+				return false;
+			for (int f = 0; f < art->frames; ++f)
+				if (!ca_graphChunks[ca_gfxInfoE.offTiles16m + KW_ArtSlot(art, f, r, c)])
+					return false;
+		}
+	return true;
+}

@@ -162,3 +162,27 @@ added. Stand next to a resident and press **up** to talk.
   are not removed yet (Border Village has none).
 - `/KWTEST` checks Border Village before (enemies, no resident) and after
   completion (no enemies, one elder in the house).
+
+## New art in the maps (`src/kw_art.c`)
+
+Both the Keen 5 boarding gate and the creator's portrait use one mechanism:
+art drawn by a script in the project's `tools/` folder is generated into a
+`src/kw_*_art.h` header, then `KW_PlaceArt()` lays each tile over the original
+tile beneath it, stores it in an empty, unused masked-tile slot, sets its tile
+properties (collision copied from the original, optional walkable row,
+animation frames), and puts it on the loaded map. Player data files are never
+changed. `KW_IsArtPlaced()` lets `/KWTEST` check it.
+
+To add art: write a generator like `tools/kw_portrait_art.py` (draw on a
+canvas, `preview` it over the real level, `csource` it into a header), then
+describe it with a `KW_Art` and call `KW_PlaceArt()` when that level loads.
+
+### The creator's portrait
+
+Border Village (Keen 4 level 1), first house, on the wall between the left
+window and the door (tiles 5–6, rows 44–46): a framed EGA rendering of the
+photo `assets/creator-portrait-source.jpg` in the project root. The generator
+crops it to hat, face and folded arms, smooths it, and uses Bayer dithering
+over the four EGA greys; crop and tone settings are at the top of
+`tools/kw_portrait_art.py`. It hangs there whether or not the village has been
+completed.

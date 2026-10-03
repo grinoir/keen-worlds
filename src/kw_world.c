@@ -29,6 +29,7 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 #include "ck5_ep.h"
 #include "ck6_ep.h"
 #include "kw_world.h"
+#include "kw_art.h"
 #include "kw_habitat.h"
 
 extern const char *ck_episodeFile;
@@ -383,106 +384,29 @@ static const struct
 #define KW_NUM_DESTINATIONS ((int)(sizeof(kw_destinations) / sizeof(kw_destinations[0])))
 
 // ---- Keen 5 boarding gate ----
-// Art drawn by tools/kw_gate_art.py. It covers map tiles 29-31 x 94-96: the
-// dock edge, the gap and the ship's nose. Each tile is the art laid over
-// whatever original tile was there, stored in an empty, unused tile slot, so
-// GAMEMAPS.CK5 and EGAGRAPH.CK5 stay untouched. Three animation frames run
-// the lights.
+// Art drawn by tools/kw_gate_art.py, placed by kw_art.c. It covers map tiles
+// 29-31 x 94-96: the dock edge, the gap and the ship's nose. Three animation
+// frames run the lights; Keen walks along the middle row.
 
 #include "kw_gate_art.h"
 
-extern uint8_t *ti_tileInfo;
-
-#define KW_GATE_ANIM_TICS 12 // per frame, at 70 tics per second
-
-// Map cells whose original tile is the solid gangway knob, which the gate
-// replaces instead of drawing over.
+// The solid gangway knob is replaced, not drawn over.
 static bool KW_GateDropsUnderlay(int x, int y)
 {
 	return y == 95 && (x == 29 || x == 30);
 }
 
-static bool KW_IsGateSlot(uint16_t tile)
-{
-	for (int f = 0; f < KW_GATE_FRAMES; ++f)
-		for (int r = 0; r < KW_GATE_TILES_H; ++r)
-			for (int c = 0; c < KW_GATE_TILES_W; ++c)
-				if (kw_gateSlots[f][r][c] == tile)
-					return true;
-	return false;
-}
-
-// Build one gate tile in a masked-tile slot: the original tile underneath
-// (if any), with the art's opaque pixels on top.
-static void KW_ComposeGateTile(uint16_t slot, uint16_t under, const uint8_t *art)
-{
-	int chunk = ca_gfxInfoE.offTiles16m + slot;
-	if (ca_graphChunks[chunk])
-		MM_FreePtr(&ca_graphChunks[chunk]);
-	MM_GetPtr(&ca_graphChunks[chunk], 160);
-	uint8_t *dst = (uint8_t *)ca_graphChunks[chunk];
-
-	if (under)
-	{
-		int underChunk = ca_gfxInfoE.offTiles16m + under;
-		CA_CacheGrChunk(underChunk);
-		memcpy(dst, ca_graphChunks[underChunk], 160);
-	}
-	else
-	{
-		memset(dst, 0xFF, 32); // all transparent
-		memset(dst + 32, 0, 128);
-	}
-
-	// Plane 0 is the mask (1 = transparent), then four colour planes.
-	for (int i = 0; i < 32; ++i)
-	{
-		uint8_t opaque = (uint8_t)~art[i];
-		dst[i] &= (uint8_t)~opaque;
-		for (int plane = 1; plane <= 4; ++plane)
-			dst[plane * 32 + i] = (uint8_t)((dst[plane * 32 + i] & ~opaque) | (art[plane * 32 + i] & opaque));
-	}
-}
-
-// Tile properties for a gate slot: collision copied from the original tile
-// (none on Keen's walkway row), and an animation link to the next frame.
-static void KW_SetGateTileInfo(uint16_t slot, uint16_t under, bool walkable, uint16_t nextSlot)
-{
-	int n16m = ca_gfxInfoE.numTiles16m;
-	uint8_t *fore = ti_tileInfo + ca_gfxInfoE.numTiles16 * 2;
-	// Blocking top/right/bottom/left and the misc flag.
-	for (int k = 0; k < 5; ++k)
-		fore[k * n16m + slot] = (walkable || !under) ? 0 : fore[k * n16m + under];
-	fore[5 * n16m + slot] = (uint8_t)(int8_t)(nextSlot - slot);
-	fore[6 * n16m + slot] = KW_GATE_ANIM_TICS;
-}
+static const KW_Art kw_gateArt = {
+	KW_GATE_ORIGIN_X, KW_GATE_ORIGIN_Y, KW_GATE_TILES_W, KW_GATE_TILES_H, KW_GATE_FRAMES,
+	&kw_gateSlots[0][0][0], &kw_gateTiles[0][0][0][0],
+	1,  // walkway row
+	12, // tics per frame
+	KW_GateDropsUnderlay,
+};
 
 static void KW_BuildKeen5Gate(void)
 {
-	uint16_t placed[KW_GATE_TILES_H * KW_GATE_TILES_W];
-	for (int r = 0; r < KW_GATE_TILES_H; ++r)
-	{
-		for (int c = 0; c < KW_GATE_TILES_W; ++c)
-		{
-			int x = KW_GATE_ORIGIN_X + c, y = KW_GATE_ORIGIN_Y + r;
-			uint16_t under = CA_TileAtPos(x, y, 1);
-			if (KW_IsGateSlot(under))
-				return; // Already built on this copy of the map.
-			if (KW_GateDropsUnderlay(x, y))
-				under = 0;
-
-			for (int f = 0; f < KW_GATE_FRAMES; ++f)
-			{
-				uint16_t slot = kw_gateSlots[f][r][c];
-				KW_ComposeGateTile(slot, under, kw_gateTiles[f][r][c]);
-				KW_SetGateTileInfo(slot, under, y == KW_GATE_ORIGIN_Y + 1,
-					kw_gateSlots[(f + 1) % KW_GATE_FRAMES][r][c]);
-			}
-			placed[r * KW_GATE_TILES_W + c] = kw_gateSlots[0][r][c];
-		}
-	}
-	// Updates the map and anything already drawn; the graphics now exist.
-	RF_ReplaceTiles(placed, 1, KW_GATE_ORIGIN_X, KW_GATE_ORIGIN_Y, KW_GATE_TILES_W, KW_GATE_TILES_H);
+	KW_PlaceArt(&kw_gateArt);
 }
 
 void KW_SetLaunchSpot(int tileX, int tileY)
@@ -749,15 +673,8 @@ void KW_SelfTest(void)
 			if (route[i] == EP_CK5)
 			{
 				// The boarding gate must be on the map, drawable and walkable.
-				for (int r = 0; r < KW_GATE_TILES_H; ++r)
-					for (int c = 0; c < KW_GATE_TILES_W; ++c)
-					{
-						if (CA_TileAtPos(KW_GATE_ORIGIN_X + c, KW_GATE_ORIGIN_Y + r, 1) != kw_gateSlots[0][r][c])
-							Quit("KW_SelfTest: Keen 5 gate not placed!");
-						for (int f = 0; f < KW_GATE_FRAMES; ++f)
-							if (!ca_graphChunks[ca_gfxInfoE.offTiles16m + kw_gateSlots[f][r][c]])
-								Quit("KW_SelfTest: Keen 5 gate tile missing!");
-					}
+				if (!KW_IsArtPlaced(&kw_gateArt))
+					Quit("KW_SelfTest: Keen 5 gate not placed or a tile is missing!");
 				for (int c = 0; c < KW_GATE_TILES_W; ++c)
 				{
 					uint16_t t = kw_gateSlots[0][1][c];
@@ -876,6 +793,8 @@ void KW_SelfTest(void)
 		ck_gameState.levelsDone[1] = 1;
 		CK_LoadLevel(true, true);
 		KW_CountLevelPeople(&hostiles, &residents, &elder);
+		if (!KW_IsArtPlaced(&kw_portraitArt))
+			Quit("KW_SelfTest: the portrait is missing from Border Village!");
 		if (hostiles || residents != 1 || !KW_IsLevelPeaceful() ||
 			RF_UnitToTile(elder->posX) != 4 || RF_UnitToTile(elder->posY) < 46 || RF_UnitToTile(elder->posY) > 48)
 			Quit("KW_SelfTest: a completed Border Village should be peaceful with one elder in the house!");
