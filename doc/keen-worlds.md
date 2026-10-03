@@ -68,21 +68,18 @@ game built on one of them. `kw_worldDefs[]` in `src/kw_world.c` lists them:
   passcard, rocket). Items belong to their world because worlds on the same
   engine episode share the item fields (Keen 7 counts its own 7 elders).
   Score, lives and ammo travel with Keen.
-- **Ships**: `kw_ships[]` lists worlds with a BWB Megarocket level (level,
-  arrival spot at the ship's nose, boarding area): Keen 4 (level 18), Keen 6
-  (17) and Keen 7 (18 — Keen 4's ship, three rows lower). Keen 5 boards at
-  its docked ship on the map. Keen 8 and 9 have a **Megarocket parked on
-  their world maps** (`kw_mapShips[]`, solid): Keen 4's own world-map
-  Megarocket (tiles 1012-1013 of the Keen 4 shareware data, copied by
-  `tools/kw_mapship_art.py`): Keen 8's on the sand a few steps below where Keen lands, boarded
-  standing at its left end; Keen 9's on the planet just under the landing
-  bay, reached through a hatch in the bay's floor and down a gangway tube
-  over the bay's outer wall (straight down and back up only; the solid
-  ship stops Keen at its cabin, where he boards; `/KWTEST` walks it). Keen 9 drew its own ship into the
-  bay floor right on the Command Center's entrance, so that floor is
-  cleared to plain bay floor. Their art takes tile slots that no level of
-  the mod uses (the mods have no empty slots left). A world with none of
-  these boards and arrives at its world map's starting spot.
+- **Ships**: `kw_ships[]` lists worlds whose Megarocket stands in one of
+  their levels (level, arrival spot at the ship's nose, boarding area):
+  Keen 4 (level 18), Keen 6 (17), Keen 7 (18 — Keen 4's ship, three rows
+  lower) and Keen 9 (level 1, the HUB Command Center: its ship stands on a
+  platform at the level's right end, where the level starts Keen anyway).
+  Keen 5 boards at its docked ship on the map. Keen 8 has a **Megarocket
+  parked on its world map** (`kw_mapShips[]`, solid): Keen 4's own
+  world-map Megarocket (tiles 1012-1013 of the Keen 4 shareware data,
+  copied by `tools/kw_mapship_art.py` into tile slots no Keen 8 level uses —
+  the mod has no empty slots left), on the sand a few steps below where
+  Keen lands, boarded standing at its left end. A world with none of these
+  boards and arrives at its world map's starting spot.
 - **Starting in a world**: `/WORLD <id>` starts new games there
   (`play/run.sh 7` = `/EPISODE 4 /WORLD keen7`, `play/run.sh 8` =
   `/EPISODE 6 /WORLD keen8`, `play/run.sh 9` = `/EPISODE 5 /WORLD keen9`).

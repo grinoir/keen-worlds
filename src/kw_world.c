@@ -170,6 +170,9 @@ static const KW_Ship kw_ships[] = {
 	{KW_KEEN4, 18, 3, 12, 3, 9, 19, 14},
 	{KW_KEEN6, 17, 4, 22, 3, 18, 18, 23},
 	{KW_KEEN7, 18, 3, 15, 3, 12, 19, 17}, // Keen 4's ship, three rows lower
+	// Keen 9's ship stands on its platform in level 1, the HUB Command
+	// Center, where the level itself starts Keen at its nose.
+	{KW_KEEN9, 1, 93, 30, 93, 26, 108, 31},
 };
 
 static const KW_Ship *KW_ShipFor(int world)
@@ -547,8 +550,7 @@ static void KW_BuildKeen5Gate(void)
 
 // ---- Megarockets parked on fan games' world maps ----
 // Art drawn by tools/kw_mapship_art.py, for worlds without a Megarocket
-// level. Keen boards standing next to the ship (or, in Keen 9, in the hatch
-// in the landing bay's floor above it).
+// level or a docked ship (Keen 8). Keen boards standing next to the ship.
 
 #include "kw_mapship_art.h"
 
@@ -558,44 +560,16 @@ static const KW_Art kw_keen8ShipArt = {
 	-1, 0, NULL, true, true,
 };
 
-static const KW_Art kw_keen9ShipArt = {
-	KW_KEEN9_SHIP_X, KW_KEEN9_SHIP_Y, KW_MAPSHIP_TILES_W, KW_MAPSHIP_TILES_H, 1,
-	&kw_keen9ShipSlots[0][0][0], &kw_keen9ShipTiles[0][0][0][0],
-	-1, 0, NULL, true, true,
-};
-
-// The hatch and the gangway tube below it replace the bay's wall (and so
-// are walkable all the way down to the ship).
-static bool KW_HatchDropsUnderlay(int x, int y)
-{
-	(void)x;
-	(void)y;
-	return true;
-}
-
-static const KW_Art kw_keen9HatchArt = {
-	KW_KEEN9_HATCH_X, KW_KEEN9_HATCH_Y, KW_HATCH_TILES_W, KW_HATCH_TILES_H, 1,
-	&kw_keen9HatchSlots[0][0][0], &kw_keen9HatchTiles[0][0][0][0],
-	0, 0, KW_HatchDropsUnderlay, true, false,
-};
-
 typedef struct KW_MapShip
 {
 	int world;
-	const KW_Art *ship, *hatch;
-	int launchX, launchY;            // where Keen stands to board
-	int clearX, clearY, clearW, clearH, clearBack; // background to clear, or clearW 0
+	const KW_Art *ship;
+	int launchX, launchY; // where Keen stands to board
 } KW_MapShip;
 
 static const KW_MapShip kw_mapShips[] = {
 	// Calidune: on the sand, a few steps below where Keen lands.
-	{KW_KEEN8, &kw_keen8ShipArt, NULL, KW_KEEN8_SHIP_X - 1, KW_KEEN8_SHIP_Y + 1, 0, 0, 0, 0, 0},
-	// The Universe: Keen 9 draws its ship into the landing bay's floor,
-	// right where the Command Center's entrance is (35-36 x 23-25), so it
-	// is moved below the bay: the floor there becomes plain bay floor
-	// (background tile 50) and Keen boards through a hatch in the bay's
-	// floor and down a gangway tube, at its bottom.
-	{KW_KEEN9, &kw_keen9ShipArt, &kw_keen9HatchArt, KW_KEEN9_HATCH_X, KW_KEEN9_HATCH_Y + KW_HATCH_TILES_H - 1, 23, 35, 3, 2, 50},
+	{KW_KEEN8, &kw_keen8ShipArt, KW_KEEN8_SHIP_X - 1, KW_KEEN8_SHIP_Y + 1},
 };
 
 static const KW_MapShip *KW_MapShipFor(int world)
@@ -633,12 +607,7 @@ void KW_SetLaunchSpot(int tileX, int tileY)
 	else if (const KW_MapShip *ms = KW_MapShipFor(kw_currentWorld))
 	{
 		// A Megarocket parked on the map (our art).
-		for (int y = ms->clearY; y < ms->clearY + ms->clearH; ++y)
-			for (int x = ms->clearX; x < ms->clearX + ms->clearW; ++x)
-				CA_SetTileAtPos(x, y, 0, ms->clearBack);
 		KW_PlaceArt(ms->ship);
-		if (ms->hatch)
-			KW_PlaceArt(ms->hatch);
 		kw_launchSpotX = ms->launchX;
 		kw_launchSpotY = ms->launchY;
 	}
@@ -674,23 +643,7 @@ void KW_PlaceArrivalAtShip(void)
 
 void KW_ConstrainKeen5Dock(CK_object *mapKeen)
 {
-	if (ca_mapOn != 0)
-		return;
-
-	// A gangway down to a parked ship (Keen 9): straight down and back up.
-	const KW_MapShip *ms = KW_MapShipFor(kw_currentWorld);
-	if (ms && ms->hatch)
-	{
-		int bottom = mapKeen->clipRects.tileY2, top = ms->hatch->originY;
-		if (mapKeen->clipRects.tileXmid != ms->hatch->originX)
-			return;
-		// (The solid ship stops him at the bottom, right at its cabin.)
-		if (bottom >= top)
-			mapKeen->xDirection = IN_motion_None;
-		return;
-	}
-
-	if (kw_currentWorld != KW_KEEN5)
+	if (kw_currentWorld != KW_KEEN5 || ca_mapOn != 0)
 		return;
 
 	int x = mapKeen->posX >> 8;
@@ -1207,13 +1160,28 @@ void KW_SelfTest(void)
 		}
 		if (loaded < 18)
 			Quit("KW_SelfTest: Keen 8/9 is missing levels!");
-		// Its Megarocket is parked on the map, solid, with Keen's boarding
-		// spot beside it (in Keen 9, the hatch, away from the Command
-		// Center's entrance).
+		const KW_Ship *ship = KW_ShipFor(fan);
+		if (ship)
+		{
+			// Its ship stands in one of its levels (Keen 9: the HUB Command
+			// Center): arriving puts Keen there, at the ship, ready to board.
+			kw_placeArrivalAtShip = true;
+			ck_gameState.currentLevel = ship->level;
+			CK_LoadLevel(true, true);
+			if (!KW_IsAtShipHatch() || RF_UnitToTile(ck_keenObj->posX) != ship->arrivalX)
+				Quit("KW_SelfTest: a fan game's ship arrival is wrong!");
+			ck_gameState.currentLevel = 0;
+			CK_LoadLevel(true, true);
+			if (kw_launchSpotX >= 0)
+				Quit("KW_SelfTest: a world with a ship level also boards on its map!");
+			continue;
+		}
+		// Otherwise its Megarocket is parked on the map, solid, with Keen's
+		// boarding spot beside it, away from level entrances.
 		ck_gameState.currentLevel = 0;
 		CK_LoadLevel(true, true);
 		const KW_MapShip *ms = KW_MapShipFor(fan);
-		if (!ms || !KW_IsArtPlaced(ms->ship) || (ms->hatch && !KW_IsArtPlaced(ms->hatch)) ||
+		if (!ms || !KW_IsArtPlaced(ms->ship) ||
 			kw_launchSpotX != ms->launchX || kw_launchSpotY != ms->launchY ||
 			!TI_ForeTop(CA_TileAtPos(ms->ship->originX, ms->ship->originY, 1)))
 			Quit("KW_SelfTest: a fan game's parked Megarocket is missing!");
@@ -1221,40 +1189,7 @@ void KW_SelfTest(void)
 			for (int x = kw_launchSpotX - KW_LAUNCH_RANGE - 1; x <= kw_launchSpotX + KW_LAUNCH_RANGE + 1; ++x)
 				if ((CA_TileAtPos(x, y, 2) & 0xFF00) == 0xC000)
 					Quit("KW_SelfTest: a parked Megarocket's boarding spot is next to a level entrance!");
-		if (ms->hatch)
-			for (int r = 0; r < ms->hatch->tilesH; ++r)
-				if (TI_ForeTop(CA_TileAtPos(ms->hatch->originX, ms->hatch->originY + r, 1)))
-					Quit("KW_SelfTest: Keen 9's boarding hatch or gangway isn't walkable!");
-		if (ms->hatch)
-		{
-			// Walk map-Keen from the bay down the gangway: he must get all the
-			// way to the ship (stopped by it) and be able to board there.
-			ck_keenObj->posX = RF_TileToUnit(ms->hatch->originX);
-			ck_keenObj->posY = RF_TileToUnit(ms->hatch->originY - 2);
-			CK_SetAction(ck_keenObj, CK_ACTION(CK_ACT_MapKeenWalk0));
-			CK_ResetClipRects(ck_keenObj);
-			memset(&ck_inputFrame, 0, sizeof(ck_inputFrame));
-			ck_inputFrame.dir = IN_dir_South;
-			ck_inputFrame.xDirection = IN_motion_None;
-			ck_inputFrame.yDirection = IN_motion_Down;
-			SD_SetSpriteSync(2);
-			for (int t = 0; t < 400; ++t)
-				CK_RunAction(ck_keenObj);
-			int shipTop = RF_TileToUnit(ms->ship->originY);
-			if (ck_keenObj->clipRects.unitY2 < shipTop - 32 || ck_keenObj->clipRects.unitY2 >= shipTop)
-			{
-				CK_Cross_LogMessage(CK_LOG_MSG_ERROR, "KW_SelfTest: gangway: Keen's feet at unit %d, ship top %d\n",
-					ck_keenObj->clipRects.unitY2, shipTop);
-				Quit("KW_SelfTest: Keen can't walk down the gangway to the ship!");
-			}
-			kw_launchRequested = false;
-			KW_TryLaunch(ck_keenObj);
-			if (!kw_launchRequested)
-				Quit("KW_SelfTest: Keen can't board at the bottom of the gangway!");
-			kw_launchRequested = false;
-			memset(&ck_inputFrame, 0, sizeof(ck_inputFrame));
-			ck_inputFrame.dir = IN_dir_None;
-		}
+
 	}
 
 	// Habitable levels: Border Village is peaceful once completed, with an
