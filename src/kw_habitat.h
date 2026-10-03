@@ -30,6 +30,24 @@ void KW_CheckPeacefulExit(void);
 // For /KWTEST: NULL if every dialogue line fits its card, else a description.
 const char *KW_CheckDialogueFits(void);
 
+// Where Keen was put on entering a completed level (for the self-test).
+typedef enum KW_RevisitPlacement
+{
+	KW_REVISIT_KEPT,  // no exit found: the level's own start
+	KW_REVISIT_SPECIAL, // not a walking level (swimming): its own start
+	KW_REVISIT_TABLE, // a hand-placed start
+	KW_REVISIT_DOOR,  // at the exit door (Keen 5)
+	KW_REVISIT_GOAL,  // by the broken fuses / the QED's place (Keen 5)
+	KW_REVISIT_SIDE,  // the side opposite the level's start
+	KW_REVISIT_ONLY_EXIT, // the level's only exit is by its start
+} KW_RevisitPlacement;
+KW_RevisitPlacement KW_LastRevisitPlacement(void);
+// Where Keen first came into the level (its own start) and from which side.
+void KW_GetLevelEntry(int *tileX, int *tileY, int *fromDirection);
+
+// In a completed level deadly tiles (spikes, fire) don't hurt Keen.
+bool KW_IsDeadlyTileHarmless(void);
+
 struct CK_object;
 struct KW_Art;
 // Border Village's tavern art (for /KWTEST): boards on the door (before);

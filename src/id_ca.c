@@ -1081,6 +1081,13 @@ FS_File ca_GameMaps;
 
 CA_MapHeader *CA_MapHeaders[CA_NUMMAPS];
 
+// KEEN WORLDS: whether the episode's GAMEMAPS holds a map in this slot.
+bool CA_MapExists(int mapIndex)
+{
+	return ca_MapHead && mapIndex >= 0 && mapIndex < CA_NUMMAPS &&
+		ca_MapHead->headerOffsets[mapIndex] && ca_MapHead->headerOffsets[mapIndex] != 0xFFFFFFFF;
+}
+
 uint16_t *CA_mapPlanes[CA_NUMMAPPLANES];
 
 extern uint8_t *ti_tileInfo;

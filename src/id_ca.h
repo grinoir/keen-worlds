@@ -107,6 +107,7 @@ typedef struct CA_MapHeader
 } CA_MapHeader;
 
 extern CA_MapHeader *CA_MapHeaders[CA_NUMMAPS];
+bool CA_MapExists(int mapIndex);
 
 extern uint16_t *CA_mapPlanes[CA_NUMMAPPLANES];
 

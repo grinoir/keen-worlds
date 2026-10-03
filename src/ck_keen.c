@@ -19,6 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "ck_act.h"
 #include "ck_def.h"
+#include "kw_habitat.h"
 #include "ck_phys.h"
 #include "ck_play.h"
 
@@ -295,7 +296,9 @@ void CK_KeenCheckSpecialTileInfo(CK_object *obj)
 			case 0:
 				break;
 			case MISCFLAG_DEADLY:
-				CK_KillKeen();
+				// KEEN WORLDS: harmless in completed (peaceful) levels.
+				if (!KW_IsDeadlyTileHarmless())
+					CK_KillKeen();
 				break;
 			case 4:
 				CK_KeenGetTileCentilife(x, y);

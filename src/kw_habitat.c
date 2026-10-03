@@ -13,6 +13,7 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 #include "id_rf.h"
 #include "id_sd.h"
 #include "id_us.h"
+#include "id_ti.h"
 #include "id_vh.h"
 #include "id_vl.h"
 #include "ck_act.h"
@@ -222,29 +223,286 @@ static void KW_ChangeLevel(void)
 }
 
 // ---- Coming back ----
-// A peaceful level is entered from its left end, Keen facing right, so it
-// looks like he walks back in (he can leave through the right end too).
+// Keen re-enters a completed level from the opposite side to where he first
+// started — at its exit — so it looks like he walks back in. This is found
+// automatically for every level of every world:
+// - a level with an exit door (info value 0xB1B1, Keen 5): Keen stands at it;
+// - a Keen 5 fuse level (no door: it ends when the last fuse breaks): beside
+//   the fuses, which stay broken; on the QED level where the QED stood;
+// - a level that ends at a goal — rescuing an Oracle Council member,
+//   finding Keen 6's rope, sandwich or passcard, or Molly: where it was;
+// - otherwise (levels left by walking off a side): the side opposite his
+//   normal start, at a spot whose floor runs out to the map's edge.
+// He faces back into the level. kw_revisitStarts[] can override a level.
 static const struct
 {
 	int episode, level;
 	int tileX, tileY; // as a Keen spawn marker: the row above the floor
 } kw_revisitStarts[] = {
-	{KW_KEEN4, 1, 3, 16}, // Border Village: by the sign at the far left
+	{KW_NO_WORLD, 0, 0, 0}, // (none needed so far)
 };
+
+static bool KW_Solid(int x, int y)
+{
+	if (x < 0 || y < 0 || x >= CA_GetMapWidth() || y >= CA_GetMapHeight())
+		return true;
+	uint16_t t = CA_TileAtPos(x, y, 1);
+	return TI_ForeTop(t) || TI_ForeBottom(t) || TI_ForeLeft(t) || TI_ForeRight(t) ||
+		(TI_ForeMisc(t) & 0x7F) == MISCFLAG_DEADLY;
+}
+
+// Keen (about 2x2 tiles) can stand with his feet in row y at columns x, x+1.
+static bool KW_Standable(int x, int y)
+{
+	if (KW_Solid(x, y) || KW_Solid(x + 1, y) || KW_Solid(x, y - 1) || KW_Solid(x + 1, y - 1))
+		return false;
+	return TI_ForeTop(CA_TileAtPos(x, y + 1, 1)) || TI_ForeTop(CA_TileAtPos(x + 1, y + 1, 1));
+}
+
+// The standing spot nearest a tile.
+static bool KW_FindSpotNear(int tx, int ty, int *outX, int *outY)
+{
+	for (int r = 0; r <= 10; ++r)
+		for (int dy = -r; dy <= r; ++dy)
+			for (int dx = -r; dx <= r; ++dx)
+				if ((abs(dx) == r || abs(dy) == r) && KW_Standable(tx + dx, ty + dy))
+				{
+					*outX = tx + dx;
+					*outY = ty + dy;
+					return true;
+				}
+	return false;
+}
+
+// The open space at Keen's height runs from x out to the map edge (column 2
+// or width - 3, inside the border), so this is a walk-off exit.
+static bool KW_ReachesEdge(int x, int y, int dir)
+{
+	int edge = dir < 0 ? 2 : CA_GetMapWidth() - 3;
+	for (int cx = x; dir < 0 ? cx >= edge : cx <= edge; cx += dir)
+		if (KW_Solid(cx, y) || KW_Solid(cx, y - 1))
+			return false;
+	return true;
+}
+
+static bool KW_FindExitDoor(int *outX, int *outY)
+{
+	bool found = false;
+	for (int y = 0; y < CA_GetMapHeight(); ++y)
+		for (int x = 0; x < CA_GetMapWidth(); ++x)
+			if (CA_TileAtPos(x, y, 2) == 0xB1B1 && (!found || y > *outY || (y == *outY && x < *outX)))
+			{
+				*outX = x;
+				*outY = y;
+				found = true;
+			}
+	return found;
+}
+
+// The standing spot nearest the given side's edge (at least 3 tiles in, so
+// Keen doesn't leave straight away) whose space runs out to the edge.
+static bool KW_FindSideExit(int dir, int nearY, int *outX, int *outY)
+{
+	int w = CA_GetMapWidth(), h = CA_GetMapHeight();
+	int start = dir < 0 ? 5 : w - 7, stop = dir < 0 ? w / 2 : w / 2;
+	for (int x = start; dir < 0 ? x <= stop : x >= stop; x -= dir)
+	{
+		int best = -1;
+		for (int y = 1; y < h - 1; ++y)
+			if (KW_Standable(x, y) && KW_ReachesEdge(dir < 0 ? x : x + 1, y, dir) &&
+				(best < 0 || abs(y - nearY) < abs(best - nearY)))
+				best = y;
+		if (best >= 0)
+		{
+			*outX = x;
+			*outY = best;
+			return true;
+		}
+	}
+	// Something in the way (a pillar, a closed passage): stand as near as
+	// possible to the opening in the map's edge column.
+	int edge = dir < 0 ? 1 : w - 2, bestDist = 1 << 30;
+	bool found = false;
+	for (int y = 2; y < h - 1; ++y)
+	{
+		int sx, sy;
+		if (KW_Solid(edge, y) || KW_Solid(edge, y - 1) || !KW_FindSpotNear(edge - dir * 2, y, &sx, &sy))
+			continue;
+		int dist = abs(sx - edge) + abs(sy - y);
+		if (dist < bestDist && abs(sx - edge) < w / 2)
+		{
+			bestDist = dist;
+			*outX = sx;
+			*outY = sy;
+			found = true;
+		}
+	}
+	return found;
+}
+
+// Keen 5's fuses: a two-tile machine whose lower tile has this top flag
+// (see CK_KeenBreakFuse). Broken, they look like the map's tiles at (0,0)
+// and (0,1). Returns how many there were; the last is in *outX, *outY.
+#define KW_FUSE_TOP 0x39
+static int KW_BreakFuses(int *outX, int *outY)
+{
+	int fuses = 0;
+#ifdef WITH_KEEN5
+	if (ck_currentEpisode->ep != EP_CK5)
+		return 0;
+	for (int y = 1; y < CA_GetMapHeight(); ++y)
+		for (int x = 0; x < CA_GetMapWidth(); ++x)
+			if (TI_ForeTop(CA_TileAtPos(x, y, 1)) == KW_FUSE_TOP)
+			{
+				CA_SetTileAtPos(x, y - 1, 1, CA_TileAtPos(0, 0, 1));
+				CA_SetTileAtPos(x, y, 1, CA_TileAtPos(0, 1, 1));
+				*outX = x;
+				*outY = y;
+				++fuses;
+			}
+	// The QED level: where the QED (info 41, see CK5_ScanInfoLayer) stood.
+	if (!fuses && ca_mapOn == 12)
+		for (int y = 1; y < CA_GetMapHeight(); ++y)
+			for (int x = 0; x < CA_GetMapWidth(); ++x)
+				if (CA_TileAtPos(x, y, 2) == 41)
+				{
+					*outX = x;
+					*outY = y;
+					++fuses;
+				}
+#else
+	(void)outX;
+	(void)outY;
+#endif
+	return fuses;
+}
+
+static KW_RevisitPlacement kw_revisitPlacement;
+static int kw_goalX = -1, kw_goalY;
+// The level's own start, where Keen first came in, and the direction he came
+// from: walking back out that way there leaves a completed level.
+static int kw_entryX = -1, kw_entryY, kw_entryFrom;
+
+KW_RevisitPlacement KW_LastRevisitPlacement(void)
+{
+	return kw_revisitPlacement;
+}
+
+static void KW_PutKeen(int tileX, int tileY, int facing)
+{
+	ck_keenObj->posX = RF_TileToUnit(tileX);
+	ck_keenObj->posY = RF_TileToUnit(tileY) - 241; // as CK_SpawnKeen
+	ck_keenObj->xDirection = facing;
+	CK_SetAction(ck_keenObj, CK_ACTION(CK_ACT_keenStanding));
+	CK_ResetClipRects(ck_keenObj);
+}
 
 static void KW_PlaceRevisitStart(void)
 {
 	for (int i = 0; i < (int)(sizeof(kw_revisitStarts) / sizeof(kw_revisitStarts[0])); ++i)
+		if (kw_revisitStarts[i].episode == KW_CurrentEpisode() && kw_revisitStarts[i].level == ca_mapOn)
+		{
+			KW_PutKeen(kw_revisitStarts[i].tileX, kw_revisitStarts[i].tileY, IN_motion_Right);
+			kw_revisitPlacement = KW_REVISIT_TABLE;
+			return;
+		}
+
+	int w = CA_GetMapWidth();
+	int startX = RF_UnitToTile(ck_keenObj->posX), startY = ck_keenObj->clipRects.tileY2;
+	int x, y, fx, fy;
+	kw_revisitPlacement = KW_REVISIT_KEPT;
+	kw_entryX = startX;
+	kw_entryY = startY;
+	kw_entryFrom = ck_keenObj->xDirection == IN_motion_Right ? IN_motion_Left : IN_motion_Right;
+	// Swimming (Keen 4's Well of Wishes) and the high score "level" keep
+	// their own start.
+	if (ck_keenObj->currentAction != CK_ACTION(CK_ACT_keenStanding))
 	{
-		if (kw_revisitStarts[i].episode != KW_CurrentEpisode() || kw_revisitStarts[i].level != ca_mapOn)
-			continue;
-		ck_keenObj->posX = RF_TileToUnit(kw_revisitStarts[i].tileX);
-		ck_keenObj->posY = RF_TileToUnit(kw_revisitStarts[i].tileY) - 241; // as CK_SpawnKeen
-		ck_keenObj->xDirection = IN_motion_Right;
-		CK_SetAction(ck_keenObj, CK_ACTION(CK_ACT_keenStanding));
-		CK_ResetClipRects(ck_keenObj);
+		kw_revisitPlacement = KW_REVISIT_SPECIAL;
 		return;
 	}
+	if (KW_FindExitDoor(&x, &y))
+	{
+		// The door's marker is one row above Keen's feet as he stands at it.
+		KW_PutKeen(x, y + 1, x < w / 2 ? IN_motion_Right : IN_motion_Left);
+		kw_revisitPlacement = KW_REVISIT_DOOR;
+		return;
+	}
+	bool goal = KW_BreakFuses(&fx, &fy);
+	if (!goal && kw_goalX >= 0)
+	{
+		fx = kw_goalX;
+		fy = kw_goalY;
+		goal = true;
+	}
+	if (goal && KW_FindSpotNear(fx, fy, &x, &y))
+	{
+		// He leaves the way he first came in, so he faces that way.
+		KW_PutKeen(x, y, startX > x ? IN_motion_Right : IN_motion_Left);
+		kw_revisitPlacement = KW_REVISIT_GOAL;
+		return;
+	}
+	// The side opposite his normal start: of the exits at both ends, the one
+	// farther from it (some levels start mid-map).
+	int lx, ly, rx, ry;
+	bool left = KW_FindSideExit(-1, startY, &lx, &ly), right = KW_FindSideExit(1, startY, &rx, &ry);
+	if (left && right)
+	{
+		if (abs(lx - startX) > abs(rx - startX))
+			right = false;
+		else
+			left = false;
+	}
+	if (left || right)
+	{
+		x = left ? lx : rx;
+		KW_PutKeen(x, left ? ly : ry, left ? IN_motion_Right : IN_motion_Left);
+		// A level whose only way out is where it starts: he comes back in there.
+		kw_revisitPlacement = abs(x - startX) >= w / 3 ? KW_REVISIT_SIDE : KW_REVISIT_ONLY_EXIT;
+	}
+	// No exit found: keep the level's own start.
+}
+
+// ---- Fully open ----
+// A completed level is completely walkable: gem doors start open (as if
+// their gems had been placed), Keen 5's keycard doors need no card, and
+// deadly tiles (spikes, fire) don't hurt (see KW_IsDeadlyTileHarmless).
+
+static void KW_OpenGemDoors(void)
+{
+	int w = CA_GetMapWidth(), h = CA_GetMapHeight();
+	for (int y = 0; y < h; ++y)
+		for (int x = 0; x < w; ++x)
+		{
+			uint16_t holder = CA_TileAtPos(x, y, 1);
+			int misc = TI_ForeMisc(holder) & 0x7F;
+			if (misc < MISCFLAG_GEMHOLDER0 || misc > MISCFLAG_GEMHOLDER3)
+				continue;
+			uint16_t target = CA_TileAtPos(x, y, 2);
+			int doorX = target >> 8, doorY = target & 0xFF;
+			if (doorX < 2 || doorY < 2 || doorX > w || doorY > h)
+				continue;
+			// As CK_KeenPlaceGem: the holder shows its gem, the door opens.
+			uint16_t filled = holder + 18;
+			CA_SetTileAtPos(x, y, 1, filled);
+			int height = 0;
+			uint16_t doorTile = CA_TileAtPos(doorX, doorY, 1);
+			for (int dy = doorY; dy < h && CA_TileAtPos(doorX, dy, 1) == doorTile; ++dy)
+				++height;
+			CK_object *door = CK_GetNewObj(false);
+			door->posX = doorX;
+			door->posY = doorY;
+			door->user1 = height;
+			door->clipped = CLIP_not;
+			door->type = CT_Friendly;
+			door->active = OBJ_ALWAYS_ACTIVE;
+			CK_SetAction(door, CK_ACTION(CK_ACT_DoorOpen1));
+		}
+}
+
+bool KW_IsDeadlyTileHarmless(void)
+{
+	return kw_levelIsPeaceful;
 }
 
 // ---- Clearing out enemies ----
@@ -303,8 +561,9 @@ static bool KW_IsHostile(CK_object *obj)
 	}
 }
 
-// Characters whose encounter ends a game: meeting them again in a cleared
-// level would replay the story (Keen 5's QED, Keen 6's Molly).
+// Characters and things whose encounter ends a level or the game: meeting
+// them again in a cleared level would replay the story (Keen 5's QED, Keen
+// 6's Molly and the rope, sandwich and passcard Keen already has).
 static bool KW_IsStoryTrigger(CK_object *obj)
 {
 #ifdef WITH_KEEN5
@@ -312,10 +571,22 @@ static bool KW_IsStoryTrigger(CK_object *obj)
 		return true;
 #endif
 #ifdef WITH_KEEN6
-	if (ck_currentEpisode->ep == EP_CK6 && obj->type == CT6_Molly)
+	if (ck_currentEpisode->ep == EP_CK6 && (obj->type == CT6_Molly || obj->type == CT6_Rope ||
+												obj->type == CT6_Sandwich || obj->type == CT6_Passcard))
 		return true;
 #endif
 	return false;
+}
+
+// What ended the level, if it wasn't an exit: the Oracle Council member
+// Keen rescued (Keen 4, and Keen 7 on its engine) or a story trigger.
+static bool KW_IsLevelGoal(CK_object *obj)
+{
+#ifdef WITH_KEEN4
+	if (ck_currentEpisode->ep == EP_CK4 && obj->type == CT4_CouncilMember)
+		return true;
+#endif
+	return KW_IsStoryTrigger(obj);
 }
 
 static void KW_SpawnResident(int index)
@@ -350,6 +621,15 @@ void KW_SetupLevelResidents(void)
 	if (!kw_levelIsPeaceful)
 		return;
 
+	// Where the level ended, if at a goal (see KW_PlaceRevisitStart).
+	kw_goalX = -1;
+	for (CK_object *obj = ck_keenObj->next; obj; obj = obj->next)
+		if (KW_IsLevelGoal(obj))
+		{
+			kw_goalX = RF_UnitToTile(obj->posX);
+			kw_goalY = RF_UnitToTile(obj->posY) + 1;
+			break;
+		}
 	// The enemies have moved out, and story moments don't replay...
 	for (CK_object *obj = ck_keenObj, *next; obj; obj = next)
 	{
@@ -364,8 +644,9 @@ void KW_SetupLevelResidents(void)
 #endif
 	}
 
-	// Keen walks back in from the left.
+	// Keen walks back in from the opposite side, and everything is open.
 	KW_PlaceRevisitStart();
+	KW_OpenGemDoors();
 
 	// ...and the residents have moved in.
 	for (int i = 0; i < KW_NUM_RESIDENTS; ++i)
@@ -584,18 +865,35 @@ void KW_CountLevelPeople(int *hostiles, int *residents, CK_object **firstResiden
 	}
 }
 
-// In a peaceful level Keen can also leave through the right end (where he
-// first came in): walking right into the last tiles of the map ends the
-// level, as walking off the left side does.
-#define KW_RIGHT_EXIT_ZONE 3 // tiles from the right edge of the map
+// In a peaceful level Keen can also leave through either end: walking into
+// the first or last tiles of the map ends the level, as walking off a side
+// does (some levels are walled at the end Keen first came in by).
+#define KW_EXIT_ZONE 3 // tiles from the left or right edge of the map
 
 void KW_CheckPeacefulExit(void)
 {
 	if (!kw_levelIsPeaceful || !ck_keenObj || ck_gameState.levelState != LS_Playing)
 		return;
-	if (ck_inputFrame.xDirection == IN_motion_Right &&
-		ck_keenObj->clipRects.tileX2 >= CA_GetMapWidth() - KW_RIGHT_EXIT_ZONE)
+#ifdef WITH_KEEN5
+	// Keycard doors open without a card in a completed level.
+	if (ck_currentEpisode->ep == EP_CK5)
+		ck_gameState.ep.ck5.securityCard = 1;
+#endif
+	if ((ck_inputFrame.xDirection == IN_motion_Right &&
+		 ck_keenObj->clipRects.tileX2 >= CA_GetMapWidth() - KW_EXIT_ZONE) ||
+		(ck_inputFrame.xDirection == IN_motion_Left && ck_keenObj->clipRects.tileX1 < KW_EXIT_ZONE))
 		ck_gameState.levelState = LS_LevelComplete;
+	// ...and back out where he first came in (some levels start mid-map).
+	if (kw_entryX >= 0 && ck_inputFrame.xDirection == kw_entryFrom &&
+		abs(ck_keenObj->clipRects.tileX1 - kw_entryX) <= 1 && abs(ck_keenObj->clipRects.tileY2 - kw_entryY) <= 1)
+		ck_gameState.levelState = LS_LevelComplete;
+}
+
+void KW_GetLevelEntry(int *tileX, int *tileY, int *fromDirection)
+{
+	*tileX = kw_entryX;
+	*tileY = kw_entryY;
+	*fromDirection = kw_entryFrom;
 }
 
 void KW_TavernDoors(int *streetX, int *streetY, int *roomX, int *roomY)

@@ -846,6 +846,68 @@ void KW_SelfTest(void)
 				if (!entrance)
 					Quit("KW_SelfTest: a completed level lost its map entrance!");
 				ck_gameState.levelsDone[1] = 0;
+
+				// Every level of the world, once completed: Keen comes back in at
+				// its exit (the opposite side, or Keen 5's exit door), standing,
+				// facing into the level, and every gem door is open.
+				for (int lv = 1; lv < CA_NUMMAPS; ++lv)
+				{
+					if (!CA_MapExists(lv))
+						continue;
+					ck_gameState.currentLevel = lv;
+					ck_gameState.levelsDone[lv] = 0;
+					CK_LoadLevel(true, true);
+					int startX = RF_UnitToTile(ck_keenObj->posX);
+					ck_gameState.levelsDone[lv] = 1;
+					CK_LoadLevel(true, true);
+					int x = RF_UnitToTile(ck_keenObj->posX), w = CA_GetMapWidth();
+					int feet = ck_keenObj->clipRects.tileY2;
+					bool atDoor = CA_TileAtPos(ck_keenObj->clipRects.tileX1, feet - 1, 2) == 0xB1B1;
+					bool opposite = abs(x - startX) >= w / 3;
+					KW_RevisitPlacement how = KW_LastRevisitPlacement();
+					if (how == KW_REVISIT_SPECIAL || !strcmp(CA_MapHeaders[lv]->name, "HighScores"))
+					{
+						ck_gameState.levelsDone[lv] = 0;
+						continue;
+					}
+					bool facingIn = how == KW_REVISIT_GOAL || (x < w / 2) == (ck_keenObj->xDirection == IN_motion_Right);
+					bool standing = TI_ForeTop(CA_TileAtPos(ck_keenObj->clipRects.tileX1, feet + 1, 1)) ||
+						TI_ForeTop(CA_TileAtPos(ck_keenObj->clipRects.tileX2, feet + 1, 1));
+					int closedGems = 0;
+					for (int gy = 0; gy < CA_GetMapHeight(); ++gy)
+						for (int gx = 0; gx < w; ++gx)
+						{
+							int misc = TI_ForeMisc(CA_TileAtPos(gx, gy, 1)) & 0x7F;
+							if (misc >= MISCFLAG_GEMHOLDER0 && misc <= MISCFLAG_GEMHOLDER3)
+								++closedGems;
+						}
+					if (how == KW_REVISIT_KEPT || (how == KW_REVISIT_DOOR && !atDoor) || (how == KW_REVISIT_SIDE && !opposite) || !facingIn || !standing || closedGems)
+					{
+						CK_Cross_LogMessage(CK_LOG_MSG_ERROR, "KW_SelfTest: %s level %d: start %d -> %d,%d door=%d opposite=%d facingIn=%d standing=%d closedGems=%d (below: tile %d top %d) how=%d\n",
+							KW_WorldName(KW_CurrentWorld()), lv, startX, x, feet, atDoor, opposite, facingIn, standing, closedGems,
+							CA_TileAtPos(ck_keenObj->clipRects.tileX1, feet + 1, 1), TI_ForeTop(CA_TileAtPos(ck_keenObj->clipRects.tileX1, feet + 1, 1)), (int)how);
+						Quit("KW_SelfTest: a completed level isn't entered from its exit, or isn't fully open!");
+					}
+					// ...and can leave where he first came in, walking back out.
+					int ex, ey, efrom;
+					KW_GetLevelEntry(&ex, &ey, &efrom);
+					ck_keenObj->posX = RF_TileToUnit(ex);
+					ck_keenObj->posY = RF_TileToUnit(ey) - 241;
+					CK_ResetClipRects(ck_keenObj);
+					ck_inputFrame.xDirection = (IN_Motion)efrom;
+					ck_gameState.levelState = LS_Playing;
+					KW_CheckPeacefulExit();
+					ck_inputFrame.xDirection = IN_motion_None;
+					if (ck_gameState.levelState != LS_LevelComplete)
+						Quit("KW_SelfTest: a completed level can't be left where Keen first came in!");
+					ck_gameState.levelState = LS_Playing;
+					if (how == KW_REVISIT_ONLY_EXIT)
+						CK_Cross_LogMessage(CK_LOG_MSG_NORMAL, "KW_SelfTest: %s level %d has one exit, by its start\n",
+							KW_WorldName(KW_CurrentWorld()), lv);
+					ck_gameState.levelsDone[lv] = 0;
+				}
+				ck_gameState.currentLevel = 0;
+				CK_LoadLevel(true, true);
 			}
 			if (route[i] == KW_KEEN4 && round == 0)
 			{
@@ -1089,10 +1151,18 @@ void KW_SelfTest(void)
 				!KW_IsArtPlaced(&kw_portraitArt) || !KW_IsArtCellPlaced(&kw_innArt, 77, 15))
 				Quit("KW_SelfTest: art was purged from memory (a conversation would crash)!");
 		}
-		// Coming back: Keen starts at the left end, facing right...
-		if (RF_UnitToTile(ck_keenObj->posX) > 4 || ck_keenObj->xDirection != IN_motion_Right)
+		// Coming back: Keen starts at the left end (his first start was at
+		// the right), facing right...
+		if (RF_UnitToTile(ck_keenObj->posX) > 8 || ck_keenObj->xDirection != IN_motion_Right)
 			Quit("KW_SelfTest: a peaceful Border Village should start at the left, facing right!");
-		// ...and can leave through the right end.
+		// ...and can leave through either end.
+		ck_keenObj->posX = RF_TileToUnit(1);
+		CK_ResetClipRects(ck_keenObj);
+		ck_inputFrame.xDirection = IN_motion_Left;
+		ck_gameState.levelState = LS_Playing;
+		KW_CheckPeacefulExit();
+		if (ck_gameState.levelState != LS_LevelComplete)
+			Quit("KW_SelfTest: a peaceful Border Village can't be left through the left end!");
 		ck_keenObj->posX = RF_TileToUnit(CA_GetMapWidth() - 3);
 		CK_ResetClipRects(ck_keenObj);
 		ck_inputFrame.xDirection = IN_motion_Right;
