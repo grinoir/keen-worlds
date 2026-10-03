@@ -88,6 +88,10 @@ void KW_SetStartWorld(void);
 // A new game always begins in the start world.
 void KW_ReturnToStartWorld(void);
 
+// Wait until no buttons are held (after a menu or dialogue), so the press
+// that closed it doesn't act again.
+void KW_WaitForButtonsUp(void);
+
 // Developer self-test, run with /KWTEST.
 void KW_SelfTest(void);
 

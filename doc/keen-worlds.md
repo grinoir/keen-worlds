@@ -136,3 +136,25 @@ and a collar clamped onto the ship's nose. Three animation frames.
   game over.
 
 `/KWTEST` covers a cross-world and a same-world save/load round trip.
+
+## Habitable levels (first slice)
+
+Once Keen has completed a level that has **residents**, coming back finds it
+peaceful: enemies are removed after the level spawns, and the residents are
+added. Stand next to a resident and press **up** to talk.
+
+- Residents are listed in `kw_residents[]` in `src/kw_habitat.c`: world,
+  level, the tile they stand on (one row above the floor, like an info-plane
+  spawn marker), their line and Keen's reply. Lines use `\n`.
+- First resident: an Oracle Council elder in Keen 4's Border Village (level
+  1), inside the first house. The house door already leads to a small room at
+  the bottom left of the map (tile 7, 48); the elder stands at (4, 48).
+- The elder reuses the council member's sprites and walking animation but is
+  spawned as `CT_Friendly`, so touching him doesn't trigger a rescue. Residents
+  carry a tag and their table index in `user4`, which is saved with the game.
+- The conversation reuses the council rescue layout: elder portrait and his
+  line, then Keen's portrait and reply.
+- Known gap: Keen 4 dart guns share object type 1 with harmless objects and
+  are not removed yet (Border Village has none).
+- `/KWTEST` checks Border Village before (enemies, no resident) and after
+  completion (no enemies, one elder in the house).

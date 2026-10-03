@@ -29,6 +29,7 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 #include "ck5_ep.h"
 #include "ck6_ep.h"
 #include "kw_world.h"
+#include "kw_habitat.h"
 
 extern const char *ck_episodeFile;
 
@@ -568,7 +569,7 @@ void KW_TryLaunch(CK_object *mapKeen)
 	kw_launchRequested = true;
 }
 
-static void KW_WaitForButtonsUp(void)
+void KW_WaitForButtonsUp(void)
 {
 	IN_ControlFrame frame;
 	do
@@ -858,6 +859,27 @@ void KW_SelfTest(void)
 					Quit("KW_SelfTest: save lost which worlds are completed!");
 		}
 		remove(testFile);
+	}
+
+	// Habitable levels: Border Village is peaceful once completed, with an
+	// elder in the first house.
+	{
+		int hostiles, residents;
+		CK_object *elder;
+		KW_SwitchWorld(4);
+		ck_gameState.currentLevel = 1;
+		ck_gameState.levelsDone[1] = 0;
+		CK_LoadLevel(true, true);
+		KW_CountLevelPeople(&hostiles, &residents, &elder);
+		if (!hostiles || residents || KW_IsLevelPeaceful())
+			Quit("KW_SelfTest: an uncompleted Border Village should keep its enemies!");
+		ck_gameState.levelsDone[1] = 1;
+		CK_LoadLevel(true, true);
+		KW_CountLevelPeople(&hostiles, &residents, &elder);
+		if (hostiles || residents != 1 || !KW_IsLevelPeaceful() ||
+			RF_UnitToTile(elder->posX) != 4 || RF_UnitToTile(elder->posY) < 46 || RF_UnitToTile(elder->posY) > 48)
+			Quit("KW_SelfTest: a completed Border Village should be peaceful with one elder in the house!");
+		ck_gameState.currentLevel = 0;
 	}
 
 	if (!ck_gameState.ep.ck4.wetsuit || !ck_gameState.ep.ck6.sandwich)

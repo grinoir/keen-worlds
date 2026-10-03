@@ -37,6 +37,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ck_play.h"
 #include "ck_text.h"
 #include "kw_world.h"
+#include "kw_habitat.h"
 #include "ck4_ep.h"
 #include "ck5_ep.h"
 #include "ck6_ep.h"
@@ -624,6 +625,8 @@ void CK_LoadLevel(bool doCache, bool silent)
 
 	CK_SetupObjArray(); // This is done inside ScanInfoLayer in CK4
 	ck_currentEpisode->scanInfoLayer();
+	// KEEN WORLDS: Completed levels with residents become peaceful.
+	KW_SetupLevelResidents();
 	KW_PlaceArrivalAtShip();
 
 	if (ca_mapOn == 0)
