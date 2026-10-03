@@ -38,4 +38,11 @@ bool KW_IsArtPlaced(const KW_Art *art);
 // cover the rest).
 bool KW_IsArtCellPlaced(const KW_Art *art, int x, int y);
 
+// Build the art's tiles in memory without putting it on the map (for art
+// drawn elsewhere, e.g. a dialogue picture).
+void KW_BuildArtTiles(const KW_Art *art);
+
+// Draw built art (first frame) into the back buffer at screen position x, y.
+void KW_DrawArt(const KW_Art *art, int x, int y);
+
 #endif

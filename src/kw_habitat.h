@@ -27,6 +27,9 @@ void KW_CheckTalk(void);
 // the map's right edge leaves the level.
 void KW_CheckPeacefulExit(void);
 
+// For /KWTEST: NULL if every dialogue line fits its card, else a description.
+const char *KW_CheckDialogueFits(void);
+
 struct CK_object;
 struct KW_Art;
 // Border Village's tavern art (for /KWTEST): boards on the door (before);

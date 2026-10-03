@@ -14,6 +14,8 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 #include "id_ca.h"
 #include "id_mm.h"
 #include "id_rf.h"
+#include "id_vh.h"
+#include "id_vl.h"
 #include "ck_def.h"
 #include "kw_art.h"
 
@@ -134,4 +136,27 @@ bool KW_IsArtCellPlaced(const KW_Art *art, int x, int y)
 		return false;
 	return CA_TileAtPos(x, y, 1) == KW_ArtSlot(art, 0, r, c) &&
 		ca_graphChunks[ca_gfxInfoE.offTiles16m + KW_ArtSlot(art, 0, r, c)];
+}
+
+void KW_BuildArtTiles(const KW_Art *art)
+{
+	for (int f = 0; f < art->frames; ++f)
+		for (int r = 0; r < art->tilesH; ++r)
+			for (int c = 0; c < art->tilesW; ++c)
+				if (!ca_graphChunks[ca_gfxInfoE.offTiles16m + KW_ArtSlot(art, f, r, c)])
+					KW_ComposeArtTile(KW_ArtSlot(art, f, r, c), 0, KW_ArtTile(art, f, r, c));
+}
+
+void KW_DrawArt(const KW_Art *art, int x, int y)
+{
+	// Like VHB_DrawTile16M (which draws an 8x8 tile by mistake), into the
+	// back buffer at screen position x, y.
+	int sx = VL_GetScrollX() & 8, sy = VL_GetScrollY();
+	for (int r = 0; r < art->tilesH; ++r)
+		for (int c = 0; c < art->tilesW; ++c)
+		{
+			int px = x + c * 16 + sx, py = y + r * 16 + sy;
+			if (VH_MarkUpdateBlock(px, py, px + 15, py + 15))
+				VH_DrawTile16M(px, py, KW_ArtSlot(art, 0, r, c));
+		}
 }

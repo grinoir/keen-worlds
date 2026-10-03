@@ -793,6 +793,12 @@ void KW_SelfTest(void)
 		KW_CountLevelPeople(&hostiles, &residents, &elder);
 		if (!hostiles || residents || KW_IsLevelPeaceful())
 			Quit("KW_SelfTest: an uncompleted Border Village should keep its enemies!");
+		{
+			const char *problem = KW_CheckDialogueFits();
+			if (problem)
+				QuitF("KW_SelfTest: dialogue doesn't fit its card: %s", problem);
+		}
+
 		// The tavern: boarded up and not enterable before liberation.
 		int streetX, streetY, roomX, roomY;
 		KW_TavernDoors(&streetX, &streetY, &roomX, &roomY);
@@ -820,7 +826,7 @@ void KW_SelfTest(void)
 		if ((TI_ForeMisc(CA_TileAtPos(streetX, streetY, 1)) & 0x7F) != MISCFLAG_DOOR ||
 			CA_TileAtPos(streetX, streetY, 2) != ((roomX << 8) | roomY) ||
 			(TI_ForeMisc(CA_TileAtPos(roomX, roomY - 1, 1)) & 0x7F) != MISCFLAG_DOOR ||
-			CA_TileAtPos(roomX, roomY, 2) != ((streetX << 8) | streetY))
+			CA_TileAtPos(roomX, roomY, 2) != ((streetX << 8) | (streetY + 1)))
 			Quit("KW_SelfTest: the tavern doors don't connect the street and the room!");
 		if (!KW_IsArtCellPlaced(&kw_innArt, 77, 15) || (TI_ForeMisc(CA_TileAtPos(77, 15, 1)) & 0x7F) != MISCFLAG_DOOR ||
 			CA_TileAtPos(77, 15, 2) != 0x641E)
@@ -847,6 +853,19 @@ void KW_SelfTest(void)
 				!KW_IsArtPlaced(&kw_portraitArt) || !KW_IsArtCellPlaced(&kw_innArt, 77, 15))
 				Quit("KW_SelfTest: art was purged from memory (a conversation would crash)!");
 		}
+		// Coming back: Keen starts at the left end, facing right...
+		if (RF_UnitToTile(ck_keenObj->posX) > 4 || ck_keenObj->xDirection != IN_motion_Right)
+			Quit("KW_SelfTest: a peaceful Border Village should start at the left, facing right!");
+		// ...and can leave through the right end.
+		ck_keenObj->posX = RF_TileToUnit(CA_GetMapWidth() - 3);
+		CK_ResetClipRects(ck_keenObj);
+		ck_inputFrame.xDirection = IN_motion_Right;
+		ck_gameState.levelState = LS_Playing;
+		KW_CheckPeacefulExit();
+		if (ck_gameState.levelState != LS_LevelComplete)
+			Quit("KW_SelfTest: a peaceful Border Village can't be left through the right end!");
+		ck_gameState.levelState = LS_Playing;
+		ck_inputFrame.xDirection = IN_motion_None;
 		if (hostiles || residents != 1 || !KW_IsLevelPeaceful() ||
 			RF_UnitToTile(elder->posX) != 4 || RF_UnitToTile(elder->posY) < 46 || RF_UnitToTile(elder->posY) > 48)
 			Quit("KW_SelfTest: a completed Border Village should be peaceful with one elder in the house!");

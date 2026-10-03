@@ -5,6 +5,7 @@ can talk to (stand next to one and press up).
 Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 */
 
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "id_ca.h"
@@ -17,6 +18,7 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 #include "ck_act.h"
 #include "ck_def.h"
 #include "ck_ep.h"
+#include "ck_phys.h"
 #include "ck_play.h"
 #include "kw_art.h"
 #include "kw_habitat.h"
@@ -50,13 +52,22 @@ typedef enum KW_ResidentKind
 	KW_PAINTED, // Drawn into level art (e.g. the barmaid); just a talk spot.
 } KW_ResidentKind;
 
+// What Keen can say, and the resident's answer.
+typedef struct KW_Choice
+{
+	const char *keen;
+	const char *reply;
+} KW_Choice;
+
+#define KW_MAX_CHOICES 3
+
 typedef struct KW_Resident
 {
 	int episode;
 	int level;
 	int tileX, tileY;
-	const char *says;      // The resident's line.
-	const char *keenSays;  // Keen's reply.
+	const char *says;                     // The resident's greeting.
+	KW_Choice choices[KW_MAX_CHOICES];    // Keen picks one (unused: NULL).
 	KW_ResidentKind kind;
 } KW_Resident;
 
@@ -64,13 +75,23 @@ static const KW_Resident kw_residents[] = {
 	// Keen 4, Border Village: an elder of the Oracle Council has moved into
 	// the first house (its door leads to the small room at the bottom left).
 	{4, 1, 4, 48,
-		"Welcome back, Keen!\nThe Border Village\nis safe again, thanks\nto you. Make yourself\nat home.",
-		"Thanks! Nice place\nyou've got here.", KW_ELDER},
+		"Welcome back, Keen!\nThe Border Village\nis safe again,\nthanks to you.",
+		{
+			{"How's the village?", "Peaceful at last.\nThe villagers are\nback in their homes."},
+			{"What's the new inn?", "The barmaid opened\nit once the slugs\nleft. Say hello!"},
+			{"Goodbye!", "Farewell, Keen.\nMay the Oracle\nguide you."},
+		},
+		KW_ELDER},
 	// Keen 4, Border Village: the barmaid behind the bar in the tavern
 	// (drawn and animated by tools/kw_barhouse.py).
 	{4, 1, KW_TAVERN_BARMAID_X + 1, KW_TAVERN_BARMAID_Y,
-		"Well, if it isn't the\nhero of the Shadowlands!\nThe first drink's on\nthe house, Keen.",
-		"Thanks! I'll have a\nroot beer, please.", KW_PAINTED},
+		"Well, if it isn't the\nhero of the\nShadowlands! What\ncan I get you?",
+		{
+			{"A root beer, please.", "Coming right up!\nThe first one's on\nthe house, hon."},
+			{"Who's in the picture?", "That's Hacker\nGriNoir. They say he\nbuilt this world!"},
+			{"Just looking around.", "Make yourself at\nhome, Keen. Stay as\nlong as you like."},
+		},
+		KW_PAINTED},
 };
 #define KW_NUM_RESIDENTS ((int)(sizeof(kw_residents) / sizeof(kw_residents[0])))
 
@@ -208,6 +229,32 @@ static void KW_ChangeLevel(void)
 	}
 }
 
+// ---- Coming back ----
+// A peaceful level is entered from its left end, Keen facing right, so it
+// looks like he walks back in (he can leave through the right end too).
+static const struct
+{
+	int episode, level;
+	int tileX, tileY; // as a Keen spawn marker: the row above the floor
+} kw_revisitStarts[] = {
+	{4, 1, 3, 16}, // Border Village: by the sign at the far left
+};
+
+static void KW_PlaceRevisitStart(void)
+{
+	for (int i = 0; i < (int)(sizeof(kw_revisitStarts) / sizeof(kw_revisitStarts[0])); ++i)
+	{
+		if (kw_revisitStarts[i].episode != KW_CurrentEpisode() || kw_revisitStarts[i].level != ca_mapOn)
+			continue;
+		ck_keenObj->posX = RF_TileToUnit(kw_revisitStarts[i].tileX);
+		ck_keenObj->posY = RF_TileToUnit(kw_revisitStarts[i].tileY) - 241; // as CK_SpawnKeen
+		ck_keenObj->xDirection = IN_motion_Right;
+		CK_SetAction(ck_keenObj, CK_ACTION(CK_ACT_keenStanding));
+		CK_ResetClipRects(ck_keenObj);
+		return;
+	}
+}
+
 // ---- Clearing out enemies ----
 
 static bool KW_IsHostile(CK_object *obj)
@@ -276,6 +323,9 @@ void KW_SetupLevelResidents(void)
 			CK_RemoveObj(obj);
 	}
 
+	// Keen walks back in from the left.
+	KW_PlaceRevisitStart();
+
 	// ...and the residents have moved in.
 	for (int i = 0; i < KW_NUM_RESIDENTS; ++i)
 		if (kw_residents[i].episode == KW_CurrentEpisode() && kw_residents[i].level == ca_mapOn)
@@ -285,6 +335,103 @@ void KW_SetupLevelResidents(void)
 
 // ---- Talking ----
 
+// The barmaid's picture for her dialogue cards (tools/kw_barmaid_portrait.py).
+#include "kw_barmaid_portrait.h"
+static const KW_Art kw_barmaidFaceArt = {
+	0, 0, KW_BARMAIDFACE_TILES_W, KW_BARMAIDFACE_TILES_H, 1,
+	&kw_barmaidfaceSlots[0][0][0], &kw_barmaidfaceTiles[0][0][0][0], -1, 0, NULL,
+};
+
+// A card with the resident's picture on the left and their text.
+static void KW_ResidentCard(const KW_Resident *r, const char *text)
+{
+	US_CenterWindow(26, 8);
+	if (r->kind == KW_ELDER)
+		VHB_DrawBitmap(US_GetWindowX(), US_GetWindowY(), CK_CHUNKNUM(PIC_ORACLE));
+	else
+		KW_DrawArt(&kw_barmaidFaceArt, US_GetWindowX(), US_GetWindowY());
+	US_SetWindowW(US_GetWindowW() - 0x30);
+	US_SetWindowX(US_GetWindowX() + 0x30);
+	US_SetPrintY(US_GetPrintY() + 2);
+	US_CPrint(text);
+	VH_UpdateScreen();
+	IN_ClearKeysDown();
+	IN_WaitButton();
+	KW_WaitForButtonsUp();
+}
+
+static int KW_NumChoices(const KW_Resident *r)
+{
+	int n = 0;
+	while (n < KW_MAX_CHOICES && r->choices[n].keen)
+		++n;
+	return n;
+}
+
+// Keen's card: his picture on the right and what he can say, chosen with the
+// same blinking box as the Megarocket's destination menu. Returns the chosen
+// line, or -1 if the player backs out with Esc.
+static int KW_ChooseReply(const KW_Resident *r)
+{
+	int n = KW_NumChoices(r);
+	if (!n)
+		return -1;
+	int lineY[KW_MAX_CHOICES];
+
+	US_CenterWindow(26, 8);
+	VHB_DrawBitmap(US_GetWindowX() + US_GetWindowW() - 0x30, US_GetWindowY(), CK_CHUNKNUM(PIC_KEENTALK1));
+	US_SetWindowW(US_GetWindowW() - 0x30);
+	US_SetPrintY(US_GetPrintY() + 4);
+	for (int i = 0; i < n; ++i)
+	{
+		lineY[i] = US_GetPrintY() - 2;
+		US_CPrint(r->choices[i].keen);
+		US_SetPrintY(US_GetPrintY() + 4);
+	}
+
+	int sel = 0, x1 = US_GetWindowX() + 2, x2 = US_GetWindowX() + US_GetWindowW() - 2;
+	while (true)
+	{
+		IN_PumpEvents();
+		int y = lineY[sel];
+		int clr = ((SD_GetTimeCount() >> 4) & 1) ? 12 : 1;
+		for (int pass = 0; pass < 2; ++pass)
+		{
+			VHB_HLine(x1, x2, y, clr);
+			VHB_HLine(x1, x2, y + 13, clr);
+			VHB_VLine(y, y + 13, x1, clr);
+			VHB_VLine(y, y + 13, x2, clr);
+			if (pass == 0)
+				VH_UpdateScreen();
+			clr = 15; // Erase it again for the next frame.
+		}
+
+		IN_ScanCode scan = IN_GetLastScan();
+		IN_ReadControls(0, &ck_inputFrame);
+		if (scan == IN_SC_Escape)
+		{
+			KW_WaitForButtonsUp();
+			return -1;
+		}
+		if (ck_inputFrame.jump || ck_inputFrame.pogo || scan == IN_SC_Enter || scan == IN_SC_Space)
+		{
+			KW_WaitForButtonsUp();
+			return sel;
+		}
+		if ((ck_inputFrame.yDirection == -1 || scan == IN_SC_UpArrow) && sel > 0)
+			sel--;
+		else if ((ck_inputFrame.yDirection == 1 || scan == IN_SC_DownArrow) && sel < n - 1)
+			sel++;
+		if (scan != IN_SC_None)
+			IN_SetLastScan(IN_SC_None);
+		while (ck_inputFrame.yDirection != 0)
+		{
+			IN_PumpEvents();
+			IN_ReadControls(0, &ck_inputFrame);
+		}
+	}
+}
+
 static void KW_ShowConversation(const KW_Resident *r)
 {
 	SD_WaitSoundDone();
@@ -293,38 +440,52 @@ static void KW_ShowConversation(const KW_Resident *r)
 	CA_MarkGrChunk(CK_CHUNKNUM(PIC_KEENTALK1));
 	CA_MarkGrChunk(CK_CHUNKNUM(PIC_KEENTALK2));
 	CA_CacheMarks(0);
+	KW_BuildArtTiles(&kw_barmaidFaceArt);
 
 	VL_FixRefreshBuffer();
+	KW_WaitForButtonsUp();
 
-	// The resident speaks (same layout as the council rescue message; painted
-	// residents have no portrait picture, so their text fills the box).
-	US_CenterWindow(26, 8);
-	if (r->kind == KW_ELDER)
-	{
-		VHB_DrawBitmap(US_GetWindowX(), US_GetWindowY(), CK_CHUNKNUM(PIC_ORACLE));
-		US_SetWindowW(US_GetWindowW() - 0x30);
-		US_SetWindowX(US_GetWindowX() + 0x30);
-	}
-	US_SetPrintY(US_GetPrintY() + 2);
-	US_CPrint(r->says);
-	VH_UpdateScreen();
-	IN_ClearKeysDown();
-	IN_WaitButton();
-
-	// Keen answers.
-	US_CenterWindow(26, 8);
-	VHB_DrawBitmap(US_GetWindowX() + US_GetWindowW() - 0x30, US_GetWindowY(), CK_CHUNKNUM(PIC_KEENTALK1));
-	US_SetWindowW(US_GetWindowW() - 0x30);
-	US_SetPrintY(US_GetPrintY() + 12);
-	US_CPrint(r->keenSays);
-	VH_UpdateScreen();
-	IN_ClearKeysDown();
-	IN_WaitButton();
+	// The resident greets Keen, Keen picks what to say, the resident answers.
+	KW_ResidentCard(r, r->says);
+	int choice = KW_ChooseReply(r);
+	if (choice >= 0 && r->choices[choice].reply)
+		KW_ResidentCard(r, r->choices[choice].reply);
 
 	CA_DownLevel();
-	KW_WaitForButtonsUp();
 	RF_ForceRefresh();
 	SD_SetLastTimeCount(SD_GetTimeCount());
+}
+
+// For /KWTEST: every dialogue line must fit its card.
+const char *KW_CheckDialogueFits(void)
+{
+	static char problem[96];
+	for (int i = 0; i < KW_NUM_RESIDENTS; ++i)
+	{
+		const KW_Resident *r = &kw_residents[i];
+		const char *texts[1 + 2 * KW_MAX_CHOICES];
+		int n = 0;
+		texts[n++] = r->says;
+		for (int c = 0; c < KW_NumChoices(r); ++c)
+		{
+			texts[n++] = r->choices[c].keen;
+			texts[n++] = r->choices[c].reply;
+		}
+		for (int t = 0; t < n; ++t)
+		{
+			if (!texts[t])
+				continue;
+			uint16_t w, h;
+			CK_MeasureMultiline(texts[t], &w, &h);
+			// Card: 26x8 characters minus the 48-pixel picture.
+			if (w > 26 * 8 - 0x30 - 8 || h > 8 * 8 - 12)
+			{
+				snprintf(problem, sizeof(problem), "resident %d line \"%.24s\" is %dx%d", i, texts[t], w, h);
+				return problem;
+			}
+		}
+	}
+	return NULL;
 }
 
 void KW_CheckTalk(void)
@@ -382,16 +543,16 @@ void KW_CountLevelPeople(int *hostiles, int *residents, CK_object **firstResiden
 	}
 }
 
-// In a peaceful level Keen can also leave through the right side: walking
-// right into the wall at the map's right edge ends the level, as walking off
-// the left side does.
-#define KW_RIGHT_EXIT_ZONE 5 // tiles from the right edge of the map
+// In a peaceful level Keen can also leave through the right end (where he
+// first came in): walking right into the last tiles of the map ends the
+// level, as walking off the left side does.
+#define KW_RIGHT_EXIT_ZONE 3 // tiles from the right edge of the map
 
 void KW_CheckPeacefulExit(void)
 {
 	if (!kw_levelIsPeaceful || !ck_keenObj || ck_gameState.levelState != LS_Playing)
 		return;
-	if (ck_inputFrame.xDirection == IN_motion_Right && ck_keenObj->rightTI &&
+	if (ck_inputFrame.xDirection == IN_motion_Right &&
 		ck_keenObj->clipRects.tileX2 >= CA_GetMapWidth() - KW_RIGHT_EXIT_ZONE)
 		ck_gameState.levelState = LS_LevelComplete;
 }
