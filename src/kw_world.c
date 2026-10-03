@@ -677,18 +677,16 @@ void KW_ConstrainKeen5Dock(CK_object *mapKeen)
 	if (ca_mapOn != 0)
 		return;
 
-	// A gangway down to a parked ship (Keen 9): straight down and back up,
-	// stopping at the ship.
+	// A gangway down to a parked ship (Keen 9): straight down and back up.
 	const KW_MapShip *ms = KW_MapShipFor(kw_currentWorld);
 	if (ms && ms->hatch)
 	{
 		int bottom = mapKeen->clipRects.tileY2, top = ms->hatch->originY;
 		if (mapKeen->clipRects.tileXmid != ms->hatch->originX)
 			return;
+		// (The solid ship stops him at the bottom, right at its cabin.)
 		if (bottom >= top)
 			mapKeen->xDirection = IN_motion_None;
-		if (bottom >= top + ms->hatch->tilesH - 1 && mapKeen->yDirection == IN_motion_Down)
-			mapKeen->yDirection = IN_motion_None;
 		return;
 	}
 
@@ -1227,6 +1225,36 @@ void KW_SelfTest(void)
 			for (int r = 0; r < ms->hatch->tilesH; ++r)
 				if (TI_ForeTop(CA_TileAtPos(ms->hatch->originX, ms->hatch->originY + r, 1)))
 					Quit("KW_SelfTest: Keen 9's boarding hatch or gangway isn't walkable!");
+		if (ms->hatch)
+		{
+			// Walk map-Keen from the bay down the gangway: he must get all the
+			// way to the ship (stopped by it) and be able to board there.
+			ck_keenObj->posX = RF_TileToUnit(ms->hatch->originX);
+			ck_keenObj->posY = RF_TileToUnit(ms->hatch->originY - 2);
+			CK_SetAction(ck_keenObj, CK_ACTION(CK_ACT_MapKeenWalk0));
+			CK_ResetClipRects(ck_keenObj);
+			memset(&ck_inputFrame, 0, sizeof(ck_inputFrame));
+			ck_inputFrame.dir = IN_dir_South;
+			ck_inputFrame.xDirection = IN_motion_None;
+			ck_inputFrame.yDirection = IN_motion_Down;
+			SD_SetSpriteSync(2);
+			for (int t = 0; t < 400; ++t)
+				CK_RunAction(ck_keenObj);
+			int shipTop = RF_TileToUnit(ms->ship->originY);
+			if (ck_keenObj->clipRects.unitY2 < shipTop - 32 || ck_keenObj->clipRects.unitY2 >= shipTop)
+			{
+				CK_Cross_LogMessage(CK_LOG_MSG_ERROR, "KW_SelfTest: gangway: Keen's feet at unit %d, ship top %d\n",
+					ck_keenObj->clipRects.unitY2, shipTop);
+				Quit("KW_SelfTest: Keen can't walk down the gangway to the ship!");
+			}
+			kw_launchRequested = false;
+			KW_TryLaunch(ck_keenObj);
+			if (!kw_launchRequested)
+				Quit("KW_SelfTest: Keen can't board at the bottom of the gangway!");
+			kw_launchRequested = false;
+			memset(&ck_inputFrame, 0, sizeof(ck_inputFrame));
+			ck_inputFrame.dir = IN_dir_None;
+		}
 	}
 
 	// Habitable levels: Border Village is peaceful once completed, with an

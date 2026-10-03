@@ -77,8 +77,8 @@ game built on one of them. `kw_worldDefs[]` in `src/kw_world.c` lists them:
   `tools/kw_mapship_art.py`): Keen 8's on the sand a few steps below where Keen lands, boarded
   standing at its left end; Keen 9's on the planet just under the landing
   bay, reached through a hatch in the bay's floor and down a gangway tube
-  over the bay's outer wall (straight down and back up only, stopping at
-  the ship; boarded at the tube's bottom). Keen 9 drew its own ship into the
+  over the bay's outer wall (straight down and back up only; the solid
+  ship stops Keen at its cabin, where he boards; `/KWTEST` walks it). Keen 9 drew its own ship into the
   bay floor right on the Command Center's entrance, so that floor is
   cleared to plain bay floor. Their art takes tile slots that no level of
   the mod uses (the mods have no empty slots left). A world with none of
