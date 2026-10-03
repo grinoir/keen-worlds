@@ -25,6 +25,9 @@ typedef struct KW_Art
 	// Drop the original tiles' misc flags (e.g. boards over a door, so it
 	// can't be entered).
 	bool clearMisc;
+	// Solid on all sides (e.g. a ship parked on a world map), except the
+	// walkable row.
+	bool solid;
 } KW_Art;
 
 // Place art on the loaded map. Call while the level is being set up (before

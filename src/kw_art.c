@@ -77,7 +77,7 @@ static void KW_SetArtTileInfo(const KW_Art *art, uint16_t slot, uint16_t under, 
 	int n16m = ca_gfxInfoE.numTiles16m;
 	uint8_t *fore = ti_tileInfo + ca_gfxInfoE.numTiles16 * 2;
 	for (int k = 0; k < 4; ++k)
-		fore[k * n16m + slot] = (walkable || !under) ? 0 : fore[k * n16m + under];
+		fore[k * n16m + slot] = walkable ? 0 : art->solid ? 1 : !under ? 0 : fore[k * n16m + under];
 	fore[5 * n16m + slot] = (walkable || !under || art->clearMisc) ? 0 : fore[5 * n16m + under];
 	bool animated = art->frames > 1;
 	fore[4 * n16m + slot] = animated ? (uint8_t)(int8_t)(nextSlot - slot) : 0;

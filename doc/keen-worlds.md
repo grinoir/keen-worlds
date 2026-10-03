@@ -71,8 +71,15 @@ game built on one of them. `kw_worldDefs[]` in `src/kw_world.c` lists them:
 - **Ships**: `kw_ships[]` lists worlds with a BWB Megarocket level (level,
   arrival spot at the ship's nose, boarding area): Keen 4 (level 18), Keen 6
   (17) and Keen 7 (18 — Keen 4's ship, three rows lower). Keen 5 boards at
-  its docked ship on the map. A world without either boards and arrives at
-  its world map's starting spot.
+  its docked ship on the map. Keen 8 and 9 have a **Megarocket parked on
+  their world maps** (`kw_mapShips[]`, art from `tools/kw_mapship_art.py`,
+  solid): Keen 8's on the sand a few steps below where Keen lands, boarded
+  standing at its left end; Keen 9's docked under the landing bay, boarded
+  through a hatch in the bay's floor. Keen 9 drew its own ship into the
+  bay floor right on the Command Center's entrance, so that floor is
+  cleared to plain bay floor. Their art takes tile slots that no level of
+  the mod uses (the mods have no empty slots left). A world with none of
+  these boards and arrives at its world map's starting spot.
 - **Starting in a world**: `/WORLD <id>` starts new games there
   (`play/run.sh 7` = `/EPISODE 4 /WORLD keen7`, `play/run.sh 8` =
   `/EPISODE 6 /WORLD keen8`, `play/run.sh 9` = `/EPISODE 5 /WORLD keen9`).
@@ -97,8 +104,7 @@ patches (speeds, chances, which action follows which — most map to
 v1.4 data: the action table gives each action's data-segment offset) and 5
 new-code patches (Nospike triggers the ending like Molly, Bip kills Keen,
 Bobba's extra shooting frames, Orbatrix gives the red key, the boss) that
-need C in Omnispeak, keyed to the `keen8` world. Keen 8 boards at its map
-start until its own ship spot is set.
+need C in Omnispeak, keyed to the `keen8` world.
 
 ### Keen 9: Battle of the Brains (conversion in progress)
 

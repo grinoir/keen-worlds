@@ -545,6 +545,65 @@ static void KW_BuildKeen5Gate(void)
 	KW_PlaceArt(&kw_gateArt);
 }
 
+// ---- Megarockets parked on fan games' world maps ----
+// Art drawn by tools/kw_mapship_art.py, for worlds without a Megarocket
+// level. Keen boards standing next to the ship (or, in Keen 9, in the hatch
+// in the landing bay's floor above it).
+
+#include "kw_mapship_art.h"
+
+static const KW_Art kw_keen8ShipArt = {
+	KW_KEEN8_SHIP_X, KW_KEEN8_SHIP_Y, 3, 2, 1,
+	&kw_keen8ShipSlots[0][0][0], &kw_keen8ShipTiles[0][0][0][0],
+	-1, 0, NULL, true, true,
+};
+
+static const KW_Art kw_keen9ShipArt = {
+	KW_KEEN9_SHIP_X, KW_KEEN9_SHIP_Y, 3, 2, 1,
+	&kw_keen9ShipSlots[0][0][0], &kw_keen9ShipTiles[0][0][0][0],
+	-1, 0, NULL, true, true,
+};
+
+// The hatch replaces a piece of the bay's wall.
+static bool KW_HatchDropsUnderlay(int x, int y)
+{
+	(void)x;
+	(void)y;
+	return true;
+}
+
+static const KW_Art kw_keen9HatchArt = {
+	KW_KEEN9_HATCH_X, KW_KEEN9_HATCH_Y, 1, 1, 1,
+	&kw_keen9HatchSlots[0][0][0], &kw_keen9HatchTiles[0][0][0][0],
+	0, 0, KW_HatchDropsUnderlay, true, false,
+};
+
+typedef struct KW_MapShip
+{
+	int world;
+	const KW_Art *ship, *hatch;
+	int launchX, launchY;            // where Keen stands to board
+	int clearX, clearY, clearW, clearH, clearBack; // background to clear, or clearW 0
+} KW_MapShip;
+
+static const KW_MapShip kw_mapShips[] = {
+	// Calidune: on the sand, a few steps below where Keen lands.
+	{KW_KEEN8, &kw_keen8ShipArt, NULL, KW_KEEN8_SHIP_X - 1, KW_KEEN8_SHIP_Y + 1, 0, 0, 0, 0, 0},
+	// The Universe: Keen 9 draws its ship into the landing bay's floor,
+	// right where the Command Center's entrance is (35-36 x 23-25), so it
+	// is moved below the bay: the floor there becomes plain bay floor
+	// (background tile 50) and Keen boards through a hatch in the bay wall.
+	{KW_KEEN9, &kw_keen9ShipArt, &kw_keen9HatchArt, KW_KEEN9_HATCH_X, KW_KEEN9_HATCH_Y, 23, 35, 3, 2, 50},
+};
+
+static const KW_MapShip *KW_MapShipFor(int world)
+{
+	for (int i = 0; i < (int)(sizeof(kw_mapShips) / sizeof(kw_mapShips[0])); ++i)
+		if (kw_mapShips[i].world == world)
+			return &kw_mapShips[i];
+	return NULL;
+}
+
 void KW_SetLaunchSpot(int tileX, int tileY)
 {
 	if (kw_currentWorld == KW_KEEN5)
@@ -568,6 +627,18 @@ void KW_SetLaunchSpot(int tileX, int tileY)
 	{
 		// Worlds with a Megarocket level board there, not on the map.
 		kw_launchSpotX = kw_launchSpotY = -1;
+	}
+	else if (const KW_MapShip *ms = KW_MapShipFor(kw_currentWorld))
+	{
+		// A Megarocket parked on the map (our art).
+		for (int y = ms->clearY; y < ms->clearY + ms->clearH; ++y)
+			for (int x = ms->clearX; x < ms->clearX + ms->clearW; ++x)
+				CA_SetTileAtPos(x, y, 0, ms->clearBack);
+		KW_PlaceArt(ms->ship);
+		if (ms->hatch)
+			KW_PlaceArt(ms->hatch);
+		kw_launchSpotX = ms->launchX;
+		kw_launchSpotY = ms->launchY;
 	}
 	else
 	{
@@ -1118,6 +1189,22 @@ void KW_SelfTest(void)
 		}
 		if (loaded < 18)
 			Quit("KW_SelfTest: Keen 8/9 is missing levels!");
+		// Its Megarocket is parked on the map, solid, with Keen's boarding
+		// spot beside it (in Keen 9, the hatch, away from the Command
+		// Center's entrance).
+		ck_gameState.currentLevel = 0;
+		CK_LoadLevel(true, true);
+		const KW_MapShip *ms = KW_MapShipFor(fan);
+		if (!ms || !KW_IsArtPlaced(ms->ship) || (ms->hatch && !KW_IsArtPlaced(ms->hatch)) ||
+			kw_launchSpotX != ms->launchX || kw_launchSpotY != ms->launchY ||
+			!TI_ForeTop(CA_TileAtPos(ms->ship->originX, ms->ship->originY, 1)))
+			Quit("KW_SelfTest: a fan game's parked Megarocket is missing!");
+		for (int y = kw_launchSpotY - KW_LAUNCH_RANGE - 1; y <= kw_launchSpotY + KW_LAUNCH_RANGE + 1; ++y)
+			for (int x = kw_launchSpotX - KW_LAUNCH_RANGE - 1; x <= kw_launchSpotX + KW_LAUNCH_RANGE + 1; ++x)
+				if ((CA_TileAtPos(x, y, 2) & 0xFF00) == 0xC000)
+					Quit("KW_SelfTest: a parked Megarocket's boarding spot is next to a level entrance!");
+		if (ms->hatch && TI_ForeTop(CA_TileAtPos(ms->hatch->originX, ms->hatch->originY, 1)))
+			Quit("KW_SelfTest: Keen 9's boarding hatch isn't walkable!");
 	}
 
 	// Habitable levels: Border Village is peaceful once completed, with an
