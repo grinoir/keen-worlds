@@ -72,10 +72,11 @@ game built on one of them. `kw_worldDefs[]` in `src/kw_world.c` lists them:
   arrival spot at the ship's nose, boarding area): Keen 4 (level 18), Keen 6
   (17) and Keen 7 (18 — Keen 4's ship, three rows lower). Keen 5 boards at
   its docked ship on the map. Keen 8 and 9 have a **Megarocket parked on
-  their world maps** (`kw_mapShips[]`, art from `tools/kw_mapship_art.py`,
-  solid): Keen 8's on the sand a few steps below where Keen lands, boarded
-  standing at its left end; Keen 9's docked under the landing bay, boarded
-  through a hatch in the bay's floor. Keen 9 drew its own ship into the
+  their world maps** (`kw_mapShips[]`, solid): Keen 4's own world-map
+  Megarocket (tiles 1012-1013 of the Keen 4 shareware data, copied by
+  `tools/kw_mapship_art.py`): Keen 8's on the sand a few steps below where Keen lands, boarded
+  standing at its left end; Keen 9's on the planet just under the landing
+  bay, boarded through a hatch in the bay's floor. Keen 9 drew its own ship into the
   bay floor right on the Command Center's entrance, so that floor is
   cleared to plain bay floor. Their art takes tile slots that no level of
   the mod uses (the mods have no empty slots left). A world with none of

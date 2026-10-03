@@ -111,8 +111,13 @@ void KW_PlaceArt(const KW_Art *art)
 			placed[r * art->tilesW + c] = KW_ArtSlot(art, 0, r, c);
 		}
 	}
-	// Updates the map and anything already drawn; the graphics now exist.
-	RF_ReplaceTiles(placed, 1, art->originX, art->originY, art->tilesW, art->tilesH);
+	// Only the map: art is placed while the level is set up, before its
+	// graphics are cached and its animations found, so nothing is drawn yet
+	// (RF_ReplaceTiles would redraw at the previous map's scroll position,
+	// with tiles not yet cached).
+	for (int r = 0; r < art->tilesH; ++r)
+		for (int c = 0; c < art->tilesW; ++c)
+			CA_SetTileAtPos(art->originX + c, art->originY + r, 1, placed[r * art->tilesW + c]);
 }
 
 bool KW_IsArtPlaced(const KW_Art *art)

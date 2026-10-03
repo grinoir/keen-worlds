@@ -553,13 +553,13 @@ static void KW_BuildKeen5Gate(void)
 #include "kw_mapship_art.h"
 
 static const KW_Art kw_keen8ShipArt = {
-	KW_KEEN8_SHIP_X, KW_KEEN8_SHIP_Y, 3, 2, 1,
+	KW_KEEN8_SHIP_X, KW_KEEN8_SHIP_Y, KW_MAPSHIP_TILES_W, KW_MAPSHIP_TILES_H, 1,
 	&kw_keen8ShipSlots[0][0][0], &kw_keen8ShipTiles[0][0][0][0],
 	-1, 0, NULL, true, true,
 };
 
 static const KW_Art kw_keen9ShipArt = {
-	KW_KEEN9_SHIP_X, KW_KEEN9_SHIP_Y, 3, 2, 1,
+	KW_KEEN9_SHIP_X, KW_KEEN9_SHIP_Y, KW_MAPSHIP_TILES_W, KW_MAPSHIP_TILES_H, 1,
 	&kw_keen9ShipSlots[0][0][0], &kw_keen9ShipTiles[0][0][0][0],
 	-1, 0, NULL, true, true,
 };
