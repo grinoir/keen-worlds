@@ -64,9 +64,11 @@ game built on one of them. `kw_worldDefs[]` in `src/kw_world.c` lists them:
   passcard, rocket). Items belong to their world because worlds on the same
   engine episode share the item fields (Keen 7 counts its own 7 elders).
   Score, lives and ammo travel with Keen.
-- **Boarding a fan game**: no ship level is known, so the Megarocket waits
-  at the world map's starting spot (press jump, pogo or fire there), and
-  Keen arrives there.
+- **Ships**: `kw_ships[]` lists worlds with a BWB Megarocket level (level,
+  arrival spot at the ship's nose, boarding area): Keen 4 (level 18), Keen 6
+  (17) and Keen 7 (18 — Keen 4's ship, three rows lower). Keen 5 boards at
+  its docked ship on the map. A world without either boards and arrives at
+  its world map's starting spot.
 - **Starting in a world**: `/WORLD <id>` starts new games there
   (`play/run.sh 7` = `/EPISODE 4 /WORLD keen7`).
 
@@ -98,6 +100,7 @@ Keen 4–6.
   | Keen 4 | the ship in its BWB Megarocket level (18) | that level, tile 3 at the ship's nose |
   | Keen 5 | the docked ship beside the map start (walk across the gate) | the Keen 5 map |
   | Keen 6 | the ship in its BWB Megarocket level (17) | that level, tile 4 at the ship's nose |
+  | Keen 7 | the ship in its BWB Megarocket level (18) | that level, tile 3 at the ship's nose |
 
   Press jump, pogo or fire at the ship to open the destination menu. Arrivals
   stand at the ship's nose rather than under it: the hull at Keen's height is
@@ -138,19 +141,23 @@ is replaced in memory with a starfield tile.
 
 ## Habitable levels
 
-Once Keen has completed a level that has **residents**, coming back finds it
+**Every completed level, in every world**, can be entered again and is
 peaceful:
 
 - **Entrance kept**: completed levels normally lose their world-map entrance
-  (`CK_MapLevelMarkAsDone`); levels with residents keep theirs. Leaving a
-  level that was already completed doesn't replay the flag-throwing
-  animation.
-- **Enemies removed** after the level spawns (`KW_IsHostile`; Keen 4 dart
-  guns are not handled yet).
-- **Walking back in**: Keen starts at the level's left end facing right
-  (`kw_revisitStarts[]`: Border Village tile 3, row 16), and can leave
-  through either end — walking right into the last 3 tiles of the map ends
-  the level (`KW_CheckPeacefulExit`).
+  (`CK_MapLevelMarkAsDone`); Keen Worlds keeps them all. Leaving a level that
+  was already completed doesn't replay the flag-throwing animation.
+- **Enemies removed** after the level spawns (`KW_IsHostile`, Keen 4, 5 and 6
+  lists; Keen 4 dart guns are not handled yet).
+- **Story moments don't replay**: Keen 5's QED and Keen 6's Molly are removed
+  (they would replay the ending); Keen 4's rescued elders stay as friendly
+  villagers who can't be rescued again.
+- **Walking back in**: where a level has a revisit start
+  (`kw_revisitStarts[]`: Border Village tile 3, row 16) Keen starts there,
+  facing right; otherwise at the level's usual start. In any peaceful level
+  walking right into the last 3 tiles of the map ends it, as well as the
+  level's normal exits (`KW_CheckPeacefulExit`).
+- **Residents** (talking characters) live in some levels only; see below.
 - **Level changes**: tile edits (`KW_MapEdit`, when: always / after
   completion) and art (`kw_levelArt[]`, when: after — **the default for Keen
   Worlds art**, "the villagers are back with their things" — before, or

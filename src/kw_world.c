@@ -147,18 +147,32 @@ static KW_WorldState kw_worlds[KW_NUM_WORLDS];
 int kw_pendingWorld = KW_NO_WORLD;
 static bool kw_placeArrivalAtShip = false;
 
-// Existing BWB Megarocket levels. Keen 5 has no equivalent level: its ship
-// remains docked on the world map.
-#define KW_CK4_SHIP_LEVEL 18
-#define KW_CK6_SHIP_LEVEL 17
+// Worlds with a playable BWB Megarocket level: Keen boards inside it and
+// arrives there. Keen 5 has none (its ship is docked on the world map).
+// Arrivals stand at the ship's nose: the hull at Keen's height is drawn in
+// front of sprites (misc bit 0x80), so standing under the ship would hide
+// him. The boarding area covers the visible ship.
+typedef struct KW_Ship
+{
+	int world;
+	int level;
+	int arrivalX, arrivalY;          // as a Keen spawn marker
+	int boardX1, boardY1, boardX2, boardY2;
+} KW_Ship;
 
-// Where cross-world arrivals stand in those levels: at the ship's nose. The
-// hull at Keen's height is drawn in front of sprites (misc bit 0x80), so
-// standing under the ship would hide him; this is the closest visible spot.
-#define KW_CK4_ARRIVAL_X 3
-#define KW_CK4_ARRIVAL_Y 12
-#define KW_CK6_ARRIVAL_X 4
-#define KW_CK6_ARRIVAL_Y 22
+static const KW_Ship kw_ships[] = {
+	{KW_KEEN4, 18, 3, 12, 3, 9, 19, 14},
+	{KW_KEEN6, 17, 4, 22, 3, 18, 18, 23},
+	{KW_KEEN7, 18, 3, 15, 3, 12, 19, 17}, // Keen 4's ship, three rows lower
+};
+
+static const KW_Ship *KW_ShipFor(int world)
+{
+	for (int i = 0; i < (int)(sizeof(kw_ships) / sizeof(kw_ships[0])); ++i)
+		if (kw_ships[i].world == world)
+			return &kw_ships[i];
+	return NULL;
+}
 
 // Every episode item field, in a fixed order.
 static int16_t *KW_ItemField(int i)
@@ -483,23 +497,11 @@ void KW_SwitchWorld(int world)
 	memset(&fresh, 0, sizeof(fresh));
 	KW_LoadState(kw_worlds[world].visited ? &kw_worlds[world] : &fresh);
 
-	// Arrive by boarding the destination's ship. Keen 4 and 6 have playable
-	// Megarocket levels; Keen 5 and the fan games arrive on their world map.
-	if (world == KW_KEEN4)
-	{
-		ck_gameState.currentLevel = KW_CK4_SHIP_LEVEL;
-		kw_placeArrivalAtShip = true;
-	}
-	else if (world == KW_KEEN6)
-	{
-		ck_gameState.currentLevel = KW_CK6_SHIP_LEVEL;
-		kw_placeArrivalAtShip = true;
-	}
-	else
-	{
-		ck_gameState.currentLevel = 0;
-		kw_placeArrivalAtShip = false;
-	}
+	// Arrive by the destination's ship: in its Megarocket level if it has
+	// one, otherwise on its world map (Keen 5's docked ship, other games).
+	const KW_Ship *ship = KW_ShipFor(world);
+	ck_gameState.currentLevel = ship ? ship->level : 0;
+	kw_placeArrivalAtShip = ship != NULL;
 }
 
 // ---- The Megarocket ----
@@ -556,14 +558,14 @@ void KW_SetLaunchSpot(int tileX, int tileY)
 		kw_launchSpotX = tileX + 3;
 		kw_launchSpotY = tileY;
 	}
-	else if (kw_currentWorld == KW_KEEN4 || kw_currentWorld == KW_KEEN6)
+	else if (KW_ShipFor(kw_currentWorld))
 	{
-		// Keen 4 and 6 use their playable Megarocket levels, not map tiles.
+		// Worlds with a Megarocket level board there, not on the map.
 		kw_launchSpotX = kw_launchSpotY = -1;
 	}
 	else
 	{
-		// Fan games: the ship waits where Keen first lands on the world map.
+		// Others: the ship waits where Keen first lands on the world map.
 		kw_launchSpotX = tileX;
 		kw_launchSpotY = tileY;
 	}
@@ -574,21 +576,10 @@ void KW_PlaceArrivalAtShip(void)
 	if (!kw_placeArrivalAtShip || !ck_keenObj)
 		return;
 
-	int tileX, tileY;
-	if (kw_currentWorld == KW_KEEN4 && ca_mapOn == KW_CK4_SHIP_LEVEL)
-	{
-		tileX = KW_CK4_ARRIVAL_X;
-		tileY = KW_CK4_ARRIVAL_Y;
-	}
-	else if (kw_currentWorld == KW_KEEN6 && ca_mapOn == KW_CK6_SHIP_LEVEL)
-	{
-		tileX = KW_CK6_ARRIVAL_X;
-		tileY = KW_CK6_ARRIVAL_Y;
-	}
-	else
-	{
+	const KW_Ship *ship = KW_ShipFor(kw_currentWorld);
+	if (!ship || ca_mapOn != ship->level)
 		return;
-	}
+	int tileX = ship->arrivalX, tileY = ship->arrivalY;
 
 	ck_keenObj->posX = RF_TileToUnit(tileX);
 	// Match CK_SpawnKeen: its origin is 241 units above the floor tile.
@@ -641,8 +632,8 @@ void KW_WaitForButtonsUp(void)
 
 static bool KW_IsShipLevel(void)
 {
-	return (kw_currentWorld == KW_KEEN4 && ca_mapOn == KW_CK4_SHIP_LEVEL) ||
-		(kw_currentWorld == KW_KEEN6 && ca_mapOn == KW_CK6_SHIP_LEVEL);
+	const KW_Ship *ship = KW_ShipFor(kw_currentWorld);
+	return ship && ca_mapOn == ship->level;
 }
 
 static bool KW_IsAtShipHatch(void)
@@ -652,11 +643,8 @@ static bool KW_IsAtShipHatch(void)
 
 	int x = ck_keenObj->clipRects.tileXmid;
 	int y = (ck_keenObj->clipRects.tileY1 + ck_keenObj->clipRects.tileY2) / 2;
-	if (kw_currentWorld == KW_KEEN4)
-		return x >= 3 && x <= 19 && y >= 9 && y <= 14;
-	if (kw_currentWorld == KW_KEEN6)
-		return x >= 3 && x <= 18 && y >= 18 && y <= 23;
-	return false;
+	const KW_Ship *ship = KW_ShipFor(kw_currentWorld);
+	return ship && x >= ship->boardX1 && x <= ship->boardX2 && y >= ship->boardY1 && y <= ship->boardY2;
 }
 
 // Draws the destination menu and returns the chosen world, or KW_NO_WORLD to
@@ -804,23 +792,23 @@ void KW_SelfTest(void)
 			KW_SwitchWorld(route[i]);
 			if (KW_CurrentWorld() != route[i] || ck_gameState.keenScore != 777)
 				Quit("KW_SelfTest: didn't arrive in the requested world (or lost the score)!");
-			if ((route[i] == KW_KEEN4 && ck_gameState.currentLevel != KW_CK4_SHIP_LEVEL) ||
-				(route[i] == KW_KEEN5 && ck_gameState.currentLevel != 0) ||
-				(route[i] == KW_KEEN6 && ck_gameState.currentLevel != KW_CK6_SHIP_LEVEL) ||
-				(route[i] == KW_KEEN7 && ck_gameState.currentLevel != 0))
+			const KW_Ship *ship = KW_ShipFor(route[i]);
+			if (ck_gameState.currentLevel != (ship ? ship->level : 0))
 				Quit("KW_SelfTest: wrong arrival location!");
 			CK_LoadLevel(true, true);
-			if ((route[i] == KW_KEEN4 && (ck_keenObj->posX != RF_TileToUnit(KW_CK4_ARRIVAL_X) || ck_keenObj->posY != RF_TileToUnit(KW_CK4_ARRIVAL_Y) - 241)) ||
-				(route[i] == KW_KEEN6 && (ck_keenObj->posX != RF_TileToUnit(KW_CK6_ARRIVAL_X) || ck_keenObj->posY != RF_TileToUnit(KW_CK6_ARRIVAL_Y) - 241)))
-				Quit("KW_SelfTest: wrong ship arrival spawn!");
+			if (ship && (ck_keenObj->posX != RF_TileToUnit(ship->arrivalX) ||
+					ck_keenObj->posY != RF_TileToUnit(ship->arrivalY) - 241 || !KW_IsAtShipHatch()))
+				Quit("KW_SelfTest: wrong ship arrival spawn (or not at the ship)!");
 			if ((route[i] == KW_KEEN4) != (ck_gameState.ep.ck4.wetsuit == 1))
 				Quit("KW_SelfTest: Keen 4's wetsuit leaked into another world (or was lost)!");
 			if (route[i] == KW_KEEN7)
 			{
 				// Keen 7 is a world of its own: none of Keen 4's or Keen 5's
 				// Keen Worlds additions apply, and Keen boards on its map.
-				if (KW_IsArtPlaced(&kw_gateArt) || kw_launchSpotX < 0)
-					Quit("KW_SelfTest: Keen 7's map got another world's additions (or has no launch spot)!");
+				ck_gameState.currentLevel = 0;
+				CK_LoadLevel(true, true);
+				if (KW_IsArtPlaced(&kw_gateArt) || kw_launchSpotX >= 0)
+					Quit("KW_SelfTest: Keen 7's map got Keen 5's gate (or a map launch spot despite its ship level)!");
 				for (int lv = 0; lv <= 18; ++lv)
 				{
 					ck_gameState.currentLevel = lv;
@@ -829,10 +817,55 @@ void KW_SelfTest(void)
 					int hostiles, residents;
 					CK_object *first;
 					KW_CountLevelPeople(&hostiles, &residents, &first);
-					if (residents || KW_IsLevelPeaceful() || KW_IsArtCellPlaced(&kw_innArt, 77, 15))
+					if (residents || KW_IsArtCellPlaced(&kw_innArt, 77, 15))
 						Quit("KW_SelfTest: Keen 4's residents or tavern appeared in Keen 7!");
+					if (lv && (!KW_IsLevelPeaceful() || hostiles))
+						Quit("KW_SelfTest: a completed Keen 7 level isn't peaceful!");
 				}
 				memset(ck_gameState.levelsDone, 0, sizeof(ck_gameState.levelsDone));
+			}
+			// Every completed level is re-enterable and peaceful, in every
+			// world (level 1 of each, marked done for the check).
+			if (round == 0)
+			{
+				ck_gameState.currentLevel = 1;
+				ck_gameState.levelsDone[1] = 1;
+				CK_LoadLevel(true, true);
+				int hostiles, residents;
+				CK_object *first;
+				KW_CountLevelPeople(&hostiles, &residents, &first);
+				if (!KW_IsLevelPeaceful() || hostiles)
+					Quit("KW_SelfTest: a completed level still has enemies!");
+				ck_gameState.currentLevel = 0;
+				CK_LoadLevel(true, true);
+				bool entrance = false;
+				for (int y = 0; y < CA_GetMapHeight(); ++y)
+					for (int x = 0; x < CA_GetMapWidth(); ++x)
+						if (CA_TileAtPos(x, y, 2) == 0xC001)
+							entrance = true;
+				if (!entrance)
+					Quit("KW_SelfTest: a completed level lost its map entrance!");
+				ck_gameState.levelsDone[1] = 0;
+			}
+			if (route[i] == KW_KEEN4 && round == 0)
+			{
+				// A cleared level's rescued elder stays as a villager, never to
+				// be rescued again (Perilous Pit, level 3, has one).
+				ck_gameState.currentLevel = 3;
+				ck_gameState.levelsDone[3] = 1;
+				CK_LoadLevel(true, true);
+				int elders = 0, villagers = 0;
+				for (CK_object *o = ck_keenObj; o; o = o->next)
+				{
+					if (o->type == CT4_CouncilMember)
+						++elders;
+					else if (o->type == CT_Friendly && o->currentAction == CK_ACTION(CK4_ACT_CouncilWalk0))
+						++villagers;
+				}
+				if (elders)
+					Quit("KW_SelfTest: a cleared Keen 4 level has an elder to rescue again!");
+				ck_gameState.levelsDone[3] = 0;
+				(void)villagers;
 			}
 			if (route[i] == KW_KEEN5)
 			{

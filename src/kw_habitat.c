@@ -1,7 +1,7 @@
 /*
-Keen Worlds: habitable levels. Once Keen has completed a level, coming back
-finds it peaceful: the enemies have gone and residents live there, who Keen
-can talk to (stand next to one and press up).
+Keen Worlds: habitable levels. Once Keen has completed a level (in any
+world), he can come back and finds it peaceful: the enemies have gone, and
+some levels have residents Keen can talk to (stand next to one, press up).
 Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 */
 
@@ -112,21 +112,11 @@ static int KW_CurrentEpisode(void)
 	return KW_CurrentWorld();
 }
 
-// A level becomes peaceful once completed, if anyone lives there.
-static bool KW_LevelHasResidents(void)
-{
-	for (int i = 0; i < KW_NUM_RESIDENTS; ++i)
-		if (kw_residents[i].episode == KW_CurrentEpisode() && kw_residents[i].level == ca_mapOn)
-			return true;
-	return false;
-}
-
 bool KW_IsHabitableLevel(int level)
 {
-	for (int i = 0; i < KW_NUM_RESIDENTS; ++i)
-		if (kw_residents[i].episode == KW_CurrentEpisode() && kw_residents[i].level == level)
-			return true;
-	return false;
+	// Every completed level can be visited again (residents or not).
+	(void)level;
+	return true;
 }
 
 bool KW_IsLevelPeaceful(void)
@@ -281,9 +271,51 @@ static bool KW_IsHostile(CK_object *obj)
 			return false;
 		}
 #endif
+#ifdef WITH_KEEN5
+	case EP_CK5:
+		switch (obj->type)
+		{
+		case CT5_EnemyShot: case CT5_StunnedCreature: case CT5_Sparky: case CT5_Mine:
+		case CT5_SliceStar: case CT5_Robo: case CT5_Spirogrip: case CT5_Ampton:
+		case CT5_Turret: case CT5_Volte: case CT5_0x11: case CT5_Spindred:
+		case CT5_Master: case CT5_Shikadi: case CT5_Shocksund: case CT5_Sphereful:
+		case CT5_Korath:
+			return true;
+		default:
+			return false;
+		}
+#endif
+#ifdef WITH_KEEN6
+	case EP_CK6:
+		switch (obj->type)
+		{
+		case CT6_EnemyShot: case CT6_StunnedCreature: case CT6_Bloog: case CT6_Blooglet:
+		case CT6_Fleex: case CT6_Babobba: case CT6_Bobba: case CT6_Nospike: case CT6_Gik:
+		case CT6_Turret: case CT6_Orbatrix: case CT6_Bip: case CT6_Flect: case CT6_Blorb:
+		case CT6_Ceilick: case CT6_Bloogguard: case CT6_Bipship: case CT6_Grabbiter:
+			return true;
+		default:
+			return false;
+		}
+#endif
 	default:
 		return false;
 	}
+}
+
+// Characters whose encounter ends a game: meeting them again in a cleared
+// level would replay the story (Keen 5's QED, Keen 6's Molly).
+static bool KW_IsStoryTrigger(CK_object *obj)
+{
+#ifdef WITH_KEEN5
+	if (ck_currentEpisode->ep == EP_CK5 && obj->type == CT5_QED)
+		return true;
+#endif
+#ifdef WITH_KEEN6
+	if (ck_currentEpisode->ep == EP_CK6 && obj->type == CT6_Molly)
+		return true;
+#endif
+	return false;
 }
 
 static void KW_SpawnResident(int index)
@@ -313,16 +345,23 @@ void KW_SetupLevelResidents(void)
 {
 	KW_ChangeLevel();
 
-	kw_levelIsPeaceful = ca_mapOn != 0 && ck_gameState.levelsDone[ca_mapOn] && KW_LevelHasResidents();
+	// Every completed level is peaceful when Keen comes back (in every world).
+	kw_levelIsPeaceful = ca_mapOn != 0 && ck_gameState.levelsDone[ca_mapOn];
 	if (!kw_levelIsPeaceful)
 		return;
 
-	// The enemies have moved out...
+	// The enemies have moved out, and story moments don't replay...
 	for (CK_object *obj = ck_keenObj, *next; obj; obj = next)
 	{
 		next = obj->next;
-		if (KW_IsHostile(obj))
+		if (KW_IsHostile(obj) || KW_IsStoryTrigger(obj))
 			CK_RemoveObj(obj);
+#ifdef WITH_KEEN4
+		// ...and a rescued Oracle Council elder stays on as a villager: still
+		// there, but touching him is no longer a rescue.
+		else if (ck_currentEpisode->ep == EP_CK4 && obj->type == CT4_CouncilMember)
+			obj->type = CT_Friendly;
+#endif
 	}
 
 	// Keen walks back in from the left.

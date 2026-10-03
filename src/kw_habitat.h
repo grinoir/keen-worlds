@@ -8,12 +8,12 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 
 #include <stdbool.h>
 
-// Called after a level's objects have spawned: if the level is completed and
-// has residents, remove the enemies and spawn the residents.
+// Called after a level's objects have spawned: if the level is completed,
+// remove the enemies (and story triggers) and spawn any residents.
 void KW_SetupLevelResidents(void);
 
-// Whether a level of the current world has residents. Once completed, such a
-// level keeps its entrance on the world map so Keen can visit it.
+// Whether a completed level keeps its world-map entrance so Keen can visit
+// it again (every level, in every world).
 bool KW_IsHabitableLevel(int level);
 
 // Whether the current level is in its peaceful, inhabited state.
