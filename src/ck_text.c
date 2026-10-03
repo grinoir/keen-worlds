@@ -30,7 +30,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ck_act.h"
 #include "ck_cross.h"
 #include "ck_def.h"
-#include "kw_card.h"
 
 int help_delay, help_pic, help_y, help_x;
 char *help_ptr;
@@ -647,36 +646,85 @@ void HelpScreens(void)
 
 void help_endgame(void)
 {
-	/*
-	 * KEEN WORLDS: All three episodes finish on one project-owned card instead
-	 * of loading their different original TEXT_END pages. Keep this function
-	 * name because the episode-ending flow calls it in each game.
-	 */
+	char *ptext;
+
+	/* Set up */
 	VL_ClearScreen(4);
+	// RF_Reset();
+	CA_UpLevel();
+	CA_SetGrPurge();
+	// CA_SetGrPurge2();
+
+	/* Cache the chunkss we need */
+	CA_CacheGrChunk(CK_CHUNKNUM(PIC_ARROWDIM));    /* Dim arrow */
+	CA_CacheGrChunk(CK_CHUNKNUM(PIC_ARROWBRIGHT)); /* Bright arrow */
+
+	// Check for Korath Fuse
+#ifdef WITH_KEEN5
+	if (/*ck_currentEpisode->ep == EP_CK5 &&*/ ck_gameState.levelsDone[13] == 0x0E)
+	{
+		CA_CacheGrChunk(CK_CHUNKNUM(TEXT_SECRETEND));
+		ptext = (char *)ca_graphChunks[CK_CHUNKNUM(TEXT_SECRETEND)];
+	}
+	else
+#endif
+	{
+		CA_CacheGrChunk(CK_CHUNKNUM(TEXT_END));
+		ptext = (char *)ca_graphChunks[CK_CHUNKNUM(TEXT_END)];
+	}
+
+	/* Initialise the parser */
+	help_ptr = (char *)ptext;
+	CacheLayoutGraphics();
+
+	/* Play some music */
 	StartMusic(CK_INT(CK_EndingMusicLevel, 0));
 
-	// The original end screens use this same red background. It is now a clean
-	// canvas for the shared project message, with no episode-specific text.
-	US_SetWindowX(0);
-	US_SetWindowY(0);
-	US_SetWindowW(320);
-	US_SetWindowH(200);
-	US_SetPrintY(46);
-	US_SetPrintColour(15);
-	// The card text is shared with the quit screen; edit it in kw_card.c.
-	char card[512];
-	size_t len = snprintf(card, sizeof(card), "%s\n\n%s\n\n", kw_cardByline, kw_cardTitle);
-	for (int line = 0; kw_cardBody[line] && len < sizeof(card); ++line)
-		len += snprintf(card + len, sizeof(card) - len, "%s\n", kw_cardBody[line]);
-	if (len < sizeof(card))
-		snprintf(card + len, sizeof(card) - len, "\n\nPress any key to continue");
-	US_CPrint(card);
-	VH_UpdateScreen();
-	IN_ClearKeysDown();
-	while (IN_GetLastScan() == IN_SC_None)
-		IN_PumpEvents();
+	while (help_cur_page < help_num_pages)
+	{
+		/* Draw the current page (which also advances to the next page) */
+		PageLayout(0);
+		IN_ClearKeysDown();
+		//VW_SetScreen( AZ : A7B4, 0 );
 
+		// This looks like it was written with a GOTO instead of an "advancePage" variable
+		bool advancePage = false;
+		while (!advancePage)
+		{
+			/* Draw the dim arrow and wait a short time */
+			VHB_DrawBitmap(0x12A & ~3, 0xB8, CK_CHUNKNUM(PIC_ARROWDIM));
+			VH_UpdateScreen();
+
+			if (IN_UserInput(70, false))
+			{
+				advancePage = true;
+				break;
+			}
+			/* Draw the bright arrow and wait a short time */
+			VHB_DrawBitmap(0x12A & ~3, 0xB8, CK_CHUNKNUM(PIC_ARROWBRIGHT));
+			VH_UpdateScreen();
+
+			if (IN_UserInput(70, false))
+			{
+				advancePage = true;
+				break;
+			}
+		}
+	}
+
+	/* Uncache our graphics and clean up */
 	StopMusic();
+#ifdef WITH_KEEN5
+	if (ck_gameState.levelsDone[13] == LS_KorathFuse)
+		MM_FreePtr(&ca_graphChunks[CK_CHUNKNUM(TEXT_SECRETEND)]);
+	else
+#endif
+		MM_FreePtr(&ca_graphChunks[CK_CHUNKNUM(TEXT_END)]);
+	MM_FreePtr(&ca_graphChunks[CK_CHUNKNUM(PIC_ARROWBRIGHT)]);
+	MM_FreePtr(&ca_graphChunks[CK_CHUNKNUM(PIC_ARROWDIM)]);
+	// CA_DownLevel();
 	IN_ClearKeysDown();
 	VL_ClearScreen(4);
+	// RF_Reset();
+	// CA_SetGrPurge();
 }

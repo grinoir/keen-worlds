@@ -4,32 +4,20 @@ This file is the map for changing non-gameplay screens without touching the
 original Keen data files. The first customized screen is the game-completion
 card, shared by Keen 4, Keen 5, and Keen 6.
 
-## Shared Keen Worlds card
+## Keen Worlds card (quit screen)
 
-One card is shown in two places:
+When the game quits, `Quit()` in `src/ck_quit.c` prints a Keen Worlds card to
+the terminal as an 80×24 text screen: starfield, blue double-lined box. It
+replaces each episode's original order screen ("Thanks for playing ... call
+Apogee").
 
-- **When a world is completed** (`help_endgame()` in `src/ck_text.c`), drawn
-  in the game's font on the red ending background.
-- **When the game quits** (`Quit()` in `src/ck_quit.c`), printed to the
-  terminal as an 80×24 text screen: starfield, blue double-lined box. This
-  replaces each episode's original order screen ("Thanks for playing ...
-  call Apogee"), which is what used to appear in the terminal on exit.
+Edit the text in `src/kw_card.c`: `kw_cardByline`, `kw_cardTitle` and the
+`kw_cardBody` lines (an empty string is a blank line). Keep lines under 54
+characters so they fit the box. Colours and layout are in
+`KW_PrintQuitCard()` in the same file.
 
-Edit the text once, in `src/kw_card.c`: `kw_cardByline`, `kw_cardTitle` and
-the `kw_cardBody` lines (an empty string is a blank line). Keep lines under 54
-characters so they fit the quit screen's box. The quit screen's colours and
-layout are in `KW_PrintQuitCard()` in the same file.
-
-The card deliberately uses `VL_ClearScreen(4)`, the red background used by
-the original ending pages, and the engine's normal white proportional font.
-It starts each episode's configured ending music and dismisses with one key.
-All three original `TEXT_END` / `TEXT_SECRETEND` graphic-text pages are now
-bypassed, so their different shareware/order-form messages can no longer
-appear at a Keen Worlds completion.
-
-The three callers stay in `src/ck_game.c`: the Keen 4 council ending, Keen 5
-QED ending, and Keen 6 Molly ending. Do not change the function name unless
-all three callers are changed too.
+The in-game completion pages (`help_endgame()` in `src/ck_text.c`) are the
+**original** episode endings and are deliberately left as they are.
 
 ## Other presentation screens worth changing later
 

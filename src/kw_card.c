@@ -1,6 +1,6 @@
 /*
-Keen Worlds: the project card, shown when a world is completed and when the
-game quits. Edit the text here; both screens use it.
+Keen Worlds: the project card, shown when the game quits (in place of the
+original order screens). Edit the text here.
 Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 */
 
