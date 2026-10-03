@@ -31,6 +31,10 @@ void KW_SetLaunchSpot(int tileX, int tileY);
 // allowing a route into the unused exterior space around the station.
 void KW_ConstrainKeen5Dock(struct CK_object *mapKeen);
 
+// Called after a level's normal object spawn pass. A one-shot cross-world
+// arrival is moved beside the Megarocket without changing ordinary entries.
+void KW_PlaceArrivalAtShip(void);
+
 // Called when Keen presses a button on the world map without standing on a
 // level entrance. Near the launch spot this asks for the travel menu.
 void KW_TryLaunch(struct CK_object *mapKeen);

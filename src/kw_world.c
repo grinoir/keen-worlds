@@ -16,6 +16,7 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 #include "ck_act.h"
 #include "ck_cross.h"
 #include "ck_game.h"
+#include "ck_phys.h"
 #include "ck_play.h"
 #include "ck_def.h"
 #include "ck_ep.h"
@@ -40,6 +41,7 @@ typedef struct KW_WorldState
 static KW_WorldState kw_worlds[3];
 
 int kw_pendingWorld = 0;
+static bool kw_placeArrivalAtShip = false;
 
 // Existing BWB Megarocket levels. Keen 5 has no equivalent level: its ship
 // remains docked on the world map.
@@ -76,6 +78,7 @@ void KW_ResetWorlds(void)
 {
 	memset(kw_worlds, 0, sizeof(kw_worlds));
 	kw_pendingWorld = 0;
+	kw_placeArrivalAtShip = false;
 }
 
 void KW_RequestWorld(int episode)
@@ -148,11 +151,20 @@ void KW_SwitchWorld(int episode)
 	// Arrive by boarding the destination's ship. Keen 4 and 6 already have
 	// playable Megarocket levels; Keen 5 arrives at its docked ship on map 0.
 	if (target->ep == EP_CK4)
+	{
 		ck_gameState.currentLevel = KW_CK4_SHIP_LEVEL;
+		kw_placeArrivalAtShip = true;
+	}
 	else if (target->ep == EP_CK6)
+	{
 		ck_gameState.currentLevel = KW_CK6_SHIP_LEVEL;
+		kw_placeArrivalAtShip = true;
+	}
 	else
+	{
 		ck_gameState.currentLevel = 0;
+		kw_placeArrivalAtShip = false;
+	}
 }
 
 // ---- The Megarocket ----
@@ -178,6 +190,13 @@ void KW_SetLaunchSpot(int tileX, int tileY)
 {
 	if (ck_currentEpisode->ep == EP_CK5)
 	{
+		// Replace Keen 5's unused yellow map border with the starfield tile
+		// already used beside the dock. This affects only the loaded map.
+		for (int y = 0; y < CA_GetMapHeight(); ++y)
+			for (int x = 0; x < CA_GetMapWidth(); ++x)
+				if (CA_TileAtPos(x, y, 0) == 0x352)
+					CA_SetTileAtPos(x, y, 0, 0x339);
+
 		/*
 		 * Build a two-tile metal gangway from existing Keen 5 ship/platform
 		 * art. The replacement tiles are naturally non-solid. This is a
@@ -196,6 +215,33 @@ void KW_SetLaunchSpot(int tileX, int tileY)
 		// Keen 4 and 6 use their playable Megarocket levels, not map tiles.
 		kw_launchSpotX = kw_launchSpotY = -1;
 	}
+}
+
+void KW_PlaceArrivalAtShip(void)
+{
+	if (!kw_placeArrivalAtShip || !ck_keenObj)
+		return;
+
+	int tileX, tileY;
+	if (ck_currentEpisode->ep == EP_CK4 && ca_mapOn == KW_CK4_SHIP_LEVEL)
+	{
+		tileX = 12;
+		tileY = 12;
+	}
+	else if (ck_currentEpisode->ep == EP_CK6 && ca_mapOn == KW_CK6_SHIP_LEVEL)
+	{
+		tileX = 13;
+		tileY = 22;
+	}
+	else
+	{
+		return;
+	}
+
+	ck_keenObj->posX = RF_TileToUnit(tileX);
+	ck_keenObj->posY = RF_TileToUnit(tileY);
+	CK_ResetClipRects(ck_keenObj);
+	kw_placeArrivalAtShip = false;
 }
 
 void KW_ConstrainKeen5Dock(CK_object *mapKeen)
@@ -396,6 +442,10 @@ void KW_SelfTest(void)
 				(route[i] == EP_CK5 && ck_gameState.currentLevel != 0) ||
 				(route[i] == EP_CK6 && ck_gameState.currentLevel != KW_CK6_SHIP_LEVEL))
 				Quit("KW_SelfTest: wrong arrival location!");
+			CK_LoadLevel(true, true);
+			if ((route[i] == EP_CK4 && (ck_keenObj->posX != RF_TileToUnit(12) || ck_keenObj->posY != RF_TileToUnit(12))) ||
+				(route[i] == EP_CK6 && (ck_keenObj->posX != RF_TileToUnit(13) || ck_keenObj->posY != RF_TileToUnit(22))))
+				Quit("KW_SelfTest: wrong ship arrival spawn!");
 			for (int level = 0; level <= 2; ++level)
 			{
 				ck_gameState.currentLevel = level;

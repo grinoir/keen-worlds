@@ -612,6 +612,7 @@ void CK_LoadLevel(bool doCache, bool silent)
 
 	CK_SetupObjArray(); // This is done inside ScanInfoLayer in CK4
 	ck_currentEpisode->scanInfoLayer();
+	KW_PlaceArrivalAtShip();
 
 	if (ca_mapOn == 0)
 	{
