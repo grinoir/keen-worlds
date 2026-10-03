@@ -202,8 +202,11 @@ void KW_SetLaunchSpot(int tileX, int tileY)
 		 * art. The replacement tiles are naturally non-solid. This is a
 		 * runtime map overlay, so GAMEMAPS.CK5 remains unchanged.
 		 */
-		CA_SetTileAtPos(tileX + 1, tileY, 1, 0x64A);
-		CA_SetTileAtPos(tileX + 2, tileY, 1, 0x64B);
+		uint16_t gangwayTiles[] = {0x64A, 0x64B};
+		// CA_SetTileAtPos changes the decompressed map but does not refresh an
+		// already visible map. RF_ReplaceTiles does both, so the bridge is
+		// present immediately when Keen 5 starts as well as after a reload.
+		RF_ReplaceTiles(gangwayTiles, 1, tileX + 1, tileY, 2, 1);
 
 		// The gangway ends at Keen's docked ship, three tiles east of the
 		// normal map-Keen spawn.
@@ -246,6 +249,10 @@ void KW_PlaceArrivalAtShip(void)
 	// Match CK_SpawnKeen: its origin is 241 units above the floor tile.
 	// Placing the origin directly at tileY embeds Keen in the ground.
 	ck_keenObj->posY = RF_TileToUnit(tileY) - 241;
+	// Cross-world arrivals face back toward the Megarocket. Normal entries
+	// retain their episode-defined facing.
+	ck_keenObj->xDirection = IN_motion_Left;
+	CK_SetAction(ck_keenObj, CK_ACTION(CK_ACT_keenStanding));
 	CK_ResetClipRects(ck_keenObj);
 	kw_placeArrivalAtShip = false;
 }

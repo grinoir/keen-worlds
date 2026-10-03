@@ -646,85 +646,33 @@ void HelpScreens(void)
 
 void help_endgame(void)
 {
-	char *ptext;
-
-	/* Set up */
+	/*
+	 * KEEN WORLDS: All three episodes finish on one project-owned card instead
+	 * of loading their different original TEXT_END pages. Keep this function
+	 * name because the episode-ending flow calls it in each game.
+	 */
 	VL_ClearScreen(4);
-	// RF_Reset();
-	CA_UpLevel();
-	CA_SetGrPurge();
-	// CA_SetGrPurge2();
-
-	/* Cache the chunkss we need */
-	CA_CacheGrChunk(CK_CHUNKNUM(PIC_ARROWDIM));    /* Dim arrow */
-	CA_CacheGrChunk(CK_CHUNKNUM(PIC_ARROWBRIGHT)); /* Bright arrow */
-
-	// Check for Korath Fuse
-#ifdef WITH_KEEN5
-	if (/*ck_currentEpisode->ep == EP_CK5 &&*/ ck_gameState.levelsDone[13] == 0x0E)
-	{
-		CA_CacheGrChunk(CK_CHUNKNUM(TEXT_SECRETEND));
-		ptext = (char *)ca_graphChunks[CK_CHUNKNUM(TEXT_SECRETEND)];
-	}
-	else
-#endif
-	{
-		CA_CacheGrChunk(CK_CHUNKNUM(TEXT_END));
-		ptext = (char *)ca_graphChunks[CK_CHUNKNUM(TEXT_END)];
-	}
-
-	/* Initialise the parser */
-	help_ptr = (char *)ptext;
-	CacheLayoutGraphics();
-
-	/* Play some music */
 	StartMusic(CK_INT(CK_EndingMusicLevel, 0));
 
-	while (help_cur_page < help_num_pages)
-	{
-		/* Draw the current page (which also advances to the next page) */
-		PageLayout(0);
-		IN_ClearKeysDown();
-		//VW_SetScreen( AZ : A7B4, 0 );
+	// The original end screens use this same red background. It is now a clean
+	// canvas for the shared project message, with no episode-specific text.
+	US_SetWindowX(0);
+	US_SetWindowY(0);
+	US_SetWindowW(320);
+	US_SetWindowH(200);
+	US_SetPrintY(46);
+	US_SetPrintColour(15);
+	US_CPrint("Hacker GriNoir brings you\n\n"
+		  "KEEN WORLDS\n\n"
+		  "Tying together Keen 4, 5, 6, and fan games.\n"
+		  "Visit completed levels and more.\n\n\n"
+		  "Press any key to continue");
+	VH_UpdateScreen();
+	IN_ClearKeysDown();
+	while (IN_GetLastScan() == IN_SC_None)
+		IN_PumpEvents();
 
-		// This looks like it was written with a GOTO instead of an "advancePage" variable
-		bool advancePage = false;
-		while (!advancePage)
-		{
-			/* Draw the dim arrow and wait a short time */
-			VHB_DrawBitmap(0x12A & ~3, 0xB8, CK_CHUNKNUM(PIC_ARROWDIM));
-			VH_UpdateScreen();
-
-			if (IN_UserInput(70, false))
-			{
-				advancePage = true;
-				break;
-			}
-			/* Draw the bright arrow and wait a short time */
-			VHB_DrawBitmap(0x12A & ~3, 0xB8, CK_CHUNKNUM(PIC_ARROWBRIGHT));
-			VH_UpdateScreen();
-
-			if (IN_UserInput(70, false))
-			{
-				advancePage = true;
-				break;
-			}
-		}
-	}
-
-	/* Uncache our graphics and clean up */
 	StopMusic();
-#ifdef WITH_KEEN5
-	if (ck_gameState.levelsDone[13] == LS_KorathFuse)
-		MM_FreePtr(&ca_graphChunks[CK_CHUNKNUM(TEXT_SECRETEND)]);
-	else
-#endif
-		MM_FreePtr(&ca_graphChunks[CK_CHUNKNUM(TEXT_END)]);
-	MM_FreePtr(&ca_graphChunks[CK_CHUNKNUM(PIC_ARROWBRIGHT)]);
-	MM_FreePtr(&ca_graphChunks[CK_CHUNKNUM(PIC_ARROWDIM)]);
-	// CA_DownLevel();
 	IN_ClearKeysDown();
 	VL_ClearScreen(4);
-	// RF_Reset();
-	// CA_SetGrPurge();
 }

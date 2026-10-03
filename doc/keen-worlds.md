@@ -24,7 +24,10 @@ for confirming the route, but it visibly left Keen walking through open space.
 
 Keen Worlds now replaces those *map cells* at load time with foreground tiles
 `0x64A` and `0x64B`, existing gray ship/platform art that forms a short metal
-gangway to the docked ship. Both replacement tiles are naturally walkable.
+gangway to the docked ship. Both replacement tiles are naturally walkable. The
+overlay is applied through `RF_ReplaceTiles`, which updates both the loaded
+map and the renderer, so the gangway is visible immediately rather than only
+after a later redraw.
 Map-Keen movement is restricted to the horizontal bridge and stops at the
 ship, while allowing him to walk back into the station. The change is made in
 the decompressed runtime map, rather than by editing `GAMEMAPS.CK5` or
@@ -74,6 +77,8 @@ the unrelated map-transition marker at `(15, 22)`. Entering these levels
 normally from their own world maps continues to use their original entrance
 spawns. The placement uses the same 241-unit vertical offset as
 `CK_SpawnKeen()`, so Keen starts on the floor rather than embedded inside it.
+Cross-world arrivals face left, toward the Megarocket; ordinary local entries
+keep their original facing.
 
 ## Validation and rollback
 
