@@ -22,6 +22,9 @@ typedef struct KW_Art
 	int animTics;           // Per frame, at 70 tics per second.
 	// Optional: cells whose original tile is replaced, not drawn over.
 	bool (*dropsUnderlay)(int x, int y);
+	// Drop the original tiles' misc flags (e.g. boards over a door, so it
+	// can't be entered).
+	bool clearMisc;
 } KW_Art;
 
 // Place art on the loaded map. Call while the level is being set up (before

@@ -56,12 +56,12 @@ static bool kw_placeArrivalAtShip = false;
 #define KW_CK4_SHIP_LEVEL 18
 #define KW_CK6_SHIP_LEVEL 17
 
-// Where cross-world arrivals stand in those levels: on the ground under the
-// cockpit, just left of the hatch (Keen 4 hatch ~x 12-14, Keen 6 ~x 13-15).
-// No ship tile is drawn in front of sprites, so Keen stays visible.
-#define KW_CK4_ARRIVAL_X 10
+// Where cross-world arrivals stand in those levels: at the ship's nose. The
+// hull at Keen's height is drawn in front of sprites (misc bit 0x80), so
+// standing under the ship would hide him; this is the closest visible spot.
+#define KW_CK4_ARRIVAL_X 3
 #define KW_CK4_ARRIVAL_Y 12
-#define KW_CK6_ARRIVAL_X 11
+#define KW_CK6_ARRIVAL_X 4
 #define KW_CK6_ARRIVAL_Y 22
 
 static CK_EpisodeDef *KW_EpisodeDef(int episode)
@@ -460,7 +460,7 @@ void KW_PlaceArrivalAtShip(void)
 	// Match CK_SpawnKeen: its origin is 241 units above the floor tile.
 	// Placing the origin directly at tileY embeds Keen in the ground.
 	ck_keenObj->posY = RF_TileToUnit(tileY) - 241;
-	// Cross-world arrivals face the hatch. Normal entries retain their
+	// Cross-world arrivals face the ship. Normal entries retain their
 	// episode-defined facing.
 	ck_keenObj->xDirection = IN_motion_Right;
 	CK_SetAction(ck_keenObj, CK_ACTION(CK_ACT_keenStanding));
@@ -678,8 +678,11 @@ void KW_SelfTest(void)
 				for (int c = 0; c < KW_GATE_TILES_W; ++c)
 				{
 					uint16_t t = kw_gateSlots[0][1][c];
-					if (TI_ForeTop(t) || TI_ForeBottom(t) || TI_ForeLeft(t) || TI_ForeRight(t))
+					if (TI_ForeTop(t) || TI_ForeBottom(t) || TI_ForeLeft(t) || TI_ForeRight(t) || TI_ForeMisc(t))
 						Quit("KW_SelfTest: Keen 5 gate walkway is blocked!");
+					// The frames must be linked as a foreground animation.
+					if (TI_ForeAnimTile(t) != kw_gateSlots[1][1][c] - t || !TI_ForeAnimTime(t))
+						Quit("KW_SelfTest: Keen 5 gate lights are not animated!");
 				}
 			}
 			for (int level = 0; level <= 2; ++level)
