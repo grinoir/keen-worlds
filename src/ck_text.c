@@ -30,6 +30,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ck_act.h"
 #include "ck_cross.h"
 #include "ck_def.h"
+#include "kw_card.h"
 
 int help_delay, help_pic, help_y, help_x;
 char *help_ptr;
@@ -662,11 +663,14 @@ void help_endgame(void)
 	US_SetWindowH(200);
 	US_SetPrintY(46);
 	US_SetPrintColour(15);
-	US_CPrint("Hacker GriNoir brings you\n\n"
-		  "KEEN WORLDS\n\n"
-		  "Tying together Keen 4, 5, 6, and fan games.\n"
-		  "Visit completed levels and more.\n\n\n"
-		  "Press any key to continue");
+	// The card text is shared with the quit screen; edit it in kw_card.c.
+	char card[512];
+	size_t len = snprintf(card, sizeof(card), "%s\n\n%s\n\n", kw_cardByline, kw_cardTitle);
+	for (int line = 0; kw_cardBody[line] && len < sizeof(card); ++line)
+		len += snprintf(card + len, sizeof(card) - len, "%s\n", kw_cardBody[line]);
+	if (len < sizeof(card))
+		snprintf(card + len, sizeof(card) - len, "\n\nPress any key to continue");
+	US_CPrint(card);
 	VH_UpdateScreen();
 	IN_ClearKeysDown();
 	while (IN_GetLastScan() == IN_SC_None)

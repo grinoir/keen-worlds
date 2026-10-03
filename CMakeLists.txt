@@ -353,6 +353,7 @@ set(OMNISPEAK_CK_SRCS
 	src/ck_quit.c
 	src/ck_text.c
 	src/kw_world.c
+	src/kw_card.c
 	src/ck_text.h
 	src/icon.c
 )
