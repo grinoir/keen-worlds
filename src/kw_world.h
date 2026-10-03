@@ -89,6 +89,9 @@ void KW_TryLaunch(struct CK_object *mapKeen);
 // 6 or 7).
 void KW_PlayLoopHook(void);
 
+// Whether the loaded level is the current world's Megarocket level.
+bool KW_IsInShipLevel(void);
+
 // ---- Saved games ----
 
 // Written at the start of every save: the world it was made in, every

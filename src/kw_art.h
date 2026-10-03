@@ -28,6 +28,9 @@ typedef struct KW_Art
 	// Solid on all sides (e.g. a ship parked on a world map), except the
 	// walkable row.
 	bool solid;
+	// Optional: cells that are solid on all sides (even on the walkable row),
+	// e.g. where the Keen 5 gangway meets the ship's nose.
+	bool (*isSolidCell)(int x, int y);
 } KW_Art;
 
 // Place art on the loaded map. Call while the level is being set up (before

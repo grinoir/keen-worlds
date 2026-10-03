@@ -414,6 +414,15 @@ static void KW_PlaceRevisitStart(void)
 	kw_entryX = startX;
 	kw_entryY = startY;
 	kw_entryFrom = ck_keenObj->xDirection == IN_motion_Right ? IN_motion_Left : IN_motion_Right;
+	// The Megarocket level keeps its own start beside the ship (an arrival
+	// by ship is placed there too), and leaves only by its normal exits:
+	// walking back out by the start would end it as soon as Keen arrives.
+	if (KW_IsInShipLevel())
+	{
+		kw_entryX = -1;
+		kw_revisitPlacement = KW_REVISIT_SPECIAL;
+		return;
+	}
 	// Swimming (Keen 4's Well of Wishes) and the high score "level" keep
 	// their own start.
 	if (ck_keenObj->currentAction != CK_ACTION(CK_ACT_keenStanding))

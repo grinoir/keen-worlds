@@ -535,12 +535,21 @@ static bool KW_GateDropsUnderlay(int x, int y)
 	return y == 95 && (x == 29 || x == 30);
 }
 
+// Where the gangway meets the ship's nose (tile 31 of the walkway row) is
+// solid, so Keen stops right beside the ship instead of walking onto it.
+#define KW_KEEN5_SHIP_NOSE_X 31
+static bool KW_GateNoseIsSolid(int x, int y)
+{
+	return x == KW_KEEN5_SHIP_NOSE_X && y == KW_GATE_ORIGIN_Y + 1;
+}
+
 static const KW_Art kw_gateArt = {
 	KW_GATE_ORIGIN_X, KW_GATE_ORIGIN_Y, KW_GATE_TILES_W, KW_GATE_TILES_H, KW_GATE_FRAMES,
 	&kw_gateSlots[0][0][0], &kw_gateTiles[0][0][0][0],
 	1,  // walkway row
 	12, // tics per frame
 	KW_GateDropsUnderlay,
+	false, false, KW_GateNoseIsSolid,
 };
 
 static void KW_BuildKeen5Gate(void)
@@ -650,9 +659,7 @@ void KW_ConstrainKeen5Dock(CK_object *mapKeen)
 	// Once Keen is on the bridge, it is a horizontal boarding route only.
 	if (x >= 29)
 		mapKeen->yDirection = IN_motion_None;
-	// Stop at the docked ship; the player can still walk left back inside.
-	if (x >= 31 && mapKeen->xDirection == IN_motion_Right)
-		mapKeen->xDirection = IN_motion_None;
+	// (The ship's nose is solid: Keen stops right beside it.)
 }
 
 void KW_TryLaunch(CK_object *mapKeen)
@@ -682,6 +689,11 @@ static bool KW_IsShipLevel(void)
 {
 	const KW_Ship *ship = KW_ShipFor(kw_currentWorld);
 	return ship && ca_mapOn == ship->level;
+}
+
+bool KW_IsInShipLevel(void)
+{
+	return KW_IsShipLevel();
 }
 
 static bool KW_IsAtShipHatch(void)
@@ -989,12 +1001,36 @@ void KW_SelfTest(void)
 				for (int c = 0; c < KW_GATE_TILES_W; ++c)
 				{
 					uint16_t t = kw_gateSlots[0][1][c];
-					if (TI_ForeTop(t) || TI_ForeBottom(t) || TI_ForeLeft(t) || TI_ForeRight(t) || TI_ForeMisc(t))
+					bool nose = KW_GATE_ORIGIN_X + c == KW_KEEN5_SHIP_NOSE_X;
+					if (!nose && (TI_ForeTop(t) || TI_ForeBottom(t) || TI_ForeLeft(t) || TI_ForeRight(t) || TI_ForeMisc(t)))
 						Quit("KW_SelfTest: Keen 5 gate walkway is blocked!");
+					if (nose && !TI_ForeLeft(t))
+						Quit("KW_SelfTest: Keen 5's ship nose isn't solid!");
 					// The frames must be linked as a foreground animation.
 					if (TI_ForeAnimTile(t) != kw_gateSlots[1][1][c] - t || !TI_ForeAnimTime(t))
 						Quit("KW_SelfTest: Keen 5 gate lights are not animated!");
 				}
+				// Walking right along the gangway, Keen stops right beside the
+				// ship's nose, not on the ship, and can board there.
+				memset(&ck_inputFrame, 0, sizeof(ck_inputFrame));
+				ck_inputFrame.dir = IN_dir_East;
+				ck_inputFrame.xDirection = IN_motion_Right;
+				CK_SetAction(ck_keenObj, CK_ACTION(CK_ACT_MapKeenWalk0));
+				SD_SetSpriteSync(2);
+				for (int t = 0; t < 400; ++t)
+					CK_RunAction(ck_keenObj);
+				int nose = RF_TileToUnit(KW_KEEN5_SHIP_NOSE_X);
+				kw_launchRequested = false;
+				KW_TryLaunch(ck_keenObj);
+				if (ck_keenObj->clipRects.unitX2 >= nose || ck_keenObj->clipRects.unitX2 < nose - 96 || !kw_launchRequested)
+				{
+					CK_Cross_LogMessage(CK_LOG_MSG_ERROR, "KW_SelfTest: dock: Keen's right edge %d, nose %d, can board %d\n",
+						ck_keenObj->clipRects.unitX2, nose, kw_launchRequested);
+					Quit("KW_SelfTest: on Keen 5's dock Keen must stop beside the ship and board there!");
+				}
+				kw_launchRequested = false;
+				memset(&ck_inputFrame, 0, sizeof(ck_inputFrame));
+				ck_inputFrame.dir = IN_dir_None;
 			}
 			for (int level = 0; level <= 2; ++level)
 			{
@@ -1129,6 +1165,34 @@ void KW_SelfTest(void)
 				Quit("KW_SelfTest: a Keen 7 save didn't load back into Keen 7!");
 			remove(testFile);
 		}
+	}
+
+	// A completed Megarocket level is still entered beside the ship and left
+	// by its normal exit: neither the far-end re-entry nor the "walk back out
+	// where you came in" exit of other completed levels applies.
+	for (int sw = 0; sw < KW_NUM_WORLDS; ++sw)
+	{
+		const KW_Ship *ship = KW_ShipFor(sw);
+		if (!ship || !KW_IsWorldPresent(sw))
+			continue;
+		KW_SwitchWorld(sw);
+		ck_gameState.levelsDone[ship->level] = 1;
+		ck_gameState.currentLevel = ship->level;
+		CK_LoadLevel(true, true);
+		if (KW_LastRevisitPlacement() != KW_REVISIT_SPECIAL)
+			Quit("KW_SelfTest: a completed ship level moved Keen away from its start!");
+		kw_placeArrivalAtShip = true;
+		CK_LoadLevel(true, true);
+		memset(&ck_inputFrame, 0, sizeof(ck_inputFrame));
+		ck_inputFrame.dir = IN_dir_West;
+		ck_inputFrame.xDirection = IN_motion_Left;
+		ck_gameState.levelState = LS_Playing;
+		KW_CheckPeacefulExit();
+		if (ck_gameState.levelState != LS_Playing)
+			Quit("KW_SelfTest: arriving by ship in a completed ship level, one step left leaves it!");
+		memset(&ck_inputFrame, 0, sizeof(ck_inputFrame));
+		ck_inputFrame.dir = IN_dir_None;
+		ck_gameState.levelsDone[ship->level] = 0;
 	}
 
 	// Keen 8 and 9 (when installed): every level loads, and every level when

@@ -165,7 +165,10 @@ New EGA art (`tools/kw_gate_art.py` → `src/kw_gate_art.h`): a gate with a
 pulsing energy field, a ribbed tube with running lights and a collar on the
 ship's nose, three animation frames, covering map tiles 29–31 × 94–96. It
 replaces the solid gangway knob at (29–30, 95); Keen walks along the middle
-row and is kept on it (`KW_ConstrainKeen5Dock`). The unused yellow map border
+row and is kept on it (`KW_ConstrainKeen5Dock`). The walkway cell where the
+tube meets the ship's nose (31, 95) is solid (`KW_Art.isSolidCell`), so Keen
+stops right beside the ship instead of walking onto it, and boards there
+(`/KWTEST` walks him along it). The unused yellow map border
 is replaced in memory with a starfield tile.
 
 ## Saves, settings, high scores, endings
@@ -218,7 +221,10 @@ peaceful:
      opening in the edge column;
   4. a level whose only way out is by its start (Keen 6's Bloogfoods and
      Bloog Control before the goal rule, three Keen 7 levels) keeps that.
-  Swimming levels (Keen 4's Well of Wishes) keep their own start.
+  Swimming levels (Keen 4's Well of Wishes) keep their own start, and so
+  does a world's **Megarocket level** (an arrival by ship is placed beside
+  the ship as always); it also has no "walk back out where you came in"
+  exit, which would end it as soon as Keen arrives.
   `kw_revisitStarts[]` can override a level by hand (empty now).
 - **Leaving**: the level's normal exits, walking into the first or last 3
   tiles of the map at either end, and walking back out where Keen first

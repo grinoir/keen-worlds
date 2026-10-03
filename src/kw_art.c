@@ -72,12 +72,12 @@ static void KW_ComposeArtTile(uint16_t slot, uint16_t under, const uint8_t *art)
 // walkable; and an animation link to the next frame.
 // Foreground tile info layout (see id_ti.c): 0 top, 1 right, 2 bottom,
 // 3 left, 4 animation offset, 5 misc, 6 animation time.
-static void KW_SetArtTileInfo(const KW_Art *art, uint16_t slot, uint16_t under, bool walkable, uint16_t nextSlot)
+static void KW_SetArtTileInfo(const KW_Art *art, uint16_t slot, uint16_t under, bool walkable, bool solid, uint16_t nextSlot)
 {
 	int n16m = ca_gfxInfoE.numTiles16m;
 	uint8_t *fore = ti_tileInfo + ca_gfxInfoE.numTiles16 * 2;
 	for (int k = 0; k < 4; ++k)
-		fore[k * n16m + slot] = walkable ? 0 : art->solid ? 1 : !under ? 0 : fore[k * n16m + under];
+		fore[k * n16m + slot] = solid ? 1 : walkable ? 0 : !under ? 0 : fore[k * n16m + under];
 	fore[5 * n16m + slot] = (walkable || !under || art->clearMisc) ? 0 : fore[5 * n16m + under];
 	bool animated = art->frames > 1;
 	fore[4 * n16m + slot] = animated ? (uint8_t)(int8_t)(nextSlot - slot) : 0;
@@ -105,7 +105,8 @@ void KW_PlaceArt(const KW_Art *art)
 			{
 				uint16_t slot = KW_ArtSlot(art, f, r, c);
 				KW_ComposeArtTile(slot, under, KW_ArtTile(art, f, r, c));
-				KW_SetArtTileInfo(art, slot, under, r == art->walkableRow,
+				bool solid = art->solid ? r != art->walkableRow : (art->isSolidCell && art->isSolidCell(x, y));
+				KW_SetArtTileInfo(art, slot, under, r == art->walkableRow, solid,
 					KW_ArtSlot(art, (f + 1) % art->frames, r, c));
 			}
 			placed[r * art->tilesW + c] = KW_ArtSlot(art, 0, r, c);
