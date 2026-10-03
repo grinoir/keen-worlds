@@ -980,7 +980,9 @@ void CK_GameLoop()
 				//TODO: Mark level as done (and more)
 				SD_PlaySound(CK_SOUNDNUM(SOUND_LEVELEXIT));
 				ck_gameState.currentLevel = 0;
-				ck_lastLevelFinished = ca_mapOn;
+				// KEEN WORLDS: Leaving a level completed earlier (a peaceful
+				// visit) doesn't throw the flag again; it is already there.
+				ck_lastLevelFinished = ck_gameState.levelsDone[ca_mapOn] ? -1 : ca_mapOn;
 				ck_gameState.levelsDone[ca_mapOn] = 1;
 
 				// Quit out early if we're doing the store demo.
