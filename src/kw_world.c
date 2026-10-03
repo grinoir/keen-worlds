@@ -48,6 +48,14 @@ static bool kw_placeArrivalAtShip = false;
 #define KW_CK4_SHIP_LEVEL 18
 #define KW_CK6_SHIP_LEVEL 17
 
+// Where cross-world arrivals stand in those levels: on the ground under the
+// cockpit, just left of the hatch (Keen 4 hatch ~x 12-14, Keen 6 ~x 13-15).
+// No ship tile is drawn in front of sprites, so Keen stays visible.
+#define KW_CK4_ARRIVAL_X 10
+#define KW_CK4_ARRIVAL_Y 12
+#define KW_CK6_ARRIVAL_X 11
+#define KW_CK6_ARRIVAL_Y 22
+
 static CK_EpisodeDef *KW_EpisodeDef(int episode)
 {
 	switch (episode)
@@ -228,17 +236,13 @@ void KW_PlaceArrivalAtShip(void)
 	int tileX, tileY;
 	if (ck_currentEpisode->ep == EP_CK4 && ca_mapOn == KW_CK4_SHIP_LEVEL)
 	{
-		// Clear approach immediately left of the ship, rather than inside its
-		// decorative tiles or by the right-side level exit.
-		tileX = 4;
-		tileY = 12;
+		tileX = KW_CK4_ARRIVAL_X;
+		tileY = KW_CK4_ARRIVAL_Y;
 	}
 	else if (ck_currentEpisode->ep == EP_CK6 && ca_mapOn == KW_CK6_SHIP_LEVEL)
 	{
-		// Clear approach immediately left of the ship and well clear of the
-		// map-transition marker at (15, 22).
-		tileX = 5;
-		tileY = 22;
+		tileX = KW_CK6_ARRIVAL_X;
+		tileY = KW_CK6_ARRIVAL_Y;
 	}
 	else
 	{
@@ -249,9 +253,9 @@ void KW_PlaceArrivalAtShip(void)
 	// Match CK_SpawnKeen: its origin is 241 units above the floor tile.
 	// Placing the origin directly at tileY embeds Keen in the ground.
 	ck_keenObj->posY = RF_TileToUnit(tileY) - 241;
-	// Cross-world arrivals face back toward the Megarocket. Normal entries
-	// retain their episode-defined facing.
-	ck_keenObj->xDirection = IN_motion_Left;
+	// Cross-world arrivals face the hatch. Normal entries retain their
+	// episode-defined facing.
+	ck_keenObj->xDirection = IN_motion_Right;
 	CK_SetAction(ck_keenObj, CK_ACTION(CK_ACT_keenStanding));
 	CK_ResetClipRects(ck_keenObj);
 	kw_placeArrivalAtShip = false;
@@ -456,8 +460,8 @@ void KW_SelfTest(void)
 				(route[i] == EP_CK6 && ck_gameState.currentLevel != KW_CK6_SHIP_LEVEL))
 				Quit("KW_SelfTest: wrong arrival location!");
 			CK_LoadLevel(true, true);
-			if ((route[i] == EP_CK4 && (ck_keenObj->posX != RF_TileToUnit(4) || ck_keenObj->posY != RF_TileToUnit(12) - 241)) ||
-				(route[i] == EP_CK6 && (ck_keenObj->posX != RF_TileToUnit(5) || ck_keenObj->posY != RF_TileToUnit(22) - 241)))
+			if ((route[i] == EP_CK4 && (ck_keenObj->posX != RF_TileToUnit(KW_CK4_ARRIVAL_X) || ck_keenObj->posY != RF_TileToUnit(KW_CK4_ARRIVAL_Y) - 241)) ||
+				(route[i] == EP_CK6 && (ck_keenObj->posX != RF_TileToUnit(KW_CK6_ARRIVAL_X) || ck_keenObj->posY != RF_TileToUnit(KW_CK6_ARRIVAL_Y) - 241)))
 				Quit("KW_SelfTest: wrong ship arrival spawn!");
 			for (int level = 0; level <= 2; ++level)
 			{
