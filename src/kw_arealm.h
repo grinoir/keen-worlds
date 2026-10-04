@@ -34,12 +34,63 @@ typedef struct AR_State
 	uint16_t axosisNum;       // Axosises left in the level
 	int16_t generatorsDestroyed;
 	int16_t vines;            // the vines have pulled Keen under
+	int16_t firebombcount, firebombtics; // Atroxus's fire bombs
+	int32_t firebombresettimer;
+	bool endscreen_played[5];
+	bool doSecretEnding;      // touched the secret level's Krile
+	int16_t atroxusBoxesPlayed;
+	int16_t atroxusBoxesLevels[3]; // the levels whose Atroxus box has been played
 } AR_State;
 extern AR_State ar_state;
 
 // Its own vertical acceleration helper (CK_PhysAccelVert in its KD_PHYS.C).
 void AR_PhysAccelVert(CK_object *obj, int accY, int velLimit);
 
+#define STARTPICS 6 // its first picture chunk (GRAPHCKD.H)
+extern uint8_t ca_levelbit;
+extern uint8_t ca_graphChunkNeeded[CA_MAX_GRAPH_CHUNKS];
+
+// Object pointers its code keeps in an object's user fields (16 bits there).
+static inline uint16_t AR_ObjToUser(CK_object *obj)
+{
+	return obj ? CK_ConvertObjPointerTo16BitOffset(obj) : 0;
+}
+static inline CK_object *AR_ObjFromUser(uint16_t user)
+{
+	return user ? CK_ConvertObj16BitOffsetToPointer(user) : NULL;
+}
+
+// Is Atroxian Realm the running game? (It runs as Keen 5 for the engine.)
+bool AR_IsActive(void);
+// The game is won: its ending screens.
+void AR_WinGame(void);
+void AR_GeneratorWinMessage(void);
+void AR_ElderWinMessage(void);
+void AR_BridgeWinMessage(void);
+
+void AR_SpawnAtroxian(int tileX, int tileY);
+void AR_SpawnAtroxite(int tileX, int tileY);
+void AR_SpawnAtroxus(int tileX, int tileY);
+void AR_SpawnAtroxusBox(int tileX, int tileY);
+void AR_SpawnAtroxusDialogue(int tileX, int tileY);
+void AR_SpawnAxoclaw(int tileX, int tileY);
+void AR_SpawnAxosis(int tileX, int tileY);
+void AR_SpawnBridge(int tileX, int tileY);
+void AR_SpawnBWBElder(int tileX, int tileY);
+void AR_SpawnElder(int tileX, int tileY);
+void AR_SpawnGenerator(int tileX, int tileY);
+void AR_SpawnKrileGhost(int tileX, int tileY);
+void AR_SpawnKrileGuardian(int tileX, int tileY);
+void AR_SpawnMoxel(int tileX, int tileY);
+void AR_SpawnSecretKrile(int tileX, int tileY);
+
+// Its story and dialogue screens (EndScreens in its CK_TEXT.C), by number.
+void AR_EndScreens(int dialogue);
+
+void CK_Fall(CK_object *obj);
+void CK_Fall2(CK_object *obj);
+void CK_Glide(CK_object *obj);
+void AR_DrawHitFlash(CK_object *obj, uint16_t *healthinfo, int adjX, int adjY);
 void CK_BasicDrawFunc1(CK_object *obj);
 void CK_BasicDrawFunc2(CK_object *obj);
 void CK_BasicDrawFunc4(CK_object *obj);

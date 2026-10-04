@@ -240,6 +240,12 @@ typedef enum CK_LevelState
 	LS_KorathFuse = 14,	  // Keen broke the Korath III fuse (Keen 5)
 	LS_DestroyedQED = 15,     // Destroyed QED (Keen 5)
 	LS_SwitchWorld = 16,      // KEEN WORLDS: Travel to another episode
+	// KEEN WORLDS: Atroxian Realm's ways of finishing a level
+	LS_ARGenerator = 17,      // blew up a generator core
+	LS_ARElder = 18,          // talked to a Krile elder
+	LS_ARBridge = 19,         // switched a bridge
+	LS_ARVines = 20,          // pulled under by the vines
+	LS_ARAtroxus = 21,        // talked to Atroxus
 } CK_LevelState;
 
 // This struct is 0x58 bytes big in Keen5
@@ -345,7 +351,10 @@ typedef enum CK_clipped
 	CLIP_not = 0,
 	CLIP_normal,
 	CLIP_simple,
-	CLIP_dart, // KEEN WORLDS (Atroxian Realm): clipped against walls only, not floors and ceilings
+	// KEEN WORLDS (Atroxian Realm's two): one its physics never acts on, and
+	// one clipped against walls only, not floors and ceilings (its darts)
+	CLIP_full,
+	CLIP_dart,
 } CK_ClipType;
 
 typedef struct CK_object

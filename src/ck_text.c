@@ -644,6 +644,52 @@ void HelpScreens(void)
 
 #endif
 
+// KEEN WORLDS: show a text chunk's pages the way the ending text is shown
+// (Atroxian Realm's story and dialogue screens), with a song while it runs.
+void CK_ShowTextPages(int textChunk, int song)
+{
+	VL_ClearScreen(4);
+	CA_UpLevel();
+	CA_SetGrPurge();
+	CA_CacheGrChunk(CK_CHUNKNUM(PIC_ARROWDIM));
+	CA_CacheGrChunk(CK_CHUNKNUM(PIC_ARROWBRIGHT));
+	CA_CacheGrChunk(textChunk);
+	MM_SetLock(&ca_graphChunks[textChunk], true);
+	help_ptr = (char *)ca_graphChunks[textChunk];
+	CacheLayoutGraphics();
+	if (song >= 0)
+		StartMusic(song);
+
+	bool quit = false;
+	while (help_cur_page < help_num_pages && !quit)
+	{
+		PageLayout(0);
+		IN_ClearKeysDown();
+		while (true)
+		{
+			VHB_DrawBitmap(0x12A & ~3, 0xB8, CK_CHUNKNUM(PIC_ARROWDIM));
+			VH_UpdateScreen();
+			if (IN_UserInput(70, false))
+				break;
+			VHB_DrawBitmap(0x12A & ~3, 0xB8, CK_CHUNKNUM(PIC_ARROWBRIGHT));
+			VH_UpdateScreen();
+			if (IN_UserInput(70, false))
+			{
+				quit = IN_GetLastScan() == IN_SC_Escape;
+				break;
+			}
+		}
+	}
+
+	MM_SetLock(&ca_graphChunks[textChunk], false);
+	MM_FreePtr(&ca_graphChunks[textChunk]);
+	if (song >= 0)
+		StopMusic();
+	CA_DownLevel();
+	IN_ClearKeysDown();
+	VL_ClearScreen(4);
+}
+
 void help_endgame(void)
 {
 	char *ptext;

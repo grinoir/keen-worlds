@@ -45,6 +45,35 @@ void AR_PhysAccelVert(CK_object *obj, int accY, int velLimit)
 	}
 }
 
+void CK_ShowTextPages(int textChunk, int song);
+extern CK_EpisodeDef ar_episode;
+
+bool AR_IsActive(void)
+{
+	return ck_currentEpisode == &ar_episode;
+}
+
+// Its story and dialogue screens (EndScreens in CK_TEXT.C): text chunk and
+// song by number. (The source also picks a red or black background.)
+void AR_EndScreens(int dialogue)
+{
+	static const int chunks[] = {T_ENDDIALOGUE, T_BWBKRILE, T_KRILEELDER, T_ATROXUS, T_SECRETKRILE,
+		T_SECRETEND, T_END2, T_END3, T_NORMALEND, T_ATROXUSBOX1, T_ATROXUSBOX2, T_ATROXUSBOX3};
+	static const int songs[] = {ENDING_MUS, KRILE_THEME_MUS, ELDER_TEXT_MUS, ATROXUS_TEXT_MUS, KRILE_THEME_MUS,
+		ENDING_MUS, ENDING_MUS, ENDING_MUS, NORMAL_END_MUS, ATROXUS_BOX_MUS, ATROXUS_BOX_MUS, ATROXUS_BOX_MUS};
+	if (dialogue < 0 || dialogue >= (int)(sizeof(chunks) / sizeof(chunks[0])))
+		return;
+	// Screen 6 follows screen 0 and keeps its music playing.
+	CK_ShowTextPages(chunks[dialogue], dialogue == 6 ? -1 : songs[dialogue]);
+}
+
+void AR_WinGame(void)
+{
+	AR_EndScreens(0);
+	AR_EndScreens(6);
+	AR_EndScreens(ar_state.doSecretEnding ? 5 : 8);
+}
+
 // Its level setup (CK5_ScanInfoLayer in AR_MISC.C). Creature numbers are
 // skipped until their code is ported.
 void AR_ScanInfoLayer(void)
@@ -77,6 +106,128 @@ void AR_ScanInfoLayer(void)
 				CA_MARKLUMP(MAPKEENLUMP);
 				CA_MARKLUMP(MAPKEEN2LUMP);
 				CK_SpawnMapKeen(x, y);
+				break;
+			case 4:
+				AR_SpawnGenerator(x, y);
+				CA_MARKLUMP(GENERATORLUMP);
+				break;
+			case 6:
+				AR_SpawnElder(x, y);
+				CA_MarkGrChunk(ELDER2SPR);
+				break;
+			case 38:
+				AR_SpawnBWBElder(x, y);
+				CA_MarkGrChunk(ELDER1SPR);
+				break;
+			case 39:
+				AR_SpawnAtroxusDialogue(x, y);
+				CA_MarkGrChunk(ATROXUSDETECTSPR);
+				break;
+			case 40:
+				AR_SpawnSecretKrile(x, y);
+				CA_MarkGrChunk(ELDER1SPR);
+				break;
+			// Keen for the boss fight (the source has its own spawn for him;
+			// not ported yet)
+			case 41:
+				CK_SpawnKeen(x, y, 1);
+				CK_DemoSignSpawn();
+				CA_MarkGrChunk(CK_CHUNKNUM(SPR_SCOREBOX));
+				CA_MARKLUMP(KEENLUMP);
+				break;
+			// Krile Guardian
+			case 50:
+				if (ck_gameState.difficulty < D_Hard)
+					break;
+			case 49:
+				if (ck_gameState.difficulty < D_Normal)
+					break;
+			case 5:
+				AR_SpawnKrileGuardian(x, y);
+				CA_MARKLUMP(KRILEGUARDIANLUMP);
+				CA_MARKLUMP(KRILEGUARDIANSHOTLUMP);
+				CA_MarkGrChunk(SPR_GUARDSHOTDIE1);
+				CA_MarkGrChunk(SPR_GUARDSHOTDIE2);
+				break;
+			case 9:
+				AR_SpawnAxoclaw(x, y);
+				CA_MARKLUMP(AXOCLAW1LUMP);
+				CA_MARKLUMP(AXOCLAW2LUMP);
+				break;
+			case 48:
+				if (ck_gameState.difficulty < D_Hard)
+					break;
+			case 47:
+				if (ck_gameState.difficulty < D_Normal)
+					break;
+			case 14:
+				AR_SpawnAtroxite(x, y);
+				CA_MARKLUMP(ATROXITELUMP);
+				break;
+			case 15:
+				AR_SpawnAtroxus(x, y);
+				CA_MARKLUMP(ATROXUSLUMP);
+				CA_MARKLUMP(SMALLEXPOSIONLUMP);
+				CA_MARKLUMP(MAGMINEEXPLOSIONLUMP);
+				CA_MarkGrChunk(ABOMB1SPR);
+				CA_MarkGrChunk(ABOMB2SPR);
+				CA_MarkGrChunk(ATROXUSDROPBOMB1SPR);
+				CA_MarkGrChunk(ATROXUSDROPBOMB2SPR);
+				CA_MarkGrChunk(ATROXUSDEBRIS1SPR);
+				CA_MarkGrChunk(ATROXUSDEBRIS2SPR);
+				break;
+			// Moxel
+			case 24:
+				if (ck_gameState.difficulty < D_Hard)
+					break;
+			case 23:
+				if (ck_gameState.difficulty < D_Normal)
+					break;
+			case 17:
+				AR_SpawnMoxel(x, y);
+				CA_MARKLUMP(MOXELLUMP);
+				CA_MARKLUMP(MOXELSHOTLUMP);
+				break;
+			case 18:
+				AR_SpawnKrileGhost(x, y);
+				CA_MARKLUMP(KRILEGHOSTLUMP);
+				break;
+			// Axosis
+			case 74:
+				if (ck_gameState.difficulty < D_Hard)
+					break;
+			case 73:
+				if (ck_gameState.difficulty < D_Normal)
+					break;
+			case 20:
+				AR_SpawnAxosis(x, y);
+				CA_MARKLUMP(AXOSISLUMP);
+				CA_MARKLUMP(AXOSIS2LUMP);
+				break;
+			case 34:
+				if (ck_gameState.numShots < 5)
+					CK_SpawnItem(x, y, 11);
+				break;
+			case 35:
+				AR_SpawnBridge(x, y);
+				CA_MARKLUMP(BRIDGELUMP);
+				break;
+			case 87:
+				AR_SpawnAtroxusBox(x, y);
+				CA_MarkGrChunk(ATROXUSDETECTSPR);
+				break;
+			case 78:
+				if (ck_gameState.difficulty < D_Hard)
+					break;
+			case 77:
+				if (ck_gameState.difficulty < D_Normal)
+					break;
+			case 76:
+				AR_SpawnAtroxian(x, y);
+				CA_MARKLUMP(ATROXIANLUMP);
+				CA_MARKLUMP(SMALLEXPOSIONLUMP);
+				CA_MARKLUMP(MAGMINEEXPLOSIONLUMP);
+				CA_MarkGrChunk(SPR_ATROXIANDEAD);
 				break;
 			// Hornet
 			case 52:
@@ -178,8 +329,13 @@ void AR_ScanInfoLayer(void)
 	}
 
 	for (CK_object *obj = ck_keenObj; obj != NULL; obj = obj->next)
+	{
 		if (obj->active != OBJ_ALWAYS_ACTIVE)
 			obj->active = OBJ_INACTIVE;
+		// The Krile ghost starts out after the first Axosis.
+		if (ar_state.krileGhost && obj->type == AR_CT_Axosis && obj->user1 == 0)
+			ar_state.krileGhost->user4 = AR_ObjToUser(obj);
+	}
 	CA_MarkAllLumps();
 }
 

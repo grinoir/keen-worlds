@@ -885,6 +885,14 @@ bool CK_TryAgainMenu()
 
 extern CK_Difficulty ck_startingDifficulty;
 
+// KEEN WORLDS: Atroxian Realm (kw_arealm.c)
+bool AR_IsActive(void);
+void AR_WinGame(void);
+void AR_EndScreens(int dialogue);
+void AR_GeneratorWinMessage(void);
+void AR_ElderWinMessage(void);
+void AR_BridgeWinMessage(void);
+
 bool CK6_CreatureQuestion();
 void CK_GameLoop()
 {
@@ -1074,6 +1082,26 @@ void CK_GameLoop()
 			}
 			break;
 
+		// KEEN WORLDS: Atroxian Realm's ways of finishing a level
+		case LS_ARGenerator:
+			AR_GeneratorWinMessage();
+			goto levelcomplete;
+		case LS_ARElder:
+			AR_ElderWinMessage();
+			goto levelcomplete;
+		case LS_ARBridge:
+			AR_BridgeWinMessage();
+			goto levelcomplete;
+		case LS_ARVines:
+			goto levelcomplete;
+		case LS_ARAtroxus:
+			// The talk with Atroxus, then straight on to the battle (level 17)
+			AR_EndScreens(3);
+			ck_lastLevelFinished = ca_mapOn;
+			ck_gameState.levelsDone[ca_mapOn] = 1;
+			ck_gameState.currentLevel = 17;
+			break;
+
 		case LS_DestroyedQED: //15:
 			// The QED was destroyed
 			/*
@@ -1082,6 +1110,9 @@ void CK_GameLoop()
 			 */
 			CK_EndingPurge();
 			VL_FixRefreshBuffer();
+			if (AR_IsActive())
+				AR_WinGame(); // KEEN WORLDS: Atroxian Realm's own ending
+			else
 			help_endgame();
 			// KEEN WORLDS: Back to the Omegamatic's map.
 			KW_AfterWorldEnding();
