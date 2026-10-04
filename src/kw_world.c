@@ -296,6 +296,8 @@ static void KW_LoadState(const KW_WorldState *w)
 		*KW_ItemField(i) = w->items[i];
 }
 
+static bool kw_debugEnding; // the ending was started with W + E
+
 void KW_AfterWorldEnding(void)
 {
 	// help_endgame() pushes a cache level and, as in the original, never
@@ -306,6 +308,17 @@ void KW_AfterWorldEnding(void)
 	if (!ck_gameState.levelsDone[ca_mapOn])
 		ck_gameState.levelsDone[ca_mapOn] = 1;
 	ck_gameState.currentLevel = 0;
+
+	// The debug ending (W + E) skipped the game, so the map may not let Keen
+	// reach his ship: put him at the Megarocket instead.
+	if (kw_debugEnding)
+	{
+		kw_debugEnding = false;
+		const KW_Ship *ship = KW_ShipFor(kw_currentWorld);
+		if (ship)
+			ck_gameState.currentLevel = ship->level;
+		kw_placeArrivalAtShip = ship != NULL || KW_MapShipFor(kw_currentWorld) != NULL;
+	}
 }
 
 bool KW_IsWorldCompleted(int world)
@@ -1153,6 +1166,7 @@ void KW_DrawOverlay(void)
 // ending plays and the world counts as completed.
 static void KW_DebugEnding(void)
 {
+	kw_debugEnding = true;
 	switch (ck_currentEpisode->ep)
 	{
 #ifdef WITH_KEEN4
