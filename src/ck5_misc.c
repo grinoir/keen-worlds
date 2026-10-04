@@ -219,6 +219,7 @@ void CK5_LevelEnd(CK_object *obj)
 
 void KW9_SetupFunctions(void);
 void AR_Act1_SetupFunctions(void);
+void FF_SetupFunctions(void);
 void AR_Act2_SetupFunctions(void);
 void AR_Misc_SetupFunctions(void);
 void AR_Act3_SetupFunctions(void);
@@ -232,6 +233,7 @@ void CK5_SetupFunctions()
 	CK5_Obj3_SetupFunctions();
 	KW9_SetupFunctions(); // KEEN WORLDS: Keen 9's functions (kw_keen9.c)
 	AR_Act1_SetupFunctions(); // KEEN WORLDS: Atroxian Realm's creatures (kw_ar_act*.c)
+	FF_SetupFunctions(); // KEEN WORLDS: Foray in the Forest's creatures (kw_ff_act.c)
 	AR_Act2_SetupFunctions();
 	AR_Misc_SetupFunctions();
 	AR_Act3_SetupFunctions();

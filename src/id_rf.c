@@ -47,7 +47,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 // is implemented by changing which part of the buffer is displayed.
 
 // Scroll blocks prevent the camera from moving beyond a certain row/column
-#define RF_MAX_SCROLLBLOCKS 6
+#define RF_MAX_SCROLLBLOCKS 14 // KEEN WORLDS: 6 originally; Foray in the Forest uses up to 14
 static int rf_horzScrollBlocks[RF_MAX_SCROLLBLOCKS];
 static int rf_vertScrollBlocks[RF_MAX_SCROLLBLOCKS];
 static int rf_numHorzScrollBlocks;
