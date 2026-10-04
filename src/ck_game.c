@@ -946,6 +946,9 @@ void CK_GameLoop()
 		resetDifficultyAndLevel:
 			// KEEN WORLDS: A new game begins in the start world.
 			KW_ReturnToStartWorld();
+			// Developer tool: KW_AUTOLEVEL=n in the environment starts in that level
+			if (getenv("KW_AUTOLEVEL"))
+				ck_gameState.currentLevel = atoi(getenv("KW_AUTOLEVEL"));
 			ck_gameState.difficulty = ck_startingDifficulty;
 			ck_startingDifficulty = D_NotPlaying;
 		loadLevel:

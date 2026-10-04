@@ -145,6 +145,79 @@ void CK_MeasureMultiline(const char *str, uint16_t *w, uint16_t *h);
 extern uint8_t ca_levelbit;
 extern uint8_t ca_graphChunkNeeded[CA_MAX_GRAPH_CHUNKS];
 
+// ---- What its PlayLoop (CK_PLAY.C) does each frame beyond the engine's.
+// The engine's play loop calls these in this world. ----
+
+void FF_CheckWorldInTiles(CK_object *keen); // kw_ff_map.c
+
+// Keen rides platforms, and quicksand counts as one.
+void FF_FrameRiding(void)
+{
+	if (!ck_keenState.platform)
+		ck_keenState.platform = ff_map.quicksand;
+	if (ck_keenState.platform)
+		FF_HandleRiding(ck_keenObj);
+}
+
+// The tiles Keen is in: items, hazards, warps, water...
+void FF_FrameInTiles(void)
+{
+	if (ca_mapOn == 0)
+		FF_CheckWorldInTiles(ck_keenObj);
+	else
+		FF_CheckInTiles(ck_keenObj);
+	if (getenv("KW_TRACE"))
+	{
+		CK_object *k = ck_keenObj;
+		fprintf(stderr, "TRACE keen tiles x %d-%d (mid %d) y %d-%d misc:", k->clipRects.tileX1, k->clipRects.tileX2,
+			k->clipRects.tileXmid, k->clipRects.tileY1, k->clipRects.tileY2);
+		for (int y = k->clipRects.tileY1; y <= k->clipRects.tileY2; ++y)
+			for (int x = k->clipRects.tileX1; x <= k->clipRects.tileX2; ++x)
+				fprintf(stderr, " %d/%x", TI_ForeMisc(CA_TileAtPos(x, y, 1)) & 0x7F, CA_TileAtPos(x, y, 2));
+		fprintf(stderr, " warp %d,%d info %x\n", ff_map.warpDeltaX, ff_map.warpDeltaY, ff_map.warpInfo);
+	}
+}
+
+// After the frame is drawn: warps, timers.
+// TODO: its Nisasi music tempo, checkpoint saving (CheckpointSave), the
+// bonus level's Lindsey, wrap-around scrolling (CK_WrapScroll).
+void FF_FrameEnd(void)
+{
+	if (ff_map.warpInfo)
+	{
+		if (!FF_KeenIsDead())
+		{
+			FF_TeleportKeen(ck_keenObj, ff_map.warpInfo);
+			CK_SetAction(ck_keenObj, ck_keenObj->currentAction);
+		}
+		ff_map.warpInfo = 0;
+	}
+	if (ff_map.warpDeltaX || ff_map.warpDeltaY)
+	{
+		if (!FF_KeenIsDead())
+		{
+			ck_keenObj->posX += RF_TileToUnit(ff_map.warpDeltaX);
+			ck_keenObj->posY += RF_TileToUnit(ff_map.warpDeltaY);
+			CK_SetAction(ck_keenObj, ck_keenObj->currentAction);
+			if (ca_mapOn != MAP_TARDISLEVEL)
+				CK_CentreCamera(ck_keenObj);
+		}
+		ff_map.warpDeltaX = ff_map.warpDeltaY = 0;
+	}
+	if (ff_map.invincibilityTimer)
+	{
+		ff_map.invincibilityTimer -= SD_GetSpriteSync();
+		if (ff_map.invincibilityTimer < 0)
+			ff_map.invincibilityTimer = 0;
+	}
+	if (ff_map.stunCooldown)
+	{
+		ff_map.stunCooldown -= SD_GetSpriteSync();
+		if (ff_map.stunCooldown <= 0)
+			ff_map.stunCooldown = ff_map.stunCounter = 0;
+	}
+}
+
 // ---- How a level ends (the switch after PlayLoop in its GameLoop, and
 // HandleLevelDone, CK_GAME.C). Called by the engine's game loop before and
 // after its own handling of the level state. ----

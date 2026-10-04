@@ -1235,6 +1235,8 @@ void KW_PlayLoopHook(void)
 {
 	// Keen has just set foot in a world for the first time: its own title
 	// and makers, once the screen is up.
+	if (getenv("KW_AUTOSHOT"))
+		kw_cardsOff = true; // the developer tools have nobody to press a key either
 	if (!kw_cardsOff && !kw_introduced[kw_currentWorld] && !kw_worlds[kw_currentWorld].visited &&
 		(ca_mapOn == 0 || KW_IsShipLevel()))
 		kw_arrivalCard = kw_currentWorld;
@@ -1477,15 +1479,96 @@ extern CK_object *ck_scoreBoxObj;
 extern bool ck_scoreBoxEnabled;
 void CK_UpdateScoreBox(CK_object *scorebox);
 
+// Save what is on the screen as a PPM picture.
+static void KW_DumpScreen(const char *path)
+{
+	static const uint8_t ega[16][3] = {{0, 0, 0}, {0, 0, 170}, {0, 170, 0}, {0, 170, 170}, {170, 0, 0}, {170, 0, 170},
+		{170, 85, 0}, {170, 170, 170}, {85, 85, 85}, {85, 85, 255}, {85, 255, 85}, {85, 255, 255}, {255, 85, 85},
+		{255, 85, 255}, {255, 255, 85}, {255, 255, 255}};
+	void *screen = vl_emuegavgaadapter.screen;
+	int sx = VL_GetScrollX() & 15, sy = VL_GetScrollY() & 15;
+	FILE *f = fopen(path, "wb");
+	if (!f)
+		QuitF("KW_DumpScreen: can't write %s", path);
+	fprintf(f, "P6\n320 200\n255\n");
+	for (int y = 0; y < 200; ++y)
+		for (int x = 0; x < 320; ++x)
+			fwrite(ega[VL_SurfacePGet(screen, x + sx, y + sy) & 15], 1, 3, f);
+	fclose(f);
+}
+
+// Developer tool for the real play loop, driven by the environment:
+//   KW_AUTOINPUT="x,y,jump,pogo,fire"  held every frame (x, y: -1, 0 or 1),
+//                                      or steps "frames:x,y,jump,pogo,fire;..."
+//   KW_AUTOSHOT="frames:file.ppm"      after that many frames, save the
+//                                      screen, print where Keen is, and quit
+// Used with /TEDLEVEL n to try out a level without a keyboard.
+void KW_DebugInput(void)
+{
+	// KW_AUTOINPUT is a list of steps "frames:x,y,jump,pogo,fire;..." (the
+	// last step is held to the end; "x,y,..." alone is one step).
+	static const char *step;
+	static int left, x, y, jump, pogo, fire, parsed;
+	if (!parsed)
+	{
+		parsed = 1;
+		step = getenv("KW_AUTOINPUT");
+		if (step)
+			parsed = 2;
+	}
+	if (parsed != 2)
+		return;
+	if (left <= 0 && step)
+	{
+		int frames = 1 << 30, n = 0;
+		x = y = jump = pogo = fire = 0;
+		if (sscanf(step, "%d:%d,%d,%d,%d,%d%n", &frames, &x, &y, &jump, &pogo, &fire, &n) < 2)
+		{
+			frames = 1 << 30;
+			sscanf(step, "%d,%d,%d,%d,%d", &x, &y, &jump, &pogo, &fire);
+		}
+		left = frames;
+		step = strchr(step, ';');
+		if (step)
+			++step;
+	}
+	--left;
+	ck_inputFrame.xDirection = (IN_Motion)x;
+	ck_inputFrame.yDirection = (IN_Motion)y;
+	static const IN_Direction dirs[3][3] = {{IN_dir_NorthWest, IN_dir_North, IN_dir_NorthEast},
+		{IN_dir_West, IN_dir_None, IN_dir_East}, {IN_dir_SouthWest, IN_dir_South, IN_dir_SouthEast}};
+	ck_inputFrame.dir = dirs[y + 1][x + 1];
+	ck_inputFrame.jump = ck_keenState.jumpIsPressed = jump != 0;
+	ck_inputFrame.pogo = ck_keenState.pogoIsPressed = pogo != 0;
+	ck_keenState.shootIsPressed = fire != 0;
+}
+
+void KW_DebugFrame(void)
+{
+	static int frames = -1, count;
+	static char path[512];
+	if (frames < 0)
+	{
+		frames = 0;
+		const char *s = getenv("KW_AUTOSHOT");
+		if (s)
+			sscanf(s, "%d:%511s", &frames, path);
+	}
+	if (!frames || ++count < frames)
+		return;
+	KW_DumpScreen(path);
+	printf("KW_AUTOSHOT: level %d, Keen at tile %d,%d, sprite %d, level state %d -> %s\n", ca_mapOn,
+		(int)RF_UnitToTile(ck_keenObj->posX), (int)RF_UnitToTile(ck_keenObj->posY), ck_keenObj->gfxChunk,
+		(int)ck_gameState.levelState, path);
+	Quit(0);
+}
+
 // Developer tool (/KWSHOT world level file.ppm): load a level of a world, draw
 // one frame and save the screen as a picture. Needs a renderer that keeps
 // pixels (not the null one): build with RENDERER=sdl2sw and run with
 // SDL_VIDEODRIVER=dummy to use it without a display.
 void KW_Screenshot(const char *worldId, int level, const char *path)
 {
-	static const uint8_t ega[16][3] = {{0, 0, 0}, {0, 0, 170}, {0, 170, 0}, {0, 170, 170}, {170, 0, 0}, {170, 0, 170},
-		{170, 85, 0}, {170, 170, 170}, {85, 85, 85}, {85, 85, 255}, {85, 255, 85}, {85, 255, 255}, {255, 85, 85},
-		{255, 85, 255}, {255, 255, 85}, {255, 255, 255}};
 	int world = KW_WorldById(worldId);
 	if (world < 0 || !KW_IsWorldPresent(world))
 		QuitF("KW_Screenshot: world %s isn't installed", worldId);
@@ -1537,16 +1620,7 @@ void KW_Screenshot(const char *worldId, int level, const char *path)
 	if (ck_scoreBoxObj)
 		CK_UpdateScoreBox(ck_scoreBoxObj);
 	RF_Refresh();
-	void *screen = vl_emuegavgaadapter.screen;
-	int sx = VL_GetScrollX() & 15, sy = VL_GetScrollY() & 15;
-	FILE *f = fopen(path, "wb");
-	if (!f)
-		QuitF("KW_Screenshot: can't write %s", path);
-	fprintf(f, "P6\n320 200\n255\n");
-	for (int y = 0; y < 200; ++y)
-		for (int x = 0; x < 320; ++x)
-			fwrite(ega[VL_SurfacePGet(screen, x + sx, y + sy) & 15], 1, 3, f);
-	fclose(f);
+	KW_DumpScreen(path);
 	int objects = 0;
 	for (CK_object *obj = ck_keenObj; obj; obj = obj->next)
 		++objects;

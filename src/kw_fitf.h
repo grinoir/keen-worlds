@@ -33,6 +33,12 @@ Forest.
 // Is Foray in the Forest the running game? (It runs as Keen 5 for the engine.)
 bool FF_IsActive(void);
 
+// ---- Compile-time switches of its source (CK_DEF.H, ID_HEADS.H, ID_RF.H) ----
+#define BETTER_WARP
+#define NEWMODS
+#define MINTICS 2
+#define MAXTICS 5
+
 // ---- Constants of its CK_DEF.H ----
 #define FF_GAMELEVELS 27
 #define MAXFALLSPEED 70

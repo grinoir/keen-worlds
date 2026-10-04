@@ -1336,6 +1336,11 @@ void CK_CheckKeys()
 }
 
 bool FF_IsActive(void);
+void KW_DebugInput(void);
+void KW_DebugFrame(void);
+void FF_FrameRiding(void);
+void FF_FrameInTiles(void);
+void FF_FrameEnd(void);
 extern bool ff_keenUpHeld; // kw_fitf.c
 
 void CK_HandleInput()
@@ -1426,6 +1431,7 @@ void CK_HandleInput()
 	// KEEN WORLDS: Foray in the Forest's Keen keeps "up was held" (doors,
 	// switches): cleared once up is let go (PollControls in its CK_PLAY.C).
 	// TODO: its reversed controls while stunned or under the Brain Fucl.
+	KW_DebugInput(); // developer tool: input from the environment (kw_world.c)
 	if (FF_IsActive() && ck_inputFrame.yDirection != IN_motion_Up)
 		ff_keenUpHeld = false;
 }
@@ -2353,6 +2359,11 @@ void CK_PlayLoop()
 		}
 #endif
 
+		// KEEN WORLDS: Foray in the Forest rides platforms (and quicksand)
+		// and reads the tiles Keen is in with its own code (kw_fitf.c)
+		if (FF_IsActive())
+			FF_FrameRiding();
+		else
 		if (ck_keenState.platform)
 			CK_KeenRidePlatform(ck_keenObj);
 
@@ -2403,9 +2414,14 @@ void CK_PlayLoop()
 			}
 			// It's actually perfectly normal to not need these, if the world
 			// map is boring enough…
+			if (FF_IsActive())
+				FF_FrameInTiles();
+			else
 			if (ck_mapMiscFlagsCheck)
 				ck_mapMiscFlagsCheck(ck_keenObj);
 		}
+		else if (FF_IsActive())
+			FF_FrameInTiles();
 		else
 			CK_KeenCheckSpecialTileInfo(ck_keenObj);
 
@@ -2448,6 +2464,9 @@ void CK_PlayLoop()
 			ck_startingSavedGame = 0;
 
 		RF_Refresh();
+		KW_DebugFrame(); // developer tool: timed screenshot (kw_world.c)
+		if (FF_IsActive())
+			FF_FrameEnd(); // its warps and timers
 
 		if (ck_invincibilityTimer)
 		{
