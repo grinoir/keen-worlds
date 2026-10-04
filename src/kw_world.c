@@ -1543,6 +1543,23 @@ void KW_DebugInput(void)
 	ck_keenState.shootIsPressed = fire != 0;
 }
 
+// KW_AUTOWAIT="file": whenever the game waits for a key, save the screen as
+// file1.ppm, file2.ppm... and go on as if one was pressed. Returns true if it
+// did.
+bool KW_DebugWait(void)
+{
+	static int count;
+	const char *s = getenv("KW_AUTOWAIT");
+	if (!s)
+		return false;
+	char path[600];
+	snprintf(path, sizeof(path), "%s%d.ppm", s, ++count);
+	VL_Present();
+	KW_DumpScreen(path);
+	printf("KW_AUTOWAIT: a wait for a key -> %s\n", path);
+	return true;
+}
+
 void KW_DebugFrame(void)
 {
 	static int frames = -1, count;

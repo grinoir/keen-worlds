@@ -860,8 +860,12 @@ void IN_ReadControls(int player, IN_ControlFrame *controls)
 	}
 }
 
+bool KW_DebugWait(void); // KEEN WORLDS developer tool (kw_world.c)
+
 void IN_WaitButton()
 {
+	if (KW_DebugWait())
+		return;
 	// Zero all of the input
 	IN_PumpEvents();
 

@@ -35,6 +35,33 @@ bool FF_IsActive(void)
 	return ck_currentEpisode == &ff_episode;
 }
 
+// ---- Its strings (KD_SM.C): GAMESTR.CKS is a table of 16-bit offsets, one
+// per string and one more, then the texts. Read once, when first asked. ----
+
+const char *FF_String(int number)
+{
+	static uint8_t *data;
+	static size_t size;
+	if (!data)
+	{
+		FS_File f = FS_OpenKeenFile("GAMESTR.CKS");
+		if (!FS_IsFileValid(f))
+			Quit("Foray in the Forest: GAMESTR.CKS is missing");
+		size = FS_GetFileSize(f);
+		data = (uint8_t *)malloc(size + 1);
+		if (!data || FS_Read(data, 1, size, f) != size)
+			Quit("Foray in the Forest: can't read GAMESTR.CKS");
+		data[size] = 0;
+		FS_CloseFile(f);
+		if (size < 2 * (FF_NUMGAMESTRINGS + 1) || (data[0] | (data[1] << 8)) != 2 * (FF_NUMGAMESTRINGS + 1))
+			Quit("Foray in the Forest: GAMESTR.CKS is not the version this was built for");
+	}
+	if (number < 0 || number >= FF_NUMGAMESTRINGS)
+		return "";
+	size_t off = data[2 * number] | (data[2 * number + 1] << 8);
+	return off < size ? (const char *)data + off : "";
+}
+
 // ---- Small helpers of its CK_STATE.C ----
 
 void FF_CalcTileClipRects(CK_object *ob)
@@ -87,28 +114,30 @@ bool FF_LoadCheckpoint(void)
 	return false;
 }
 
-// TODO: dialogue windows (CK_SPEC.C)
-void FF_MiscDialog(int number)
+// Its dialogue windows are in kw_ff_dialog.c. What they call:
+
+void FF_FadeOut(void)
 {
-	(void)number;
+	VL_FadeToBlack();
 }
-void FF_JanitorDialog(int number)
+
+// The score box is redrawn next frame.
+void FF_ForceScoreboxUpdate(void)
 {
-	(void)number;
+	if (ck_scoreBoxObj)
+		ck_scoreBoxObj->user1 = ck_scoreBoxObj->user2 = ck_scoreBoxObj->user3 = ck_scoreBoxObj->user4 = -1;
 }
-void FF_LindseyDialog(int number)
-{
-	(void)number;
-}
-void FF_JanitorSleepMonolog(void)
-{
-}
-void FF_JanitorStunnedMonolog(void)
+
+// TODO: its jukebox and its two built-in games (CK_Jukebox in CK_PLAY.C,
+// SNAILAS.C, FOOBS.C)
+void FF_Jukebox(void)
 {
 }
-void FF_JanitorNisasiDialog(int number)
+void FF_RunSnailas(void)
 {
-	(void)number;
+}
+void FF_RunFoobsInSpace(void)
+{
 }
 
 // TODO: the fade out and back in around a teleport (DelayedFade in CK_GAME.C)
@@ -418,7 +447,7 @@ void FF_DrawStatusWindow(void)
 	US_SetWindowX(80);
 	US_SetWindowW(161);
 	US_SetPrintColour(15);
-	US_CPrint("LOCATION");
+	US_CPrint(FF_String(FF_S_LOCATION));
 	VHB_Bar(79 - 1, 38 - 1, 162 + 2, 20 + 2, 8);
 	VHB_Bar(79, 38, 162, 20, 0);
 	CK_MeasureMultiline(name, &strW, &strH);
@@ -430,7 +459,7 @@ void FF_DrawStatusWindow(void)
 	US_SetWindowX(80);
 	US_SetWindowW(64);
 	US_SetPrintColour(15);
-	US_CPrint("EXTRA");
+	US_CPrint(FF_String(FF_S_EXTRA));
 	VHB_Bar(79, 71, 66, 10, 0);
 	CK_DrawLongRight(88, 72, 7, 6, ck_gameState.nextKeenAt);
 	VHB_Bar(95, 80, 1, 1, 8);
@@ -439,7 +468,7 @@ void FF_DrawStatusWindow(void)
 	US_SetPrintY(85);
 	US_SetWindowX(81);
 	US_SetWindowW(64);
-	US_CPrint("SCORE");
+	US_CPrint(FF_String(FF_S_SCORE));
 	VHB_Bar(79, 95, 66, 10, 0);
 	CK_DrawLongRight(88, 96, 7, 6, ck_gameState.keenScore);
 	VHB_Bar(95, 104, 1, 1, 8);
@@ -449,38 +478,38 @@ void FF_DrawStatusWindow(void)
 	US_SetWindowX(177);
 	US_SetWindowW(64);
 	US_SetPrintColour(15);
-	US_CPrint("LEVEL");
+	US_CPrint(FF_String(FF_S_LEVEL));
 	VHB_Bar(175, 71, 66, 10, 0);
 	US_SetPrintY(72);
 	US_SetWindowX(176);
 	US_SetWindowW(64);
 	US_SetPrintColour(10);
-	US_CPrint(ff_state.cheated ? "CHEATER!" : ck_gameState.difficulty == D_Easy ? "Easy" :
-		ck_gameState.difficulty == D_Normal ? "Normal" : ck_gameState.difficulty == D_Hard ? "Hard" : "Expert");
+	US_CPrint(FF_String(ff_state.cheated ? FF_S_CHEATER : ck_gameState.difficulty == D_Easy ? FF_S_EASY :
+		ck_gameState.difficulty == D_Normal ? FF_S_NORMAL : ck_gameState.difficulty == D_Hard ? FF_S_HARD : FF_S_EXPERT));
 
 	US_SetPrintX(194);
 	US_SetPrintY(85);
 	US_SetPrintColour(15);
-	US_Print("KEYS");
+	US_Print(FF_String(FF_S_KEYS));
 	VHB_Bar(175, 95, 66, 10, 0);
 	for (int i = 0, x = 184; i < 4; i++, x += 13)
 		VHB_DrawTile8(x, 96, ck_gameState.keyGems[i] ? i : 4);
 
 	US_SetPrintX(80);
 	US_SetPrintY(144);
-	US_Print("AMMO");
+	US_Print(FF_String(FF_S_AMMO));
 	VHB_Bar(127, 143, 18, 10, 0);
 	CK_DrawLongRight(128, 144, 2, 6, ck_gameState.numShots);
 
 	US_SetPrintX(80);
 	US_SetPrintY(112);
-	US_Print("KEENS");
+	US_Print(FF_String(FF_S_KEENS));
 	VHB_Bar(127, 111, 18, 10, 0);
 	CK_DrawLongRight(128, 112, 2, 6, ck_gameState.numLives);
 
 	US_SetPrintX(80);
 	US_SetPrintY(128);
-	US_Print("DROPS");
+	US_Print(FF_String(FF_S_DROPS));
 	VHB_Bar(127, 127, 18, 10, 0);
 	CK_DrawLongRight(128, 128, 2, 6, ck_gameState.numCentilife);
 
@@ -490,7 +519,7 @@ void FF_DrawStatusWindow(void)
 	US_SetPrintY(117);
 	US_SetWindowX(177);
 	US_SetWindowW(64);
-	US_CPrint("GOODIES");
+	US_CPrint(FF_String(FF_S_GOODIES));
 	VHB_Bar(175, 127, 66, 10, 0);
 	VHB_Bar(175, 143, 66, 10, 0);
 	uint16_t bits = ff_state.collectiblesTotal | ff_map.collectiblesNew;

@@ -193,6 +193,16 @@ void FF_DrawSprite(RF_SpriteDrawEntry **sde, int x, int y, int chunk, int drawty
 #define RF_PlaceSpriteClipped(sde, x, y, chunk, type, z, clip) RF_AddSpriteDraw(sde, x, y, chunk, type, z)
 #define RF_PlaceSpriteAfterClipped(user, x, y, chunk, type, z, after, a, b) RF_AddSpriteDrawUsing16BitOffset(user, x, y, chunk, type, z)
 
+// Its strings (GAMESTR.CKS, its string manager KD_SM.C): by FF_S_ number.
+const char *FF_String(int number);
+#define SM_GetString(n) FF_String(n)
+#define SM_Print(n) US_Print(FF_String(n))
+#define SM_CPrint(n) US_CPrint(FF_String(n))
+#define SM_PrintCentered(n) US_PrintCentered(FF_String(n))
+#define SM_MeasureMultiline(n, w, h) CK_MeasureMultiline(FF_String(n), (w), (h))
+#define SM_CopyString(dest, n) strcpy((dest), FF_String(n))
+#define SM_ConcatString(dest, n) strcat((dest), FF_String(n))
+
 // State kept outside its structures
 extern bool ff_keenKilled, ff_keenUpHeld, ff_keenMustAdjustNextX;
 extern int ff_brainfucled;
@@ -203,14 +213,19 @@ void FF_MoveObjHoriz(CK_object *ob, int xmove);
 void FF_CalcTileClipRects(CK_object *ob);
 bool FF_SaveCheckpoint(void);
 bool FF_LoadCheckpoint(void);
-void FF_MiscDialog(int number);
-void FF_JanitorDialog(int number);
-void FF_LindseyDialog(int number);
+void FF_MiscDialog(int16_t number);
+void FF_JanitorDialog(int16_t number);
+void FF_LindseyDialog(int16_t number);
 void FF_JanitorSleepMonolog(void);
 void FF_JanitorStunnedMonolog(void);
-void FF_JanitorNisasiDialog(int number);
+void FF_JanitorNisasiDialog(int16_t number);
 void FF_StartMusic(uint16_t song, bool repeat);
 void FF_DelayedFade(void);
+void FF_FadeOut(void);
+void FF_Jukebox(void);
+void FF_RunSnailas(void);
+void FF_RunFoobsInSpace(void);
+void FF_ForceScoreboxUpdate(void);
 void SD_SetMusicRate(int rate);
 void SD_PlayTwoSounds(int first, int second);
 
