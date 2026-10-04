@@ -317,6 +317,12 @@ void AR_ScanInfoLayer(void)
 				AR_SpawnFireball(x, y, infoValue - 70);
 				CA_MARKLUMP(FIREBALLLUMP);
 				break;
+			case 69: // its 3-up
+				CA_MarkGrChunk(ITEM3UP1SPR);
+				CA_MarkGrChunk(ITEM3UP2SPR);
+				CA_MarkGrChunk(ITEM3UP3SPR);
+				CK_SpawnItem(x, y, 12);
+				break;
 			case 42:
 				AR_SpawnCheckPoint(x, y);
 				CA_MARKLUMP(CHECKPOINTLUMP);
@@ -364,6 +370,76 @@ void CK_KeenFall(CK_object *obj)
 {
 	CK_PhysGravityHigh(obj);
 	ck_nextX = obj->velX * SD_GetSpriteSync();
+}
+
+// Its switches ("Fleexy's code" in KD_KEEN.C): one switch can stand for a
+// stack of them. Each either flips a bridge (foreground tiles to their next
+// animation tile) or changes an info value (a platform arrow or blocker).
+//   type: 0 bridge, 1 info value, 2 by the switch's own tile property
+//   animSwitch: 0 not a real switch, 1 a normal one, 2 only animate it
+static bool AR_SwitchFlipWorker(int xpos, int ypos, int type, int animSwitch)
+{
+	static const int infoPlaneInverses[8] = {2, 3, 0, 1, 6, 7, 4, 5};
+	uint16_t switchTarget = CA_TileAtPos(xpos, ypos, 2);
+	int switchTargetX = switchTarget >> 8, switchTargetY = switchTarget & 0xFF;
+	int switchMisc = 0;
+	if (animSwitch > 0)
+	{
+		uint16_t switchTile = CA_TileAtPos(xpos, ypos, 1);
+		switchMisc = TI_ForeMisc(switchTile);
+		if (switchMisc != 15 && switchMisc != 5 && switchMisc != 6) // bridge, platform on, platform off
+			return false;
+		uint16_t switchNextTile = switchTile + TI_ForeAnimTile(switchTile);
+		RF_ReplaceTiles(&switchNextTile, 1, xpos, ypos, 1, 1);
+	}
+	else if (switchTarget < 0x100)
+		return false;
+
+	if ((animSwitch == 0 && type == 0) || (animSwitch == 1 && switchMisc == 15))
+	{
+		for (int tileY = switchTargetY; tileY < switchTargetY + 2; ++tileY)
+			for (int tileX = switchTargetX - ((tileY == switchTargetY) ? 0 : 1); tileX < CA_GetMapWidth(); ++tileX)
+			{
+				uint16_t currentTile = CA_TileAtPos(tileX, tileY, 1);
+				if (!TI_ForeAnimTile(currentTile))
+					break;
+				uint16_t newTile = currentTile + TI_ForeAnimTile(currentTile);
+				RF_ReplaceTiles(&newTile, 1, tileX, tileY, 1, 1);
+			}
+	}
+	else if ((animSwitch == 0 && type == 1) || animSwitch == 1)
+	{
+		uint16_t infoPlaneValue = CA_TileAtPos(switchTargetX, switchTargetY, 2);
+		if (infoPlaneValue >= 91 && infoPlaneValue < 99)
+			infoPlaneValue = infoPlaneInverses[infoPlaneValue - 91] + 91; // turn a platform arrow round
+		else
+			infoPlaneValue ^= 0x1F; // put in or take out a blocker
+		if (switchTargetX < CA_GetMapWidth() && switchTargetY < CA_GetMapHeight())
+			CA_mapPlanes[2][switchTargetY * CA_GetMapWidth() + switchTargetX] = infoPlaneValue;
+	}
+	return true;
+}
+
+void AR_KeenPressSwitch(CK_object *obj)
+{
+	int switchX = obj->clipRects.tileXmid, switchY = obj->clipRects.tileY1;
+	uint16_t switchTarget = CA_TileAtPos(switchX, switchY, 2);
+	int type = TI_ForeMisc(CA_TileAtPos(switchX, switchY, 1)) == 15 ? 0 : 1;
+
+	SD_PlaySound(KEENOUTOFAMMOSND);
+	if (switchTarget == 0xF1EE)
+	{
+		// A stack of info values above it, all of this switch's kind
+		AR_SwitchFlipWorker(switchX, switchY, 0, 2);
+		while (--switchY >= 0 && AR_SwitchFlipWorker(switchX, switchY, type, 0))
+			;
+	}
+	else
+	{
+		// A stack of switches, each of its own kind
+		while (switchY >= 0 && AR_SwitchFlipWorker(switchX, switchY, 2, 1))
+			switchY--;
+	}
 }
 
 // The last frame of being pulled under by the vines ends the level.
@@ -466,6 +542,41 @@ void AR_Misc_SetupFunctions(void)
 	CK_ACT_AddColFunction("AR_CheckPointCol", &AR_CheckPointCol);
 }
 
+// Saved games (Keen Worlds' save block): what must outlive a level. The
+// ghost is found again among the loaded objects; a checkpoint isn't saved.
+static bool ar_relinkGhost;
+void AR_ClearCheckpoint(void);
+
+bool AR_WriteState(FS_File fp)
+{
+	int16_t v[14] = {ar_state.vines, ar_state.generatorsDestroyed, ar_state.endscreen_played[0],
+		ar_state.endscreen_played[1], ar_state.endscreen_played[2], ar_state.endscreen_played[3],
+		ar_state.endscreen_played[4], ar_state.doSecretEnding, ar_state.atroxusBoxesPlayed,
+		ar_state.atroxusBoxesLevels[0], ar_state.atroxusBoxesLevels[1], ar_state.atroxusBoxesLevels[2],
+		(int16_t)ar_state.axosisNum, 0};
+	return FS_WriteInt16LE(v, 14, fp) == 14;
+}
+
+bool AR_ReadState(FS_File fp)
+{
+	int16_t v[14];
+	if (FS_ReadInt16LE(v, 14, fp) != 14)
+		return false;
+	memset(&ar_state, 0, sizeof(ar_state));
+	ar_state.vines = v[0];
+	ar_state.generatorsDestroyed = v[1];
+	for (int i = 0; i < 5; ++i)
+		ar_state.endscreen_played[i] = v[2 + i] != 0;
+	ar_state.doSecretEnding = v[7] != 0;
+	ar_state.atroxusBoxesPlayed = v[8];
+	for (int i = 0; i < 3; ++i)
+		ar_state.atroxusBoxesLevels[i] = v[9 + i];
+	ar_state.axosisNum = v[12];
+	ar_relinkGhost = true;
+	AR_ClearCheckpoint();
+	return true;
+}
+
 // A new game: nothing of its extra state carries over.
 void AR_ResetState(void)
 {
@@ -559,6 +670,16 @@ static void AR_SaveCheckpoint(CK_object *checkpoint)
 // Once a frame, after the objects have moved and collided.
 void AR_CheckpointFrame(void)
 {
+	// After a saved game was loaded: find the Krile ghost again.
+	if (ar_relinkGhost)
+	{
+		ar_relinkGhost = false;
+		ar_state.krileGhost = NULL;
+		if (AR_IsActive())
+			for (CK_object *obj = ck_keenObj; obj; obj = obj->next)
+				if (obj->type == AR_CT_KrileGhost)
+					ar_state.krileGhost = obj;
+	}
 	if (!ar_touchedCheckpoint)
 		return;
 	CK_object *checkpoint = ar_touchedCheckpoint;

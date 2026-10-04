@@ -251,11 +251,17 @@ typedef enum CK_LevelState
 // This struct is 0x58 bytes big in Keen5
 // It must be preserved (or at least negotiated) if omnispeak savegames are to be compatible
 // with those of vanilla keen
+#define CK_LEVELS_SAVED 25
+#define CK_LEVELS_TRACKED 32
+
 typedef struct CK_GameState
 {
 	uint16_t mapPosX;
 	uint16_t mapPosY;
-	uint16_t levelsDone[25]; // Number of levels complete
+	// KEEN WORLDS: room for more levels than the original 25 (Atroxian Realm
+	// has a 26th). The engine's own save format still holds the first 25
+	// (CK_LEVELS_SAVED); Keen Worlds' save block carries the rest.
+	uint16_t levelsDone[CK_LEVELS_TRACKED]; // Number of levels complete
 	int32_t keenScore;       // Keen's score. (This _is_ signed, by the looks of all the 'jl' instructions)
 	int32_t nextKeenAt;      // Score keen will get a new life at.
 	int16_t numShots;

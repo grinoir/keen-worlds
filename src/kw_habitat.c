@@ -24,9 +24,6 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 #include "kw_art.h"
 #include "kw_habitat.h"
 
-// The engine tracks 25 levels as done. A game with more maps (Atroxian Realm
-// has a 26th) can't have the extra ones completed or peaceful yet.
-#define KW_LEVELS_TRACKED ((int)(sizeof(ck_gameState.levelsDone) / sizeof(ck_gameState.levelsDone[0])))
 #include "kw_world.h"
 
 typedef enum KW_When
@@ -205,7 +202,7 @@ static bool KW_IsShown(KW_When when, bool completed)
 
 static void KW_ChangeLevel(void)
 {
-	bool completed = ca_mapOn > 0 && ca_mapOn < KW_LEVELS_TRACKED && ck_gameState.levelsDone[ca_mapOn];
+	bool completed = ca_mapOn > 0 && ca_mapOn < CK_LEVELS_TRACKED && ck_gameState.levelsDone[ca_mapOn];
 	for (int i = 0; i < (int)(sizeof(kw_levelEdits) / sizeof(kw_levelEdits[0])); ++i)
 	{
 		if (kw_levelEdits[i].episode != KW_CurrentEpisode() || kw_levelEdits[i].level != ca_mapOn)
@@ -634,7 +631,7 @@ void KW_SetupLevelResidents(void)
 	KW_ChangeLevel();
 
 	// Every completed level is peaceful when Keen comes back (in every world).
-	kw_levelIsPeaceful = ca_mapOn > 0 && ca_mapOn < KW_LEVELS_TRACKED && ck_gameState.levelsDone[ca_mapOn];
+	kw_levelIsPeaceful = ca_mapOn > 0 && ca_mapOn < CK_LEVELS_TRACKED && ck_gameState.levelsDone[ca_mapOn];
 	if (!kw_levelIsPeaceful)
 		return;
 

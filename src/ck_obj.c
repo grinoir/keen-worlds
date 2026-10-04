@@ -25,6 +25,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ck_phys.h"
 #include "ck_play.h"
 
+bool AR_IsActive(void); // KEEN WORLDS: Atroxian Realm (kw_arealm.c)
+
 // This file contains some object functions (think, etc) which are common to
 // several episodes.
 // AFAIK, There never was a "ck_obj.c" in the DOS source
@@ -107,6 +109,8 @@ void CK_SpawnItem(int tileX, int tileY, int itemNumber)
 	obj->gfxChunk = CK_LookupChunk(CK_ItemSpriteChunks[itemNumber]);
 	obj->user2 = obj->gfxChunk;
 	obj->user3 = obj->gfxChunk + 2;
+	if (itemNumber == 12 && AR_IsActive())
+		obj->user3 = obj->gfxChunk + 3; // KEEN WORLDS: Atroxian Realm's 3-up has three frames
 	CK_SetAction(obj, CK_ACTION(CK_ACT_item));
 }
 

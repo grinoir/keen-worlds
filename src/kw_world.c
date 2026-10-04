@@ -215,7 +215,7 @@ typedef struct KW_WorldState
 	bool visited;
 	uint16_t mapPosX;
 	uint16_t mapPosY;
-	uint16_t levelsDone[25];
+	uint16_t levelsDone[CK_LEVELS_TRACKED];
 	bool completed; // The world's ending has been seen.
 	int16_t items[KW_NUM_ITEMS];
 } KW_WorldState;
@@ -318,7 +318,12 @@ bool KW_IsWorldCompleted(int world)
 // 4-6 only, items shared) is still read.
 
 #define KW_SAVE_BLOCK_ID "KWLD"
-#define KW_SAVE_VERSION 2
+#define KW_SAVE_VERSION 3
+#define KW_LEVELS_EXTRA (CK_LEVELS_TRACKED - CK_LEVELS_SAVED)
+
+// Atroxian Realm's extra game state (kw_arealm.c)
+bool AR_WriteState(FS_File fp);
+bool AR_ReadState(FS_File fp);
 #define KW_SAVE_ID_LEN 8
 
 static bool kw_introduced[KW_NUM_WORLDS]; // worlds whose arrival card has been shown
@@ -377,10 +382,11 @@ bool KW_WriteSaveBlock(FS_File fp)
 	{
 		KW_WorldState state = (w == kw_currentWorld) ? KW_LiveState() : kw_worlds[w];
 		if (!KW_WriteId(fp, kw_worldDefs[w].id) || !KW_WriteWorld(fp, &state) ||
-			FS_WriteInt16LE(state.items, KW_NUM_ITEMS, fp) != KW_NUM_ITEMS)
+			FS_WriteInt16LE(state.items, KW_NUM_ITEMS, fp) != KW_NUM_ITEMS ||
+			FS_WriteInt16LE(state.levelsDone + CK_LEVELS_SAVED, KW_LEVELS_EXTRA, fp) != KW_LEVELS_EXTRA)
 			return false;
 	}
-	return true;
+	return AR_WriteState(fp);
 }
 
 bool KW_ReadSaveBlock(FS_File fp, bool *deferred)
@@ -411,7 +417,7 @@ bool KW_ReadSaveBlock(FS_File fp, bool *deferred)
 			memcpy(worlds[w].items, items, sizeof(items));
 		world = KW_KEEN4 + (episode - 4);
 	}
-	else if (version == KW_SAVE_VERSION)
+	else if (version == 2 || version == KW_SAVE_VERSION)
 	{
 		char wid[KW_SAVE_ID_LEN];
 		int16_t count;
@@ -425,10 +431,17 @@ bool KW_ReadSaveBlock(FS_File fp, bool *deferred)
 			if (FS_Read(wid, KW_SAVE_ID_LEN, 1, fp) != 1 || !KW_ReadWorld(fp, &state) ||
 				FS_ReadInt16LE(state.items, KW_NUM_ITEMS, fp) != KW_NUM_ITEMS)
 				return false;
+			// Version 3: the levels past the engine's 25
+			if (version >= 3 &&
+				FS_ReadInt16LE(state.levelsDone + CK_LEVELS_SAVED, KW_LEVELS_EXTRA, fp) != KW_LEVELS_EXTRA)
+				return false;
 			int w = KW_WorldById(wid);
 			if (w != KW_NO_WORLD)
 				worlds[w] = state;   // worlds that are no longer known are dropped
 		}
+		// Version 3: Atroxian Realm's extra state
+		if (version >= 3 && !AR_ReadState(fp))
+			return false;
 	}
 	else
 		return false;
@@ -454,6 +467,9 @@ bool KW_ReadSaveBlock(FS_File fp, bool *deferred)
 	// (map position, levels done) from the normal save that follows.
 	for (int i = 0; i < KW_NUM_ITEMS; ++i)
 		*KW_ItemField(i) = kw_worlds[world].items[i];
+	// ...and the levels past the 25 the normal save holds.
+	memcpy(ck_gameState.levelsDone + CK_LEVELS_SAVED, kw_worlds[world].levelsDone + CK_LEVELS_SAVED,
+		KW_LEVELS_EXTRA * sizeof(ck_gameState.levelsDone[0]));
 	kw_pendingWorld = KW_NO_WORLD;
 	kw_placeArrivalAtShip = false;
 	if (world >= 0 && world < KW_NUM_WORLDS)

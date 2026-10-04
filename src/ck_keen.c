@@ -78,6 +78,7 @@ extern void CK6_ToggleBigSwitch(CK_object *obj, bool p);
 // KEEN WORLDS: Atroxian Realm (kw_arealm.c)
 bool AR_IsActive(void);
 bool AR_KeenVinesTile(CK_object *obj, int tileX, int tileY);
+void AR_KeenPressSwitch(CK_object *obj);
 
 void CK_KeenColFunc(CK_object *a, CK_object *b)
 {
@@ -112,6 +113,9 @@ void CK_KeenColFunc(CK_object *a, CK_object *b)
 #ifdef WITH_KEEN5
 		else if ((ck_currentEpisode->ep == EP_CK5) && (b->user1 == 12))
 		{
+			if (AR_IsActive())
+				ck_gameState.numLives += 3; // KEEN WORLDS: Atroxian Realm's 3-up
+			else
 			ck_gameState.ep.ck5.securityCard = 1;
 		}
 #endif
@@ -356,6 +360,12 @@ void CK_KeenCheckSpecialTileInfo(CK_object *obj)
 
 void CK_KeenPressSwitchThink(CK_object *obj)
 {
+	// KEEN WORLDS: Atroxian Realm has its own switches
+	if (AR_IsActive())
+	{
+		AR_KeenPressSwitch(obj);
+		return;
+	}
 	uint16_t switchTarget = CA_TileAtPos(obj->clipRects.tileXmid, obj->clipRects.tileY1, 2);
 	int switchTargetX = (switchTarget >> 8);
 	int switchTargetY = (switchTarget & 0xFF);
