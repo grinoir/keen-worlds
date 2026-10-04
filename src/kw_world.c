@@ -249,6 +249,9 @@ static const KW_Ship kw_ships[] = {
 	// Keen 9's ship stands on its platform in level 1, the HUB Command
 	// Center, where the level itself starts Keen at its nose.
 	{KW_KEEN9, 1, 93, 30, 93, 26, 108, 31},
+	// Atroxian Realm: the wreck of the Megarocket in its "BWB Crash Site"
+	// level (25), where that level starts Keen beside it.
+	{KW_AREALM, 25, 5, 16, 3, 13, 14, 17},
 };
 
 static const KW_Ship *KW_ShipFor(int world)
@@ -1036,6 +1039,46 @@ static int KW_TravelMenu(void)
 	return result;
 }
 
+// ---- The registry plaque ----
+// A small plaque stands beside the Megarocket in every world that has a
+// ship level. Pressing up at the ship reads it: the game's title, its
+// makers and the full credits. It is drawn over the level each frame (no
+// tile or sprite of the world's own graphics is used or changed).
+
+static bool KW_PlaquePixel(int *px, int *py)
+{
+	const KW_Ship *ship = KW_ShipFor(kw_currentWorld);
+	if (!ship || ca_mapOn != ship->level)
+		return false;
+	// One tile to the side of where Keen arrives (away from the ship),
+	// standing on the ground he stands on.
+	*px = (ship->arrivalX - 1) * 16;
+	*py = (ship->arrivalY + 1) * 16;
+	return true;
+}
+
+void KW_DrawOverlay(void)
+{
+	int wx, wy;
+	if (kw_cardsOff || !KW_PlaquePixel(&wx, &wy))
+		return;
+	// The screen buffer starts at the tile the view is scrolled to.
+	int x = wx - (RF_UnitToTile(rf_scrollXUnit) << 4);
+	int y = wy - (RF_UnitToTile(rf_scrollYUnit) << 4);
+	if (x < 0 || y < 26 || x + 16 > RF_BUFFER_WIDTH_PIXELS || y > RF_BUFFER_HEIGHT_PIXELS)
+		return;
+	// A post and a board, in the EGA palette: brown post, grey board with a
+	// dark frame, a blue "i" and two lines of writing.
+	VL_ScreenRect(x + 7, y - 12, 2, 12, 6);
+	VL_ScreenRect(x + 1, y - 26, 14, 14, 0);
+	VL_ScreenRect(x + 2, y - 25, 12, 12, 7);
+	VL_ScreenRect(x + 3, y - 24, 10, 10, 15);
+	VL_ScreenRect(x + 7, y - 23, 2, 2, 1);
+	VL_ScreenRect(x + 7, y - 20, 2, 1, 1);
+	VL_ScreenRect(x + 4, y - 18, 8, 1, 8);
+	VL_ScreenRect(x + 4, y - 16, 8, 1, 8);
+}
+
 void KW_PlayLoopHook(void)
 {
 	// Keen has just set foot in a world for the first time: its own title
@@ -1059,6 +1102,20 @@ void KW_PlayLoopHook(void)
 		(ck_keenState.jumpIsPressed || ck_keenState.pogoIsPressed || ck_keenState.shootIsPressed) &&
 		KW_IsAtShipHatch())
 		kw_launchRequested = true;
+
+	// Reading the plaque: up, standing at the ship.
+	if (KW_IsShipLevel() && !kw_cardsOff && ck_keenObj && ck_keenObj->topTI &&
+		ck_inputFrame.yDirection == IN_motion_Up && KW_IsAtShipHatch())
+	{
+		KW_ShowAboutWorld(kw_currentWorld);
+		// Don't open it again until the key has been let go.
+		while (ck_inputFrame.yDirection != 0)
+		{
+			IN_PumpEvents();
+			IN_ReadControls(0, &ck_inputFrame);
+		}
+		return;
+	}
 
 	if (kw_launchRequested)
 	{
@@ -1694,6 +1751,31 @@ void KW_SelfTest(void)
 		}
 		if (loaded < 20)
 			Quit("KW_SelfTest: Atroxian Realm is missing levels!");
+		// Its completed levels are peaceful, by its own lists.
+		for (int lv = 1; lv < 25; ++lv)
+		{
+			if (!CA_MapExists(lv))
+				continue;
+			ck_gameState.currentLevel = lv;
+			ck_gameState.levelsDone[lv] = 1;
+			CK_LoadLevel(true, true);
+			int hostiles, residents;
+			CK_object *first;
+			KW_CountLevelPeople(&hostiles, &residents, &first);
+			if (!KW_IsLevelPeaceful() || hostiles)
+				QuitF("KW_SelfTest: completed Atroxian Realm level %d isn't peaceful (%d hostile)!", lv, hostiles);
+			ck_gameState.levelsDone[lv] = 0;
+		}
+		// Arriving by Megarocket puts Keen at the wreck in the crash site level.
+		const KW_Ship *arShip = KW_ShipFor(KW_AREALM);
+		kw_placeArrivalAtShip = true;
+		ck_gameState.currentLevel = arShip->level;
+		CK_LoadLevel(true, true);
+		if (!KW_IsAtShipHatch() || RF_UnitToTile(ck_keenObj->posX) != arShip->arrivalX)
+			Quit("KW_SelfTest: Atroxian Realm's ship arrival is wrong!");
+		int plaqueX, plaqueY;
+		if (!KW_PlaquePixel(&plaqueX, &plaqueY) || plaqueX != (arShip->arrivalX - 1) * 16)
+			Quit("KW_SelfTest: Atroxian Realm's registry plaque is missing!");
 		KW_SwitchWorld(KW_KEEN4);
 	}
 

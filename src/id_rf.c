@@ -601,6 +601,7 @@ void RFL_AnimateTiles()
 }
 
 void (*rf_drawFunc)(void);
+void KW_DrawOverlay(void); // KEEN WORLDS (kw_world.c)
 
 void RF_SetDrawFunc(void (*func)(void))
 {
@@ -1451,6 +1452,7 @@ void RF_Refresh()
 
 	if (rf_drawFunc)
 		rf_drawFunc();
+	KW_DrawOverlay(); // KEEN WORLDS: the registry plaque by the Megarocket
 
 	// 0xef for the X-direction to match EGA keen's 2px horz scrolling.
 	VL_SetScrollCoords(RF_UnitToPixel(rf_scrollXUnit & 0xef), RF_UnitToPixel(rf_scrollYUnit & 0xff));

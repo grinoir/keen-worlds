@@ -24,6 +24,12 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 #include "kw_art.h"
 #include "kw_habitat.h"
 
+// Atroxian Realm has its own lists (kw_arealm.c).
+bool AR_IsActive(void);
+bool AR_IsHostileType(int type);
+bool AR_IsStoryTrigger(const CK_object *obj);
+
+
 #include "kw_world.h"
 
 typedef enum KW_When
@@ -353,7 +359,7 @@ static int KW_BreakFuses(int *outX, int *outY)
 {
 	int fuses = 0;
 #ifdef WITH_KEEN5
-	if (ck_currentEpisode->ep != EP_CK5)
+	if (ck_currentEpisode->ep != EP_CK5 || AR_IsActive()) // Keen 5's own fuse tiles
 		return 0;
 	for (int y = 1; y < CA_GetMapHeight(); ++y)
 		for (int x = 0; x < CA_GetMapWidth(); ++x)
@@ -523,6 +529,8 @@ bool KW_IsDeadlyTileHarmless(void)
 
 static bool KW_IsHostile(CK_object *obj)
 {
+	if (AR_IsActive())
+		return AR_IsHostileType(obj->type);
 	switch (ck_currentEpisode->ep)
 	{
 #ifdef WITH_KEEN4
@@ -580,6 +588,8 @@ static bool KW_IsHostile(CK_object *obj)
 // 6's Molly and the rope, sandwich and passcard Keen already has).
 static bool KW_IsStoryTrigger(CK_object *obj)
 {
+	if (AR_IsActive())
+		return AR_IsStoryTrigger(obj);
 #ifdef WITH_KEEN5
 	if (ck_currentEpisode->ep == EP_CK5 && obj->type == CT5_QED)
 		return true;

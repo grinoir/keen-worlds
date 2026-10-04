@@ -23,6 +23,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "kw_habitat.h"
 
 void AR_CheckpointFrame(void); // KEEN WORLDS: Atroxian Realm (kw_arealm.c)
+bool AR_IsActive(void);
+int AR_MapSongAfterZiggurat(void);
 #include "id_ca.h"
 #include "id_fs.h"
 #include "id_in.h"
@@ -1438,6 +1440,9 @@ void StartMusic(int16_t level)
 	else
 #endif
 		song = CK_INTELEMENT(CK_LevelMusic, level);
+	// KEEN WORLDS: Atroxian Realm's map has another song once level 15 is done
+	if (AR_IsActive() && level == 0 && ck_gameState.levelsDone[15])
+		song = AR_MapSongAfterZiggurat();
 
 
 	if ((song == -1) || (SD_GetMusicMode() != smm_AdLib))

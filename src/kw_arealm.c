@@ -482,6 +482,17 @@ static void AR_SpawnBossKeen(int tileX, int tileY, int direction)
 	CK_SetAction(ck_keenObj, CK_ACTION(CK_ACT_keenStanding));
 }
 
+// The map's flag doesn't flip for level 10 when the vines ended it.
+bool AR_NoFlagFlip(int level)
+{
+	return level == 10 && ar_state.vines == 2;
+}
+
+int AR_MapSongAfterZiggurat(void)
+{
+	return SKY_SANCTUM_MAP_MUS;
+}
+
 // ---- The map transporter (AR_MAP.C) ----
 // After the Great Ziggurat (level 15) Keen arrives on the map in a saucer
 // that flies to the tile its info value names, where he steps out.
@@ -540,6 +551,31 @@ void AR_Misc_SetupFunctions(void)
 	CK_ACT_AddFunction("AR_KeenVines", &AR_KeenVines);
 	CK_ACT_AddFunction("AR_TransporterKeen", &AR_TransporterKeen);
 	CK_ACT_AddColFunction("AR_CheckPointCol", &AR_CheckPointCol);
+}
+
+// ---- Keen Worlds' peaceful levels ----
+// Its object types reuse Keen 5's numbers for other things, so it has its
+// own lists. Hostile: every creature, shot and hazard. Story triggers: what
+// ends a level or starts a dialogue when touched.
+
+bool AR_IsHostileType(int type)
+{
+	return type == CT5_EnemyShot || type == CT5_StunnedCreature ||
+		(type >= AR_CT_Larvac && type <= AR_CT_Dartgun) || type == AR_CT_Atroxus;
+}
+
+bool AR_IsStoryTrigger(const CK_object *obj)
+{
+	if (obj->type == AR_CT_Generator || obj->type == AR_CT_Elder || obj->type == AR_CT_Bridge)
+		return true;
+	if (obj->type != CT_Friendly || !obj->currentAction || !obj->currentAction->collide)
+		return false;
+	static const char *talkers[] = {"AR_ElderBWBCollide", "AR_AtroxusDialogueCollide", "AR_SecretKrileCollide",
+		"AR_AtroxusBoxCollide"};
+	for (size_t i = 0; i < sizeof(talkers) / sizeof(talkers[0]); ++i)
+		if (obj->currentAction->collide == CK_ACT_GetColFunction(talkers[i]))
+			return true;
+	return false;
 }
 
 // Saved games (Keen Worlds' save block): what must outlive a level. The

@@ -44,6 +44,16 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 // =========================================================================
 
+// KEEN WORLDS: Atroxian Realm (kw_arealm.c)
+bool AR_IsActive(void);
+void AR_WinGame(void);
+void AR_EndScreens(int dialogue);
+void AR_GeneratorWinMessage(void);
+void AR_ElderWinMessage(void);
+void AR_BridgeWinMessage(void);
+void AR_AfterLevelLoad(void);
+bool AR_NoFlagFlip(int level);
+
 int ck_lastLevelFinished; // KEEN WORLDS: not static (Atroxian Realm's map transporter reads it)
 
 // =========================================================================
@@ -573,7 +583,9 @@ void CK_MapLevelMarkAsDone(void)
 				{
 					/* If this is the flag holder for the level */
 #if defined(WITH_KEEN4) || defined(WITH_KEEN6)
-					if (ck_currentEpisode->ep != EP_CK5 && ck_lastLevelFinished == level)
+					// KEEN WORLDS: Atroxian Realm (on Keen 5's code) has flags too;
+					// no flag flip for its level 10 when the vines ended it.
+					if ((ck_currentEpisode->ep != EP_CK5 || (AR_IsActive() && !AR_NoFlagFlip(level))) && ck_lastLevelFinished == level)
 						CK_FlippingFlagSpawn(x, y);
 					else
 #endif
@@ -885,14 +897,6 @@ bool CK_TryAgainMenu()
 
 extern CK_Difficulty ck_startingDifficulty;
 
-// KEEN WORLDS: Atroxian Realm (kw_arealm.c)
-bool AR_IsActive(void);
-void AR_WinGame(void);
-void AR_EndScreens(int dialogue);
-void AR_GeneratorWinMessage(void);
-void AR_ElderWinMessage(void);
-void AR_BridgeWinMessage(void);
-void AR_AfterLevelLoad(void);
 
 bool CK6_CreatureQuestion();
 void CK_GameLoop()

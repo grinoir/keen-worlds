@@ -68,6 +68,10 @@ void AR_AfterLevelLoad(void);
 void AR_ClearCheckpoint(void);
 bool AR_HasCheckpoint(void);
 
+// Keen Worlds' peaceful levels: what is removed from a cleared level.
+bool AR_IsHostileType(int type);
+bool AR_IsStoryTrigger(const CK_object *obj);
+
 // Is Atroxian Realm the running game? (It runs as Keen 5 for the engine.)
 bool AR_IsActive(void);
 // The game is won: its ending screens.
