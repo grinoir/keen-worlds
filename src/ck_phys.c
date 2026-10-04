@@ -428,7 +428,8 @@ void CK_PhysUpdateNormalObj(CK_object *obj)
 
 			CK_SetDeltaClipRects(obj);
 
-			CK_PhysClipVert(obj);
+			if (obj->clipped != CLIP_dart) // KEEN WORLDS: Atroxian Realm's darts
+				CK_PhysClipVert(obj);
 
 			//TODO: Handle keen NOT being pushed.
 			if (obj == ck_keenObj && (ck_currentEpisode->ep != EP_CK6 || !ck_keenIgnoreVertClip))
@@ -651,7 +652,8 @@ void CK_PhysUpdateSimpleObj(CK_object *obj)
 		if (obj->clipped)
 		{
 			CK_SetDeltaClipRects(obj);
-			CK_PhysClipVert(obj);
+			if (obj->clipped != CLIP_dart) // KEEN WORLDS: Atroxian Realm's darts
+				CK_PhysClipVert(obj);
 			CK_PhysClipHorz(obj);
 		}
 

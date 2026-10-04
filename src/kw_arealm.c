@@ -11,24 +11,47 @@ Keen, items and platforms only.
 Licensed under the GNU GPL v2 or later, like Omnispeak and Atroxian Realm.
 */
 
-#include "id_ca.h"
 #include "id_fs.h"
-#include "id_rf.h"
-#include "ck_act.h"
-#include "ck_def.h"
-#include "ck_play.h"
 #include "ck_ep.h"
-#include "ck5_ep.h"
+#include "kw_arealm.h"
 
 void CK_SpawnAxisPlatform(int tileX, int tileY, int direction, bool purple);
 void CK_SpawnFallPlat(int tileX, int tileY);
 
+
+AR_State ar_state;
+
+void AR_PhysAccelVert(CK_object *obj, int accY, int velLimit)
+{
+	bool isNegative = (obj->velY < 0);
+	int32_t lastTimeCount = SD_GetLastTimeCount();
+	for (int32_t tickCount = lastTimeCount - SD_GetSpriteSync(); tickCount < lastTimeCount; tickCount++)
+	{
+		// Every odd tic...
+		if (tickCount & 1)
+		{
+			obj->velY += accY;
+			if ((obj->velY < 0) != isNegative)
+			{
+				isNegative = (obj->velY < 0);
+				obj->yDirection = isNegative ? -1 : 1;
+			}
+			if (obj->velY > velLimit)
+				obj->velY = velLimit;
+			else if (obj->velY < -velLimit)
+				obj->velY = -velLimit;
+		}
+		ck_nextY += obj->velY;
+	}
+}
 
 // Its level setup (CK5_ScanInfoLayer in AR_MISC.C). Creature numbers are
 // skipped until their code is ported.
 void AR_ScanInfoLayer(void)
 {
 	CA_InitLumps();
+	ar_state.axosisNum = 0;
+	ar_state.krileGhost = NULL;
 	int mapW = CA_GetMapWidth();
 	int mapH = CA_GetMapHeight();
 
@@ -54,6 +77,80 @@ void AR_ScanInfoLayer(void)
 				CA_MARKLUMP(MAPKEENLUMP);
 				CA_MARKLUMP(MAPKEEN2LUMP);
 				CK_SpawnMapKeen(x, y);
+				break;
+			// Hornet
+			case 52:
+				if (ck_gameState.difficulty < D_Hard)
+					break;
+			case 51:
+				if (ck_gameState.difficulty < D_Normal)
+					break;
+			case 7:
+				AR_SpawnHornet(x, y);
+				CA_MARKLUMP(HORNETLUMP);
+				break;
+			case 11:
+				AR_SpawnMagmine(x, y);
+				CA_MARKLUMP(MAGMINELUMP);
+				break;
+			case 12:
+				AR_SpawnDartfrog(x, y);
+				CA_MARKLUMP(DARTFROGLUMP);
+				break;
+			case 19:
+				AR_SpawnSplider(x, y);
+				CA_MARKLUMP(SPLIDERLUMP);
+				break;
+			case 21:
+				AR_SpawnBeetle(x, y);
+				CA_MARKLUMP(BEETLELUMP);
+				break;
+			case 44:
+				if (ck_gameState.difficulty < D_Hard)
+					break;
+			case 43:
+				if (ck_gameState.difficulty < D_Normal)
+					break;
+			case 22:
+				AR_SpawnLarvac(x, y);
+				CA_MARKLUMP(LARVACLUMP);
+				break;
+			case 46:
+				if (ck_gameState.difficulty < D_Hard)
+					break;
+			case 45:
+				if (ck_gameState.difficulty < D_Normal)
+					break;
+			case 8:
+				AR_SpawnLarvbat(x, y);
+				CA_MARKLUMP(LARVBATLUMP);
+				// (as the source: its dying frames aren't in the lump)
+				CA_MarkGrChunk(SPR_LARVBATDIE1);
+				CA_MarkGrChunk(SPR_LARVBATDIE2);
+				CA_MarkGrChunk(SPR_LARVBATDIE3);
+				CA_MarkGrChunk(SPR_LARVBATDIE4);
+				break;
+			case 53: case 54: case 55: case 56:
+				AR_SpawnDartgun(x, y, infoValue - 53);
+				CA_MARKLUMP(DARTLUMP);
+				break;
+			case 79: case 80: case 81: case 82:
+				if (ck_gameState.difficulty >= D_Normal)
+				{
+					AR_SpawnDartgun(x, y, infoValue - 79);
+					CA_MARKLUMP(DARTLUMP);
+				}
+				break;
+			case 83: case 84: case 85: case 86:
+				if (ck_gameState.difficulty >= D_Hard)
+				{
+					AR_SpawnDartgun(x, y, infoValue - 83);
+					CA_MARKLUMP(DARTLUMP);
+				}
+				break;
+			case 70: case 71: case 72:
+				AR_SpawnFireball(x, y, infoValue - 70);
+				CA_MARKLUMP(FIREBALLLUMP);
 				break;
 			case 25:
 				RF_SetScrollBlock(x, y, true);

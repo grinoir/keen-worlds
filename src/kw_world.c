@@ -1168,6 +1168,65 @@ static void KW_TestLevelSpritesCached(const char *world, int level)
 	}
 }
 
+// For /KWTEST: let the objects of the loaded level think, move, collide and
+// draw for a number of frames, as the play loop does (without Keen's input).
+// Like the game, only a screenful is active at a time: the window moves from
+// object to object until the sprite table is nearly full. Catches crashes and
+// bad memory use in creature code under the sanitizers.
+static bool KW_TestNear(const CK_object *obj, const CK_object *focus)
+{
+	return abs(obj->clipRects.tileXmid - focus->clipRects.tileXmid) <= 12 &&
+		abs(obj->clipRects.tileY2 - focus->clipRects.tileY2) <= 8;
+}
+
+static void KW_TestRunObjects(int frames)
+{
+	SD_SetSpriteSync(2);
+	for (CK_object *focus = ck_keenObj->next; focus && RF_NumSpriteDraws() < 30; focus = focus->next)
+	{
+		if (!focus->currentAction)
+			continue;
+		CK_object snapshot = *focus; // where the window is, even if the object goes
+		for (int frame = 0; frame < frames && ck_gameState.levelState == LS_Playing && RF_NumSpriteDraws() < 50; ++frame)
+		{
+			SD_SetLastTimeCount(SD_GetLastTimeCount() + 2);
+			for (CK_object *obj = ck_keenObj->next; obj;)
+			{
+				CK_object *next = obj->next;
+				if (obj->currentAction && KW_TestNear(obj, &snapshot))
+				{
+					obj->active = OBJ_ACTIVE;
+					CK_RunAction(obj);
+				}
+				obj = next;
+			}
+			for (CK_object *a = ck_keenObj; a; a = a->next)
+				for (CK_object *b = a->next; b; b = b->next)
+				{
+					if (!a->currentAction || !b->currentAction || a->type == CT_Nothing || b->type == CT_Nothing)
+						continue;
+					if (!KW_TestNear(b, &snapshot) || (a != ck_keenObj && !KW_TestNear(a, &snapshot)))
+						continue;
+					if (a->clipRects.unitX2 > b->clipRects.unitX1 && a->clipRects.unitX1 < b->clipRects.unitX2 &&
+						a->clipRects.unitY1 < b->clipRects.unitY2 && a->clipRects.unitY2 > b->clipRects.unitY1)
+					{
+						if (a != ck_keenObj && a->currentAction->collide)
+							a->currentAction->collide(a, b);
+						if (b->currentAction && b->currentAction->collide)
+							b->currentAction->collide(b, a);
+					}
+				}
+			for (CK_object *obj = ck_keenObj->next; obj; obj = obj->next)
+				if (obj->visible && obj->currentAction && obj->currentAction->draw && KW_TestNear(obj, &snapshot))
+				{
+					obj->visible = false;
+					obj->currentAction->draw(obj);
+				}
+		}
+		ck_gameState.levelState = LS_Playing;
+	}
+}
+
 // Developer self-test (/KWTEST): hop between all worlds several times, loading
 // the world map and two levels each visit, and log memory use after every hop
 // so leaks show up as steady growth.
@@ -1570,11 +1629,16 @@ void KW_SelfTest(void)
 			if (!CA_MapExists(lv))
 				continue;
 			ck_gameState.currentLevel = lv;
-			ck_gameState.levelsDone[lv] = 0;
+			if (lv < (int)(sizeof(ck_gameState.levelsDone) / sizeof(ck_gameState.levelsDone[0])))
+				ck_gameState.levelsDone[lv] = 0;
 			CK_LoadLevel(true, true);
 			if (!ck_keenObj || !ck_keenObj->currentAction)
 				QuitF("KW_SelfTest: Atroxian Realm map %d has no Keen!", lv);
 			KW_TestLevelSpritesCached("arealm", lv);
+			bool god = ck_godMode;
+			ck_godMode = true; // creatures may touch Keen; he isn't the subject here
+			KW_TestRunObjects(150);
+			ck_godMode = god;
 			++loaded;
 		}
 		if (loaded < 20)

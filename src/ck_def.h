@@ -345,6 +345,7 @@ typedef enum CK_clipped
 	CLIP_not = 0,
 	CLIP_normal,
 	CLIP_simple,
+	CLIP_dart, // KEEN WORLDS (Atroxian Realm): clipped against walls only, not floors and ceilings
 } CK_ClipType;
 
 typedef struct CK_object

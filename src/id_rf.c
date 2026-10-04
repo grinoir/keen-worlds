@@ -1137,6 +1137,12 @@ int RF_GetLastPage(int page)
 	return (VL_GetActiveBuffer() - page + VL_GetNumBuffers()) % VL_GetNumBuffers();
 }
 
+// KEEN WORLDS: how many sprite draws are in use (for the self-test)
+int RF_NumSpriteDraws(void)
+{
+	return rf_numSpriteDraws;
+}
+
 void RF_RemoveSpriteDraw(RF_SpriteDrawEntry **drawEntry)
 {
 	if (!drawEntry)

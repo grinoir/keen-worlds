@@ -88,6 +88,7 @@ void RF_NewMap(void);
 void RF_RenderTile16(int x, int y, int tile);
 void RF_RenderTile16m(int x, int y, int tile);
 void RF_ForceRefresh(void);
+int RF_NumSpriteDraws(void); // KEEN WORLDS
 void RF_ReplaceTileBlock(int srcx, int srcy, int destx, int desty, int width, int height);
 void RF_ReplaceTiles(uint16_t *tilePtr, int plane, int dstX, int dstY, int width, int height);
 void RF_Reposition(int scrollXunit, int scrollYunit);
