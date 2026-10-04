@@ -705,7 +705,10 @@ static int ck_cacheCountdownNum, ck_cacheBoxChunksPerPic, ck_cacheBoxChunkCounte
 bool FF_IsActive(void); // KEEN WORLDS: Foray in the Forest has its own box (kw_fitf.c)
 void FF_BeginCacheBox(const char *title, int numChunks);
 void FF_UpdateCacheBox(void);
+bool KW_DebugWait(void);
 void FF_LevelEnded(void);
+bool FF_HandleDeath(void);
+bool FF_HasCheckpoint(void);
 void FF_NewGame(void);
 void FF_AfterLevelEnded(void);
 
@@ -846,13 +849,18 @@ bool CK_TryAgainMenu()
 
 		US_SetPrintY(y1 + 2);
 		// KEEN WORLDS: Atroxian Realm restarts from a touched checkpoint
-		US_CPrint(AR_HasCheckpoint() ? "Restart from Checkpoint" : CK_STRING(ck_str_tryAgainTryAgain));
+		US_CPrint((AR_HasCheckpoint() || FF_HasCheckpoint()) ? "Restart from Checkpoint" : CK_STRING(ck_str_tryAgainTryAgain));
 		US_SetPrintY(US_GetPrintY() + 4);
 		y2 = US_GetPrintY() - 2;
 		US_CPrint(CK_STRING(ck_str_exitToMap));
 
 		IN_ClearKeysDown();
 		sel = 0;
+		// Developer tool (kw_world.c): with KW_AUTOWAIT set, save a picture of
+		// the menu and take its first choice.
+		VH_UpdateScreen();
+		if (KW_DebugWait())
+			return false;
 		while (1)
 		{
 			IN_PumpEvents();
@@ -982,7 +990,9 @@ void CK_GameLoop()
 
 		VL_FixRefreshBuffer();
 
-		if (us_tedLevel)
+		// (Developer tool: with KW_AUTOLEVEL the level is handled as in a
+		// normal game, so that dying and finishing can be tried out.)
+		if (us_tedLevel && !getenv("KW_AUTOLEVEL"))
 		{
 			if (ck_gameState.levelState == LS_LoadedGame)
 				goto replayLevel;
@@ -1004,6 +1014,13 @@ void CK_GameLoop()
 		switch (ck_gameState.levelState)
 		{
 		case LS_Died:
+			// KEEN WORLDS: Foray in the Forest's checkpoints and free restarts
+			if (FF_IsActive())
+			{
+				if (FF_HandleDeath())
+					goto replayLevel;
+				break;
+			}
 			if (CK_TryAgainMenu())
 				goto replayLevel;
 			//ck_gameState.currentLevel = ck_nextMapNumber;

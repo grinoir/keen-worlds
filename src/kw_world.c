@@ -1571,6 +1571,12 @@ void KW_DebugFrame(void)
 		if (s)
 			sscanf(s, "%d:%511s", &frames, path);
 	}
+	// KW_AUTOKILL=n: Keen is killed at frame n (to try out what dying does)
+	static int killAt = -1;
+	if (killAt < 0)
+		killAt = getenv("KW_AUTOKILL") ? atoi(getenv("KW_AUTOKILL")) : 0;
+	if (killAt && count + 1 == killAt)
+		CK_KillKeen();
 	if (!frames || ++count < frames)
 		return;
 	KW_DumpScreen(path);

@@ -1449,9 +1449,15 @@ void StopMusic(void)
 			MM_SetPurge((void **)&CA_audio[ca_audInfoE.startMusic + i], 3);
 }
 
+int FF_SongFor(int level); // KEEN WORLDS (kw_fitf.c)
+
 void StartMusic(int16_t level)
 {
 	int16_t song = -1;
+
+	// KEEN WORLDS: Foray in the Forest's levels name their song in the map
+	if (FF_IsActive() && level != -1)
+		level = FF_SongFor(level);
 
 	// KEEN WORLDS: the limit is a variable (Atroxian Realm has 26 levels and
 	// songs past them); 20 as in the original otherwise.

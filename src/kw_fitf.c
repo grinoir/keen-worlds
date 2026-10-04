@@ -104,14 +104,199 @@ void FF_DrawSprite(RF_SpriteDrawEntry **sde, int x, int y, int chunk, int drawty
 // Keen and the creatures call. Each does the least that keeps the game
 // going. ----
 
-// TODO: checkpoints (CK_GAME.C)
+// ---- Checkpoints (SaveCheckpoint, LoadCheckpoint, SaveGameStuff and
+// LoadGameStuff in CK_GAME.C). The source writes a CHKPOINT file holding the
+// game state, the map and the whole object array; here the same is kept in
+// memory, so a checkpoint doesn't outlive the level or the program. ----
+
+extern CK_object ck_objArray[CK_MAX_OBJECTS];
+extern CK_object *ck_freeObject, *ck_lastObject;
+extern int ck_numObjects;
+
+static struct
+{
+	bool valid;
+	int level;
+	CK_GameState gameState;
+	FF_State state;
+	FF_MapState map;
+	int brainfucled;
+	uint16_t *planes[3];
+	size_t planeBytes;
+	CK_object objects[CK_MAX_OBJECTS];
+	CK_object *freeObject, *lastObject;
+	int numObjects;
+	int scrollX, scrollY;
+} ff_checkpoint;
+
+static void FF_ClearCheckpoint(void)
+{
+	for (int i = 0; i < 3; ++i)
+	{
+		free(ff_checkpoint.planes[i]);
+		ff_checkpoint.planes[i] = NULL;
+	}
+	ff_checkpoint.valid = false;
+}
+
+bool FF_HasCheckpoint(void)
+{
+	return FF_IsActive() && ff_checkpoint.valid && ff_checkpoint.level == ca_mapOn && ff_map.checkpointSaved;
+}
+
 bool FF_SaveCheckpoint(void)
 {
-	return false;
+	FF_ClearCheckpoint();
+	ff_map.checkpointSaved = true;
+	ff_checkpoint.level = ca_mapOn;
+	ff_checkpoint.gameState = ck_gameState;
+	ff_checkpoint.state = ff_state;
+	ff_checkpoint.map = ff_map;
+	ff_checkpoint.brainfucled = ff_brainfucled;
+	ff_checkpoint.planeBytes = (size_t)CA_GetMapWidth() * CA_GetMapHeight() * 2;
+	for (int i = 0; i < 3; ++i)
+	{
+		ff_checkpoint.planes[i] = (uint16_t *)malloc(ff_checkpoint.planeBytes);
+		if (!ff_checkpoint.planes[i])
+		{
+			FF_ClearCheckpoint();
+			return ff_map.checkpointSaved = false;
+		}
+		memcpy(ff_checkpoint.planes[i], CA_mapPlanes[i], ff_checkpoint.planeBytes);
+	}
+	memcpy(ff_checkpoint.objects, ck_objArray, sizeof(ck_objArray));
+	ff_checkpoint.freeObject = ck_freeObject;
+	ff_checkpoint.lastObject = ck_lastObject;
+	ff_checkpoint.numObjects = ck_numObjects;
+	ff_checkpoint.scrollX = rf_scrollXUnit;
+	ff_checkpoint.scrollY = rf_scrollYUnit;
+	ff_checkpoint.valid = true;
+	return true;
 }
+
+// The sprites an object has on screen (its own, and the extra ones some
+// kinds keep in their temp fields) come off before the objects change.
+static void FF_RemoveObjectSprites(CK_object *ob)
+{
+	RF_RemoveSpriteDraw(&ob->sde);
+	switch (ob->type)
+	{
+	case FF_CT_FallBlock:
+	case CT5_StunnedCreature:
+	case FF_CT_Slug:
+	case FF_CT_Checkpoint:
+		RF_RemoveSpriteDrawUsing16BitOffset(&ob->user3);
+		break;
+	case CT5_Platform:
+		RF_RemoveSpriteDrawUsing16BitOffset(&ob->user2);
+		RF_RemoveSpriteDrawUsing16BitOffset(&ob->user3);
+		break;
+	}
+}
+
 bool FF_LoadCheckpoint(void)
 {
-	return false;
+	if (!ff_checkpoint.valid || ff_checkpoint.level != ca_mapOn ||
+		ff_checkpoint.planeBytes != (size_t)CA_GetMapWidth() * CA_GetMapHeight() * 2)
+		return false;
+
+	CK_GameState old = ck_gameState;
+	FF_State oldState = ff_state;
+	for (CK_object *ob = ck_keenObj; ob; ob = ob->next)
+		FF_RemoveObjectSprites(ob);
+
+	ck_gameState = ff_checkpoint.gameState;
+	ff_state = ff_checkpoint.state;
+	if (ck_gameState.numShots < DEFAULT_SHOTS)
+		ck_gameState.numShots = DEFAULT_SHOTS;
+	if (ck_gameState.numShots < old.numShots)
+		ck_gameState.numShots = old.numShots;
+	if (!(oldState.cheated && !ff_state.cheated && old.numLives > ck_gameState.numLives))
+		ck_gameState.numLives = old.numLives;
+	ck_gameState.nextKeenAt = old.nextKeenAt;
+	ck_gameState.numCentilife = old.numCentilife;
+	ck_gameState.levelState = old.levelState;
+	ff_state.janitorMessageShown = oldState.janitorMessageShown;
+	ff_state.savebits = oldState.savebits;
+
+	ff_map = ff_checkpoint.map;
+	ff_brainfucled = ff_checkpoint.brainfucled;
+	for (int i = 0; i < 3; ++i)
+		memcpy(CA_mapPlanes[i], ff_checkpoint.planes[i], ff_checkpoint.planeBytes);
+	memcpy(ck_objArray, ff_checkpoint.objects, sizeof(ck_objArray));
+	ck_freeObject = ff_checkpoint.freeObject;
+	ck_lastObject = ff_checkpoint.lastObject;
+	ck_numObjects = ff_checkpoint.numObjects;
+	ck_keenState.platform = NULL;
+	ff_keenKilled = false;
+
+	for (CK_object *ob = ck_keenObj; ob; ob = ob->next)
+	{
+		ob->visible = true; // force redraw
+		ob->sde = NULL;
+		switch (ob->type)
+		{
+		case FF_CT_FallBlock:
+		case CT5_StunnedCreature:
+		case FF_CT_Slug:
+		case FF_CT_Checkpoint:
+			ob->user3 = 0; // the stars, foreground, donut or overlay sprite
+			break;
+		case CT5_Platform:
+			ob->user2 = ob->user3 = 0; // the thrusters
+			break;
+		}
+	}
+	FF_ForceScoreboxUpdate();
+	RF_Reposition(ff_checkpoint.scrollX, ff_checkpoint.scrollY);
+	RF_ForceRefresh();
+	return true;
+}
+
+// ---- Dying (HandleDeath in CK_GAME.C). A touched checkpoint gives a number
+// of free restarts by difficulty; after those a restart costs a life like
+// any other. The menu itself is the engine's ("try again" or "restart from
+// checkpoint", and "exit to the map"). TODO: its third choice, loading the
+// last saved game. Returns true to go on playing from the checkpoint. ----
+
+bool CK_TryAgainMenu(void);
+
+bool FF_HandleDeath(void)
+{
+	int checkpointCounter = 0;
+	bool gotFreeRestart = false;
+	int level = ca_mapOn;
+	if (ff_map.checkpointSaved && ff_map.lastCheckpoint && ff_checkpoint.valid)
+	{
+		checkpointCounter = ff_map.lastCheckpoint->user1;
+		if (checkpointCounter <= (int)ff_state.freeRestartsPerCheckpoint)
+		{
+			gotFreeRestart = true;
+			checkpointCounter++;
+		}
+	}
+	// The menu takes a life and only shows while one is left; a free restart
+	// gives it back.
+	if (gotFreeRestart)
+		ck_gameState.numLives++;
+	CK_TryAgainMenu();
+	if (ck_gameState.numLives < 0)
+		return false; // game over
+	if (ck_gameState.currentLevel != level)
+	{
+		// left for the map: the free restart wasn't used
+		if (gotFreeRestart)
+			ck_gameState.numLives--;
+		return false;
+	}
+	if (checkpointCounter && FF_CheckpointLoad())
+	{
+		ck_gameState.levelState = LS_Playing;
+		if (ff_map.lastCheckpoint)
+			ff_map.lastCheckpoint->user1 = checkpointCounter;
+		return true;
+	}
+	return false; // the level starts over
 }
 
 // Its dialogue windows are in kw_ff_dialog.c. What they call:
@@ -145,17 +330,26 @@ void FF_DelayedFade(void)
 {
 }
 
-// The level's song is a number in its map (ScanInfoPlane, music trigger
-// tiles): StartMusic plays ff_map.music whatever it is asked for.
+// Music. A level's song is a number in its map (ScanInfoPlane, music trigger
+// tiles), kept in ff_map.music: the engine's StartMusic(level) plays that
+// in this world. Its own StartMusic(song) (dialogues, triggers) names a song
+// directly. (Its songs are numbered as the engine's "levels": song n is
+// CK_LevelMusic[n].)
+static bool ff_songDirect;
+
 void FF_StartMusic(uint16_t song, bool repeat)
 {
 	(void)repeat;
-	ff_map.music = song;
+	ff_songDirect = true;
 	StartMusic(song);
+	ff_songDirect = false;
 }
-int FF_LevelSong(void)
+
+int FF_SongFor(int level)
 {
-	return ff_map.music;
+	if (ff_songDirect)
+		return level;
+	return (ff_map.music >= 0 && ff_map.music < FF_LASTMUSIC) ? ff_map.music : 0;
 }
 
 // TODO: music tempo changes and two sounds in a row (its ID_SD.C)
@@ -203,7 +397,8 @@ void FF_FrameInTiles(void)
 		for (int y = k->clipRects.tileY1; y <= k->clipRects.tileY2; ++y)
 			for (int x = k->clipRects.tileX1; x <= k->clipRects.tileX2; ++x)
 				fprintf(stderr, " %d/%x", TI_ForeMisc(CA_TileAtPos(x, y, 1)) & 0x7F, CA_TileAtPos(x, y, 2));
-		fprintf(stderr, " warp %d,%d info %x\n", ff_map.warpDeltaX, ff_map.warpDeltaY, ff_map.warpInfo);
+		fprintf(stderr, " warp %d,%d info %x checkpoint %d lives %d\n", ff_map.warpDeltaX, ff_map.warpDeltaY, ff_map.warpInfo,
+			(int)ff_map.checkpointSaved, ck_gameState.numLives);
 	}
 }
 
@@ -215,8 +410,8 @@ void FF_Camera(CK_object *keen)
 }
 
 // After the frame is drawn: warps, timers.
-// TODO: its Nisasi music tempo, checkpoint saving (CheckpointSave), the
-// bonus level's Lindsey, wrap-around scrolling (CK_WrapScroll).
+// TODO: its Nisasi music tempo, the bonus level's Lindsey, wrap-around
+// scrolling (CK_WrapScroll).
 void FF_FrameEnd(void)
 {
 	if (ff_map.warpInfo)
@@ -252,6 +447,9 @@ void FF_FrameEnd(void)
 		if (ff_map.stunCooldown <= 0)
 			ff_map.stunCooldown = ff_map.stunCounter = 0;
 	}
+	// a checkpoint touched this frame is saved now, with everything settled
+	if (ff_map.checkpointTouched)
+		FF_CheckpointSave(ff_map.checkpointTouched);
 }
 
 // ---- How a level ends (the switch after PlayLoop in its GameLoop, and
@@ -572,6 +770,7 @@ void FF_ScanInfoLayer(void)
 {
 	memset(&ff_map, 0, sizeof(ff_map));
 	ff_keenKilled = false;
+	FF_ClearCheckpoint(); // a checkpoint belongs to the level it was touched in
 	if (!ff_state.maxammo)
 		FF_ApplyDifficulty(false); // arrived from another world
 	FF_ScanInfoPlane();
