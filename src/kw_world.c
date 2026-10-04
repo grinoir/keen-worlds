@@ -1473,6 +1473,10 @@ bool AR_HasCheckpoint(void);
 
 #include "id_vl_private.h"
 
+extern CK_object *ck_scoreBoxObj;
+extern bool ck_scoreBoxEnabled;
+void CK_UpdateScoreBox(CK_object *scorebox);
+
 // Developer tool (/KWSHOT world level file.ppm): load a level of a world, draw
 // one frame and save the screen as a picture. Needs a renderer that keeps
 // pixels (not the null one): build with RENDERER=sdl2sw and run with
@@ -1529,6 +1533,9 @@ void KW_Screenshot(const char *worldId, int level, const char *path)
 			CK_NormalCamera(ck_keenObj);
 		RF_Refresh();
 	}
+	ck_scoreBoxEnabled = true;
+	if (ck_scoreBoxObj)
+		CK_UpdateScoreBox(ck_scoreBoxObj);
 	RF_Refresh();
 	void *screen = vl_emuegavgaadapter.screen;
 	int sx = VL_GetScrollX() & 15, sy = VL_GetScrollY() & 15;

@@ -112,7 +112,9 @@ void CK_ScoreBoxDrawTile8(int tilenum, uint8_t *dest, int destWidth, int planeSi
 
 // KEEN WORLDS: ck_scoreBoxBlankTile and ck_scoreBoxDigitOffset - the small
 // tiles of the blank and of the digits (a digit's tile is its character code
-// minus the offset), for games that number them differently.
+// minus the offset), for games that number them differently; and
+// ck_scoreBoxScoreDigits, ck_scoreBoxShotsColumn, ck_scoreBoxLivesColumn -
+// how many places the score has and where the two small numbers start.
 void CK_UpdateScoreBox(CK_object *scorebox)
 {
 
@@ -153,7 +155,7 @@ void CK_UpdateScoreBox(CK_object *scorebox)
 		len = strlen(buf);
 
 		// Draw the leading emptiness
-		for (place = 9; place > len; place--)
+		for (place = CK_INT(ck_scoreBoxScoreDigits, 9); place > len; place--)
 		{
 			CK_ScoreBoxDrawTile8(CK_INT(ck_scoreBoxBlankTile, 0x29), dest++, box.width, planeSize);
 		}
@@ -180,7 +182,7 @@ void CK_UpdateScoreBox(CK_object *scorebox)
 		// and 12 rows from the top
 		dest = spr->data;
 		dest += (planeSize = box.width * box.height);
-		dest += box.width * 20 + 8;
+		dest += box.width * 20 + CK_INT(ck_scoreBoxShotsColumn, 8);
 
 		if (ck_gameState.numShots >= 99)
 			snprintf(buf, sizeof(buf), "99");
@@ -217,7 +219,7 @@ void CK_UpdateScoreBox(CK_object *scorebox)
 		// and 12 rows from the top
 		dest = spr->data;
 		dest += (planeSize = box.width * box.height);
-		dest += box.width * 20 + 3;
+		dest += box.width * 20 + CK_INT(ck_scoreBoxLivesColumn, 3);
 
 		if (ck_gameState.numLives >= 99)
 			snprintf(buf, sizeof(buf), "99");
