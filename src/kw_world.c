@@ -40,6 +40,9 @@ extern const char *ck_episodeFile;
 // its own files and level setup.
 #define KW_EPISODE_AREALM 10
 extern CK_EpisodeDef ar_episode;
+// Foray in the Forest's (kw_fitf.c), the same way with extension CKS.
+#define KW_EPISODE_FITF 11
+extern CK_EpisodeDef ff_episode;
 
 
 typedef struct KW_WorldDef
@@ -119,6 +122,15 @@ static const KW_WorldDef kw_worldDefs[KW_NUM_WORLDS] = {
 		"Testing: Fleex, Keenfan,\nT-Squared, Gamebird, Lemm\n\n"
 		"Engine programming: NY00123,\nAndy Durdin, Lemm, David Gow\n\nVersion 1.5 fixes: K1n9_Duk3" KW_NOT_OURS,
 		"A fan game by Gridlock (2016).\nDownload Atroxian Realm v1.5\n(see its thread on pckf.com)\nand put its files in\nmods/arealm."},
+	// Foray in the Forest (Nisaba and K1n9_Duk3, v2.0 2025): a game of its
+	// own with GPL source. play/mods/fitf holds the player's copy of its data
+	// files and the variable files tools/kw_fitf.py writes from its source.
+	// TODO: the full credits from its own credits screens.
+	{"fitf", "The Ancient Forest", KW_EPISODE_FITF, "mods/fitf", "FITF.CKS",
+		"Foray in the Forest",
+		"A Commander Keen fan game\nby Nisaba and K1n9_Duk3",
+		"Created by Nisaba\nProgramming: K1n9_Duk3" KW_NOT_OURS,
+		"A fan game by Nisaba and\nK1n9_Duk3. Download Foray in\nthe Forest v2.0 (see its page\non keenwiki.shikadi.net) and\nput its files in mods/fitf."},
 };
 
 static CK_EpisodeDef *KW_EpisodeDef(int episode)
@@ -139,6 +151,8 @@ static CK_EpisodeDef *KW_EpisodeDef(int episode)
 #endif
 	case KW_EPISODE_AREALM:
 		return &ar_episode;
+	case KW_EPISODE_FITF:
+		return &ff_episode;
 	default:
 		return NULL;
 	}
@@ -189,11 +203,12 @@ bool KW_IsWorldPresent(int world)
 	if (!FS_IsFileValid(f))
 		return false;
 	FS_CloseFile(f);
-	if (def->episode == KW_EPISODE_AREALM)
+	if (def->episode == KW_EPISODE_AREALM || def->episode == KW_EPISODE_FITF)
 	{
 		// Its support files are in its own folder too; Keen 5's variables
 		// (Omnispeak's own files) are its base.
-		f = FSL_OpenFileInDirCaseInsensitive(KW_WorldPath(world), "maptemp.ckd", false);
+		f = FSL_OpenFileInDirCaseInsensitive(KW_WorldPath(world),
+			def->episode == KW_EPISODE_FITF ? "MAPTEMP.CKS" : "maptemp.ckd", false);
 		if (!FS_IsFileValid(f))
 			return false;
 		FS_CloseFile(f);
@@ -1939,6 +1954,33 @@ void KW_SelfTest(void)
 		KW_SwitchWorld(KW_KEEN4);
 	}
 
+	// Foray in the Forest (when installed): every map of the game loads, with
+	// every object's sprites in memory.
+	if (KW_IsWorldPresent(KW_FITF))
+	{
+		KW_SwitchWorld(KW_FITF);
+		int loaded = 0;
+		for (int lv = 0; lv < 27 /* GAMELEVELS; the file has more maps */; ++lv)
+		{
+			if (!CA_MapExists(lv))
+				continue;
+			ck_gameState.currentLevel = lv;
+			ck_gameState.levelsDone[lv] = 0;
+			CK_LoadLevel(true, true);
+			if (!ck_keenObj || !ck_keenObj->currentAction)
+				QuitF("KW_SelfTest: Foray in the Forest map %d has no Keen!", lv);
+			KW_TestLevelSpritesCached("fitf", lv);
+			bool god = ck_godMode;
+			ck_godMode = true;
+			KW_TestRunObjects(150);
+			ck_godMode = god;
+			++loaded;
+		}
+		if (loaded < 20)
+			Quit("KW_SelfTest: Foray in the Forest is missing levels!");
+		KW_SwitchWorld(KW_KEEN4);
+	}
+
 	// Keen 8 and 9 (when installed): every level loads, and every level when
 	// completed is peaceful.
 	for (int fan = KW_KEEN8; fan <= KW_KEEN9; ++fan)
@@ -2143,5 +2185,10 @@ void KW_SelfTest(void)
 
 	if (!ck_gameState.ep.ck4.wetsuit)
 		Quit("KW_SelfTest: Keen 4 lost its wetsuit while Keen travelled!");
-	CK_Cross_LogMessage(CK_LOG_MSG_NORMAL, "KW_SelfTest: passed\n");
+	// Printed whatever the log level: which worlds were there to be tested.
+	printf("KW_SelfTest: passed. Worlds tested:");
+	for (int w = 0; w < KW_NUM_WORLDS; ++w)
+		if (KW_IsWorldPresent(w))
+			printf(" %s", kw_worldDefs[w].id);
+	printf("\n");
 }
