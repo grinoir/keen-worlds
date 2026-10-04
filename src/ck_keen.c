@@ -806,7 +806,8 @@ void CK_HandleInputOnGround(CK_object *obj)
 	if (obj->topTI == 0x19)
 	{
 		// But only if such an action exists in this episode. :/
-		if (ck_currentEpisode->ep == EP_CK5)
+		// (KEEN WORLDS: not in Atroxian Realm, whose source leaves it out)
+		if (ck_currentEpisode->ep == EP_CK5 && !AR_IsActive())
 		{
 			obj->currentAction = CK_ACTION(CK_ACT_keenRidePlatform);
 		}
@@ -884,7 +885,8 @@ void CK_KeenStandingThink(CK_object *obj)
 	if (obj->topTI == 0x19)
 	{
 		// But only if such an action exists in this episode. :/
-		if (ck_currentEpisode->ep == EP_CK5)
+		// (KEEN WORLDS: not in Atroxian Realm, whose source leaves it out)
+		if (ck_currentEpisode->ep == EP_CK5 && !AR_IsActive())
 		{
 			obj->currentAction = CK_ACTION(CK_ACT_keenRidePlatform);
 		}
