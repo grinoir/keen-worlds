@@ -158,10 +158,65 @@ void SD_PlayTwoSounds(int first, int second)
 	SD_PlaySound(first);
 }
 
-// ---- Its status window (DrawStatusWindow in CK_PLAY.C) ----
-
 void CK_DrawLongRight(int x, int y, int digits, int zerotile, int value);
 void CK_MeasureMultiline(const char *str, uint16_t *w, uint16_t *h);
+extern uint8_t ca_levelbit;
+extern uint8_t ca_graphChunkNeeded[CA_MAX_GRAPH_CHUNKS];
+
+// ---- Its "Keen enters" box (DialogDraw and DialogUpdate in CK_GAME.C): the
+// text on the left, Keen's face on the right and under it a hand counting
+// down from five. (The engine's own box takes six pictures in a row, which
+// this game doesn't have.) ----
+
+static int ff_handPic, ff_chunkCount, ff_chunkMax;
+
+void FF_BeginCacheBox(const char *title, int numChunks)
+{
+	static const int pics[6] = {FF_CD_KEENPIC, FF_CD_FIVEPIC, FF_CD_FOURPIC, FF_CD_THREEPIC, FF_CD_TWOPIC, FF_CD_ONEPIC};
+	uint16_t w, h;
+	ff_handPic = 0;
+	US_CenterWindow(26, 8);
+	US_SetWindowW(US_GetWindowW() - 48);
+	for (int i = 0; i < 6; i++)
+	{
+		CA_CacheGrChunk(pics[i]);
+		ca_graphChunkNeeded[pics[i]] &= ~ca_levelbit;
+		if (!ca_graphChunks[pics[i]])
+		{
+			ff_handPic = 5;
+			break;
+		}
+		if (i == 0)
+			VHB_DrawBitmap(US_GetWindowX() + US_GetWindowW(), US_GetWindowY(), pics[i]);
+	}
+	US_SetPrintX(US_GetWindowX());
+	CK_MeasureMultiline(title, &w, &h);
+	US_SetPrintY(US_GetPrintY() + (US_GetWindowH() - h) / 2 - 4);
+	US_CPrint(title);
+	VH_UpdateScreen();
+	ff_chunkCount = ff_chunkMax = numChunks / 6;
+}
+
+void FF_UpdateCacheBox(void)
+{
+	if (--ff_chunkCount == 0 && ff_handPic <= 4)
+	{
+		ff_chunkCount = ff_chunkMax;
+		if (ca_graphChunks[FF_CD_FIVEPIC + ff_handPic])
+		{
+			VHB_DrawBitmap(US_GetWindowX() + US_GetWindowW(), US_GetWindowY() + 44, FF_CD_FIVEPIC + ff_handPic);
+			VH_UpdateScreen();
+		}
+		// as the engine's own box: loading is very fast here
+		int loadingDelay = CFG_GetConfigInt("loadingDelay", 10);
+		if (loadingDelay)
+			VL_DelayTics(loadingDelay);
+		ff_handPic++;
+	}
+}
+
+// ---- Its status window (DrawStatusWindow in CK_PLAY.C) ----
+
 
 void FF_DrawStatusWindow(void)
 {

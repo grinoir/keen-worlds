@@ -252,9 +252,17 @@ void CK_UpdateScoreBox(CK_object *scorebox)
 
 	if (updated)
 	{
-		CAL_ShiftSprite(spr->data, &spr->data[spr->sprShiftOffset[1]], box.width, box.height, 2);
-		CAL_ShiftSprite(spr->data, &spr->data[spr->sprShiftOffset[2]], box.width, box.height, 4);
-		CAL_ShiftSprite(spr->data, &spr->data[spr->sprShiftOffset[3]], box.width, box.height, 6);
+		// KEEN WORLDS: only the shifted copies the sprite has. (A box with
+		// fewer than four, as Foray in the Forest's, has no room for more:
+		// writing all three overran its memory.)
+		if (box.shifts == 4)
+		{
+			CAL_ShiftSprite(spr->data, &spr->data[spr->sprShiftOffset[1]], box.width, box.height, 2);
+			CAL_ShiftSprite(spr->data, &spr->data[spr->sprShiftOffset[2]], box.width, box.height, 4);
+			CAL_ShiftSprite(spr->data, &spr->data[spr->sprShiftOffset[3]], box.width, box.height, 6);
+		}
+		else if (box.shifts == 2)
+			CAL_ShiftSprite(spr->data, &spr->data[spr->sprShiftOffset[2]], box.width, box.height, 4);
 		RF_AddSpriteDraw(&scorebox->sde, scorebox->posX + 0x40, scorebox->posY + 0x40, CK_CHUNKNUM(SPR_SCOREBOX), false, 3);
 	}
 }

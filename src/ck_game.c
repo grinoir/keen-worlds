@@ -697,9 +697,19 @@ void CK_LoadLevel(bool doCache, bool silent)
 
 static int ck_cacheCountdownNum, ck_cacheBoxChunksPerPic, ck_cacheBoxChunkCounter;
 
+bool FF_IsActive(void); // KEEN WORLDS: Foray in the Forest has its own box (kw_fitf.c)
+void FF_BeginCacheBox(const char *title, int numChunks);
+void FF_UpdateCacheBox(void);
+
 void CK_BeginCacheBox(const char *title, int numChunks)
 {
 	uint16_t w, h;
+
+	if (FF_IsActive())
+	{
+		FF_BeginCacheBox(title, numChunks);
+		return;
+	}
 
 	// Vanilla keen checks if > 2kb free here
 	// If not, it doesn't cache all of the keen counting down graphics
@@ -771,6 +781,11 @@ void CK_BeginCacheBox(const char *title, int numChunks)
 
 void CK_UpdateCacheBox(void)
 {
+	if (FF_IsActive())
+	{
+		FF_UpdateCacheBox();
+		return;
+	}
 	ck_cacheBoxChunkCounter--;
 
 	if (ck_cacheBoxChunkCounter == 0 && ck_cacheCountdownNum <= 4)
