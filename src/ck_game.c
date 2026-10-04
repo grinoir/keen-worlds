@@ -103,9 +103,14 @@ void CK_NewGame()
 	}
 }
 
+bool FF_IsActive(void);
+
 void CK_GameOver()
 {
 	VL_FixRefreshBuffer();
+	// KEEN WORLDS: Foray in the Forest clears the screen to black first
+	if (FF_IsActive())
+		VHB_Bar(0, 0, 320, 200, 0);
 	US_CenterWindow(16, 3);
 	US_PrintCentered(CK_STRING(ck_str_gameOver));
 	VH_UpdateScreen();
@@ -1178,7 +1183,10 @@ void CK_GameLoop()
 
 	// Keen 5: Blow up the galaxy
 #ifdef WITH_KEEN5
-	if (ck_currentEpisode->ep == EP_CK5)
+	// KEEN WORLDS: not in Atroxian Realm or Foray in the Forest (no galaxy to
+	// blow up there, and their pictures have other numbers): their game
+	// over is the plain window, as in their sources.
+	if (ck_currentEpisode->ep == EP_CK5 && !FF_IsActive() && !AR_IsActive())
 	{
 		CK5_ExplodeGalaxy();
 	}
