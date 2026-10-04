@@ -53,6 +53,7 @@ void AR_ElderWinMessage(void);
 void AR_BridgeWinMessage(void);
 void AR_AfterLevelLoad(void);
 bool AR_NoFlagFlip(int level);
+bool AR_HasCheckpoint(void);
 
 int ck_lastLevelFinished; // KEEN WORLDS: not static (Atroxian Realm's map transporter reads it)
 
@@ -812,7 +813,8 @@ bool CK_TryAgainMenu()
 		US_CPrint(buf);
 
 		US_SetPrintY(y1 + 2);
-		US_CPrint(CK_STRING(ck_str_tryAgainTryAgain));
+		// KEEN WORLDS: Atroxian Realm restarts from a touched checkpoint
+		US_CPrint(AR_HasCheckpoint() ? "Restart from Checkpoint" : CK_STRING(ck_str_tryAgainTryAgain));
 		US_SetPrintY(US_GetPrintY() + 4);
 		y2 = US_GetPrintY() - 2;
 		US_CPrint(CK_STRING(ck_str_exitToMap));

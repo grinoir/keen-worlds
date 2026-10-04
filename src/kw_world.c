@@ -1048,12 +1048,22 @@ static int KW_TravelMenu(void)
 static bool KW_PlaquePixel(int *px, int *py)
 {
 	const KW_Ship *ship = KW_ShipFor(kw_currentWorld);
-	if (!ship || ca_mapOn != ship->level)
+	if (ship)
+	{
+		if (ca_mapOn != ship->level)
+			return false;
+		// One tile to the side of where Keen arrives (away from the ship),
+		// standing on the ground he stands on.
+		*px = (ship->arrivalX - 1) * 16;
+		*py = (ship->arrivalY + 1) * 16;
+		return true;
+	}
+	// A ship on the world map: beside the boarding spot, away from the ship
+	// (Keen 5: on the dock, a step before the map's own start).
+	if (ca_mapOn != 0 || kw_launchSpotX < 0)
 		return false;
-	// One tile to the side of where Keen arrives (away from the ship),
-	// standing on the ground he stands on.
-	*px = (ship->arrivalX - 1) * 16;
-	*py = (ship->arrivalY + 1) * 16;
+	*px = (kw_launchSpotX - (kw_currentWorld == KW_KEEN5 ? 4 : 1)) * 16;
+	*py = (kw_launchSpotY + 1) * 16;
 	return true;
 }
 
