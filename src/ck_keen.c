@@ -75,6 +75,10 @@ int16_t ck_keenMoon;
 
 extern void CK6_ToggleBigSwitch(CK_object *obj, bool p);
 
+// KEEN WORLDS: Atroxian Realm (kw_arealm.c)
+bool AR_IsActive(void);
+bool AR_KeenVinesTile(CK_object *obj, int tileX, int tileY);
+
 void CK_KeenColFunc(CK_object *a, CK_object *b)
 {
 	if (b->type == CT_CLASS(Item))
@@ -323,6 +327,13 @@ void CK_KeenCheckSpecialTileInfo(CK_object *obj)
 				}
 				return;
 			case 16:
+				// KEEN WORLDS: in Atroxian Realm this tile is the vines
+				if (AR_IsActive())
+				{
+					if (AR_KeenVinesTile(obj, x, y))
+						return;
+					break;
+				}
 				if (ck_keenMoon == 0)
 					ck_keenMoon = 1; // Yes, also set in Keen 5
 				break;

@@ -220,6 +220,7 @@ void CK5_LevelEnd(CK_object *obj)
 void KW9_SetupFunctions(void);
 void AR_Act1_SetupFunctions(void);
 void AR_Act2_SetupFunctions(void);
+void AR_Misc_SetupFunctions(void);
 void AR_Act3_SetupFunctions(void);
 void KW9_SpawnKorathoid(int tileX, int tileY);
 
@@ -232,6 +233,7 @@ void CK5_SetupFunctions()
 	KW9_SetupFunctions(); // KEEN WORLDS: Keen 9's functions (kw_keen9.c)
 	AR_Act1_SetupFunctions(); // KEEN WORLDS: Atroxian Realm's creatures (kw_ar_act*.c)
 	AR_Act2_SetupFunctions();
+	AR_Misc_SetupFunctions();
 	AR_Act3_SetupFunctions();
 	CK5_Map_SetupFunctions();
 	CK_ACT_AddFunction("CK5_PurpleAxisPlatform", &CK5_PurpleAxisPlatform);

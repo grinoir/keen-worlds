@@ -44,7 +44,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 // =========================================================================
 
-static int ck_lastLevelFinished;
+int ck_lastLevelFinished; // KEEN WORLDS: not static (Atroxian Realm's map transporter reads it)
 
 // =========================================================================
 
@@ -892,6 +892,7 @@ void AR_EndScreens(int dialogue);
 void AR_GeneratorWinMessage(void);
 void AR_ElderWinMessage(void);
 void AR_BridgeWinMessage(void);
+void AR_AfterLevelLoad(void);
 
 bool CK6_CreatureQuestion();
 void CK_GameLoop()
@@ -917,6 +918,7 @@ void CK_GameLoop()
 			ck_startingDifficulty = D_NotPlaying;
 		loadLevel:
 			CK_LoadLevel(true, false);
+			AR_AfterLevelLoad(); // KEEN WORLDS: Atroxian Realm restarts from a touched checkpoint
 
 			//TODO: If this didn't succeed, return to level 0.
 		}

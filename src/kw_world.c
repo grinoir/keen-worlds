@@ -525,8 +525,11 @@ void KW_ReturnToStartWorld(void)
 	kw_placeArrivalAtShip = false;
 }
 
+void AR_ResetState(void); // Atroxian Realm's extra game state (kw_arealm.c)
+
 void KW_ResetWorlds(void)
 {
+	AR_ResetState();
 	memset(kw_worlds, 0, sizeof(kw_worlds));
 	memset(kw_introduced, 0, sizeof(kw_introduced)); // a new game introduces each world again
 	kw_pendingWorld = KW_NO_WORLD;
@@ -1227,6 +1230,14 @@ static void KW_TestRunObjects(int frames)
 	}
 }
 
+// Atroxian Realm's checkpoints (kw_arealm.c), for the self-test
+#define AR_CT_CheckPoint 33
+void AR_CheckPointCol(CK_object *obj1, CK_object *obj2);
+void AR_CheckpointFrame(void);
+void AR_AfterLevelLoad(void);
+void AR_ClearCheckpoint(void);
+bool AR_HasCheckpoint(void);
+
 // Developer self-test (/KWTEST): hop between all worlds several times, loading
 // the world map and two levels each visit, and log memory use after every hop
 // so leaks show up as steady growth.
@@ -1635,6 +1646,30 @@ void KW_SelfTest(void)
 			if (!ck_keenObj || !ck_keenObj->currentAction)
 				QuitF("KW_SelfTest: Atroxian Realm map %d has no Keen!", lv);
 			KW_TestLevelSpritesCached("arealm", lv);
+			// A checkpoint: touching it saves the level; loading the level
+			// again puts Keen and every object back.
+			for (CK_object *obj = ck_keenObj; obj; obj = obj->next)
+				if (obj->type == AR_CT_CheckPoint)
+				{
+					int objects = 0, restored = 0;
+					for (CK_object *o = ck_keenObj; o; o = o->next)
+						++objects;
+					int cx = obj->posX, cy = obj->posY;
+					AR_CheckPointCol(obj, ck_keenObj);
+					AR_CheckpointFrame();
+					if (!AR_HasCheckpoint())
+						Quit("KW_SelfTest: touching an Atroxian Realm checkpoint doesn't save it!");
+					CK_LoadLevel(true, true);
+					AR_AfterLevelLoad();
+					for (CK_object *o = ck_keenObj; o; o = o->next)
+						++restored;
+					// (+1: the rising checkpoint sign spawned after the save isn't in it)
+					if (restored != objects || ck_keenObj->posX != cx || !AR_HasCheckpoint())
+						QuitF("KW_SelfTest: Atroxian Realm level %d doesn't restart from its checkpoint (%d objects, %d before)!", lv, restored, objects);
+					AR_ClearCheckpoint();
+					break;
+				}
+
 			bool god = ck_godMode;
 			ck_godMode = true; // creatures may touch Keen; he isn't the subject here
 			KW_TestRunObjects(150);

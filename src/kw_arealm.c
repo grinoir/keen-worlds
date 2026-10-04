@@ -21,6 +21,11 @@ void CK_SpawnFallPlat(int tileX, int tileY);
 
 AR_State ar_state;
 
+extern int ck_lastLevelFinished;
+extern bool ck_scrollDisabled;
+static void AR_SpawnBossKeen(int tileX, int tileY, int direction);
+static void AR_SpawnTransporterKeen(int tileX, int tileY);
+
 void AR_PhysAccelVert(CK_object *obj, int accY, int velLimit)
 {
 	bool isNegative = (obj->velY < 0);
@@ -105,7 +110,19 @@ void AR_ScanInfoLayer(void)
 				CA_MarkGrChunk(CK_CHUNKNUM(SPR_SCOREBOX));
 				CA_MARKLUMP(MAPKEENLUMP);
 				CA_MARKLUMP(MAPKEEN2LUMP);
-				CK_SpawnMapKeen(x, y);
+				// After the Great Ziggurat he arrives by transporter (37).
+				if (ck_lastLevelFinished != 15)
+					CK_SpawnMapKeen(x, y);
+				break;
+			case 37:
+				if (ck_lastLevelFinished == 15)
+				{
+					AR_SpawnTransporterKeen(x, y);
+					CK_DemoSignSpawn();
+					CA_MarkGrChunk(CK_CHUNKNUM(SPR_SCOREBOX));
+					CA_MARKLUMP(MAPKEENLUMP);
+					CA_MARKLUMP(MAPKEEN2LUMP);
+				}
 				break;
 			case 4:
 				AR_SpawnGenerator(x, y);
@@ -127,11 +144,8 @@ void AR_ScanInfoLayer(void)
 				AR_SpawnSecretKrile(x, y);
 				CA_MarkGrChunk(ELDER1SPR);
 				break;
-			// Keen for the boss fight (the source has its own spawn for him;
-			// not ported yet)
 			case 41:
-				CK_SpawnKeen(x, y, 1);
-				CK_DemoSignSpawn();
+				AR_SpawnBossKeen(x, y, IN_motion_Right);
 				CA_MarkGrChunk(CK_CHUNKNUM(SPR_SCOREBOX));
 				CA_MARKLUMP(KEENLUMP);
 				break;
@@ -303,6 +317,10 @@ void AR_ScanInfoLayer(void)
 				AR_SpawnFireball(x, y, infoValue - 70);
 				CA_MARKLUMP(FIREBALLLUMP);
 				break;
+			case 42:
+				AR_SpawnCheckPoint(x, y);
+				CA_MARKLUMP(CHECKPOINTLUMP);
+				break;
 			case 25:
 				RF_SetScrollBlock(x, y, true);
 				break;
@@ -337,6 +355,292 @@ void AR_ScanInfoLayer(void)
 			ar_state.krileGhost->user4 = AR_ObjToUser(obj);
 	}
 	CA_MarkAllLumps();
+}
+
+// ---- Keen's own differences (KD_KEEN.C) ----
+
+// His think function while shooting in the air.
+void CK_KeenFall(CK_object *obj)
+{
+	CK_PhysGravityHigh(obj);
+	ck_nextX = obj->velX * SD_GetSpriteSync();
+}
+
+// The last frame of being pulled under by the vines ends the level.
+void AR_KeenVines(CK_object *obj)
+{
+	ck_gameState.levelState = LS_ARVines;
+}
+
+// A vines tile (tile property 16) under a standing Keen pulls him under,
+// once per game. The tile's info value says where on the map he comes out.
+bool AR_KeenVinesTile(CK_object *obj, int tileX, int tileY)
+{
+	if (ar_state.vines != 0 || !ck_keenObj->topTI)
+		return false;
+	uint16_t info = CA_TileAtPos(tileX, tileY, 2);
+	ck_gameState.mapPosX = RF_TileToUnit(info >> 8);
+	ck_gameState.mapPosY = RF_TileToUnit(info & 0xFF);
+	ck_scrollDisabled = true;
+	obj->currentAction = CK_ACTION(AR_ACT_KeenPulledByVines1);
+	obj->clipped = CLIP_not;
+	ar_state.vines = 2;
+	return true;
+}
+
+// Info value 41 in the Dark Temple (level 16): where Keen stands once the
+// talk with Atroxus is over.
+static void AR_SpawnBossKeen(int tileX, int tileY, int direction)
+{
+	if (ca_mapOn != 16 || !ck_gameState.levelsDone[16])
+		return;
+	ck_keenObj->type = CT_Player;
+	ck_keenObj->active = OBJ_ALWAYS_ACTIVE;
+	ck_keenObj->visible = true;
+	ck_keenObj->zLayer = 1;
+	ck_keenObj->clipped = CLIP_normal;
+	ck_keenObj->posX = RF_TileToUnit(tileX);
+	ck_keenObj->posY = RF_TileToUnit(tileY) - 241;
+	ck_keenObj->xDirection = direction;
+	ck_keenObj->yDirection = 1;
+	CK_SetAction(ck_keenObj, CK_ACTION(CK_ACT_keenStanding));
+}
+
+// ---- The map transporter (AR_MAP.C) ----
+// After the Great Ziggurat (level 15) Keen arrives on the map in a saucer
+// that flies to the tile its info value names, where he steps out.
+
+static void AR_SpawnTransporterKeen(int tileX, int tileY)
+{
+	ck_keenObj->type = CT_Player;
+	ck_keenObj->clipped = CLIP_not;
+	ck_keenObj->active = OBJ_ALWAYS_ACTIVE;
+	ck_keenObj->posX = RF_TileToUnit(tileX);
+	ck_keenObj->posY = RF_TileToUnit(tileY);
+	ck_keenObj->zLayer = 2;
+
+	uint16_t info = CA_TileAtPos(tileX - 1, tileY, 2);
+	int32_t destX = RF_TileToUnit(ck_keenObj->user1 = info >> 8);
+	int32_t destY = RF_TileToUnit(ck_keenObj->user2 = info & 0xFF);
+	int32_t delX = destX - ck_keenObj->posX, delY = destY - ck_keenObj->posY;
+	int32_t velX = 0, velY = 0;
+	if (abs(delX) > abs(delY))
+	{
+		velX = delX > 0 ? 0x2000 : -0x2000;
+		velY = delY * velX / delX;
+	}
+	else if (delY)
+	{
+		velY = delY > 0 ? 0x2000 : -0x2000;
+		velX = delX * velY / delY;
+	}
+	ck_keenObj->velX = velX;
+	ck_keenObj->velY = velY;
+	CK_SetAction(ck_keenObj, CK_ACTION(AR_ACT_TransporterKeen1));
+}
+
+void AR_TransporterKeen(CK_object *obj)
+{
+	int tileX = RF_UnitToTile(obj->posX), tileY = RF_UnitToTile(obj->posY);
+	if (obj->user1 - 1 <= tileX && tileX <= obj->user1 + 1 && obj->user2 - 1 <= tileY && tileY <= obj->user2 + 1)
+	{
+		obj->zLayer = 1;
+		obj->xDirection = obj->yDirection = IN_motion_None;
+		obj->user1 = 6;
+		obj->user2 = 3;
+		obj->user3 = 0;
+		obj->gfxChunk = WORLDKEENDR1SPR;
+		obj->clipped = CLIP_normal;
+		CK_SetAction2(obj, CK_ACTION(CK5_ACT_MapKeenStart));
+		return;
+	}
+	ck_nextX = obj->velX / 0x100 * SD_GetSpriteSync();
+	ck_nextY = obj->velY / 0x100 * SD_GetSpriteSync();
+}
+
+void AR_Misc_SetupFunctions(void)
+{
+	CK_ACT_AddFunction("CK_KeenFall", &CK_KeenFall);
+	CK_ACT_AddFunction("AR_KeenVines", &AR_KeenVines);
+	CK_ACT_AddFunction("AR_TransporterKeen", &AR_TransporterKeen);
+	CK_ACT_AddColFunction("AR_CheckPointCol", &AR_CheckPointCol);
+}
+
+// A new game: nothing of its extra state carries over.
+void AR_ResetState(void)
+{
+	memset(&ar_state, 0, sizeof(ar_state));
+	AR_ClearCheckpoint();
+}
+
+// ---- In-level checkpoints (AR_MISC.C) ----
+// Touching a checkpoint saves the level as it is (map, objects, game
+// state); dying after that restarts the level from there. The source writes
+// a CHKPOINT file; here it is kept in memory. It is saved at the end of the
+// frame, not inside the collision, so every object is in a settled state.
+
+static CK_object *ar_touchedCheckpoint;
+static struct
+{
+	bool valid;
+	int level;
+	CK_GameState gameState;
+	AR_State state;
+	uint16_t *planes[3];
+	size_t planeBytes;
+	CK_object *objects;
+	int numObjects;
+} ar_checkpoint;
+
+void AR_ClearCheckpoint(void)
+{
+	for (int i = 0; i < 3; ++i)
+	{
+		free(ar_checkpoint.planes[i]);
+		ar_checkpoint.planes[i] = NULL;
+	}
+	free(ar_checkpoint.objects);
+	ar_checkpoint.objects = NULL;
+	ar_checkpoint.valid = false;
+	ar_touchedCheckpoint = NULL;
+}
+
+bool AR_HasCheckpoint(void)
+{
+	return ar_checkpoint.valid;
+}
+
+void AR_SpawnCheckPoint(int tileX, int tileY)
+{
+	CK_object *obj = CK_GetNewObj(false);
+	obj->type = AR_CT_CheckPoint;
+	obj->active = OBJ_ACTIVE;
+	obj->zLayer = 0;
+	obj->posX = RF_TileToUnit(tileX);
+	obj->posY = RF_TileToUnit(tileY);
+	obj->clipped = CLIP_not;
+	CK_SetAction(obj, CK_ACTION(AR_ACT_CheckPointIdle));
+}
+
+void AR_CheckPointCol(CK_object *obj1, CK_object *obj2)
+{
+	if (obj2->type == CT_Player && obj2->currentAction != CK_ACTION(CK_ACT_keenDie0) &&
+		obj2->currentAction != CK_ACTION(CK_ACT_keenDie1))
+		ar_touchedCheckpoint = obj1;
+}
+
+static void AR_SaveCheckpoint(CK_object *checkpoint)
+{
+	AR_ClearCheckpoint();
+	ar_checkpoint.level = ca_mapOn;
+	ck_keenState.platform = NULL;
+	ar_checkpoint.gameState = ck_gameState;
+	ar_checkpoint.state = ar_state;
+	ar_checkpoint.planeBytes = (size_t)CA_GetMapWidth() * CA_GetMapHeight() * 2;
+	for (int i = 0; i < 3; ++i)
+	{
+		ar_checkpoint.planes[i] = (uint16_t *)malloc(ar_checkpoint.planeBytes);
+		memcpy(ar_checkpoint.planes[i], CA_mapPlanes[i], ar_checkpoint.planeBytes);
+	}
+	int n = 0;
+	for (CK_object *obj = ck_keenObj; obj; obj = obj->next)
+		++n;
+	ar_checkpoint.objects = (CK_object *)malloc(n * sizeof(CK_object));
+	ar_checkpoint.numObjects = n;
+	n = 0;
+	for (CK_object *obj = ck_keenObj; obj; obj = obj->next)
+		ar_checkpoint.objects[n++] = *obj;
+	// Keen restarts standing at the checkpoint.
+	ar_checkpoint.objects[0].posX = checkpoint->posX;
+	ar_checkpoint.objects[0].posY = checkpoint->posY;
+	ar_checkpoint.valid = true;
+}
+
+// Once a frame, after the objects have moved and collided.
+void AR_CheckpointFrame(void)
+{
+	if (!ar_touchedCheckpoint)
+		return;
+	CK_object *checkpoint = ar_touchedCheckpoint;
+	ar_touchedCheckpoint = NULL;
+	CK_SetAction2(checkpoint, CK_ACTION(AR_ACT_CheckPointSpin1));
+	AR_SaveCheckpoint(checkpoint);
+
+	CK_object *shadow = CK_GetNewObj(true);
+	shadow->type = CT_Friendly;
+	shadow->active = OBJ_EXISTS_ONLY_ONSCREEN;
+	shadow->clipped = CLIP_not;
+	shadow->posX = checkpoint->posX - 0x80;
+	shadow->posY = checkpoint->posY;
+	shadow->yDirection = IN_motion_Up;
+	shadow->zLayer = PRIORITIES - 1;
+	CK_SetAction(shadow, CK_ACTION(AR_ACT_CheckPointShadow));
+	SD_PlaySound(CHECKPOINTSND);
+}
+
+static void AR_RestoreObject(CK_object *obj, const CK_object *saved)
+{
+	CK_object *prev = obj->prev, *next = obj->next;
+	*obj = *saved;
+	obj->prev = prev;
+	obj->next = next;
+	obj->visible = true;
+	obj->sde = NULL;
+}
+
+// After a level has been loaded: restarting the level a checkpoint was
+// touched in puts everything back as it was then. Lives, score, ammo (at
+// least 10 shots) and vitalin stay as they are now. Any other level load
+// drops the checkpoint.
+void AR_AfterLevelLoad(void)
+{
+	if (!ar_checkpoint.valid)
+		return;
+	if (!AR_IsActive() || ca_mapOn != ar_checkpoint.level || ca_mapOn == 0 ||
+		ar_checkpoint.planeBytes != (size_t)CA_GetMapWidth() * CA_GetMapHeight() * 2)
+	{
+		AR_ClearCheckpoint();
+		return;
+	}
+
+	CK_GameState now = ck_gameState;
+	AR_State stateNow = ar_state;
+	ck_gameState = ar_checkpoint.gameState;
+	ck_gameState.numShots = now.numShots < 10 ? 10 : now.numShots;
+	ck_gameState.numLives = now.numLives;
+	ck_gameState.numCentilife = now.numCentilife;
+	ck_gameState.keenScore = now.keenScore;
+	ck_gameState.nextKeenAt = now.nextKeenAt;
+	ck_gameState.levelState = now.levelState;
+	ar_state = ar_checkpoint.state;
+	memcpy(ar_state.endscreen_played, stateNow.endscreen_played, sizeof(ar_state.endscreen_played));
+	for (int i = 0; i < 3; ++i)
+		memcpy(CA_mapPlanes[i], ar_checkpoint.planes[i], ar_checkpoint.planeBytes);
+
+	CK_SetupObjArray();
+	ar_state.krileGhost = NULL;
+	AR_RestoreObject(ck_keenObj, &ar_checkpoint.objects[0]);
+	CK_SpawnKeen(RF_UnitToTile(ck_keenObj->posX), RF_UnitToTile(ck_keenObj->posY), ck_keenObj->xDirection);
+	for (int i = 1; i < ar_checkpoint.numObjects; ++i)
+	{
+		CK_object *obj = i == 1 ? ck_scoreBoxObj : CK_GetNewObj(false);
+		AR_RestoreObject(obj, &ar_checkpoint.objects[i]);
+		if (obj->type == CT5_StunnedCreature)
+			obj->user3 = 0;
+		else if (obj->type == CT5_Platform)
+			obj->user2 = obj->user3 = 0;
+		else if (obj->type == AR_CT_KrileGhost)
+		{
+			ar_state.krileGhost = obj;
+			obj->user4 = 0;
+		}
+	}
+	ck_scoreBoxObj->user1 = ck_scoreBoxObj->user2 = ck_scoreBoxObj->user3 = ck_scoreBoxObj->user4 = -1;
+	// The ghost goes on hunting the Axosis it was after.
+	if (ar_state.krileGhost)
+		for (CK_object *obj = ck_keenObj; obj; obj = obj->next)
+			if (obj->type == AR_CT_Axosis && obj->user1 == ar_state.krileGhost->user3)
+				ar_state.krileGhost->user4 = AR_ObjToUser(obj);
 }
 
 // The player's game files and our generated support files, all in the

@@ -21,6 +21,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ck_play.h"
 #include "kw_world.h"
 #include "kw_habitat.h"
+
+void AR_CheckpointFrame(void); // KEEN WORLDS: Atroxian Realm (kw_arealm.c)
 #include "id_ca.h"
 #include "id_fs.h"
 #include "id_in.h"
@@ -1267,6 +1269,7 @@ void CK_CheckKeys()
 	KW_CheckTalk();
 	KW_UpdateMusicZone();
 	KW_CheckPeacefulExit();
+	AR_CheckpointFrame(); // KEEN WORLDS: Atroxian Realm's checkpoints
 
 	// BAT ITEM CHEAT
 	if (IN_GetKeyState(IN_SC_B) && IN_GetKeyState(IN_SC_A) && IN_GetKeyState(IN_SC_T))

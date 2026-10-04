@@ -60,6 +60,14 @@ static inline CK_object *AR_ObjFromUser(uint16_t user)
 	return user ? CK_ConvertObj16BitOffsetToPointer(user) : NULL;
 }
 
+// Checkpoints (kw_arealm.c)
+void AR_SpawnCheckPoint(int tileX, int tileY);
+void AR_CheckPointCol(CK_object *obj1, CK_object *obj2);
+void AR_CheckpointFrame(void);
+void AR_AfterLevelLoad(void);
+void AR_ClearCheckpoint(void);
+bool AR_HasCheckpoint(void);
+
 // Is Atroxian Realm the running game? (It runs as Keen 5 for the engine.)
 bool AR_IsActive(void);
 // The game is won: its ending screens.
