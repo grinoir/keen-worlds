@@ -43,6 +43,7 @@ const char **CK_VAR_GetStringArray(const char *name);
 const char *CK_VAR_GetStringArrayElement(const char *name, int index);
 CK_action *CK_GetActionByName(const char *name);
 CK_action *CK_GetOrCreateActionByName(const char *name);
+CK_action *CK_GetActionByAlias(const char *alias, const char *name); // KEEN WORLDS
 CK_action *CK_LookupActionFrom16BitOffset(uint16_t offset); // POTENTIALLY SLOW function - Use in game loading only!
 void CK_VAR_SetInt(const char *name, intptr_t val);
 void CK_VAR_SetString(const char *name, const char *val);
@@ -62,6 +63,7 @@ void CK_VAR_LoadVars(const char *filename);
 #define CK_CHUNKNUM(name) INT_ ## name
 #define CK_SOUNDNUM(name) INT_ ## name
 #define CK_ACTION(name) (&name)
+#define CK_ACTION_ALIAS(alias, name) (&name)
 #define CK_FUNCTION(name) (&name)
 typedef int16_t chunk_id_t;
 #define CK_CHUNKID(name) CK_CHUNKNUM(name)
@@ -76,6 +78,10 @@ typedef int16_t chunk_id_t;
 #define CK_CHUNKNUM(name) CK_VAR_GetInt(#name, 0)
 #define CK_SOUNDNUM(name) CK_VAR_GetInt(#name, 0)
 #define CK_ACTION(name) CK_GetActionByName(#name)
+// KEEN WORLDS: `name`, unless a variable file points `alias` at another action
+// (`%action alias = other`). Lets a converted mod send a creature to a
+// different action where its CKPatch file patched the action's address.
+#define CK_ACTION_ALIAS(alias, name) CK_GetActionByAlias(#alias, #name)
 #define CK_FUNCTION(name) CK_ACT_GetFunction(#name)
 typedef const char *chunk_id_t;
 #define CK_CHUNKID(name) #name

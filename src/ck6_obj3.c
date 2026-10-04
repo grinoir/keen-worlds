@@ -120,7 +120,8 @@ void CK6_Bobba(CK_object *obj)
 		CK_SetAction(shot, CK_ACTION(CK6_ACT_BobbaTwinkle0));
 		shot->zLayer = PRIORITIES - 2;
 
-		obj->currentAction = CK_ACTION(CK6_ACT_BobbaShoot0);
+		// KEEN WORLDS: redirectable (Keen 8 adds shooting frames)
+		obj->currentAction = CK_ACTION_ALIAS(CK6_ACT_BobbaShootStart, CK6_ACT_BobbaShoot0);
 	}
 	else
 	{
@@ -212,7 +213,8 @@ void CK6_BabobbaSit(CK_object *obj)
 	{
 		// Nap time
 		obj->user1 = 0;
-		obj->currentAction = CK_ACTION(CK6_ACT_BabobbaNap0);
+		// KEEN WORLDS: redirectable (Keen 8's doesn't nap)
+		obj->currentAction = CK_ACTION_ALIAS(CK6_ACT_BabobbaNapStart, CK6_ACT_BabobbaNap0);
 	}
 	else if (++obj->user1 == CK_INT(CK6_BabobbaHopsPerShot, 3))
 	{
@@ -398,8 +400,17 @@ void CK6_CeilickCol(CK_object *a, CK_object *b)
 	}
 }
 
+// KEEN WORLDS: Keen 8 (Dead in the Desert) patches CK6_CeilickCol into "win the
+// game, whatever touched this" and gives it to its stunned boss. A collide
+// function of its own here, so Keen 6's Ceilick keeps working.
+void CK6_WinGameCol(CK_object *a, CK_object *b)
+{
+	ck_gameState.levelState = LS_Molly;
+}
+
 void CK6_Obj3_SetupFunctions()
 {
+	CK_ACT_AddColFunction("CK6_WinGameCol", &CK6_WinGameCol); // KEEN WORLDS
 
 	CK_ACT_AddFunction("CK6_FleexWalk", &CK6_FleexWalk);
 	CK_ACT_AddFunction("CK6_FleexSearch", &CK6_FleexSearch);

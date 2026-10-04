@@ -217,12 +217,16 @@ void CK5_LevelEnd(CK_object *obj)
 	ck_gameState.levelState = (ca_mapOn == 12) ? LS_DestroyedQED : LS_KorathFuse;
 }
 
+void KW9_SetupFunctions(void);
+void KW9_SpawnKorathoid(int tileX, int tileY);
+
 void CK5_SetupFunctions()
 {
 	//Quick hack as we haven't got a deadly function yet
 	CK5_Obj1_SetupFunctions();
 	CK5_Obj2_SetupFunctions();
 	CK5_Obj3_SetupFunctions();
+	KW9_SetupFunctions(); // KEEN WORLDS: Keen 9's functions (kw_keen9.c)
 	CK5_Map_SetupFunctions();
 	CK_ACT_AddFunction("CK5_PurpleAxisPlatform", &CK5_PurpleAxisPlatform);
 	CK_ACT_AddFunction("CK5_LevelEnd", &CK5_LevelEnd);
@@ -421,12 +425,23 @@ void CK5_ScanInfoLayer()
 				break;
 
 			case 33:
-				if (ck_gameState.difficulty > D_Easy)
-					break;
 			case 34:
-				if (ck_gameState.difficulty > D_Normal)
-					break;
 			case 35:
+				// KEEN WORLDS: CK5_StandPlatformIsKorathoid (Keen 9) puts a
+				// Korathoid here, on harder levels where Keen 5 has easier ones.
+				if (CK_INT(CK5_StandPlatformIsKorathoid, 0))
+				{
+					if (infoValue == 35 || ck_gameState.difficulty > (infoValue == 34 ? D_Easy : D_Normal))
+					{
+						KW9_SpawnKorathoid(x, y);
+						CA_MARKLUMP(LUMP_PLATFORM);
+					}
+					break;
+				}
+				if (infoValue == 33 && ck_gameState.difficulty > D_Easy)
+					break;
+				if (infoValue <= 34 && ck_gameState.difficulty > D_Normal)
+					break;
 				CK_SpawnStandPlatform(x, y);
 				CA_MARKLUMP(LUMP_PLATFORM);
 				break;
@@ -443,9 +458,11 @@ void CK5_ScanInfoLayer()
 				CA_MARKLUMP(LUMP_PLATFORM);
 				break;
 			case 41:
-				if (ck_gameState.currentLevel == 12)
+				// KEEN WORLDS: CK5_QEDEveryLevel and CK5_QEDFuseCount (Keen 9's
+				// fuses are all QED objects)
+				if (ck_gameState.currentLevel == 12 || CK_INT(CK5_QEDEveryLevel, 0))
 				{
-					ck_gameState.ep.ck5.fusesRemaining = 4;
+					ck_gameState.ep.ck5.fusesRemaining = CK_INT(CK5_QEDFuseCount, 4);
 					CK5_QEDSpawn(x, y);
 				}
 				else

@@ -856,6 +856,105 @@ void KW_PlayLoopHook(void)
 		KW_RequestWorld(KW_KEEN9);
 }
 
+// For /KWTEST: Keen 8's converted behaviour (its PAT.PAT, see MOD.CK6) is in
+// force in its world.
+static void KW_TestKeen8Behaviour(void)
+{
+	CK_action *sit = CK_ACTION(CK6_ACT_NospikeSit0);
+	CK_action *stunned = CK_ACTION(CK6_ACT_NospikeStunned0);
+	CK_action *shoot = CK_ACTION_ALIAS(CK6_ACT_BobbaShootStart, CK6_ACT_BobbaShoot0);
+	if (CK_INT(CK6_NospikeHealth, 4) != 16 || CK_INT(CK6_OrbatrixObjType, CT6_Orbatrix) != CT6_Item ||
+		CK_INT(CK6_FleexHealth, 4) != 2 || CK_INTELEMENT(CK_LevelMusic, 2) != 8)
+		Quit("KW_SelfTest: Keen 8's settings aren't loaded!");
+	if (CK_ACTION_ALIAS(CK6_ACT_NospikeLanded, CK6_ACT_NospikeStunned0) != sit ||
+		sit->next != CK_ACTION(CK6_ACT_NospikeCharge0) || sit->timer != 4 ||
+		CK_ACTION_ALIAS(CK6_ACT_OrbatrixNearKeen, CK6_ACT_OrbatrixCurl0) != CK_ACTION(CK6_ACT_OrbatrixFloat1) ||
+		CK_ACTION_ALIAS(CK6_ACT_BabobbaNapStart, CK6_ACT_BabobbaNap0) != CK_ACTION(CK6_ACT_BabobbaSit0))
+		Quit("KW_SelfTest: Keen 8's redirected actions are wrong!");
+	// Bobba's shot: two new frames, then the original one, then it hops on.
+	if (shoot == CK_ACTION(CK6_ACT_BobbaShoot0) || !shoot->next ||
+		shoot->next->next != CK_ACTION(CK6_ACT_BobbaShoot0) ||
+		shoot->next->next->next != CK_ACTION(CK6_ACT_BobbaJump0) || shoot->think)
+		Quit("KW_SelfTest: Keen 8's Bobba shooting frames are wrong!");
+	if (CK_ACTION(CK6_ACT_GikJump0)->think != CK_ACT_GetFunction("CK6_OrbatrixUncurlThink") ||
+		CK_ACTION(CK6_ACT_CeilickStrike10)->collide || CK_ACTION(CK6_ACT_Blorb0)->velY != 21)
+		Quit("KW_SelfTest: Keen 8's creature actions are wrong!");
+	// Touching the stunned boss wins the game.
+	if (!stunned->collide)
+		Quit("KW_SelfTest: Keen 8's stunned boss can't be touched!");
+	int state = ck_gameState.levelState;
+	stunned->collide(ck_keenObj, ck_keenObj);
+	if (ck_gameState.levelState != LS_Molly)
+		Quit("KW_SelfTest: touching Keen 8's stunned boss doesn't win!");
+	ck_gameState.levelState = state;
+}
+
+// For /KWTEST: Keen 8 borrows sprites for the Bobbas' new shooting frames.
+// They must be in memory in every level that has such a creature.
+static void KW_TestKeen8Sprites(int level)
+{
+	static const struct { int type, first, last; const char *who; } needs[] = {
+		{CT6_Bobba, 427, 430, "Bobba"},
+		{CT6_Babobba, 431, 432, "Babobba"},
+	};
+	for (CK_object *obj = ck_keenObj; obj; obj = obj->next)
+		for (size_t i = 0; i < sizeof(needs) / sizeof(needs[0]); ++i)
+			for (int chunk = needs[i].first; obj->type == needs[i].type && chunk <= needs[i].last; ++chunk)
+				if (!ca_graphChunks[chunk])
+					QuitF("KW_SelfTest: Keen 8 level %d has a %s but not its sprite %d!", level, needs[i].who, chunk);
+}
+
+// For /KWTEST: Keen 9's converted behaviour (its PATCH5.PAT, see MOD.CK5 and
+// kw_keen9.c) is in force in its world.
+static void KW_TestKeen9Behaviour(void)
+{
+	if (ca_audInfoE.startMusic != 187 || ca_audInfoE.numSongs != 19 || CK_INTELEMENT(CK_LevelMusic, 0) != 3 ||
+		CK_INT(CK5_ShocksundHealth, 2) != 30 || CK_INT(CK5_QEDHealth, 0) != 2 || CK_INT(CK_WinGameExitLevel, -1) != 15 ||
+		CK_INTELEMENT(lumpStarts, CK_INT(LUMP_KORATH, 0)) != 0x122 || CK_INTELEMENT(lumpEnds, CK_INT(LUMP_KORATH, 0)) != 0x129)
+		QuitF("KW_SelfTest: Keen 9's settings aren't loaded! (music %d+%d, level 0 song %d, health %d/%d, exit %d, Korath lump %d-%d)",
+			ca_audInfoE.startMusic, ca_audInfoE.numSongs, (int)CK_INTELEMENT(CK_LevelMusic, 0), (int)CK_INT(CK5_ShocksundHealth, 2),
+			(int)CK_INT(CK5_QEDHealth, 0), (int)CK_INT(CK_WinGameExitLevel, -1),
+			(int)CK_INTELEMENT(lumpStarts, CK_INT(LUMP_KORATH, 0)), (int)CK_INTELEMENT(lumpEnds, CK_INT(LUMP_KORATH, 0)));
+	if (CK_ACTION_ALIAS(CK5_ACT_RoboShootStart, CK5_ACT_RoboShoot0) != CK_ACTION(CK5_ACT_ShikadiPole0) ||
+		CK_ACTION_ALIAS(CK5_ACT_MasterShootStart, CK5_ACT_MasterShoot0) != CK_ACTION(CK5_ACT_RoboShoot0) ||
+		CK_ACTION_ALIAS(CK5_ACT_ShikadiPoleStart, CK5_ACT_ShikadiPole0) != CK_ACTION(CK5_ACT_MasterShoot0) ||
+		CK_ACTION_ALIAS(CK5_ACT_MineShrapA, CK5_ACT_MineShrap0) != CK_ACTION(CK5_ACT_Sphereful0))
+		Quit("KW_SelfTest: Keen 9's redirected actions are wrong!");
+	// The functions its patch file adds are there and wired to their actions.
+	CK_action *korathoid = CK_ACTION(KW9_ACT_Korathoid0);
+	if (!CK_ACTION(KW9_ACT_KeenStunned) || !CK_ACTION(KW9_ACT_SpherefulStunned) || !korathoid ||
+		!korathoid->next || !korathoid->next->next || !korathoid->next->next->next ||
+		korathoid->next->next->next->next != korathoid ||
+		korathoid->think != CK_ACT_GetFunction("KW9_KorathoidWalk") || !korathoid->think ||
+		korathoid->collide != CK_ACT_GetColFunction("KW9_KorathoidCol") || !korathoid->collide ||
+		CK_ACTION(CK5_ACT_QED)->collide != CK_ACT_GetColFunction("KW9_WarpcoreCol") || !CK_ACTION(CK5_ACT_QED)->collide ||
+		CK_ACTION(CK5_ACT_LevelEnd)->think != CK_ACT_GetFunction("KW9_FuseTouched") ||
+		CK_ACTION(CK_ACT_keenRun1)->collide != CK_ACT_GetColFunction("KW9_ShrapCol") ||
+		CK_ACTION(CK5_ACT_Ampton0)->collide != CK_ACT_GetColFunction("KW9_YetiCol") ||
+		CK_ACTION(CK5_ACT_Ampton0)->think != CK_ACT_GetFunction("CK5_ShikadiWalk") ||
+		CK_ACTION(CK5_ACT_Mine0)->collide != CK_ACT_GetColFunction("KW9_MineCol") ||
+		CK_ACTION(CK5_ACT_MasterBall0)->collide != CK_ACT_GetColFunction("KW9_SnowballCol") ||
+		CK_ACTION(CK5_ACT_Sphereful0)->collide != CK_ACT_GetColFunction("KW9_SpherefulCol") ||
+		CK_ACTION(CK5_ACT_KorathWalk1)->collide != CK_ACT_GetColFunction("KW9_KorathCol"))
+		Quit("KW_SelfTest: Keen 9's new creature code isn't wired up!");
+}
+
+// For /KWTEST: every creature in the loaded level has its picture in memory
+// (a fan game moves sprites between caches; a wrong cache table shows here).
+static void KW_TestLevelSpritesCached(const char *world, int level)
+{
+	for (CK_object *obj = ck_keenObj; obj; obj = obj->next)
+	{
+		const CK_action *act = obj->currentAction;
+		if (!act)
+			continue;
+		int chunks[2] = {act->chunkLeft, act->chunkRight};
+		for (int i = 0; i < 2; ++i)
+			if (chunks[i] > 0 && chunks[i] < CA_MAX_GRAPH_CHUNKS && !ca_graphChunks[chunks[i]])
+				QuitF("KW_SelfTest: %s level %d: an object of type %d needs sprite %d, which isn't loaded!", world, level, obj->type, chunks[i]);
+	}
+}
+
 // Developer self-test (/KWTEST): hop between all worlds several times, loading
 // the world map and two levels each visit, and log memory use after every hop
 // so leaks show up as steady growth.
@@ -1224,6 +1323,25 @@ void KW_SelfTest(void)
 		ck_gameState.levelsDone[ship->level] = 0;
 	}
 
+	// Keen 6 itself keeps its own behaviour: none of Keen 8's settings or
+	// redirected actions leak into it.
+	KW_SwitchWorld(KW_KEEN6);
+	if (CK_INT(CK6_NospikeHealth, 4) != 4 || CK_INT(CK6_OrbatrixObjType, CT6_Orbatrix) != CT6_Orbatrix ||
+		CK_INT(CK6_FlectKillsKeen, 0) || CK_INT(CK6_GrabbiterTalkPic, CK_CHUNKNUM(PIC_KEENTALK1)) != CK_CHUNKNUM(PIC_KEENTALK1) ||
+		CK_ACTION_ALIAS(CK6_ACT_NospikeLanded, CK6_ACT_NospikeStunned0) != CK_ACTION(CK6_ACT_NospikeStunned0) ||
+		CK_ACTION_ALIAS(CK6_ACT_BobbaShootStart, CK6_ACT_BobbaShoot0) != CK_ACTION(CK6_ACT_BobbaShoot0) ||
+		CK_ACTION(CK6_ACT_NospikeStunned0)->collide || !CK_ACTION(CK6_ACT_CeilickStrike10)->collide)
+		Quit("KW_SelfTest: Keen 6 has picked up Keen 8's behaviour!");
+
+	// Keen 5 itself has none of Keen 9's.
+	KW_SwitchWorld(KW_KEEN5);
+	if (ca_audInfoE.startMusic != 192 || CK_INT(CK5_ShocksundHealth, 2) != 2 || CK_INT(CK5_QEDEveryLevel, 0) ||
+		CK_INT(CK5_StandPlatformIsKorathoid, 0) || CK_INT(CK_WinGameExitLevel, -1) != -1 ||
+		CK_ACTION_ALIAS(CK5_ACT_RoboShootStart, CK5_ACT_RoboShoot0) != CK_ACTION(CK5_ACT_RoboShoot0) ||
+		CK_ACTION(CK5_ACT_QED)->collide || CK_ACTION(CK5_ACT_LevelEnd)->think != CK_ACT_GetFunction("CK5_LevelEnd") ||
+		CK_ACTION(CK_ACT_keenRun1)->collide != CK_ACT_GetColFunction("CK_KeenColFunc"))
+		Quit("KW_SelfTest: Keen 5 has picked up Keen 9's behaviour!");
+
 	// Keen 8 and 9 (when installed): every level loads, and every level when
 	// completed is peaceful.
 	for (int fan = KW_KEEN8; fan <= KW_KEEN9; ++fan)
@@ -1231,6 +1349,10 @@ void KW_SelfTest(void)
 		if (!KW_IsWorldPresent(fan))
 			continue;
 		KW_SwitchWorld(fan);
+		if (fan == KW_KEEN8)
+			KW_TestKeen8Behaviour();
+		else
+			KW_TestKeen9Behaviour();
 		int loaded = 0;
 		for (int lv = 0; lv < CA_NUMMAPS; ++lv)
 		{
@@ -1239,6 +1361,9 @@ void KW_SelfTest(void)
 			ck_gameState.currentLevel = lv;
 			ck_gameState.levelsDone[lv] = 0;
 			CK_LoadLevel(true, true);
+			if (fan == KW_KEEN8)
+				KW_TestKeen8Sprites(lv);
+			KW_TestLevelSpritesCached(KW_WorldId(fan), lv);
 			ck_gameState.levelsDone[lv] = 1;
 			CK_LoadLevel(true, true);
 			int hostiles, residents;

@@ -1469,7 +1469,7 @@ void CK_KeenPogoDrawFunc(CK_object *obj)
 
 			if (!ck_gameState.jumpCheat)
 			{
-				SD_PlaySound(CK_SOUNDNUM(SOUND_KEENHITCEILING));
+				SD_PlaySound(CK_INT(CK_KeenPogoCeilingSound, CK_SOUNDNUM(SOUND_KEENHITCEILING))); // KEEN WORLDS: variable
 
 				if (obj->bottomTI > 1)
 				{

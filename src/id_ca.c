@@ -1149,6 +1149,10 @@ void CAL_SetupAudioFile(void)
 	for (size_t loopVar = 0; loopVar < sizeof(ca_audInfoE) / 2; loopVar++, uptr++)
 		*uptr = CK_Cross_Swap16(*uptr);
 #endif
+	// KEEN WORLDS: a mod's variable file can say where its music starts and
+	// how many songs it has (Keen 9 has five more than Keen 5).
+	ca_audInfoE.startMusic = CK_INT(ca_audStartMusic, ca_audInfoE.startMusic);
+	ca_audInfoE.numSongs = CK_INT(ca_audNumSongs, ca_audInfoE.numSongs);
 
 	ca_audioUncompressed = CK_INT(ca_audioUncompressed, 0);
 	if (!ca_audioUncompressed)

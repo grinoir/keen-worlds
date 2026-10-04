@@ -23,6 +23,10 @@ bool KW_IsLevelPeaceful(void);
 // stands next to one and presses up.
 void KW_CheckTalk(void);
 
+// Called every frame: starts the tavern's own theme inside its room and
+// restores the level theme when Keen walks back out.
+void KW_UpdateMusicZone(void);
+
 // Called every frame from the play loop: in a peaceful level, walking into
 // the map's right edge leaves the level.
 void KW_CheckPeacefulExit(void);

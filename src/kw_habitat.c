@@ -254,6 +254,10 @@ static bool KW_Solid(int x, int y)
 // Keen (about 2x2 tiles) can stand with his feet in row y at columns x, x+1.
 static bool KW_Standable(int x, int y)
 {
+	// Inside the map's border only: a goal near the top (Keen 9's Warpcore)
+	// must not put Keen above the map.
+	if (x < 2 || y < 2 || x > CA_GetMapWidth() - 4 || y > CA_GetMapHeight() - 3)
+		return false;
 	if (KW_Solid(x, y) || KW_Solid(x + 1, y) || KW_Solid(x, y - 1) || KW_Solid(x + 1, y - 1))
 		return false;
 	return TI_ForeTop(CA_TileAtPos(x, y + 1, 1)) || TI_ForeTop(CA_TileAtPos(x + 1, y + 1, 1));

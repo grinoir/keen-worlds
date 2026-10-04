@@ -61,13 +61,15 @@ void CK6_SpawnGrabbiter(int tileX, int tileY)
 
 void CK6_GrabbiterCol(CK_object *a, CK_object *b)
 {
+	// KEEN WORLDS: the picture beside the Grabbiter's messages (Keen 8 shows its own)
+	int talkPic = CK_INT(CK6_GrabbiterTalkPic, CK_CHUNKNUM(PIC_KEENTALK1));
 	if (!ck_gameState.ep.ck6.sandwich)
 	{
-		CA_CacheGrChunk(CK_CHUNKNUM(PIC_KEENTALK1));
+		CA_CacheGrChunk(talkPic);
 		SD_PlaySound(CK_SOUNDNUM(SOUND_GRABBITER));
 		VL_FixRefreshBuffer();
 		US_CenterWindow(26, 8);
-		VHB_DrawBitmap(US_GetWindowX() + US_GetWindowW() - 0x30, US_GetWindowY(), CK_CHUNKNUM(PIC_KEENTALK1));
+		VHB_DrawBitmap(US_GetWindowX() + US_GetWindowW() - 0x30, US_GetWindowY(), talkPic);
 		US_SetWindowW(US_GetWindowW() - 0x30);
 		US_SetPrintY(US_GetPrintY() + 5);
 		US_CPrint(CK_STRING(ck6_str_grabbiterHungry));
@@ -85,10 +87,10 @@ void CK6_GrabbiterCol(CK_object *a, CK_object *b)
 	else
 	{
 		ck_gameState.ep.ck6.sandwich++;
-		CA_CacheGrChunk(CK_CHUNKNUM(PIC_KEENTALK1));
+		CA_CacheGrChunk(talkPic);
 		VL_FixRefreshBuffer();
 		US_CenterWindow(26, 8);
-		VHB_DrawBitmap(US_GetWindowX() + US_GetWindowW() - 0x30, US_GetWindowY(), CK_CHUNKNUM(PIC_KEENTALK1));
+		VHB_DrawBitmap(US_GetWindowX() + US_GetWindowW() - 0x30, US_GetWindowY(), talkPic);
 		US_SetWindowW(US_GetWindowW() - 0x30);
 		US_SetPrintY(US_GetPrintY() + 2);
 		US_CPrint(CK_STRING(ck6_str_grabbiterFed));
@@ -430,7 +432,7 @@ void CK6_SpawnSatellite(int tileX, int tileY)
 {
 	CK_object *obj = CK_GetNewObj(false);
 	obj->clipped = CLIP_not;
-	obj->zLayer = PRIORITIES - 2;
+	obj->zLayer = CK_INT(CK6_SatelliteZLayer, PRIORITIES - 2); // KEEN WORLDS: variable
 	obj->active = OBJ_ALWAYS_ACTIVE;
 	obj->type = CT6_Satellite;
 	obj->posX = RF_TileToUnit(tileX);
@@ -642,7 +644,8 @@ void CK6_BloogguardWalk(CK_object *obj)
 	if ((obj->xDirection == IN_motion_Right && ck_keenObj->posX > obj->posX) ||
 		(obj->xDirection == IN_motion_Left && ck_keenObj->posX < obj->posX))
 	{
-		if (obj->clipRects.unitY2 == ck_keenObj->clipRects.unitY2)
+		// KEEN WORLDS: CK6_BloogguardClubAnyHeight (Keen 8 clubs wherever Keen is)
+		if (CK_INT(CK6_BloogguardClubAnyHeight, 0) || obj->clipRects.unitY2 == ck_keenObj->clipRects.unitY2)
 		{
 			if (US_RndT() < CK_INT(CK6_BloogguardClubChance, 0x20))
 				obj->currentAction = CK_ACTION(CK6_ACT_BloogguardClub0);

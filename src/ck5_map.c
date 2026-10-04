@@ -210,8 +210,10 @@ void CK5_MapKeenElevator(CK_object *keen)
 	// Draw keen walking out of elevator
 	for (int frame = 0; frame < 32; frame++)
 	{
-		keen->posY += 8;
-		keen->gfxChunk = CK_CHUNKNUM(SPR_MAPKEEN_WALK1_S) + (frame / 4) % 3;
+		// KEEN WORLDS: CK5_MapTeleportExitWalk 0 keeps Keen standing where he arrives
+		if (CK_INT(CK5_MapTeleportExitWalk, 1))
+			keen->posY += 8;
+		keen->gfxChunk = CK_CHUNKNUM(SPR_MAPKEEN_WALK1_S) + (CK_INT(CK5_MapTeleportExitWalk, 1) ? (frame / 4) % 3 : 0);
 		RF_AddSpriteDraw(&keen->sde, keen->posX, keen->posY, keen->gfxChunk, false, keen->zLayer);
 		RF_Refresh();
 

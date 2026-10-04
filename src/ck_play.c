@@ -1265,6 +1265,7 @@ void CK_CheckKeys()
 	// KEEN WORLDS: Megarocket travel menu (and the W + 4/5/6 debug shortcut).
 	KW_PlayLoopHook();
 	KW_CheckTalk();
+	KW_UpdateMusicZone();
 	KW_CheckPeacefulExit();
 
 	// BAT ITEM CHEAT
@@ -2052,7 +2053,12 @@ void CK_NormalCamera(CK_object *obj)
 	// End level if keen makes it out either side
 	if (obj->clipRects.unitX1 < rf_scrollXMinUnit || obj->clipRects.unitX2 > rf_scrollXMaxUnit + RF_TileToUnit(RF_SCREEN_WIDTH_TILES))
 	{
-		ck_gameState.levelState = LS_LevelComplete;
+		// KEEN WORLDS: CK_WinGameExitLevel - walking out of that level wins
+		// the game (Keen 9's Warpcore).
+		if (ck_gameState.currentLevel == CK_INT(CK_WinGameExitLevel, -1))
+			ck_gameState.levelState = LS_DestroyedQED;
+		else
+			ck_gameState.levelState = LS_LevelComplete;
 		return;
 	}
 

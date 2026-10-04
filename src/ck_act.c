@@ -292,6 +292,15 @@ CK_action *CK_GetActionByName(const char *name)
 #endif
 }
 
+// KEEN WORLDS: The action `alias` names if a variable file defines it,
+// otherwise `name`. (No warning when the alias is unset: that's the default.)
+CK_action *CK_GetActionByAlias(const char *alias, const char *name)
+{
+	if (STR_DoesEntryExist(ck_varTable, alias))
+		return CK_GetActionByName(alias);
+	return CK_GetActionByName(name);
+}
+
 CK_action *CK_GetOrCreateActionByName(const char *name)
 {
 	CK_action *ptr = NULL;

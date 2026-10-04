@@ -661,7 +661,7 @@ void help_endgame(void)
 
 	// Check for Korath Fuse
 #ifdef WITH_KEEN5
-	if (/*ck_currentEpisode->ep == EP_CK5 &&*/ ck_gameState.levelsDone[13] == 0x0E)
+	if (/*ck_currentEpisode->ep == EP_CK5 &&*/ (CK_INT(CK5_SecretEndingAnyExit, 0) ? ck_gameState.levelsDone[13] >= 1 : ck_gameState.levelsDone[13] == 0x0E)) // KEEN WORLDS: variable
 	{
 		CA_CacheGrChunk(CK_CHUNKNUM(TEXT_SECRETEND));
 		ptext = (char *)ca_graphChunks[CK_CHUNKNUM(TEXT_SECRETEND)];
@@ -715,7 +715,7 @@ void help_endgame(void)
 	/* Uncache our graphics and clean up */
 	StopMusic();
 #ifdef WITH_KEEN5
-	if (ck_gameState.levelsDone[13] == LS_KorathFuse)
+	if (CK_INT(CK5_SecretEndingAnyExit, 0) ? ck_gameState.levelsDone[13] >= 1 : ck_gameState.levelsDone[13] == LS_KorathFuse) // KEEN WORLDS: variable
 		MM_FreePtr(&ca_graphChunks[CK_CHUNKNUM(TEXT_SECRETEND)]);
 	else
 #endif

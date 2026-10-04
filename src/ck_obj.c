@@ -590,7 +590,7 @@ void CK_TurretShoot(CK_object *obj)
 	}
 
 	CK_SetAction(shot, CK_ACTION(CK_ACT_turretShot1));
-	SD_PlaySound(CK_SOUNDNUM(SOUND_ENEMYSHOOT));
+	SD_PlaySound(CK_INT(CK_TurretShootSound, CK_SOUNDNUM(SOUND_ENEMYSHOOT))); // KEEN WORLDS: variable
 }
 
 void CK_TurretShotCol(CK_object *me, CK_object *other)

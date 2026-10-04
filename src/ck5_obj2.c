@@ -61,7 +61,7 @@ void CK5_SparkyPrepareCharge(CK_object *obj)
 void CK5_SparkySearchLeft(CK_object *obj)
 {
 
-	uint16_t delY = ck_keenObj->clipRects.unitY2 + 0x100 - obj->clipRects.unitY2;
+	uint16_t delY = ck_keenObj->clipRects.unitY2 + CK_INT(CK5_SparkySearchYOffset, 0x100) - obj->clipRects.unitY2; // KEEN WORLDS: variable
 
 	if (delY < CK_INT(CK5_SparkySearchYRadius, 0x200) && ck_keenObj->posX < obj->posX)
 	{
@@ -75,7 +75,7 @@ void CK5_SparkySearchLeft(CK_object *obj)
 void CK5_SparkySearchRight(CK_object *obj)
 {
 
-	uint16_t delY = ck_keenObj->clipRects.unitY2 + 0x100 - obj->clipRects.unitY2;
+	uint16_t delY = ck_keenObj->clipRects.unitY2 + CK_INT(CK5_SparkySearchYOffset, 0x100) - obj->clipRects.unitY2; // KEEN WORLDS: variable
 
 	if (delY < CK_INT(CK5_SparkySearchYRadius, 0x200) && ck_keenObj->posX > obj->posX)
 	{
@@ -155,7 +155,7 @@ void CK5_AmptonWalk(CK_object *obj)
 {
 
 	//play tic toc sound
-	if (obj->currentAction == CK_ACTION(CK5_ACT_Ampton0))
+	if (obj->currentAction == CK_ACTION_ALIAS(CK5_ACT_AmptonStepSound, CK5_ACT_Ampton0)) // KEEN WORLDS: redirectable
 	{
 		SD_PlaySound(CK_SOUNDNUM(SOUND_AMPTONWALK0));
 	}
@@ -356,6 +356,14 @@ void CK5_AmptonTileCol(CK_object *obj)
 		CK_SetAction2(obj, CK_ACTION(CK5_ACT_AmptonTurn0));
 	}
 
+	// KEEN WORLDS: CK5_AmptonFlashes draws it like the Shikadi, flashing
+	// white while user3 counts down (Keen 9's takes several shots).
+	if (CK_INT(CK5_AmptonFlashes, 0) && obj->user3)
+	{
+		obj->user3--;
+		RF_AddSpriteDraw(&obj->sde, obj->posX, obj->posY, obj->gfxChunk, 1, obj->zLayer);
+		return;
+	}
 	RF_AddSpriteDraw(&obj->sde, obj->posX, obj->posY, obj->gfxChunk, 0, obj->zLayer);
 }
 
@@ -494,7 +502,8 @@ void CK5_SpawnShelly(int tileX, int tileY)
 void CK5_ShellyWait(CK_object *obj)
 {
 
-	if (ck_keenObj->clipRects.unitY1 >= obj->clipRects.unitY2)
+	// KEEN WORLDS: CK5_ShelleyJumpsUp makes it jump at Keen when he is above it
+	if (CK_INT(CK5_ShelleyJumpsUp, 0) ? (ck_keenObj->clipRects.unitY1 <= obj->clipRects.unitY2) : (ck_keenObj->clipRects.unitY1 >= obj->clipRects.unitY2))
 	{
 		// Jump off of ledge if Keen is a ledge below
 		int xDel = ck_keenObj->clipRects.unitXmid - obj->clipRects.unitXmid;

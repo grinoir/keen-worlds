@@ -85,7 +85,7 @@ game built on one of them. `kw_worldDefs[]` in `src/kw_world.c` lists them:
   (`play/run.sh 7` = `/EPISODE 4 /WORLD keen7`, `play/run.sh 8` =
   `/EPISODE 6 /WORLD keen8`, `play/run.sh 9` = `/EPISODE 5 /WORLD keen9`).
 
-### Keen 8: Dead in the Desert (conversion in progress)
+### Keen 8: Dead in the Desert (converted)
 
 Ceilick's Keen 6 mod (2009, patching by Levellass) was never converted for
 Omnispeak, so `play/mods/keen8/MOD.CK6` is ours. The player puts the mod's
@@ -99,30 +99,94 @@ Done: levels, graphics, tile properties, sound and music, and all texts
 (level names, entry texts, story, item and character lines). All 19 maps
 load and every completed level is peaceful (`/KWTEST`).
 
-Still Keen 6's: creature behaviour. `PAT.PAT` has ~104 one/two-byte value
-patches (speeds, chances, which action follows which — most map to
-`%action`/`%int` overrides once each EXE offset is matched to Omnispeak's
-v1.4 data: the action table gives each action's data-segment offset) and 5
-new-code patches (Nospike triggers the ending like Molly, Bip kills Keen,
-Bobba's extra shooting frames, Orbatrix gives the red key, the boss) that
-need C in Omnispeak, keyed to the `keen8` world.
+Creature behaviour (2026-10-04): every active patch in `PAT.PAT` is
+converted, as settings in `MOD.CK6` (each line names the patch address it
+comes from). Nothing is keyed to the `keen8` world in C: the engine got
+settings whose defaults are Keen 6's behaviour, so Keen 6 is unchanged.
 
-### Keen 9: Battle of the Brains (conversion in progress)
+- **Existing settings**: music per level, story and ending music, the
+  creature question off, boss (Nospike) and Fleex health, the Gik's jump.
+- **New settings** (`KEEN WORLDS` in `ck6_obj*.c`): `CK6_OrbatrixObjType`
+  (Keen 8's is an item: touching it gives the red key),
+  `CK6_OrbatrixAvoidsKeen`, `CK6_BloogguardClubAnyHeight`,
+  `CK6_GikJumpKeenXRadiusMaxLeft`, `CK6_FlectKillsKeen`,
+  `CK6_GrabbiterTalkPic`, `CK6_SatelliteZLayer`.
+- **Redirected actions**: where a patch changes *which action the code
+  goes to*, the code now asks `CK_ACTION_ALIAS(alias, original)`; a variable
+  file redirects it with `%action alias = other` (after its `%override`).
+  Used for `CK6_ACT_NospikeLanded`, `CK6_ACT_OrbatrixNearKeen`,
+  `CK6_ACT_BobbaShootStart`, `CK6_ACT_BabobbaNapStart`.
+- **Actions**: 35 changed and 2 new ones (Bobba's extra shooting frames),
+  listed after `%override` in `MOD.CK6` because the original's action file
+  would otherwise overwrite them.
+- **New function** `CK6_WinGameCol`: the mod rewrites Keen 6's Ceilick
+  collision into "win the game" and gives it to the stunned boss.
 
-The same for Ceilick's Keen 5 mod (2011, patching by Levellass and Lemm):
+Kept as the mod has them, oddities included: one Grabbiter patch misses its
+target by a byte and sets a speed instead of a timer; the patch that makes a
+jumping Gik deadly does it by running the Orbatrix's rising code; a
+collision function used as a think function (does nothing useful on DOS) is
+NULL here. Not converted: the DOS start-up text banner (`CK6LOAD.BIN`),
+which Keen Worlds never shows, and the patches the mod itself has commented
+out.
+
+`/KWTEST` checks the settings and redirects are in force in Keen 8, that
+Keen 6 has none of them, that touching the stunned boss wins, and that the
+Bobbas' borrowed sprites are in memory in every level that has one. Not yet
+play-tested by eye.
+
+### Converting a CKPatch file (`tools/kw_patconv.py`)
+
+`python3 tools/kw_patconv.py all KEEN6.EXE PAT.PAT omnispeak/data/keen6e14`
+reads the mod's patch file against the unmodified v1.4 program (fan games
+ship it; it is only read) and prints: the changed and new actions as
+ready `%action` lines; every code patch with the function it is in and the
+old and new bytes (these need a setting or C by hand); other data patches.
+`check ... MOD.CK6 CK6_WinGameCol=CK6_CeilickCol` then compares the finished
+variable file with the patched program: all 331 Keen 8 and 332 Keen 9
+actions match. `NAME=SEG:OFF` names code the patches add. The tool finds
+the program's data segment itself and unpacks LZEXE programs.
+
+### Keen 9: Battle of the Brains (converted)
+
+Ceilick's Keen 5 mod (2011, patching by Levellass and Lemm):
 `play/mods/keen9/` holds the mod's files (`EGAGRAPH.CK5`, `EGAHEAD.CK5`,
 `AUDIO.CK5`, `AUDIOHED.CK5`, `AUDIODCT.CK5`, `editmaps.ck5`, `maphead.ck5`,
 `Keen9.tli`, `story.ck5`, `PATCH5.PAT`) plus Keen 5 v1.4's `EGADICT.CK5`,
 `GFXINFOE.CK5`, `AUDINFOE.CK5` from `omnispeak/data/keen5`, and our
-`MOD.CK5`: texts, high scores on map 16, and `ck5_mapElevators 0` (a new
-variable, default 1: Keen 9 moves the Omegamatic's map elevators off its
-map, so their code in `CK5_ScanInfoLayer` is skipped). All 18 maps load and
-are peaceful once completed.
+`MOD.CK5`. All 18 maps load and are peaceful once completed.
 
-Still Keen 5's: behaviour. `PATCH5.PAT` is about three times Keen 8's
-(394 value, 66 code/table patches): fuses become the friends' messages
-(Spot, Lindsey, Barker, the Janitor) and the QED moves to level 15, new
-enemy actions, the Shikadi Master, and more.
+Behaviour (2026-10-04): `PATCH5.PAT` is converted, the same way as Keen 8.
+
+- **Settings** in `MOD.CK5`, each naming its patch address: about 60 new
+  ones in `ck5_obj2.c`, `ck5_obj3.c`, `ck5_misc.c`, `ck5_map.c`,
+  `ck_keen.c`, `ck_obj.c`, `ck_play.c`, `ck_text.c` and `id_ca.c` (all
+  `KEEN WORLDS`, defaults are Keen 5's behaviour), plus existing ones.
+- **12 redirected actions** (`CK_ACTION_ALIAS`), e.g. Robo Red's shooting
+  goes to the Shikadi's pole zap, the Master's to Robo Red's shots.
+- **196 actions** after `%override`, 20 of them new.
+- **New program code** in the patch file is `src/kw_keen9.c` (`KW9_...`):
+  the friends' messages where Keen 5 has fuses (Spot, Lindsey, Barker, the
+  Janitor, by level), the Warpcore in level 15 (hit by enemy shots, or set
+  off by touch), the yeti (three shots), snowballs that knock Keen over,
+  the Korathoid (where Keen 5 has standing platforms), a mine that explodes
+  when shot, a Sphereful that can be stunned.
+- **Music**: Keen 9 has 19 songs starting at audio chunk 187; `MOD.CK5`
+  sets `ca_audStartMusic` and `ca_audNumSongs` (new), so the level music is
+  right now (it was five songs off before).
+- **Sprite caches**: the mod moves every creature's frames; `lumpStarts` and
+  `lumpEnds` in `MOD.CK5` follow. Omnispeak keeps that table sorted by
+  sprite number, the program doesn't, so they are matched by start value.
+
+Not converted: the DOS start-up banner, the galaxy-explosion palette and
+star colours (Omnispeak's explosion is hard-wired), the removed F10 cheats.
+Found on the way: Omnispeak's Keen 5 action file names two different
+program functions `CK_DeadlyCol`; one only kills (`CK_LethalCol`). Keen 9's
+file uses the right one; Keen 5's own data is left as upstream has it.
+
+`/KWTEST` checks Keen 9's settings, redirects and new functions are wired
+up, that Keen 5 has none of them, and, for every level of Keen 8 and 9,
+that each creature's sprites are in memory. Not yet play-tested by eye.
 
 ### Adding a fan game
 
@@ -198,6 +262,16 @@ is replaced in memory with a starfield tile.
 
 **Every completed level, in every world**, can be entered again and is
 peaceful:
+
+**Border Village tavern music.** The reopened tavern in Keen 4's Border Village has its own tune: an original
+jig in G major (squeezebox, plucked bass, off-beat chords) written by
+`tools/kw_tavern_music.py` into `src/kw_tavern_music.h` as an OPL2/IMF loop on
+AdLib channels 1-4 (channel 0 is the sound effects'), played by `src/kw_music.c`. It starts only while Keen is inside the
+room carved below the inn (tiles x 64–82, y 26–34), and the level's normal
+music resumes when he steps back outside. The loop is compiled into Keen
+Worlds and played through `SD_StartMusicData`, so it does not modify or ship
+the player's `AUDIO.CK4` archive. The zone is explicitly keyed to
+`KW_KEEN4`, level 1, and only exists after the village has been liberated.
 
 - **Entrance kept**: completed levels normally lose their world-map entrance
   (`CK_MapLevelMarkAsDone`); Keen Worlds keeps them all. Leaving a level that

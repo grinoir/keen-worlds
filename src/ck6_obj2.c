@@ -159,7 +159,8 @@ void CK6_NospikeFallDraw2(CK_object *obj)
 	{
 		obj->user1 = obj->user2 = obj->user3;
 		obj->user4 = obj->type;
-		CK_SetAction2(obj, CK_ACTION(CK6_ACT_NospikeStunned0));
+		// KEEN WORLDS: the landing action can be redirected (Keen 8's survives the fall)
+		CK_SetAction2(obj, CK_ACTION_ALIAS(CK6_ACT_NospikeLanded, CK6_ACT_NospikeStunned0));
 		SD_PlaySound(CK_SOUNDNUM(SOUND_NOSPIKECOLLIDE));
 		obj->type = CT6_StunnedCreature;
 		obj->velY = CK_INT(CK6_NospikeDeathHopYVel, -24);
@@ -220,7 +221,7 @@ void CK6_GikWalk(CK_object *obj)
 		if (dy >= CK_INT(CK6_GikJumpKeenYMin, 0) && dy <= CK_INT(CK6_GikJumpKeenYMax, 0x400))
 		{
 			obj->xDirection = dx < 0 ? IN_motion_Left : IN_motion_Right;
-			if (dx >= -CK_INT(CK6_GikJumpKeenXRadiusMax, 0x700) && dx <= CK_INT(CK6_GikJumpKeenXRadiusMax, 0x700) && (dx <= -CK_INT(CK6_GikJumpKeenXRadiusMin, 0x100) || dx >= CK_INT(CK6_GikJumpKeenXRadiusMin, 0x100)))
+			if (dx >= -CK_INT(CK6_GikJumpKeenXRadiusMaxLeft, CK_INT(CK6_GikJumpKeenXRadiusMax, 0x700)) /* KEEN WORLDS: the left side on its own */ && dx <= CK_INT(CK6_GikJumpKeenXRadiusMax, 0x700) && (dx <= -CK_INT(CK6_GikJumpKeenXRadiusMin, 0x100) || dx >= CK_INT(CK6_GikJumpKeenXRadiusMin, 0x100)))
 			{
 				obj->velX = dx < 0 ? -CK_INT(CK6_GikJumpXVel, 40) : CK_INT(CK6_GikJumpXVel, 40);
 				obj->velY = CK_INT(CK6_GikJumpYVel, -28);
@@ -298,7 +299,7 @@ void CK6_GikSlideDraw(CK_object *obj)
 void CK6_SpawnOrbatrix(int tileX, int tileY)
 {
 	CK_object *obj = CK_GetNewObj(false);
-	obj->type = CT6_Orbatrix;
+	obj->type = CK_INT(CK6_OrbatrixObjType, CT6_Orbatrix); // KEEN WORLDS: variable (Keen 8's is an item)
 	obj->active = OBJ_ACTIVE;
 	obj->zLayer = PRIORITIES - 4;
 	obj->posX = RF_TileToUnit(tileX);
@@ -319,8 +320,12 @@ void CK6_OrbatrixFloat(CK_object *obj)
 	{
 		int16_t dx = ck_keenObj->posX - obj->posX;
 		obj->xDirection = dx < 0 ? IN_motion_Left : IN_motion_Right;
+		// KEEN WORLDS: CK6_OrbatrixAvoidsKeen turns it away from Keen, and the
+		// action it takes near him can be redirected (both for Keen 8).
+		if (CK_INT(CK6_OrbatrixAvoidsKeen, 0))
+			obj->xDirection = -obj->xDirection;
 		if (dx > -CK_INT(CK6_OrbatrixCurlKeenXRadius, 0x500) && dx < CK_INT(CK6_OrbatrixCurlKeenXRadius, 0x500))
-			obj->currentAction = CK_ACTION(CK6_ACT_OrbatrixCurl0);
+			obj->currentAction = CK_ACTION_ALIAS(CK6_ACT_OrbatrixNearKeen, CK6_ACT_OrbatrixCurl0);
 	}
 }
 
@@ -630,7 +635,11 @@ void CK6_FlectCol(CK_object *a, CK_object *b)
 {
 	if (b->type == CT_Player)
 	{
-		CK_PhysPushX(b, a);
+		// KEEN WORLDS: CK6_FlectKillsKeen (Keen 8's kills instead of pushing)
+		if (CK_INT(CK6_FlectKillsKeen, 0))
+			CK_KillKeen();
+		else
+			CK_PhysPushX(b, a);
 	}
 	else if (b->type == CT_Stunner)
 	{

@@ -47,7 +47,10 @@ void CK5_SpawnMine(int tileX, int tileY)
 	obj->user2 = CK_INT(CK5_MineDotXOffset, 0x100);
 	obj->user3 = CK_INT(CK5_MineDotYOffset, 0xD0);
 	CK_SetAction(obj, CK_ACTION(CK5_ACT_Mine2));
-	obj->velX = 0x100;
+	// KEEN WORLDS: variable; CK5_MineZLayer draws it in front of the level
+	obj->velX = CK_INT(CK5_MineStartDist, 0x100);
+	if (CK_INT(CK5_MineZLayer, -1) >= 0)
+		obj->zLayer = CK_INT(CK5_MineZLayer, -1);
 
 	for (i = 0; i < 4; i++)
 		if (CK5_Walk(obj, (CK_Controldir)i))
@@ -268,7 +271,7 @@ void CK5_MineMove(CK_object *obj)
 		obj->velX = 0x100;
 		if (obj->xDirection != xDir || obj->yDirection != yDir)
 		{
-			obj->currentAction = CK_ACTION(CK5_ACT_Mine1);
+			obj->currentAction = CK_ACTION_ALIAS(CK5_ACT_MineTurn, CK5_ACT_Mine1); // KEEN WORLDS: redirectable
 			return;
 		}
 	}
@@ -493,7 +496,7 @@ void CK5_MineExplode(CK_object *obj)
 	new_object->posY = obj->posY;
 	new_object->velX = CK_INT(CK5_MineShrapABaseXVel, 0) + US_RndT() / CK_INT(CK5_MineShrapARndXVel, -8);
 	new_object->velY = CK_INT(CK5_MineShrapABaseYVel, -48);
-	CK_SetAction(new_object, CK_ACTION(CK5_ACT_MineShrap0));
+	CK_SetAction(new_object, CK_ACTION_ALIAS(CK5_ACT_MineShrapA, CK5_ACT_MineShrap0)); // KEEN WORLDS: redirectable
 
 	// upright
 	new_object = CK_GetNewObj(true);
@@ -522,14 +525,14 @@ void CK5_MineExplode(CK_object *obj)
 	new_object->posY = obj->posY;
 	new_object->velX = CK_INT(CK5_MineShrapEBaseXVel, 24);
 	new_object->velY = CK_INT(CK5_MineShrapEBaseYVel, 16);
-	CK_SetAction(new_object, CK_ACTION(CK5_ACT_MineShrap0));
+	CK_SetAction(new_object, CK_ACTION_ALIAS(CK5_ACT_MineShrapE, CK5_ACT_MineShrap0)); // KEEN WORLDS: redirectable
 
 	new_object = CK_GetNewObj(true);
 	new_object->posX = obj->posX + CK_INT(CK5_MineShrapFSpawnXOffset, 0x100);
 	new_object->posY = obj->posY;
 	new_object->velX = CK_INT(CK5_MineShrapFBaseXVel, 24);
 	new_object->velY = CK_INT(CK5_MineShrapFBaseYVel, 16);
-	CK_SetAction(new_object, CK_ACTION(CK5_ACT_MineShrap0));
+	CK_SetAction(new_object, CK_ACTION_ALIAS(CK5_ACT_MineShrapF, CK5_ACT_MineShrap0)); // KEEN WORLDS: redirectable
 
 	return;
 }
@@ -539,8 +542,11 @@ void CK5_MineTileCol(CK_object *obj)
 
 	RF_AddSpriteDraw(&obj->sde, obj->posX, obj->posY, obj->gfxChunk, 0,
 		obj->zLayer); //mine
-	RF_AddSpriteDrawUsing16BitOffset(&obj->user4, obj->posX + obj->user2,
-		obj->posY + obj->user3, CK_CHUNKNUM(SPR_SHIKADIMINEEYE), 0, 2); //dot
+	// KEEN WORLDS: CK5_MineEyeChunk -1 leaves the eye out (Keen 9)
+	int eyeChunk = CK_INT(CK5_MineEyeChunk, CK_CHUNKNUM(SPR_SHIKADIMINEEYE));
+	if (eyeChunk >= 0)
+		RF_AddSpriteDrawUsing16BitOffset(&obj->user4, obj->posX + obj->user2,
+			obj->posY + obj->user3, eyeChunk, 0, 2); //dot
 	return;
 }
 
@@ -566,7 +572,7 @@ void CK5_RoboMove(CK_object *obj)
 	{
 		obj->xDirection = obj->posX > ck_keenObj->posX ? IN_motion_Left : IN_motion_Right;
 		obj->user1 = CK_INT(CK5_RoboNumShots, 10);
-		obj->currentAction = CK_ACTION(CK5_ACT_RoboShoot0);
+		obj->currentAction = CK_ACTION_ALIAS(CK5_ACT_RoboShootStart, CK5_ACT_RoboShoot0); // KEEN WORLDS: redirectable
 	}
 }
 // time is number of shots
@@ -579,7 +585,7 @@ void CK5_RoboCol(CK_object *o1, CK_object *o2)
 		CK_ShotHit(o2);
 		o1->xDirection = o1->posX > ck_keenObj->posX ? IN_motion_Left : IN_motion_Right;
 		o1->user1 = CK_INT(CK5_RoboNumShots, 10);
-		CK_SetAction2(o1, CK_ACTION(CK5_ACT_RoboShoot0));
+		CK_SetAction2(o1, CK_ACTION_ALIAS(CK5_ACT_RoboShootStart, CK5_ACT_RoboShoot0)); // KEEN WORLDS: redirectable
 		return;
 	}
 	if (o2->type == CT_Player)
@@ -595,7 +601,7 @@ void CK5_RoboShoot(CK_object *obj)
 	int shotSpawnX;
 
 	if (--obj->user1 == 0)
-		obj->currentAction = CK_ACTION(CK5_ACT_Robo0);
+		obj->currentAction = CK_ACTION_ALIAS(CK5_ACT_RoboShootDone, CK5_ACT_Robo0); // KEEN WORLDS: redirectable
 
 	shotSpawnX = obj->xDirection == IN_motion_Right ? (obj->posX + CK_INT(CK5_RoboShotRightXOffset, 0x380)) : (obj->posX + CK_INT(CK5_RoboShotLeftXOffset, 0));
 
@@ -644,7 +650,10 @@ void CK5_SpawnSpirogrip(int tileX, int tileY)
 	obj->xDirection = 1; // Right
 	obj->yDirection = 1; // Down
 
-	CK_SetAction(obj, CK_ACTION(CK5_ACT_SpirogripAttachDown));
+	// KEEN WORLDS: redirectable start; CK5_SpirogripZLayer draws it in front of the level
+	if (CK_INT(CK5_SpirogripZLayer, -1) >= 0)
+		obj->zLayer = CK_INT(CK5_SpirogripZLayer, -1);
+	CK_SetAction(obj, CK_ACTION_ALIAS(CK5_ACT_SpirogripSpawn, CK5_ACT_SpirogripAttachDown));
 }
 
 void CK5_SpirogripSpin(CK_object *obj)
@@ -659,7 +668,7 @@ void CK5_SpirogripSpin(CK_object *obj)
 	if (obj->currentAction == CK_ACTION(CK5_ACT_SpirogripSpin1))
 		obj->currentAction = CK_ACTION(CK5_ACT_SpirogripFlyUp);
 	else if (obj->currentAction == CK_ACTION(CK5_ACT_SpirogripSpin3))
-		obj->currentAction = CK_ACTION(CK5_ACT_SpirogripFlyRight);
+		obj->currentAction = CK_ACTION_ALIAS(CK5_ACT_SpirogripSpin3Fly, CK5_ACT_SpirogripFlyRight); // KEEN WORLDS: redirectable
 	else if (obj->currentAction == CK_ACTION(CK5_ACT_SpirogripSpin5))
 		obj->currentAction = CK_ACTION(CK5_ACT_SpirogripFlyDown);
 	else if (obj->currentAction == CK_ACTION(CK5_ACT_SpirogripSpin7))
@@ -744,7 +753,7 @@ void CK5_SpindredTileCol(CK_object *obj)
 				obj->user1 = 0;
 				obj->velY = CK_INT(CK5_SpindredFlyVel, 68);
 				obj->yDirection = -obj->yDirection;
-				SD_PlaySound(CK_SOUNDNUM(SOUND_SPINDREDFLYDOWN)); // fly down
+				SD_PlaySound(CK_INT(CK5_SpindredFlyDownSound, CK_SOUNDNUM(SOUND_SPINDREDFLYDOWN))); // fly down (KEEN WORLDS: variable)
 			}
 			else
 			{
@@ -759,17 +768,18 @@ void CK5_SpindredTileCol(CK_object *obj)
 		obj->velY = 0;
 		if (obj->yDirection == IN_motion_Down)
 		{
-			if (++obj->user1 == CK_INT(CK5_SpindredNumBounces, 3))
+			// KEEN WORLDS: the floor's bounce count, slam speed and sound on their own
+			if ((uint16_t)++obj->user1 == (uint16_t)CK_INT(CK5_SpindredFloorBounces, CK_INT(CK5_SpindredNumBounces, 3)))
 			{ //time holds slamcount
 				obj->user1 = 0;
 				obj->velY = -CK_INT(CK5_SpindredFlyVel, 68);
 				obj->yDirection = -obj->yDirection;
-				SD_PlaySound(CK_SOUNDNUM(SOUND_SPINDREDFLYUP)); // fly down
+				SD_PlaySound(CK_INT(CK5_SpindredFlyUpSound, CK_SOUNDNUM(SOUND_SPINDREDFLYUP))); // fly down
 			}
 			else
 			{
 				SD_PlaySound(CK_SOUNDNUM(SOUND_SPINDREDSLAM)); // slam once
-				obj->velY = -CK_INT(CK5_SpindredSlamVel, 40);
+				obj->velY = -CK_INT(CK5_SpindredFloorSlamVel, CK_INT(CK5_SpindredSlamVel, 40));
 			}
 		}
 	}
@@ -801,9 +811,10 @@ void CK5_MasterStand(CK_object *obj)
 		return;
 	}
 
-	obj->user1 = 1;
+	// KEEN WORLDS: variable count, redirectable action (Keen 9's fires Robo Red's shots)
+	obj->user1 = CK_INT(CK5_MasterStandShots, 1);
 	obj->xDirection = ck_keenObj->posX > obj->posX ? IN_motion_Right : IN_motion_Left;
-	obj->currentAction = CK_ACTION(CK5_ACT_MasterShoot0);
+	obj->currentAction = CK_ACTION_ALIAS(CK5_ACT_MasterShootStart, CK5_ACT_MasterShoot0);
 }
 
 void CK5_MasterShoot(CK_object *obj)
@@ -830,8 +841,8 @@ void CK5_MasterCol(CK_object *o1, CK_object *o2)
 	{
 		CK_ShotHit(o2);
 		o1->xDirection = ck_keenObj->posX - o1->posX ? IN_motion_Right : IN_motion_Left;
-		o1->user1 = 1;
-		CK_SetAction2(o1, CK_ACTION(CK5_ACT_MasterShoot0));
+		o1->user1 = CK_INT(CK5_MasterHitShots, 1); // KEEN WORLDS: variable, redirectable
+		CK_SetAction2(o1, CK_ACTION_ALIAS(CK5_ACT_MasterShootStart, CK5_ACT_MasterShoot0));
 		return;
 	}
 
@@ -978,7 +989,8 @@ void CK5_MasterBallTileCol(CK_object *obj)
 	if (obj->topTI)
 	{
 		//turn ball into sparks, spawn sparks in reverse direction
-		SD_PlaySound(CK_SOUNDNUM(SOUND_MASTERSHOT));
+		if (CK_INT(CK5_MasterBallLandSound, 1)) // KEEN WORLDS: can be silent
+			SD_PlaySound(CK_SOUNDNUM(SOUND_MASTERSHOT));
 		CK_object *new_object;
 		obj->velX = CK_INT(CK5_MasterSparksXVel, 48);
 		CK_SetAction2(obj, CK_ACTION(CK5_ACT_MasterSparks0));
@@ -1031,18 +1043,22 @@ void CK5_ShikadiWalk(CK_object *obj)
 
 	// By casting to unsigned, we also check if the difference in
 	// Y values is greater than zero
-	if (ck_keenObj->currentAction->collide == &CK_KeenSpecialColFunc || (unsigned)(obj->clipRects.unitY2 - ck_keenObj->clipRects.unitY2 + 0x100) <= 0x200)
+	if (ck_keenObj->currentAction->collide == &CK_KeenSpecialColFunc || (unsigned)(obj->clipRects.unitY2 - ck_keenObj->clipRects.unitY2 + CK_INT(CK5_ShikadiKeenYOffset, 0x100)) <= 0x200)
 	{
 		// if Keen on Pole or Keen at shikadi level , get to keen
 		// walk back and forth one tile to the left or right underneath him
-		if (obj->posX > ck_keenObj->posX + CK_INT(CK5_ShikadiPoleXRadius, 0x100))
+		// KEEN WORLDS: CK5_ShikadiIgnoresKeenX keeps its direction;
+		// CK5_ShikadiPoleKeenAway inverts the check on Keen's column.
+		if (CK_INT(CK5_ShikadiIgnoresKeenX, 0))
+			;
+		else if (obj->posX > ck_keenObj->posX + CK_INT(CK5_ShikadiPoleXRadius, 0x100))
 			obj->xDirection = IN_motion_Left;
 		else if (obj->posX < ck_keenObj->posX - CK_INT(CK5_ShikadiPoleXRadius, 0x100))
 			obj->xDirection = IN_motion_Right;
 
 		tx = obj->xDirection == IN_motion_Right ? obj->clipRects.tileX2 : obj->clipRects.tileX1;
 
-		if (ck_keenObj->clipRects.tileXmid != tx)
+		if (CK_INT(CK5_ShikadiPoleKeenAway, 0) ? (ck_keenObj->clipRects.tileXmid == tx) : (ck_keenObj->clipRects.tileXmid != tx))
 			return; // no zapping if not below keen
 	}
 	else
@@ -1051,7 +1067,7 @@ void CK5_ShikadiWalk(CK_object *obj)
 		{
 			// 1/16 chance of stopping walk
 			ck_nextX = 0;
-			obj->currentAction = CK_ACTION(CK5_ACT_ShikadiStand0);
+			obj->currentAction = CK_ACTION_ALIAS(CK5_ACT_ShikadiRest, CK5_ACT_ShikadiStand0); // KEEN WORLDS: redirectable
 			return;
 		}
 
@@ -1065,13 +1081,15 @@ void CK5_ShikadiWalk(CK_object *obj)
 	// Make a pole zap
 	tile = CA_TileAtPos(tx, obj->clipRects.tileY1, 1);
 	//tile = *MAPSPOT(tx, obj->clipRects.tileY1, FGPLANE);
-	if (TI_ForeMisc(tile) == MISCFLAG_POLE)
+	// KEEN WORLDS: the tile it reacts to, what it does there and whether that
+	// makes a sound are variable (Keen 9's yeti throws a snowball).
+	if (TI_ForeMisc(tile) == CK_INT(CK5_ShikadiPoleMiscFlag, MISCFLAG_POLE))
 	{
-
 		obj->user1 = tx;
-		obj->currentAction = CK_ACTION(CK5_ACT_ShikadiPole0);
+		obj->currentAction = CK_ACTION_ALIAS(CK5_ACT_ShikadiPoleStart, CK5_ACT_ShikadiPole0);
 		ck_nextX = 0;
-		SD_PlaySound(CK_SOUNDNUM(SOUND_POLEZAP));
+		if (CK_INT(CK5_ShikadiPoleSound, 1))
+			SD_PlaySound(CK_SOUNDNUM(SOUND_POLEZAP));
 	}
 }
 
@@ -1115,10 +1133,18 @@ void CK5_ShikadiPole(CK_object *obj)
 	new_object->posX = sparkX;
 	new_object->posY = obj->posY + 0x80;
 	new_object->type = CT5_EnemyShot;
-	new_object->active = OBJ_EXISTS_ONLY_ONSCREEN;
+	// KEEN WORLDS: CK5_PoleZapZLayer (in front of the level, and it then
+	// lives off-screen too); CK5_PoleZapHorizontal aims it sideways at Keen.
+	if (CK_INT(CK5_PoleZapZLayer, -1) >= 0)
+		new_object->zLayer = CK_INT(CK5_PoleZapZLayer, -1);
+	else
+		new_object->active = OBJ_EXISTS_ONLY_ONSCREEN;
 	new_object->clipped = CLIP_not;
 	CK_SetAction(new_object, CK_ACTION(CK5_ACT_PoleZap0));
-	new_object->yDirection = obj->posY > ck_keenObj->posY ? IN_motion_Up : IN_motion_Down;
+	if (CK_INT(CK5_PoleZapHorizontal, 0))
+		new_object->xDirection = obj->posX < ck_keenObj->posX ? IN_motion_Right : IN_motion_Left;
+	else
+		new_object->yDirection = obj->posY > ck_keenObj->posY ? IN_motion_Up : IN_motion_Down;
 	SD_PlaySound(CK_SOUNDNUM(SOUND_POLEZAP));
 }
 
@@ -1241,15 +1267,16 @@ void CK5_ShocksundShoot(CK_object *obj)
 
 void CK5_ShocksundCol(CK_object *o1, CK_object *o2)
 {
-
-	if (o2->type == CT_Player)
+	// KEEN WORLDS: CK5_ShocksundHarmless; CK5_ShocksundStunsAgain stuns on
+	// every shot once its health is gone.
+	if (o2->type == CT_Player && !CK_INT(CK5_ShocksundHarmless, 0))
 	{
 		CK_KillKeen();
 	}
 
 	if (o2->type == CT_Stunner)
 	{
-		if (--o1->user2)
+		if (CK_INT(CK5_ShocksundStunsAgain, 0) ? (--o1->user2 > 0) : (--o1->user2 != 0))
 		{
 			o1->user3 = 2;
 			o1->visible = true;
@@ -1347,7 +1374,8 @@ void CK5_BarkShotCol(CK_object *o1, CK_object *o2)
 	{
 
 		CK_ShotHit(o2);
-		CK_SetAction2(o1, CK_ACTION(CK5_ACT_BarkShotDie0));
+		if (!CK_INT(CK5_BarkShotSurvivesStunner, 0)) // KEEN WORLDS
+			CK_SetAction2(o1, CK_ACTION(CK5_ACT_BarkShotDie0));
 	}
 }
 
@@ -1356,7 +1384,7 @@ void CK5_BarkShotTileCol(CK_object *obj)
 
 	if (obj->topTI || obj->rightTI || obj->bottomTI || obj->leftTI)
 	{
-		SD_PlaySound(CK_SOUNDNUM(SOUND_BARKSHOTDIE));
+		SD_PlaySound(CK_INT(CK5_BarkShotHitSound, CK_SOUNDNUM(SOUND_BARKSHOTDIE))); // KEEN WORLDS: variable
 
 		CK_SetAction2(obj, CK_ACTION(CK5_ACT_BarkShotDie0));
 	}
@@ -1396,7 +1424,7 @@ void CK5_SpherefulBounce(CK_object *obj)
 			if (ck_keenObj->posX > obj->posX && obj->velX < CK_INT(CK5_SpherefulMaxXVel, 8))
 				obj->velX++;
 
-			if (ck_keenObj->posX < obj->posX && obj->velX > -CK_INT(CK5_SpherefulMaxXVel, 8))
+			if (ck_keenObj->posX < obj->posX && obj->velX > -CK_INT(CK5_SpherefulMaxXVelLeft, CK_INT(CK5_SpherefulMaxXVel, 8))) // KEEN WORLDS: the left side on its own
 				obj->velX--;
 		}
 		ck_nextY += obj->velY;
@@ -1433,15 +1461,17 @@ void CK5_SpherefulTileCol(CK_object *obj)
 			obj->velY++;
 
 		if (obj->velY > CK_INT(CK5_SpherefulBounceMaxYVel, -4))
-			obj->velY = CK_INT(CK5_SpherefulBounceMaxYVel, -4);
+			obj->velY = CK_INT(CK5_SpherefulBounceMaxYVelSet, CK_INT(CK5_SpherefulBounceMaxYVel, -4)); // KEEN WORLDS: variable
 		else if (obj->velY < CK_INT(CK5_SpherefulBounceMinYVel, -12))
-			obj->velY = CK_INT(CK5_SpherefulBounceMinYVel, -12);
+			obj->velY = CK_INT(CK5_SpherefulBounceMinYVelSet, CK_INT(CK5_SpherefulBounceMinYVel, -12)); // KEEN WORLDS: variable
 		/* FIXME: Any better name for (shared) sound? */
-		SD_PlaySound(CK_SOUNDNUM(SOUND_SPINDREDFLYUP));
+		SD_PlaySound(CK_INT(CK5_SpherefulFloorSound, CK_SOUNDNUM(SOUND_SPINDREDFLYUP))); // KEEN WORLDS: variable
 	}
 
 	// First draw the sphereful
 	RF_AddSpriteDraw(&obj->sde, obj->posX, obj->posY, obj->gfxChunk, 0, obj->zLayer);
+	if (!CK_INT(CK5_SpherefulDiamonds, 1)) // KEEN WORLDS: Keen 9's has none
+		return;
 
 	//draw the diamonds
 	time = (SD_GetLastTimeCount() >> 3) & 0xF;
@@ -1519,6 +1549,7 @@ void CK5_QEDSpawn(int tileX, int tileY)
 	new_object->clipRects.unitY1 = RF_TileToUnit(tileY) - 0x10;
 	new_object->clipRects.unitX2 = new_object->clipRects.unitX1 + 0x220;
 	new_object->clipRects.unitY2 = new_object->clipRects.unitY1 + 0x220;
+	new_object->user2 = CK_INT(CK5_QEDHealth, 0); // KEEN WORLDS: for mods (Keen 9's takes hits)
 	CK_SetAction(new_object, CK_ACTION(CK5_ACT_QED));
 }
 

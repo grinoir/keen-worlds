@@ -373,7 +373,7 @@ static void SD_AL_SoundService()
 // ======= Adlib Music ========
 
 // Pointer to current Adlib/IMF music data for current track
-uint8_t *sd_music_data;
+const uint8_t *sd_music_data;
 // Index into current tracks in bytes.
 int sd_music_currentIndex;
 // Current time in the track (in IMF ticks)
@@ -723,14 +723,21 @@ void SD_MusicOff(void)
 // Start a specific music track.
 void SD_StartMusic(SD_MusicTrack *music)
 {
+	SD_StartMusicData(music->data, music->length);
+}
+
+// Start an IMF stream that is owned by the caller. This is useful for small
+// Keen Worlds cues which should not require replacing a player's AUDIO file.
+void SD_StartMusicData(const uint8_t *data, uint16_t length)
+{
 	SD_MusicOff();
 	if (sd_musicMode == smm_AdLib)
 	{
 		if (!sd_backend)
 			return;
 		sd_backend->lock();
-		sd_music_data = music->data;
-		sd_music_trackSize = music->length;
+		sd_music_data = data;
+		sd_music_trackSize = length;
 		sd_music_currentIndex = 0;
 		sd_music_nextEventTime = 0;
 		sd_music_currentTime = 0;
