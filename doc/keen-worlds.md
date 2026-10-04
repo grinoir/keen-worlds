@@ -85,6 +85,26 @@ game built on one of them. `kw_worldDefs[]` in `src/kw_world.c` lists them:
   (`play/run.sh 7` = `/EPISODE 4 /WORLD keen7`, `play/run.sh 8` =
   `/EPISODE 6 /WORLD keen8`, `play/run.sh 9` = `/EPISODE 5 /WORLD keen9`).
 
+### Who made each world (credits)
+
+Each `kw_worldDefs[]` row also carries the game's title, a byline, its
+credits (pages separated by `\f`; fan games' are taken from their own Read
+Me files) and a "how to get it" text.
+
+- **Arrival card**: the first time Keen is on a world's map or at its ship
+  (new game included) the game's title and makers are shown once
+  (`KW_ShowArrivalCard`; not for a world a loaded save was made in, not in
+  demos).
+- **About this world**: the last line of the Megarocket menu shows the
+  title card and the full credits.
+- **Not installed**: the menu lists every world; choosing one that isn't
+  installed shows what it is and which folder its files go in.
+- `/KWTEST` checks every card fits the screen (`KW_CheckCardsFit`) and
+  switches the cards off for itself.
+
+Still to do here: a physical plaque by the ship (needs art per world) and
+playing a fan game's own story scroll on first arrival.
+
 ### Keen 8: Dead in the Desert (converted)
 
 Ceilick's Keen 6 mod (2009, patching by Levellass) was never converted for

@@ -43,22 +43,64 @@ typedef struct KW_WorldDef
 	int episode;             // the engine episode it runs on (4, 5, 6)
 	const char *dir;         // own data folder under the game path, or NULL
 	const char *episodeFile; // variable file, or NULL for the episode's own
+	// The game this world is, in its makers' words: shown when Keen first
+	// arrives, and under "About this world" in the Megarocket. Credits are
+	// pages separated by \f; fan games' come from their own Read Me files.
+	const char *title;
+	const char *byline;
+	const char *credits;
+	const char *getIt;       // for the menu when it isn't installed
 } KW_WorldDef;
 
+#define KW_ID_CREDITS \
+	"Programming:\nJohn Carmack, John Romero,\nJason Blochowiak\n\n" \
+	"Creative director: Tom Hall\nArt: Adrian Carmack\nMusic: Bobby Prince"
+#define KW_NOT_OURS "\n\nKeen Worlds links this world\nto the others. It did not make it."
+
 static const KW_WorldDef kw_worldDefs[KW_NUM_WORLDS] = {
-	{"keen4", "Gnosticus IV", 4, NULL, NULL},
-	{"keen5", "The Omegamatic", 5, NULL, NULL},
-	{"keen6", "Fribbulus Xax", 6, NULL, NULL},
+	{"keen4", "Gnosticus IV", 4, NULL, NULL,
+		"Commander Keen in\nSecret of the Oracle",
+		"Goodbye, Galaxy! episode one\nid Software, 1991",
+		KW_ID_CREDITS "\n\nPublished by Apogee Software" KW_NOT_OURS,
+		"Episode 4 is shareware.\nPut GAMEMAPS.CK4, EGAGRAPH.CK4\nand AUDIO.CK4 (version 1.4)\nin the game folder."},
+	{"keen5", "The Omegamatic", 5, NULL, NULL,
+		"Commander Keen in\nThe Armageddon Machine",
+		"Goodbye, Galaxy! episode two\nid Software, 1991",
+		KW_ID_CREDITS "\n\nPublished by Apogee Software" KW_NOT_OURS,
+		"Use your own copy of Keen 5.\nPut GAMEMAPS.CK5, EGAGRAPH.CK5\nand AUDIO.CK5 (version 1.4)\nin the game folder."},
+	{"keen6", "Fribbulus Xax", 6, NULL, NULL,
+		"Commander Keen in\nAliens Ate My Baby Sitter!",
+		"id Software, 1991",
+		KW_ID_CREDITS "\n\nPublished by FormGen" KW_NOT_OURS,
+		"Use your own copy of Keen 6.\nPut GAMEMAPS.CK6, EGAGRAPH.CK6\nand AUDIO.CK6 (version 1.4)\nin the game folder."},
 	// The Keys of Krodacia ("Keen 7", Ceilick), as converted for Omnispeak
 	// in the Omnispeak modding kit (data/mod/keen7): the player copies that
 	// folder to play/mods/keen7.
-	{"keen7", "Krodacia", 4, "mods/keen7", "MOD.CK4"},
+	{"keen7", "Krodacia", 4, "mods/keen7", "MOD.CK4",
+		"The Keys of Krodacia",
+		"The Universe is Toast, part one\nA fan episode by Ceilick",
+		"Created by Ceilick\n\nMusic: KeenRush, Ceilick\n\nOmnispeak version:\nDavid Gow (Multimania)" KW_NOT_OURS,
+		"A fan episode by Ceilick.\nGet its Omnispeak version from\nthe Omnispeak modding kit\n(github.com/sulix/omnispeak)\nand put it in mods/keen7."},
 	// Dead in the Desert ("Keen 8", Ceilick and Levellass): the player's copy
 	// of the mod's files in play/mods/keen8, with our MOD.CK6 (see there).
-	{"keen8", "Calidune", 6, "mods/keen8", "MOD.CK6"},
+	{"keen8", "Calidune", 6, "mods/keen8", "MOD.CK6",
+		"Dead in the Desert",
+		"The Universe is Toast, part two\nA fan episode by Ceilick, 2009",
+		"Mod by Ceilick, 2009\nPatching by Levellass\n\n"
+		"Music: Mr. M, J. Greek,\nAntone S. Wallach, ZidaneA\n\n"
+		"Beta testing:\nArjak, Iv4n, Mink, Mr. M" KW_NOT_OURS,
+		"A fan episode by Ceilick (2009).\nDownload \"Commander Keen 8 -\nDead in the Desert\", for\ninstance from archive.org, and\nput its files in mods/keen8."},
 	// Battle of the Brains ("Keen 9", Ceilick and Levellass): play/mods/keen9
 	// with our MOD.CK5.
-	{"keen9", "The Universe", 5, "mods/keen9", "MOD.CK5"},
+	{"keen9", "The Universe", 5, "mods/keen9", "MOD.CK5",
+		"Battle of the Brains",
+		"The Universe is Toast, part three\nA fan episode by\nCeilick, Mink and Tulip, 2011",
+		"Mod by Ceilick, Mink and Tulip\nPatching by Levellass and Lemm\n\n"
+		"Graphics contributions:\nMobiethian, VikingBoyBilly,\nXkyRauh, Mr. M, Fleexy\n\n"
+		"Sound effects:\nCeilick, Levellass, Mr. M"
+		"\f"
+		"Music:\nGenius314, Mr. M, XkyRauh,\nthehackercat, Kosmyn, Umbrella" KW_NOT_OURS,
+		"A fan episode by Ceilick,\nMink and Tulip (2011).\nDownload \"Commander Keen 9 -\nBattle of the Brains\", for\ninstance from archive.org, and\nput its files in mods/keen9."},
 };
 
 static CK_EpisodeDef *KW_EpisodeDef(int episode)
@@ -249,6 +291,7 @@ bool KW_IsWorldCompleted(int world)
 #define KW_SAVE_VERSION 2
 #define KW_SAVE_ID_LEN 8
 
+static bool kw_introduced[KW_NUM_WORLDS]; // worlds whose arrival card has been shown
 const char *kw_loadingFileName = NULL;
 static int kw_deferredWorld = KW_NO_WORLD;
 static char kw_deferredFile[FS_MAX_FILENAME_LEN];
@@ -371,6 +414,7 @@ bool KW_ReadSaveBlock(FS_File fp, bool *deferred)
 			return false;
 		CK_Cross_strscpy(kw_deferredFile, kw_loadingFileName, sizeof(kw_deferredFile));
 		kw_deferredWorld = world;
+		kw_introduced[world] = true; // a saved game: Keen has been here
 		*deferred = true;
 		return true;
 	}
@@ -382,6 +426,8 @@ bool KW_ReadSaveBlock(FS_File fp, bool *deferred)
 		*KW_ItemField(i) = kw_worlds[world].items[i];
 	kw_pendingWorld = KW_NO_WORLD;
 	kw_placeArrivalAtShip = false;
+	if (world >= 0 && world < KW_NUM_WORLDS)
+		kw_introduced[world] = true; // a saved game: Keen has been here
 	return true;
 }
 
@@ -452,6 +498,7 @@ void KW_ReturnToStartWorld(void)
 void KW_ResetWorlds(void)
 {
 	memset(kw_worlds, 0, sizeof(kw_worlds));
+	memset(kw_introduced, 0, sizeof(kw_introduced)); // a new game introduces each world again
 	kw_pendingWorld = KW_NO_WORLD;
 	kw_placeArrivalAtShip = false;
 }
@@ -736,31 +783,145 @@ static bool KW_IsAtShipHatch(void)
 	return ship && x >= ship->boardX1 && x <= ship->boardX2 && y >= ship->boardY1 && y <= ship->boardY2;
 }
 
+// ---- World cards: who made each world ----
+
+static bool kw_cardsOff = false;             // the self-test has nobody to press a key
+static int kw_arrivalCard = KW_NO_WORLD;     // world whose arrival card is due
+
+#define KW_CARD_MAX_W 38
+#define KW_CARD_MAX_H 22
+
+// One card: centred text in a window sized to it; waits for a button.
+static void KW_ShowCard(const char *text)
+{
+	uint16_t w, h;
+	CK_MeasureMultiline(text, &w, &h);
+	VL_FixRefreshBuffer();
+	US_CenterWindow((w + 15) / 8 + 2, (h + 7) / 8 + 2);
+	US_SetPrintY(US_GetPrintY() + 4);
+	US_CPrint(text);
+	VH_UpdateScreen();
+	KW_WaitForButtonsUp();
+	IN_WaitButton();
+	KW_WaitForButtonsUp();
+}
+
+// Pages separated by \f, one card each.
+static void KW_ShowCards(const char *pages)
+{
+	char page[512];
+	while (*pages)
+	{
+		size_t n = strcspn(pages, "\f");
+		if (n >= sizeof(page))
+			n = sizeof(page) - 1;
+		memcpy(page, pages, n);
+		page[n] = 0;
+		KW_ShowCard(page);
+		pages += n + (pages[n] == '\f');
+	}
+	RF_ForceRefresh();
+	SD_SetLastTimeCount(SD_GetTimeCount());
+}
+
+static void KW_WorldCardText(int world, bool withCredits, char *out, size_t size)
+{
+	const KW_WorldDef *def = &kw_worldDefs[world];
+	if (withCredits)
+		snprintf(out, size, "%s\n\n%s\f%s", def->title, def->byline, def->credits);
+	else
+		snprintf(out, size, "%s\n\n%s", def->title, def->byline);
+}
+
+// The game's own title and makers, the first time Keen sets foot in a world.
+static void KW_ShowArrivalCard(int world)
+{
+	char text[512];
+	KW_WorldCardText(world, false, text, sizeof(text));
+	KW_ShowCards(text);
+}
+
+// "About this world" in the Megarocket: title, makers and the full credits.
+static void KW_ShowAboutWorld(int world)
+{
+	char text[1024];
+	KW_WorldCardText(world, true, text, sizeof(text));
+	KW_ShowCards(text);
+}
+
+// A world in the menu that isn't installed: what it is and where it goes.
+static void KW_ShowGetWorld(int world)
+{
+	char text[512];
+	snprintf(text, sizeof(text), "%s\n\n%s", kw_worldDefs[world].title, kw_worldDefs[world].getIt);
+	KW_ShowCards(text);
+}
+
+// For /KWTEST: every card fits the screen. Returns the first that doesn't.
+static const char *KW_CheckCardsFit(void)
+{
+	static char problem[96];
+	for (int world = 0; world < KW_NUM_WORLDS; ++world)
+	{
+		char text[1024], get[512];
+		KW_WorldCardText(world, true, text, sizeof(text));
+		snprintf(get, sizeof(get), "%s\n\n%s", kw_worldDefs[world].title, kw_worldDefs[world].getIt);
+		const char *all[2] = {text, get};
+		for (int t = 0; t < 2; ++t)
+			for (const char *p = all[t]; *p;)
+			{
+				char page[512];
+				size_t n = strcspn(p, "\f");
+				if (n >= sizeof(page))
+					return "a card page is too long";
+				memcpy(page, p, n);
+				page[n] = 0;
+				uint16_t w, h;
+				CK_MeasureMultiline(page, &w, &h);
+				if ((w + 15) / 8 + 2 > KW_CARD_MAX_W || (h + 7) / 8 + 2 > KW_CARD_MAX_H)
+				{
+					snprintf(problem, sizeof(problem), "%s card \"%.20s\" is %dx%d", kw_worldDefs[world].id, page, w, h);
+					return problem;
+				}
+				p += n + (p[n] == '\f');
+			}
+	}
+	return NULL;
+}
+
 // Draws the destination menu and returns the chosen world, or KW_NO_WORLD to
-// stay. Only installed worlds are listed.
+// stay. Every other world is listed: one that isn't installed opens a card
+// saying where to get it. The last line is "About this world".
+#define KW_MENU_ABOUT (-2)
 static int KW_TravelMenu(void)
 {
 	int lineY[KW_NUM_WORLDS];
-	int available[KW_NUM_WORLDS];
-	int numAvailable = 0;
+	int entries[KW_NUM_WORLDS];
+	int numEntries = 0;
 
 	for (int w = 0; w < KW_NUM_WORLDS; ++w)
-		if (w != kw_currentWorld && KW_IsWorldPresent(w))
-			available[numAvailable++] = w;
-	if (!numAvailable)
-		return KW_NO_WORLD;
+		if (w != kw_currentWorld)
+			entries[numEntries++] = w;
+	entries[numEntries++] = KW_MENU_ABOUT;
 
 	SD_PlaySound(CK_SOUNDNUM(SOUND_UNKNOWN12));
 	VL_FixRefreshBuffer();
-	US_CenterWindow(24, 4 + 2 * numAvailable);
+	US_CenterWindow(30, 4 + 2 * numEntries);
 	US_SetPrintY(US_GetPrintY() + 3);
 	US_CPrint("Bean-with-Bacon Megarocket");
 	US_CPrint("Fly to:");
 	US_SetPrintY(US_GetPrintY() + 4);
-	for (int i = 0; i < numAvailable; ++i)
+	for (int i = 0; i < numEntries; ++i)
 	{
+		char line[64];
 		lineY[i] = US_GetPrintY() - 2;
-		US_CPrint(kw_worldDefs[available[i]].name);
+		if (entries[i] == KW_MENU_ABOUT)
+			snprintf(line, sizeof(line), "About this world");
+		else if (KW_IsWorldPresent(entries[i]))
+			snprintf(line, sizeof(line), "%s", kw_worldDefs[entries[i]].name);
+		else
+			snprintf(line, sizeof(line), "%s (not installed)", kw_worldDefs[entries[i]].name);
+		US_CPrint(line);
 		US_SetPrintY(US_GetPrintY() + 4);
 	}
 
@@ -795,12 +956,12 @@ static int KW_TravelMenu(void)
 			break;
 		if (ck_inputFrame.jump || ck_inputFrame.pogo || scan == IN_SC_Enter || scan == IN_SC_Space)
 		{
-			result = available[sel];
+			result = entries[sel];
 			break;
 		}
 		if ((ck_inputFrame.yDirection == -1 || scan == IN_SC_UpArrow) && sel > 0)
 			sel--;
-		else if ((ck_inputFrame.yDirection == 1 || scan == IN_SC_DownArrow) && sel < numAvailable - 1)
+		else if ((ck_inputFrame.yDirection == 1 || scan == IN_SC_DownArrow) && sel < numEntries - 1)
 			sel++;
 		if (scan != IN_SC_None)
 			IN_SetLastScan(IN_SC_None);
@@ -813,11 +974,33 @@ static int KW_TravelMenu(void)
 	}
 
 	KW_WaitForButtonsUp();
+	if (result == KW_MENU_ABOUT)
+	{
+		KW_ShowAboutWorld(kw_currentWorld);
+		return KW_NO_WORLD;
+	}
+	if (result != KW_NO_WORLD && !KW_IsWorldPresent(result))
+	{
+		KW_ShowGetWorld(result);
+		return KW_NO_WORLD;
+	}
 	return result;
 }
 
 void KW_PlayLoopHook(void)
 {
+	// Keen has just set foot in a world for the first time: its own title
+	// and makers, once the screen is up.
+	if (!kw_cardsOff && !kw_introduced[kw_currentWorld] && !kw_worlds[kw_currentWorld].visited &&
+		(ca_mapOn == 0 || KW_IsShipLevel()))
+		kw_arrivalCard = kw_currentWorld;
+	if (kw_arrivalCard == kw_currentWorld && !vl_screenFaded && IN_DemoGetMode() == IN_Demo_Off)
+	{
+		kw_arrivalCard = KW_NO_WORLD;
+		kw_introduced[kw_currentWorld] = true;
+		KW_ShowArrivalCard(kw_currentWorld);
+	}
+
 	if (ca_mapOn != 0 && !KW_IsShipLevel())
 	{
 		kw_launchRequested = false;
@@ -962,6 +1145,10 @@ void KW_SelfTest(void)
 {
 	static const int route[] = {KW_KEEN5, KW_KEEN6, KW_KEEN4, KW_KEEN7, KW_KEEN6, KW_KEEN5, KW_KEEN7, KW_KEEN4};
 	bool haveKeen7 = KW_IsWorldPresent(KW_KEEN7);
+	kw_cardsOff = true;
+	const char *cardProblem = KW_CheckCardsFit();
+	if (cardProblem)
+		QuitF("KW_SelfTest: a world card doesn't fit the screen: %s", cardProblem);
 	CK_NewGame();
 	// AdLib effects sit after the PC ones, so this mode catches stale offsets.
 	SD_SetSoundMode(sdm_AdLib);
