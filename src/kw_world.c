@@ -1462,6 +1462,7 @@ static void KW_TestRunObjects(int frames)
 	}
 }
 
+void CK_DrawStatusWindow(void);
 // Atroxian Realm's checkpoints (kw_arealm.c), for the self-test
 #define AR_CT_CheckPoint 33
 void AR_CheckPointCol(CK_object *obj1, CK_object *obj2);
@@ -1970,6 +1971,7 @@ void KW_SelfTest(void)
 			if (!ck_keenObj || !ck_keenObj->currentAction)
 				QuitF("KW_SelfTest: Foray in the Forest map %d has no Keen!", lv);
 			KW_TestLevelSpritesCached("fitf", lv);
+			CK_DrawStatusWindow(); // its own window; the engine's would use Keen 5's pictures
 			bool god = ck_godMode;
 			ck_godMode = true;
 			KW_TestRunObjects(150);

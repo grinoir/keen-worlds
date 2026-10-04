@@ -158,6 +158,123 @@ void SD_PlayTwoSounds(int first, int second)
 	SD_PlaySound(first);
 }
 
+// ---- Its status window (DrawStatusWindow in CK_PLAY.C) ----
+
+void CK_DrawLongRight(int x, int y, int digits, int zerotile, int value);
+void CK_MeasureMultiline(const char *str, uint16_t *w, uint16_t *h);
+
+void FF_DrawStatusWindow(void)
+{
+	int winX = 64, winY = 16, winW = 184, winH = 144, n;
+	VHB_DrawTile8(winX, winY, 36);
+	VHB_DrawTile8(winX, winY + winH, 41);
+	for (n = winX + 8; winX + winW - 8 >= n; n += 8)
+	{
+		VHB_DrawTile8(n, winY, 37);
+		VHB_DrawTile8(n, winY + winH, 42);
+	}
+	VHB_DrawTile8(n, winY, 38);
+	VHB_DrawTile8(n, winY + winH, 43);
+	for (n = winY + 8; winY + winH - 8 >= n; n += 8)
+	{
+		VHB_DrawTile8(winX, n, 39);
+		VHB_DrawTile8(winX + winW, n, 40);
+	}
+	VHB_Bar(72, 24, 176, 136, 7);
+
+	int oldcolor = US_GetPrintColour();
+	uint16_t strW, strH;
+	const char *name = CK_STRINGELEMENT(ck_str_levelNames, ca_mapOn);
+
+	US_SetPrintY(27);
+	US_SetWindowX(80);
+	US_SetWindowW(161);
+	US_SetPrintColour(15);
+	US_CPrint("LOCATION");
+	VHB_Bar(79 - 1, 38 - 1, 162 + 2, 20 + 2, 8);
+	VHB_Bar(79, 38, 162, 20, 0);
+	CK_MeasureMultiline(name, &strW, &strH);
+	US_SetPrintY((20 - strH) / 2 + 40 - 2);
+	US_SetPrintColour(10);
+	US_CPrint(name);
+
+	US_SetPrintY(61);
+	US_SetWindowX(80);
+	US_SetWindowW(64);
+	US_SetPrintColour(15);
+	US_CPrint("EXTRA");
+	VHB_Bar(79, 71, 66, 10, 0);
+	CK_DrawLongRight(88, 72, 7, 6, ck_gameState.nextKeenAt);
+	VHB_Bar(95, 80, 1, 1, 8);
+	VHB_Bar(119, 80, 1, 1, 8);
+
+	US_SetPrintY(85);
+	US_SetWindowX(81);
+	US_SetWindowW(64);
+	US_CPrint("SCORE");
+	VHB_Bar(79, 95, 66, 10, 0);
+	CK_DrawLongRight(88, 96, 7, 6, ck_gameState.keenScore);
+	VHB_Bar(95, 104, 1, 1, 8);
+	VHB_Bar(119, 104, 1, 1, 8);
+
+	US_SetPrintY(61);
+	US_SetWindowX(177);
+	US_SetWindowW(64);
+	US_SetPrintColour(15);
+	US_CPrint("LEVEL");
+	VHB_Bar(175, 71, 66, 10, 0);
+	US_SetPrintY(72);
+	US_SetWindowX(176);
+	US_SetWindowW(64);
+	US_SetPrintColour(10);
+	US_CPrint(ff_state.cheated ? "CHEATER!" : ck_gameState.difficulty == D_Easy ? "Easy" :
+		ck_gameState.difficulty == D_Normal ? "Normal" : ck_gameState.difficulty == D_Hard ? "Hard" : "Expert");
+
+	US_SetPrintX(194);
+	US_SetPrintY(85);
+	US_SetPrintColour(15);
+	US_Print("KEYS");
+	VHB_Bar(175, 95, 66, 10, 0);
+	for (int i = 0, x = 184; i < 4; i++, x += 13)
+		VHB_DrawTile8(x, 96, ck_gameState.keyGems[i] ? i : 4);
+
+	US_SetPrintX(80);
+	US_SetPrintY(144);
+	US_Print("AMMO");
+	VHB_Bar(127, 143, 18, 10, 0);
+	CK_DrawLongRight(128, 144, 2, 6, ck_gameState.numShots);
+
+	US_SetPrintX(80);
+	US_SetPrintY(112);
+	US_Print("KEENS");
+	VHB_Bar(127, 111, 18, 10, 0);
+	CK_DrawLongRight(128, 112, 2, 6, ck_gameState.numLives);
+
+	US_SetPrintX(80);
+	US_SetPrintY(128);
+	US_Print("DROPS");
+	VHB_Bar(127, 127, 18, 10, 0);
+	CK_DrawLongRight(128, 128, 2, 6, ck_gameState.numCentilife);
+
+	// The six collectibles. TODO: the source draws eight rows of each
+	// sprite, dark grey while it is missing; here only those found, whole,
+	// and only if the sprite is in memory.
+	US_SetPrintY(117);
+	US_SetWindowX(177);
+	US_SetWindowW(64);
+	US_CPrint("GOODIES");
+	VHB_Bar(175, 127, 66, 10, 0);
+	VHB_Bar(175, 143, 66, 10, 0);
+	uint16_t bits = ff_state.collectiblesTotal | ff_map.collectiblesNew;
+	for (int i = 0; i < 6; i++)
+	{
+		int chunk = FF_COLLECTIBLETEDDY1SPR + 2 * i;
+		if ((bits & (1 << i)) && ca_graphChunks[chunk])
+			VHB_DrawSprite(182 - 4 + 21 * (i % 3), i < 3 ? 128 : 144, chunk);
+	}
+	US_SetPrintColour(oldcolor);
+}
+
 // Its level setup: kw_ff_scan.c (ScanInfoPlane in CK_SPEC.C).
 void FF_ScanInfoPlane(void);
 void FF_ScanInfoLayer(void)

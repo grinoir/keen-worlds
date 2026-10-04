@@ -1533,12 +1533,19 @@ void CK_DrawLongRight(int x, int y, int digits, int zerotile, int value)
 }
 
 void AR_DrawStatusWindow(void); // KEEN WORLDS: Atroxian Realm (kw_arealm.c)
+bool FF_IsActive(void);
+void FF_DrawStatusWindow(void); // KEEN WORLDS: Foray in the Forest (kw_fitf.c)
 
 void CK_DrawStatusWindow(void)
 {
 	if (AR_IsActive())
 	{
 		AR_DrawStatusWindow(); // its own status window
+		return;
+	}
+	if (FF_IsActive())
+	{
+		FF_DrawStatusWindow();
 		return;
 	}
 	int si, i, oldcolor;
