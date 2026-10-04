@@ -957,9 +957,21 @@ int VL_GetTics(int wait)
 	return tics;
 }
 
+void IN_PumpEvents(); // id_in.c
+
 void VL_DelayTics(int tics)
 {
-	vl_currentBackend->waitVBLs(tics);
+	// KEEN WORLDS: wait in short slices and keep answering the window
+	// system in between. A long plain sleep (the timed pictures of the
+	// ending texts wait for seconds) makes the desktop report the game as
+	// "not responding".
+	while (tics > 0)
+	{
+		int slice = tics > 7 ? 7 : tics; // a tenth of a second
+		vl_currentBackend->waitVBLs(slice);
+		IN_PumpEvents();
+		tics -= slice;
+	}
 }
 
 void VL_Yield()
