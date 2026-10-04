@@ -298,6 +298,8 @@ void HandleWord(void)
 	}
 }
 
+static bool ck_textBlackBackground; // KEEN WORLDS, see CK_ShowTextPages
+
 void PageLayout(int show_status)
 {
 	int8_t old_print_color;
@@ -312,9 +314,11 @@ void PageLayout(int show_status)
 	VL_SetScrollCoords(0, 0);
 
 	/* Fill the background and draw the border */
-	VHB_Bar(0, 0, 320, 200, 4);
+	// KEEN WORLDS: ck_textBlackBackground gives a plain black page (some of
+	// Atroxian Realm's story screens)
+	VHB_Bar(0, 0, 320, 200, ck_textBlackBackground ? 0 : 4);
 #ifdef HAS_HELPSCREEN
-	if (ck_currentEpisode->ep != EP_CK6)
+	if (ck_currentEpisode->ep != EP_CK6 && !ck_textBlackBackground)
 	{
 		VHB_DrawBitmap(0, 0, CK_CHUNKNUM(PIC_BORDERTOP));     /* Top border */
 		VHB_DrawBitmap(0, 8, CK_CHUNKNUM(PIC_BORDERLEFT));    /* Left border */
@@ -645,10 +649,12 @@ void HelpScreens(void)
 #endif
 
 // KEEN WORLDS: show a text chunk's pages the way the ending text is shown
-// (Atroxian Realm's story and dialogue screens), with a song while it runs.
-void CK_ShowTextPages(int textChunk, int song)
+// (Atroxian Realm's story and dialogue screens), with a song while it runs,
+// on the usual red bordered page or a plain black one.
+void CK_ShowTextPages(int textChunk, int song, bool blackBackground)
 {
-	VL_ClearScreen(4);
+	ck_textBlackBackground = blackBackground;
+	VL_ClearScreen(blackBackground ? 0 : 4);
 	CA_UpLevel();
 	CA_SetGrPurge();
 	CA_CacheGrChunk(CK_CHUNKNUM(PIC_ARROWDIM));
@@ -687,7 +693,8 @@ void CK_ShowTextPages(int textChunk, int song)
 		StopMusic();
 	CA_DownLevel();
 	IN_ClearKeysDown();
-	VL_ClearScreen(4);
+	VL_ClearScreen(blackBackground ? 0 : 4);
+	ck_textBlackBackground = false;
 }
 
 void help_endgame(void)

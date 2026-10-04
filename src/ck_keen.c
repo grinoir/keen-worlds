@@ -79,6 +79,7 @@ extern void CK6_ToggleBigSwitch(CK_object *obj, bool p);
 bool AR_IsActive(void);
 bool AR_KeenVinesTile(CK_object *obj, int tileX, int tileY);
 void AR_KeenPressSwitch(CK_object *obj);
+void AR_GotHyperStar(void);
 
 void CK_KeenColFunc(CK_object *a, CK_object *b)
 {
@@ -114,7 +115,10 @@ void CK_KeenColFunc(CK_object *a, CK_object *b)
 		else if ((ck_currentEpisode->ep == EP_CK5) && (b->user1 == 12))
 		{
 			if (AR_IsActive())
-				ck_gameState.numLives += 3; // KEEN WORLDS: Atroxian Realm's 3-up
+			{
+				ck_gameState.numLives += 3; // KEEN WORLDS: Atroxian Realm's 3-up, its Hyper Star
+				AR_GotHyperStar();
+			}
 			else
 			ck_gameState.ep.ck5.securityCard = 1;
 		}

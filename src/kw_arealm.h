@@ -38,6 +38,9 @@ typedef struct AR_State
 	int32_t firebombresettimer;
 	bool endscreen_played[5];
 	bool doSecretEnding;      // touched the secret level's Krile
+	bool got3UP;              // picked up this level's Hyper Star (its 3-up item)
+	int16_t hyperstarCount;   // Hyper Stars so far, one per level
+	uint32_t hyperstarBits;   // the levels they were found in
 	int16_t atroxusBoxesPlayed;
 	int16_t atroxusBoxesLevels[3]; // the levels whose Atroxus box has been played
 } AR_State;

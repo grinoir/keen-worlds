@@ -1521,8 +1521,15 @@ void CK_DrawLongRight(int x, int y, int digits, int zerotile, int value)
 	}
 }
 
+void AR_DrawStatusWindow(void); // KEEN WORLDS: Atroxian Realm (kw_arealm.c)
+
 void CK_DrawStatusWindow(void)
 {
+	if (AR_IsActive())
+	{
+		AR_DrawStatusWindow(); // its own status window
+		return;
+	}
 	int si, i, oldcolor;
 
 	// Draw the backdrop

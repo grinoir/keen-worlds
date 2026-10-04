@@ -50,7 +50,7 @@ void AR_PhysAccelVert(CK_object *obj, int accY, int velLimit)
 	}
 }
 
-void CK_ShowTextPages(int textChunk, int song);
+void CK_ShowTextPages(int textChunk, int song, bool blackBackground);
 extern CK_EpisodeDef ar_episode;
 
 bool AR_IsActive(void)
@@ -68,8 +68,11 @@ void AR_EndScreens(int dialogue)
 		ENDING_MUS, ENDING_MUS, ENDING_MUS, NORMAL_END_MUS, ATROXUS_BOX_MUS, ATROXUS_BOX_MUS, ATROXUS_BOX_MUS};
 	if (dialogue < 0 || dialogue >= (int)(sizeof(chunks) / sizeof(chunks[0])))
 		return;
+	// Black pages for the endings, Atroxus and his boxes; the red bordered
+	// page for the Krile.
+	static const bool black[] = {true, false, false, true, false, false, true, true, false, true, true, true};
 	// Screen 6 follows screen 0 and keeps its music playing.
-	CK_ShowTextPages(chunks[dialogue], dialogue == 6 ? -1 : songs[dialogue]);
+	CK_ShowTextPages(chunks[dialogue], dialogue == 6 ? -1 : songs[dialogue], black[dialogue]);
 }
 
 void AR_WinGame(void)
@@ -451,6 +454,12 @@ void AR_KeenVines(CK_object *obj)
 	ck_gameState.levelState = LS_ARVines;
 }
 
+// Picking up the 3-up: it is the level's Hyper Star.
+void AR_GotHyperStar(void)
+{
+	ar_state.got3UP = true;
+}
+
 // A vines tile (tile property 16) under a standing Keen pulls him under,
 // once per game. The tile's info value says where on the map he comes out.
 bool AR_KeenVinesTile(CK_object *obj, int tileX, int tileY)
@@ -556,6 +565,132 @@ void AR_Misc_SetupFunctions(void)
 	CK_ACT_AddColFunction("AR_CheckPointCol", &AR_CheckPointCol);
 }
 
+// ---- Its status window (CK_DrawStatusWindow in KD_PLAY.C) ----
+// Location, score, extra Keen at, bridges, difficulty, keys, ammo, Keens,
+// sparks (its vitalin) and the two generators.
+
+void CK_DrawLongRight(int x, int y, int digits, int zerotile, int value);
+
+void AR_DrawStatusWindow(void)
+{
+	int left = 64, top = 16, width = 184, height = 144, si;
+	VHB_DrawTile8(left, top, 54);
+	VHB_DrawTile8(left, top + height, 60);
+	for (si = left + 8; left + width - 8 >= si; si += 8)
+	{
+		VHB_DrawTile8(si, top, 55);
+		VHB_DrawTile8(si, top + height, 61);
+	}
+	VHB_DrawTile8(si, top, 56);
+	VHB_DrawTile8(si, top + height, 62);
+	for (si = top + 8; top + height - 8 >= si; si += 8)
+	{
+		VHB_DrawTile8(left, si, 57);
+		VHB_DrawTile8(left + width, si, 59);
+	}
+	VHB_Bar(72, 24, 176, 136, 7);
+
+	int oldcolor = US_GetPrintColour();
+	uint16_t strW, strH;
+	const char *name = CK_STRINGELEMENT(ck_str_levelNames, ca_mapOn);
+	US_SetPrintY(28);
+	US_SetWindowX(80);
+	US_SetWindowW(160);
+	US_SetPrintColour(15);
+	US_CPrint("LOCATION");
+	VHB_Bar(79, 38, 162, 20, 15);
+	CK_MeasureMultiline(name, &strW, &strH);
+	US_SetPrintY((20 - strH) / 2 + 40 - 2);
+	US_CPrint(name);
+
+	US_SetPrintY(61);
+	US_SetWindowX(80);
+	US_SetWindowW(64);
+	US_SetPrintColour(15);
+	US_CPrint("SCORE");
+	VHB_Bar(79, 71, 66, 10, 0);
+	CK_DrawLongRight(80, 72, 8, 41, ck_gameState.keenScore);
+
+	US_SetPrintY(61);
+	US_SetWindowX(176);
+	US_SetWindowW(64);
+	US_CPrint("EXTRA");
+	VHB_Bar(175, 71, 66, 10, 0);
+	CK_DrawLongRight(176, 72, 8, 41, ck_gameState.nextKeenAt);
+
+	// The bridges work once Port Atrox (level 9) is done.
+	US_SetPrintY(85);
+	US_SetWindowX(80);
+	US_SetWindowW(64);
+	US_SetPrintColour(15);
+	US_CPrint("BRIDGES");
+	VHB_Bar(79, 95, 66, 10, 0);
+	US_SetPrintY(96);
+	US_SetWindowX(80);
+	US_SetWindowW(64);
+	US_SetPrintColour(ck_gameState.levelsDone[9] ? 12 : 8);
+	US_CPrint(ck_gameState.levelsDone[9] ? "Active" : "Inactive");
+
+	US_SetPrintY(85);
+	US_SetWindowX(176);
+	US_SetWindowW(64);
+	US_SetPrintColour(15);
+	US_CPrint("LEVEL");
+	VHB_Bar(175, 95, 66, 10, 0);
+	US_SetPrintY(96);
+	US_SetWindowX(176);
+	US_SetWindowW(64);
+	US_SetPrintColour(12);
+	US_CPrint(ck_gameState.difficulty == D_Easy ? "Easy" : ck_gameState.difficulty == D_Normal ? "Normal" : "Hard");
+
+	US_SetPrintX(80);
+	US_SetPrintY(112);
+	US_SetPrintColour(15);
+	US_Print("KEYS");
+	VHB_Bar(119, 111, 34, 10, 0);
+	for (int i = 0; i < 4; i++)
+		if (ck_gameState.keyGems[i])
+			VHB_DrawTile8(120 + i * 8, 112, 36 + i);
+
+	US_SetPrintX(176);
+	US_SetPrintY(112);
+	US_Print("AMMO");
+	VHB_Bar(215, 111, 26, 10, 0);
+	CK_DrawLongRight(216, 112, 3, 41, ck_gameState.numShots);
+
+	US_SetPrintX(80);
+	US_SetPrintY(128);
+	US_Print("KEENS");
+	VHB_Bar(127, 127, 18, 10, 0);
+	CK_DrawLongRight(128, 128, 2, 41, ck_gameState.numLives);
+
+	US_SetPrintX(176);
+	US_SetPrintY(128);
+	US_Print("SPARKS");
+	VHB_Bar(224, 127, 16, 10, 0);
+	CK_DrawLongRight(224, 128, 2, 41, ck_gameState.numCentilife);
+
+	// The two generators: struck through once destroyed (levels 6 and 7).
+	US_SetPrintX(80);
+	US_SetPrintY(146);
+	US_SetPrintColour(15);
+	US_Print("GENERATORS");
+	US_SetPrintColour(ck_gameState.levelsDone[6] ? 8 : 12);
+	US_SetPrintX(165);
+	US_SetPrintY(146);
+	VHB_Bar(160, 145, 40, 10, 0);
+	US_Print("Mines");
+	if (ck_gameState.levelsDone[6])
+		VHB_HLine(164, 164 + 32, 145 + 5, 12);
+	US_SetPrintColour(ck_gameState.levelsDone[7] ? 8 : 12);
+	VHB_Bar(240 - 36, 145, 36, 10, 0);
+	US_SetPrintX(240 - 31);
+	US_Print("Base");
+	if (ck_gameState.levelsDone[7])
+		VHB_HLine(240 - 36 + 4, 240 - 4, 145 + 5, 12);
+	US_SetPrintColour(oldcolor);
+}
+
 // ---- Keen Worlds' peaceful levels ----
 // Its object types reuse Keen 5's numbers for other things, so it has its
 // own lists. Hostile: every creature, shot and hazard. Story triggers: what
@@ -592,16 +727,21 @@ bool AR_WriteState(FS_File fp)
 		ar_state.endscreen_played[1], ar_state.endscreen_played[2], ar_state.endscreen_played[3],
 		ar_state.endscreen_played[4], ar_state.doSecretEnding, ar_state.atroxusBoxesPlayed,
 		ar_state.atroxusBoxesLevels[0], ar_state.atroxusBoxesLevels[1], ar_state.atroxusBoxesLevels[2],
-		(int16_t)ar_state.axosisNum, 0};
+		(int16_t)ar_state.axosisNum, ar_state.hyperstarCount};
+	int16_t bits[2] = {(int16_t)(ar_state.hyperstarBits & 0xFFFF), (int16_t)(ar_state.hyperstarBits >> 16)};
+	if (FS_WriteInt16LE(bits, 2, fp) != 2)
+		return false;
 	return FS_WriteInt16LE(v, 14, fp) == 14;
 }
 
 bool AR_ReadState(FS_File fp)
 {
-	int16_t v[14];
-	if (FS_ReadInt16LE(v, 14, fp) != 14)
+	int16_t v[14], bits[2];
+	if (FS_ReadInt16LE(bits, 2, fp) != 2 || FS_ReadInt16LE(v, 14, fp) != 14)
 		return false;
 	memset(&ar_state, 0, sizeof(ar_state));
+	ar_state.hyperstarBits = (uint16_t)bits[0] | ((uint32_t)(uint16_t)bits[1] << 16);
+	ar_state.hyperstarCount = v[13];
 	ar_state.vines = v[0];
 	ar_state.generatorsDestroyed = v[1];
 	for (int i = 0; i < 5; ++i)
@@ -764,6 +904,16 @@ static void AR_RestoreObject(CK_object *obj, const CK_object *saved)
 // drops the checkpoint.
 void AR_AfterLevelLoad(void)
 {
+	// Hyper Stars (CountHyperStars in KD_GAME.C): the star of the level just
+	// finished counts once, however often the level is played.
+	if (AR_IsActive() && ar_state.got3UP && ck_lastLevelFinished > 0 && ck_lastLevelFinished < 32 &&
+		!(ar_state.hyperstarBits & (1u << ck_lastLevelFinished)))
+	{
+		ar_state.hyperstarBits |= 1u << ck_lastLevelFinished;
+		ar_state.hyperstarCount++;
+	}
+	ar_state.got3UP = false;
+
 	if (!ar_checkpoint.valid)
 		return;
 	if (!AR_IsActive() || ca_mapOn != ar_checkpoint.level || ca_mapOn == 0 ||
