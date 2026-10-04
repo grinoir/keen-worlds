@@ -771,6 +771,12 @@ int main(int argc, char *argv[])
 			CK_PlayDemo(atoi(argv[i + 1]));
 			Quit(0);
 		}
+		else if (!CK_Cross_strcasecmp(argv[i], "/KWSHOT") && i + 3 < argc)
+		{
+			// KEEN WORLDS: save a picture of a level (developer tool).
+			KW_Screenshot(argv[i + 1], atoi(argv[i + 2]), argv[i + 3]);
+			Quit(0);
+		}
 		else if (!CK_Cross_strcasecmp(argv[i], "/KWTEST"))
 		{
 			// KEEN WORLDS: world-switching self-test.

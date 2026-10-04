@@ -284,9 +284,12 @@ void FF_ScanInfoLayer(void)
 	FF_ScanInfoPlane();
 }
 
+void kw_ff_map_SetupFunctions(void);
+
 void FF_SetupFunctions(void)
 {
 	kw_ff_act_SetupFunctions();
+	kw_ff_map_SetupFunctions();
 }
 
 // The player's game files and our generated support files, all in the

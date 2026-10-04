@@ -133,5 +133,6 @@ void KW_WaitForButtonsUp(void);
 
 // Developer self-test, run with /KWTEST.
 void KW_SelfTest(void);
+void KW_Screenshot(const char *worldId, int level, const char *path);
 
 #endif

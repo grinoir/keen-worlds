@@ -363,6 +363,7 @@ set(OMNISPEAK_CK_SRCS
 	src/kw_ar_act3.c
 	src/kw_fitf.c
 	src/kw_ff_act.c
+	src/kw_ff_map.c
 	src/kw_ff_phys.c
 	src/kw_ff_scan.c
 	src/kw_art.c

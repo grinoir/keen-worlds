@@ -110,6 +110,9 @@ void CK_ScoreBoxDrawTile8(int tilenum, uint8_t *dest, int destWidth, int planeSi
 	}
 }
 
+// KEEN WORLDS: ck_scoreBoxBlankTile and ck_scoreBoxDigitOffset - the small
+// tiles of the blank and of the digits (a digit's tile is its character code
+// minus the offset), for games that number them differently.
 void CK_UpdateScoreBox(CK_object *scorebox)
 {
 
@@ -152,13 +155,13 @@ void CK_UpdateScoreBox(CK_object *scorebox)
 		// Draw the leading emptiness
 		for (place = 9; place > len; place--)
 		{
-			CK_ScoreBoxDrawTile8(0x29, dest++, box.width, planeSize);
+			CK_ScoreBoxDrawTile8(CK_INT(ck_scoreBoxBlankTile, 0x29), dest++, box.width, planeSize);
 		}
 
 		// Draw the score
 		for (char *c = buf; *c != 0; c++)
 		{
-			CK_ScoreBoxDrawTile8(*c - 6, dest++, box.width, planeSize);
+			CK_ScoreBoxDrawTile8(*c - CK_INT(ck_scoreBoxDigitOffset, 6), dest++, box.width, planeSize);
 		}
 
 		scorebox->user1 = ck_gameState.keenScore >> 16;
@@ -189,13 +192,13 @@ void CK_UpdateScoreBox(CK_object *scorebox)
 		// Draw the leading emptiness
 		for (place = 2; place > len; place--)
 		{
-			CK_ScoreBoxDrawTile8(0x29, dest++, box.width, planeSize);
+			CK_ScoreBoxDrawTile8(CK_INT(ck_scoreBoxBlankTile, 0x29), dest++, box.width, planeSize);
 		}
 
 		// Draw the score
 		for (char *c = buf; *c != 0; c++)
 		{
-			CK_ScoreBoxDrawTile8(*c - 6, dest++, box.width, planeSize);
+			CK_ScoreBoxDrawTile8(*c - CK_INT(ck_scoreBoxDigitOffset, 6), dest++, box.width, planeSize);
 		}
 
 		scorebox->user3 = ck_gameState.numShots;
@@ -226,13 +229,13 @@ void CK_UpdateScoreBox(CK_object *scorebox)
 		// Draw the leading emptiness
 		for (place = 2; place > len; place--)
 		{
-			CK_ScoreBoxDrawTile8(0x29, dest++, box.width, planeSize);
+			CK_ScoreBoxDrawTile8(CK_INT(ck_scoreBoxBlankTile, 0x29), dest++, box.width, planeSize);
 		}
 
 		// Draw the score
 		for (char *c = buf; *c != 0; c++)
 		{
-			CK_ScoreBoxDrawTile8(*c - 6, dest++, box.width, planeSize);
+			CK_ScoreBoxDrawTile8(*c - CK_INT(ck_scoreBoxDigitOffset, 6), dest++, box.width, planeSize);
 		}
 
 		scorebox->user4 = ck_gameState.numLives;

@@ -1471,6 +1471,84 @@ void AR_AfterLevelLoad(void);
 void AR_ClearCheckpoint(void);
 bool AR_HasCheckpoint(void);
 
+#include "id_vl_private.h"
+
+// Developer tool (/KWSHOT world level file.ppm): load a level of a world, draw
+// one frame and save the screen as a picture. Needs a renderer that keeps
+// pixels (not the null one): build with RENDERER=sdl2sw and run with
+// SDL_VIDEODRIVER=dummy to use it without a display.
+void KW_Screenshot(const char *worldId, int level, const char *path)
+{
+	static const uint8_t ega[16][3] = {{0, 0, 0}, {0, 0, 170}, {0, 170, 0}, {0, 170, 170}, {170, 0, 0}, {170, 0, 170},
+		{170, 85, 0}, {170, 170, 170}, {85, 85, 85}, {85, 85, 255}, {85, 255, 85}, {85, 255, 255}, {255, 85, 85},
+		{255, 85, 255}, {255, 255, 85}, {255, 255, 255}};
+	int world = KW_WorldById(worldId);
+	if (world < 0 || !KW_IsWorldPresent(world))
+		QuitF("KW_Screenshot: world %s isn't installed", worldId);
+	kw_cardsOff = true;
+	CK_NewGame();
+	ck_gameState.difficulty = D_Normal;
+	if (world != KW_CurrentWorld())
+		KW_SwitchWorld(world);
+	ck_gameState.currentLevel = level;
+	CK_LoadLevel(true, true);
+	ck_gameState.levelState = LS_Playing;
+	SD_SetSpriteSync(2);
+	CK_CentreCamera(ck_keenObj);
+	for (CK_object *obj = ck_keenObj; obj; obj = obj->next)
+	{
+		ck_nextX = ck_nextY = 0;
+		if (obj->currentAction && obj->currentAction->draw && CK_ObjectVisible(obj))
+			obj->currentAction->draw(obj);
+	}
+	// KW_SHOT_FRAMES=n in the environment: let the level run n frames first
+	// (objects think, move and draw as in the play loop; no input, no
+	// collisions between objects).
+	int frames = getenv("KW_SHOT_FRAMES") ? atoi(getenv("KW_SHOT_FRAMES")) : 0;
+	for (int frame = 0; frame < frames && ck_gameState.levelState == LS_Playing; ++frame)
+	{
+		SD_SetLastTimeCount(SD_GetLastTimeCount() + 2);
+		for (CK_object *obj = ck_keenObj; obj;)
+		{
+			CK_object *next = obj->next;
+			if (obj->active == OBJ_INACTIVE && CK_ObjectVisible(obj))
+				obj->active = OBJ_ACTIVE;
+			if (obj->active != OBJ_INACTIVE && obj->currentAction)
+				CK_RunAction(obj);
+			obj = next;
+		}
+		for (CK_object *obj = ck_keenObj; obj; obj = obj->next)
+			if (obj->visible && obj->currentAction && obj->currentAction->draw)
+			{
+				obj->visible = false;
+				obj->currentAction->draw(obj);
+			}
+		if (ca_mapOn == 0)
+			CK_MapCamera(ck_keenObj);
+		else
+			CK_NormalCamera(ck_keenObj);
+		RF_Refresh();
+	}
+	RF_Refresh();
+	void *screen = vl_emuegavgaadapter.screen;
+	int sx = VL_GetScrollX() & 15, sy = VL_GetScrollY() & 15;
+	FILE *f = fopen(path, "wb");
+	if (!f)
+		QuitF("KW_Screenshot: can't write %s", path);
+	fprintf(f, "P6\n320 200\n255\n");
+	for (int y = 0; y < 200; ++y)
+		for (int x = 0; x < 320; ++x)
+			fwrite(ega[VL_SurfacePGet(screen, x + sx, y + sy) & 15], 1, 3, f);
+	fclose(f);
+	int objects = 0;
+	for (CK_object *obj = ck_keenObj; obj; obj = obj->next)
+		++objects;
+	printf("KW_Screenshot: %s level %d (%dx%d), view at tile %d,%d, %d objects, Keen at tile %d,%d sprite %d layer %d -> %s\n",
+		worldId, level, CA_GetMapWidth(), CA_GetMapHeight(), (int)RF_UnitToTile(rf_scrollXUnit),
+		(int)RF_UnitToTile(rf_scrollYUnit), objects, (int)RF_UnitToTile(ck_keenObj->posX),
+		(int)RF_UnitToTile(ck_keenObj->posY), ck_keenObj->gfxChunk, ck_keenObj->zLayer, path);
+}
+
 // Developer self-test (/KWTEST): hop between all worlds several times, loading
 // the world map and two levels each visit, and log memory use after every hop
 // so leaks show up as steady growth.

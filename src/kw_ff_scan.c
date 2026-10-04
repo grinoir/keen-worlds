@@ -6,6 +6,8 @@ CK_SPEC.C of its source (Nisaba and K1n9_Duk3; GPL v2 or later).
 #include "kw_fitf.h"
 #include "kw_ff_act.h"
 
+void FF_SpawnWorldKeen(int tileX, int tileY); // kw_ff_map.c
+
 // A sprite cache of its GRAPHCKS.H (START_LUMP/END_LUMP there)
 static void FF_NeedChunks(int first, int last)
 {
@@ -73,7 +75,7 @@ void FF_ScanInfoPlane(void)
 					break;
 
 				case 3:
-					CK_SpawnMapKeen(x, y); // TODO: its own map Keen (SpawnWorldKeen in CK_KEEN2.C)
+					FF_SpawnWorldKeen(x, y);
 					NeedLump(WORLDKEEN);
 
 					CK_DemoSignSpawn();
