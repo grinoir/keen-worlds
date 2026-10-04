@@ -297,6 +297,7 @@ static void KW_LoadState(const KW_WorldState *w)
 }
 
 static bool kw_debugEnding; // the ending was started with W + E
+void AR_DebugCompleteState(void); // Atroxian Realm's part of it (kw_arealm.c)
 
 void KW_AfterWorldEnding(void)
 {
@@ -319,6 +320,24 @@ void KW_AfterWorldEnding(void)
 		for (int lv = 1; lv < CK_LEVELS_TRACKED; ++lv)
 			if (CA_MapExists(lv) && lv != CK_INT(CK_highScoreLevel, -1) && !ck_gameState.levelsDone[lv])
 				ck_gameState.levelsDone[lv] = 1;
+		// ...and Keen has the world's story items, as after a real play-through.
+		switch (ck_currentEpisode->ep)
+		{
+#ifdef WITH_KEEN4
+		case EP_CK4:
+			ck_gameState.ep.ck4.wetsuit = 1;
+			ck_gameState.ep.ck4.membersRescued = CK_INT(CK4_NumCouncilsToRescue, 8);
+			break;
+#endif
+#ifdef WITH_KEEN6
+		case EP_CK6: // as the game's own item cheat gives them
+			ck_gameState.ep.ck6.sandwich = ck_gameState.ep.ck6.rope = ck_gameState.ep.ck6.passcard = 1;
+			break;
+#endif
+		default:
+			break;
+		}
+		AR_DebugCompleteState();
 		const KW_Ship *ship = KW_ShipFor(kw_currentWorld);
 		if (ship)
 			ck_gameState.currentLevel = ship->level;

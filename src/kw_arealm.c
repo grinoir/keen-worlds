@@ -616,6 +616,16 @@ bool AR_ReadState(FS_File fp)
 	return true;
 }
 
+// For the debug ending: its state as after a real play-through (both
+// generators destroyed, the vines already met).
+void AR_DebugCompleteState(void)
+{
+	if (!AR_IsActive())
+		return;
+	ar_state.generatorsDestroyed = 2;
+	ar_state.vines = 2;
+}
+
 // A new game: nothing of its extra state carries over.
 void AR_ResetState(void)
 {
