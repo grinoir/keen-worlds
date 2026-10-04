@@ -1335,6 +1335,9 @@ void CK_CheckKeys()
 	}
 }
 
+bool FF_IsActive(void);
+extern bool ff_keenUpHeld; // kw_fitf.c
+
 void CK_HandleInput()
 {
 	IN_ReadControls(0, &ck_inputFrame);
@@ -1419,6 +1422,12 @@ void CK_HandleInput()
 	{
 		// TODO: Gravis Gamepad input handling
 	}
+
+	// KEEN WORLDS: Foray in the Forest's Keen keeps "up was held" (doors,
+	// switches): cleared once up is let go (PollControls in its CK_PLAY.C).
+	// TODO: its reversed controls while stunned or under the Brain Fucl.
+	if (FF_IsActive() && ck_inputFrame.yDirection != IN_motion_Up)
+		ff_keenUpHeld = false;
 }
 
 void StopMusic(void)

@@ -1,4 +1,5 @@
 #include "kw_fitf.h"
+#include "kw_ff_keen.h"
 
 typedef int turntype_fwd;
 void FF_TurnX(CK_object *ob);
@@ -443,11 +444,11 @@ void FF_C_LethalBlock(CK_object *ob, CK_object *hit)
 {
 	if (hit->type == CT_Stunner)
 	{
-		CK_ShotHit(hit);
+		FF_ExplodeShot(hit);
 	}
 	else if (hit->type == CT_Player)
 	{
-		CK_KillKeen();
+		FF_KillKeen();
 	}
 }
 
@@ -455,7 +456,7 @@ void FF_C_Lethal(CK_object *ob, CK_object *hit)
 {
 	if (hit->type == CT_Player)
 	{
-		CK_KillKeen();
+		FF_KillKeen();
 	}
 }
 
@@ -604,7 +605,7 @@ void FF_StunObj(CK_object *ob, CK_object *shot, CK_action *stunstate)
 {
 	// Kill the stunner shot	(K1n9_Duk3 fix: only when it's not a NULL pointer)
 	if (shot)
-		CK_ShotHit(shot);
+		FF_ExplodeShot(shot);
 
 	FF_ObjDropNisasi(ob);
 
@@ -959,7 +960,7 @@ void FF_SpawnDropPlat(int tileX, int tileY)
 void FF_T_DropPlatSit (CK_object *ob)
 {
 
-	if (ob == ff_map.riding)
+	if (ob == ck_keenState.platform)
 	{
 		ck_nextY = SD_GetSpriteSync() * 16;
 		ob->velY = 0;
@@ -985,14 +986,14 @@ void FF_T_DropPlatFall (CK_object *ob)
 	if ((ob->clipRects.tileY2 != newYT) && (INFOSPOT(ob->clipRects.tileX1, newYT) == PLATFORMBLOCK))
 	{
 		ck_nextY = 0xFF - (ob->clipRects.unitY2 & 0xFF);
-		if (ff_map.riding != ob)
+		if (ck_keenState.platform != ob)
 			ob->currentAction = CK_ACTION(FF_ACT_dropplatrise);
 	}
 }
 
 void FF_T_DropPlatRise (CK_object *ob)
 {
-	if (ff_map.riding == ob)
+	if (ck_keenState.platform == ob)
 	{
 		ob->velY = 0;
 		ob->currentAction = CK_ACTION(FF_ACT_dropplatfall);
@@ -1083,7 +1084,7 @@ void FF_C_Slug(CK_object *a, CK_object *b)
 {
 	if (b->type == CT_Player)
 	{
-		CK_KillKeen();
+		FF_KillKeen();
 	}
 	else if (b->type == CT_Stunner)
 	{
@@ -1118,7 +1119,7 @@ void FF_C_SlugSlime(CK_object *a, CK_object *b)
 	{
 	case CT_Player:
 		if (a->currentAction->next)
-			CK_KillKeen();
+			FF_KillKeen();
 		break;
 #ifdef EXTRA_INTERACTIONS
 	case FF_CT_CouncilMember:
@@ -1461,7 +1462,7 @@ void FF_C_PestFly(CK_object *a, CK_object *b)
 {
 	if (b->type == CT_Player)
 	{
-		CK_KillKeen();
+		FF_KillKeen();
 	}
 	// There's no "else" in the original Keen 4 EXE so, so let's omit it for
 	// the sake of consistency, even if there's no change to behaviors
@@ -1476,7 +1477,7 @@ void FF_C_PestFly(CK_object *a, CK_object *b)
 		else if (b->yDirection == IN_motion_Up)
 			a->velY = -20;
 
-		CK_ShotHit(b);
+		FF_ExplodeShot(b);
 	}
 }
 
@@ -2175,7 +2176,7 @@ void FF_C_XkyLickAttack(CK_object *a, CK_object *b)
 	}
 	else if (b->type == CT_Player)
 	{
-		CK_KillKeen();
+		FF_KillKeen();
 	}
 	else
 	{
@@ -2627,7 +2628,7 @@ void FF_C_Chem(CK_object *a, CK_object *b)
 		a->user2 = 12;	// cycle through all 6 frames twice
 		break;
 	case CT_Stunner:
-		CK_ShotHit(b);
+		FF_ExplodeShot(b);
 		CK_SetAction2(a, CK_ACTION(FF_ACT_ChemCycle));
 		a->user2 = 12;	// cycle through all 6 frames twice
 		break;
@@ -2677,7 +2678,7 @@ void FF_SpawnLogPlatform(int tileX, int tileY, int xdir)
 
 void FF_T_Log(CK_object *ob)
 {
-	if (ob == ff_map.riding)
+	if (ob == ck_keenState.platform)
 	{
 		// Keen is standing on this log, so make it sink slowly:
 		ck_nextY = SD_GetSpriteSync();
@@ -2686,7 +2687,7 @@ void FF_T_Log(CK_object *ob)
 		{
 			// make Keen fall off:
 			ob->type = FF_CT_SlipperyLog;
-			ff_map.riding = NULL;
+			ck_keenState.platform = NULL;
 		}
 	}
 	else if (ob->posY > ob->user1)
@@ -2734,7 +2735,7 @@ void FF_R_Log(CK_object *ob)
 	if (ob->topTI)
 	{
 		// log has hit the ground
-		if (ob == ff_map.riding)
+		if (ob == ck_keenState.platform)
 		{
 			// log is sinking, so stop moving left/right:
 			if (ob->xDirection != IN_motion_None)
@@ -2910,7 +2911,7 @@ void FF_WormouthBiteContact(CK_object *ob, CK_object *hit)
 			|| ob->xDirection == IN_motion_Left && ob->posX < hit->posX)
 			return;
 		
-		CK_KillKeen();
+		FF_KillKeen();
 	}
 	else
 	{
@@ -3045,7 +3046,7 @@ void FF_C_Shrubbery(CK_object *ob, CK_object *hit)
 		}
 		break;
 	case CT_Stunner:
-		CK_ShotHit(hit);
+		FF_ExplodeShot(hit);
 		if (ob->gfxChunk < FF_SHRUBBERYGETUPSPR)
 		{
 			CK_SetAction2(ob, CK_ACTION(FF_ACT_Shrubbery));
@@ -3271,10 +3272,10 @@ void FF_C_Bounder(CK_object *ob, CK_object *hit)
 	switch (hit->type)
 	{
 	case CT_Player:
-		CK_KillKeen();
+		FF_KillKeen();
 		break;
 	case CT_Stunner:
-		CK_ShotHit(hit);
+		FF_ExplodeShot(hit);
 		CK_SetAction2(ob, CK_ACTION(FF_ACT_BounderStunned));
 	/*
 		for (ob=player; ob; ob=ob->next)
@@ -3385,10 +3386,10 @@ void FF_C_Tentacle(CK_object *ob, CK_object *hit)
 	switch (hit->type)
 	{
 	case CT_Player:
-		CK_KillKeen();
+		FF_KillKeen();
 		break;
 	case CT_Stunner:
-		CK_ShotHit(hit);	// shot explodes but doesn't do anything else
+		FF_ExplodeShot(hit);	// shot explodes but doesn't do anything else
 		break;
 	}
 }
@@ -3548,10 +3549,10 @@ void FF_C_Poleknawel(CK_object *ob, CK_object *hit)
 	switch (hit->type)
 	{
 	case CT_Player:
-		CK_KillKeen();
+		FF_KillKeen();
 		break;
 	case CT_Stunner:
-		CK_ShotHit(hit);
+		FF_ExplodeShot(hit);
 		FF_ObjDropNisasi(ob);
 		ob->clipped = CLIP_normal;
 		CK_SetAction2(ob, CK_ACTION(FF_ACT_PoleknawelFall));
@@ -3695,7 +3696,7 @@ void FF_C_Kitten(CK_object *ob, CK_object *hit)
 		FF_ObjDropNisasi(ob);
 		break;
 	case CT_Stunner:
-		CK_ShotHit(hit);
+		FF_ExplodeShot(hit);
 		CK_SetAction2(ob, CK_ACTION(FF_ACT_KittenRoll1));
 		ob->timeUntillThink = 20;
 		FF_ObjDropNisasi(ob);
@@ -3916,7 +3917,7 @@ void FF_C_GellyGhost(CK_object *ob, CK_object *hit)
 			ob->velY += 24;
 			ob->user1 += 3*256;
 		}
-		CK_ShotHit(hit);
+		FF_ExplodeShot(hit);
 		break;
 	}
 }
@@ -4096,12 +4097,12 @@ void FF_C_Roots(CK_object *ob, CK_object *hit)
 	switch (hit->type)
 	{
 	case CT_Player:
-		CK_KillKeen();
+		FF_KillKeen();
 		break;
 	case CT_Stunner:
 		if (ob->gfxChunk > FF_ROOTS2SPR)
 			break;
-		CK_ShotHit(hit);
+		FF_ExplodeShot(hit);
 		if (ob->gfxChunk == FF_ROOTS2SPR)
 		{
 			ob->user1 = 10;	// delay for vanishing animation
@@ -4174,7 +4175,7 @@ void  FF_PushKeenX(CK_object *hit, CK_object *ob)
 		int oldY = hit->posY;
 		int oldPush = hit->currentAction->stickToGround;
 		
-		if (ff_map.riding)
+		if (ck_keenState.platform)
 			hit->currentAction->stickToGround = 0;	// don't push Keen down when he's on a platform object
 		
 		ff_map.playerkludgeclipcancel = true;
@@ -4268,7 +4269,7 @@ void FF_C_Yeti(CK_object *ob, CK_object *hit)
 		FF_PushKeenX(hit, ob);
 		break;
 	case CT_Stunner:
-		CK_ShotHit(hit);
+		FF_ExplodeShot(hit);
 		ob->user4 = 35;	// half a second of shaking
 
 		//if (++ob->user1 >= 5)
@@ -4616,14 +4617,14 @@ void FF_T_Cloud(CK_object *ob)
 	//
 	// version 1: make the cloud sink when Keen stands on it
 	//
-	if (ob == ff_map.riding)
+	if (ob == ck_keenState.platform)
 	{
 		// Keen is standing on the cloud, so make it move down:
 		ck_nextY = SD_GetSpriteSync();
 		if (ob->posY - ob->user1 >= 3*70)
 		{
 			// make Keen fall off
-			ff_map.riding = NULL;
+			ck_keenState.platform = NULL;
 			ob->type = CT_Friendly;
 		}
 	}
@@ -4639,14 +4640,14 @@ void FF_T_Cloud(CK_object *ob)
 	//
 	// version 2: make Keen sink into the cloud
 	//
-	if (ob == ff_map.riding)
+	if (ob == ck_keenState.platform)
 	{
 		// Keen is standing on the cloud, so make Keen sink into it by hacking the cloud's hitbox:
 		ob->clipRects.unitY1 += ob->gfxChunk? SD_GetSpriteSync()*2 : SD_GetSpriteSync();
 		if (ob->clipRects.unitY1 >= ob->clipRects.unitY2)
 		{
 			// make Keen fall off
-			ff_map.riding = NULL;
+			ck_keenState.platform = NULL;
 			ob->type = CT_Friendly;
 		}
 	}
@@ -4810,18 +4811,18 @@ void FF_C_Molet(CK_object *ob, CK_object *hit)
 			// molet is facing left
 			// only the tip of the drill (leftmost side of the molet's hitbox) is deadly
 			if (hit->clipRects.unitX1 <= ob->clipRects.unitX1 && hit->clipRects.unitX2 >= ob->clipRects.unitX1)
-				CK_KillKeen();
+				FF_KillKeen();
 		}
 		else
 		{
 			// molet is facing right
 			// only the tip of the drill (rightmost side of the molet's hitbox) is deadly
 			if (hit->clipRects.unitX1 <= ob->clipRects.unitX2 && hit->clipRects.unitX2 >= ob->clipRects.unitX2)
-				CK_KillKeen();
+				FF_KillKeen();
 		}
 		break;
 	case CT_Stunner:
-		CK_ShotHit(hit);
+		FF_ExplodeShot(hit);
 		break;
 		
 #ifdef EXTRA_INTERACTIONS
@@ -5202,7 +5203,7 @@ void FF_C_Bird(CK_object *ob, CK_object *hit)
 	switch (hit->type)
 	{
 	case CT_Player:
-		CK_KillKeen();
+		FF_KillKeen();
 		break;
 	case CT_Stunner:
 		if (++ob->user3 == 2)
@@ -5212,7 +5213,7 @@ void FF_C_Bird(CK_object *ob, CK_object *hit)
 		}
 		else
 		{
-			CK_ShotHit(hit);
+			FF_ExplodeShot(hit);
 			if (ob->currentAction != CK_ACTION(FF_ACT_BirdLayEgg))	// don't restart the shaking animation if it's playing already
 			{
 				SD_PlaySound(FF_BIRDLAYSEGGSND);
@@ -5388,7 +5389,7 @@ void FF_C_BirdEgg(CK_object *ob, CK_object *hit)
 		switch (hit->type)
 		{
 		case CT_Stunner:
-			CK_ShotHit(hit);
+			FF_ExplodeShot(hit);
 			// no break here!
 		case CT_Player:
 			// break the egg:
@@ -5580,7 +5581,7 @@ void FF_T_SneakyTree(CK_object *ob)
 			}
 		}
 	}
-	else if (ob == ff_map.riding || ob->user4)
+	else if (ob == ck_keenState.platform || ob->user4)
 	{
 		if ((ob->actionTimer += SD_GetSpriteSync()) >= SNEAKYTREE_LOOKDELAY)
 		{
@@ -5920,7 +5921,7 @@ void FF_C_Croc(CK_object *ob, CK_object *hit)
 	if (hit->type == CT_Player
 		&& ob->gfxChunk >= FF_CROCOTRAPOPENR1SPR && ob->gfxChunk <= FF_CROCOTRAPSNAP1SPR)
 	{
-		CK_KillKeen();
+		FF_KillKeen();
 		if (ob->currentAction == CK_ACTION(FF_ACT_CrocTrap))
 		{
 			ob->gfxChunk = FF_CROCOTRAPSNAP1SPR;
@@ -6772,10 +6773,10 @@ void FF_C_Warble(CK_object *ob, CK_object *hit)
 	switch (hit->type)
 	{
 	case CT_Player:
-		CK_KillKeen();
+		FF_KillKeen();
 		break;
 	case CT_Stunner:
-		CK_ShotHit(hit);
+		FF_ExplodeShot(hit);
 		if (ob->user3++)
 		{
 			ob->user2 = 3*70;	// stay hidden for 3 seconds
@@ -7210,8 +7211,8 @@ void FF_C_Nisasi(CK_object *ob, CK_object *hit)
 			hit->velX = hit->actionTimer = 0;	// stop moving
 			hit->user1 = ST_RETRACT;
 		}
-		if (hit == ff_map.riding)
-			ff_map.riding = NULL;
+		if (hit == ck_keenState.platform)
+			ck_keenState.platform = NULL;
 		break;
 	case FF_CT_Kitten:
 		if (hit->currentAction->think != &FF_T_KittenIdle)
@@ -8880,7 +8881,7 @@ void FF_C_Nipnap(CK_object *ob, CK_object *hit)
 		}
 		break;
 	case CT_Stunner:
-		CK_ShotHit(hit);
+		FF_ExplodeShot(hit);
 		break;
 	}
 }
@@ -9392,10 +9393,10 @@ void FF_C_Crab(CK_object *ob, CK_object *hit)
 	switch (hit->type)
 	{
 	case CT_Player:
-		CK_KillKeen();
+		FF_KillKeen();
 		break;
 	case CT_Stunner:
-		CK_ShotHit(hit);
+		FF_ExplodeShot(hit);
 		ob->clipped = FF_CLIP_custommid;
 		if (ob->currentAction == CK_ACTION(FF_ACT_CrabWall))
 			ob->xDirection = -ob->xDirection;	// walk away from the wall after landing
@@ -9727,7 +9728,7 @@ void FF_C_Fungus(CK_object *ob, CK_object *hit)
 		switch (ob->user1)
 		{
 		case FU_WALK:
-			CK_KillKeen();
+			FF_KillKeen();
 			break;
 
 		case FU_IDLE:
@@ -9742,7 +9743,7 @@ void FF_C_Fungus(CK_object *ob, CK_object *hit)
 		{
 		case FU_WALK:
 		case FU_WAKEUP:
-			CK_ShotHit(hit);
+			FF_ExplodeShot(hit);
 			if (ob->gfxChunk != FF_FUNGUSAMONGUSSTUNNEDSPR)
 			{
 				ob->posY -= 9*16;
@@ -10214,7 +10215,7 @@ void FF_C_FallBlock(CK_object *ob, CK_object *hit)
 		}
 		break;
 	case CT_Stunner:
-		CK_ShotHit(hit);
+		FF_ExplodeShot(hit);
 		break;
 	}
 }
@@ -10308,7 +10309,7 @@ void FF_C_Obelisk(CK_object *ob, CK_object *hit)
 	case CT_Stunner:
 		// make it shake and sink:
 		ob->user2 = OBELISK_PERSHOT;
-		CK_ShotHit(hit);
+		FF_ExplodeShot(hit);
 		break;
 	}
 }
@@ -10643,7 +10644,7 @@ void FF_C_Mummy(CK_object *ob, CK_object *hit)
 		break;
 
 	case CT_Stunner:
-		CK_ShotHit(hit);
+		FF_ExplodeShot(hit);
 		CK_SetAction2(ob, CK_ACTION(FF_ACT_Mummy));
 		ob->user1 = MUMMY_SINK;
 		break;

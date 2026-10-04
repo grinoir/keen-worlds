@@ -700,6 +700,8 @@ static int ck_cacheCountdownNum, ck_cacheBoxChunksPerPic, ck_cacheBoxChunkCounte
 bool FF_IsActive(void); // KEEN WORLDS: Foray in the Forest has its own box (kw_fitf.c)
 void FF_BeginCacheBox(const char *title, int numChunks);
 void FF_UpdateCacheBox(void);
+void FF_LevelEnded(void);
+void FF_AfterLevelEnded(void);
 
 void CK_BeginCacheBox(const char *title, int numChunks)
 {
@@ -984,6 +986,10 @@ void CK_GameLoop()
 		}
 
 		ck_lastLevelFinished = -1;
+		// KEEN WORLDS: Foray in the Forest's own ways of ending a level
+		// (kw_fitf.c); it may change the level state for the cases below.
+		if (FF_IsActive())
+			FF_LevelEnded();
 		switch (ck_gameState.levelState)
 		{
 		case LS_Died:
@@ -1154,6 +1160,9 @@ void CK_GameLoop()
 			break;
 #endif
 		}
+
+		if (FF_IsActive())
+			FF_AfterLevelEnded();
 
 		if (ck_gameState.numLives < 0)
 			break;

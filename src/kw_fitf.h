@@ -165,6 +165,17 @@ static inline uint16_t FF_MapAt(int plane, unsigned off)
 }
 
 #define SIGN(x) ((x) > 0 ? 1 : -1)
+#ifndef max
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#endif
+#define DEFAULT_SHOTS 5
+#define ObjectsCollide(a, b) ((a)->clipRects.unitX2 > (b)->clipRects.unitX1 && (a)->clipRects.unitX1 < (b)->clipRects.unitX2 && \
+	(a)->clipRects.unitY1 < (b)->clipRects.unitY2 && (a)->clipRects.unitY2 > (b)->clipRects.unitY1)
+// The tiles on screen (its originxtile...)
+#define originxtile RF_UnitToTile(rf_scrollXUnit)
+#define originytile RF_UnitToTile(rf_scrollYUnit)
+#define originxtilemax (originxtile + 20 - 1)
+#define originytilemax (originytile + 13 - 1)
 #define FF_D_Expert 4 // its fourth difficulty
 #define FF_CLIP_custommid CLIP_normal // TODO: its custom clip box (CK_CustomClipRects)
 
@@ -177,26 +188,23 @@ void FF_DrawSprite(RF_SpriteDrawEntry **sde, int x, int y, int chunk, int drawty
 #define RF_PlaceSpriteAfterClipped(user, x, y, chunk, type, z, after, a, b) RF_AddSpriteDrawUsing16BitOffset(user, x, y, chunk, type, z)
 
 // State kept outside its structures
-extern bool ff_keenKilled, ff_keenUpHeld;
+extern bool ff_keenKilled, ff_keenUpHeld, ff_keenMustAdjustNextX;
 extern int ff_brainfucled;
 
 // ---- Parts of its other files the creatures call (kw_fitf.c) ----
-void FF_StunKeen(uint16_t midx);
-bool FF_KeenIsDead(void);
 void FF_MoveObjVert(CK_object *ob, int ymove);
 void FF_MoveObjHoriz(CK_object *ob, int xmove);
 void FF_CalcTileClipRects(CK_object *ob);
-void FF_SpawnKeen(int tileX, int tileY, int direction);
-void FF_KeenContact(CK_object *ob, CK_object *hit);
-void FF_KeenWalkThink(CK_object *ob);
-void FF_KeenPauseThink(CK_object *ob);
-void FF_ToggleSwitch(int x, int y);
-void FF_RemoveDreamBubbles(void);
-void FF_SpawnDreamBubble(uint16_t x, uint16_t y, uint16_t type);
 bool FF_SaveCheckpoint(void);
 bool FF_LoadCheckpoint(void);
 void FF_MiscDialog(int number);
 void FF_JanitorDialog(int number);
+void FF_LindseyDialog(int number);
+void FF_JanitorSleepMonolog(void);
+void FF_JanitorStunnedMonolog(void);
+void FF_JanitorNisasiDialog(int number);
+void FF_StartMusic(uint16_t song, bool repeat);
+void FF_DelayedFade(void);
 void SD_SetMusicRate(int rate);
 void SD_PlayTwoSounds(int first, int second);
 

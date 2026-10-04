@@ -1550,6 +1550,13 @@ void KW_Screenshot(const char *worldId, int level, const char *path)
 	int objects = 0;
 	for (CK_object *obj = ck_keenObj; obj; obj = obj->next)
 		++objects;
+	// KW_SHOT_LIST=1: what stands on the screen
+	if (getenv("KW_SHOT_LIST"))
+		for (CK_object *obj = ck_keenObj; obj; obj = obj->next)
+			if (CK_ObjectVisible(obj))
+				printf("  type %d sprite %d layer %d at %d,%d (pixel %d,%d on screen)\n", obj->type, obj->gfxChunk, obj->zLayer,
+					(int)RF_UnitToTile(obj->posX), (int)RF_UnitToTile(obj->posY),
+					(obj->posX - rf_scrollXUnit) / 16, (obj->posY - rf_scrollYUnit) / 16);
 	printf("KW_Screenshot: %s level %d (%dx%d), view at tile %d,%d, %d objects, Keen at tile %d,%d sprite %d layer %d -> %s\n",
 		worldId, level, CA_GetMapWidth(), CA_GetMapHeight(), (int)RF_UnitToTile(rf_scrollXUnit),
 		(int)RF_UnitToTile(rf_scrollYUnit), objects, (int)RF_UnitToTile(ck_keenObj->posX),

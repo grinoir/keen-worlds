@@ -4,6 +4,7 @@ CK_SPEC.C of its source (Nisaba and K1n9_Duk3; GPL v2 or later).
 */
 
 #include "kw_fitf.h"
+#include "kw_ff_keen.h"
 #include "kw_ff_act.h"
 
 void FF_SpawnWorldKeen(int tileX, int tileY); // kw_ff_map.c
@@ -17,7 +18,6 @@ static void FF_NeedChunks(int first, int last)
 #define NeedLump(name) FF_NeedChunks(FF_##name##_LUMP_START, FF_##name##_LUMP_END)
 
 extern CK_object *ck_lastObject;
-#define DEFAULT_SHOTS 5
 
 // If the info value is a number icon naming a song, the level plays it
 // (SetMusicNum in CK_SPEC.C).

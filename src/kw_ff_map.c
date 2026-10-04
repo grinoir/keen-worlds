@@ -5,6 +5,7 @@ tools/kw_fitf_port.py, with the hand fixes of tools/kw_fitf_map_fixes.py.
 */
 
 #include "kw_fitf.h"
+#include "kw_ff_keen.h"
 
 void FF_T_KeenWorldWalk(CK_object *ob);
 #define max(a, b) ((a) > (b) ? (a) : (b))

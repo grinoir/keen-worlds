@@ -1715,8 +1715,17 @@ void CK_KeenDeathThink(CK_object *obj)
 	}
 }
 
+bool FF_IsActive(void);
+void FF_KillKeen(void);
+
 void CK_KillKeen()
 {
+	// KEEN WORLDS: Foray in the Forest has its own Keen (kw_ff_keen.c)
+	if (FF_IsActive())
+	{
+		FF_KillKeen();
+		return;
+	}
 	CK_object *obj = ck_keenObj;
 	if (ck_invincibilityTimer || ck_godMode || (obj->currentAction == CK_ACTION(CK_ACT_keenNot)))
 	{

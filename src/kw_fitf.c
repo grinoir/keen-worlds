@@ -21,12 +21,13 @@ Forest.
 #include "ck_ep.h"
 #include "kw_fitf.h"
 #include "kw_ff_act.h"
+#include "kw_ff_keen.h"
 
 extern CK_EpisodeDef ff_episode;
 
 FF_State ff_state;
 FF_MapState ff_map;
-bool ff_keenKilled, ff_keenUpHeld;
+bool ff_keenKilled, ff_keenUpHeld, ff_keenMustAdjustNextX;
 int ff_brainfucled;
 
 bool FF_IsActive(void)
@@ -72,60 +73,9 @@ void FF_DrawSprite(RF_SpriteDrawEntry **sde, int x, int y, int chunk, int drawty
 	RF_AddSpriteDraw(sde, x, y, chunk, false, zLayer);
 }
 
-// ---- Not ported yet: parts of its CK_KEEN.C, CK_GAME.C and CK_SPEC.C the
-// creatures call. Each does the least that keeps the game going. ----
-
-// TODO: Keen stunned by a creature (StunKeen in CK_KEEN.C)
-void FF_StunKeen(uint16_t midx)
-{
-	(void)midx;
-}
-
-bool FF_KeenIsDead(void)
-{
-	return ck_gameState.levelState == LS_Died || ff_keenKilled;
-}
-
-// TODO: its own Keen spawn (SpawnKeen in CK_KEEN.C)
-void FF_SpawnKeen(int tileX, int tileY, int direction)
-{
-	CK_SpawnKeen(tileX, tileY, direction ? direction : 1);
-}
-
-void CK_KeenColFunc(CK_object *a, CK_object *b);
-
-// TODO: its own Keen contact, walk and pause code (CK_KEEN.C); creatures
-// only compare a state's function with these.
-void FF_KeenContact(CK_object *ob, CK_object *hit)
-{
-	CK_KeenColFunc(ob, hit);
-}
-void FF_KeenWalkThink(CK_object *ob)
-{
-	(void)ob;
-}
-void FF_KeenPauseThink(CK_object *ob)
-{
-	(void)ob;
-}
-
-// TODO: switches (ToggleSwitch in CK_KEEN.C)
-void FF_ToggleSwitch(int x, int y)
-{
-	(void)x;
-	(void)y;
-}
-
-// TODO: dream bubbles (CK_KEEN.C)
-void FF_RemoveDreamBubbles(void)
-{
-}
-void FF_SpawnDreamBubble(uint16_t x, uint16_t y, uint16_t type)
-{
-	(void)x;
-	(void)y;
-	(void)type;
-}
+// ---- Not ported yet: parts of its CK_GAME.C, CK_PLAY.C and CK_SPEC.C that
+// Keen and the creatures call. Each does the least that keeps the game
+// going. ----
 
 // TODO: checkpoints (CK_GAME.C)
 bool FF_SaveCheckpoint(void)
@@ -146,6 +96,38 @@ void FF_JanitorDialog(int number)
 {
 	(void)number;
 }
+void FF_LindseyDialog(int number)
+{
+	(void)number;
+}
+void FF_JanitorSleepMonolog(void)
+{
+}
+void FF_JanitorStunnedMonolog(void)
+{
+}
+void FF_JanitorNisasiDialog(int number)
+{
+	(void)number;
+}
+
+// TODO: the fade out and back in around a teleport (DelayedFade in CK_GAME.C)
+void FF_DelayedFade(void)
+{
+}
+
+// The level's song is a number in its map (ScanInfoPlane, music trigger
+// tiles): StartMusic plays ff_map.music whatever it is asked for.
+void FF_StartMusic(uint16_t song, bool repeat)
+{
+	(void)repeat;
+	ff_map.music = song;
+	StartMusic(song);
+}
+int FF_LevelSong(void)
+{
+	return ff_map.music;
+}
 
 // TODO: music tempo changes and two sounds in a row (its ID_SD.C)
 void SD_SetMusicRate(int rate)
@@ -162,6 +144,117 @@ void CK_DrawLongRight(int x, int y, int digits, int zerotile, int value);
 void CK_MeasureMultiline(const char *str, uint16_t *w, uint16_t *h);
 extern uint8_t ca_levelbit;
 extern uint8_t ca_graphChunkNeeded[CA_MAX_GRAPH_CHUNKS];
+
+// ---- How a level ends (the switch after PlayLoop in its GameLoop, and
+// HandleLevelDone, CK_GAME.C). Called by the engine's game loop before and
+// after its own handling of the level state. ----
+
+void CK_ShowTextPages(int textChunk, int song, bool blackBackground);
+void KW_AfterWorldEnding(void);
+
+#define COLLECT_DONUT 0x0040
+#define COLLECT_SODAS 0x0080
+#define FF_LS_HANDLED 60 // a level state the engine's game loop does nothing for
+
+static int ff_doneLevel = -1;
+static uint16_t ff_doneFlags;
+
+static void FF_HandleLevelDone(void)
+{
+	ff_state.collectiblesTotal |= ff_map.collectiblesNew;
+	ff_state.oldscore = ck_gameState.keenScore;
+	ff_state.slugcans += ff_map.slugcans;
+	if (ff_state.slugcans >= SLUGCANS_TOTAL)
+		ff_state.collectiblesTotal |= COLLECT_SODAS;
+	ff_map.doneFlags |= DF_DONE;
+	if (ff_state.cheated)
+		ff_map.doneFlags |= DF_CHEATED;
+	if (ff_map.itemsCollected && ff_map.itemsCollected == ff_map.itemsTotal)
+		ff_map.doneFlags |= DF_PERFECT;
+}
+
+static void FF_Ending(int textChunk, int song)
+{
+	CK_ShowTextPages(textChunk, song, false);
+	// The engine's own ending text leaves a cache level pushed, which Keen
+	// Worlds pops afterwards (KW_AfterWorldEnding). Ours doesn't, so push one.
+	CA_UpLevel();
+	KW_AfterWorldEnding();
+}
+
+void FF_LevelEnded(void)
+{
+	int level = ca_mapOn;
+	ff_doneLevel = -1;
+	switch ((int)ck_gameState.levelState)
+	{
+	case ex_mushroomtrigger: // straight on into the second mushroom level
+		ck_gameState.currentLevel = MAP_MUSHROOMLEVEL2;
+		SD_PlayTwoSounds(FF_FOOTAPPEARSND, FF_YETICLOUDSND);
+		FF_HandleLevelDone();
+		ck_gameState.levelState = FF_LS_HANDLED;
+		break;
+	case ex_secrettrigger: // on into the secret level
+		FF_HandleLevelDone();
+		ck_gameState.levelsDone[MAP_MUSHROOMLEVEL1] = ff_map.doneFlags;
+		ck_gameState.levelsDone[level] = ff_map.doneFlags;
+		ck_gameState.currentLevel = MAP_TARDISLEVEL;
+		SD_PlaySound(FF_ENTERLEVELSND);
+		ck_gameState.levelState = FF_LS_HANDLED;
+		break;
+	case ex_bonuscomplete:
+		FF_LindseyDialog(2);
+		StopMusic();
+		ff_state.collectiblesTotal |= COLLECT_DONUT;
+		ck_gameState.levelState = LS_LevelComplete;
+		// fall through
+	case LS_LevelComplete:
+		FF_HandleLevelDone();
+		if (level == 0)
+			break; // the map: the engine goes on into the level entered
+		if (level == MAP_TEMPLELEVEL)
+		{
+			// beaten: straight on to the final level
+			ck_gameState.levelsDone[MAP_TEMPLELEVEL] = ff_map.doneFlags;
+			ck_gameState.currentLevel = MAP_ACMELABLEVEL;
+			SD_PlaySound(FF_ENTERLEVELSND);
+			ck_gameState.levelState = FF_LS_HANDLED;
+			break;
+		}
+		if (level == MAP_MUSHROOMLEVEL2)
+			ck_gameState.levelsDone[MAP_MUSHROOMLEVEL1] = ff_map.doneFlags;
+		// the engine marks the level done and returns to the map; its
+		// flags (done, perfect, cheated) go in afterwards
+		ff_doneLevel = level;
+		ff_doneFlags = ff_map.doneFlags;
+		break;
+	case ex_clonedjanitor: // the game is won: one of its endings
+		FF_HandleLevelDone();
+		if (ff_state.cheated)
+			FF_Ending(FF_T_END_CHEAT, FF_JosephCollins_Slipping_Slug);
+		else if (ck_gameState.keenScore >= 1000000)
+			FF_Ending(FF_T_END_ALL, FF_Kohntarkosz__JoJackson);
+		else if (ck_gameState.keenScore <= 1000)
+			FF_Ending(ff_state.continuesUsed ? FF_T_END_TRICKERY : FF_T_END_MINIMUM, -1);
+		else
+			FF_Ending(FF_T_END_WIN, FF_IncredibleMachine_Fusion);
+		ck_gameState.levelState = FF_LS_HANDLED;
+		break;
+	case ex_brainfucled: // the bad ending. (The source quits the game; here Keen is back on the map.)
+		FF_HandleLevelDone();
+		CK_ShowTextPages(FF_T_END_LOSE, FF_LeeJackson_dopejaws, false);
+		ck_gameState.currentLevel = 0;
+		ck_gameState.levelState = FF_LS_HANDLED;
+		break;
+	}
+}
+
+void FF_AfterLevelEnded(void)
+{
+	if (ff_doneLevel > 0 && ck_gameState.levelsDone[ff_doneLevel])
+		ck_gameState.levelsDone[ff_doneLevel] = ff_doneFlags;
+	ff_doneLevel = -1;
+}
 
 // ---- Its "Keen enters" box (DialogDraw and DialogUpdate in CK_GAME.C): the
 // text on the left, Keen's face on the right and under it a hand counting
@@ -345,6 +438,7 @@ void FF_SetupFunctions(void)
 {
 	kw_ff_act_SetupFunctions();
 	kw_ff_map_SetupFunctions();
+	kw_ff_keen_SetupFunctions();
 }
 
 // The player's game files and our generated support files, all in the
