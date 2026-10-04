@@ -314,6 +314,11 @@ void KW_AfterWorldEnding(void)
 	if (kw_debugEnding)
 	{
 		kw_debugEnding = false;
+		// The whole world counts as played through: every level is completed
+		// (so each can be entered again, peaceful), not only the last one.
+		for (int lv = 1; lv < CK_LEVELS_TRACKED; ++lv)
+			if (CA_MapExists(lv) && lv != CK_INT(CK_highScoreLevel, -1) && !ck_gameState.levelsDone[lv])
+				ck_gameState.levelsDone[lv] = 1;
 		const KW_Ship *ship = KW_ShipFor(kw_currentWorld);
 		if (ship)
 			ck_gameState.currentLevel = ship->level;
@@ -1163,7 +1168,8 @@ void KW_DrawOverlay(void)
 }
 
 // Debug (W + E): end the level the way this world's game is won, so its
-// ending plays and the world counts as completed.
+// ending plays and the world counts as completed, with every level of it
+// completed too (see KW_AfterWorldEnding).
 static void KW_DebugEnding(void)
 {
 	kw_debugEnding = true;

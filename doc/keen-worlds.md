@@ -260,7 +260,8 @@ Keen 4–6.
 - Debug shortcuts, on a world map or at the ship: hold **W** and press
   **4** to **9** to fly to that world (this also leaves Krisle), or **E** to
   play the ending of the world Keen is in (`KW_DebugEnding`: the world then
-  counts as completed).
+  counts as completed, every level of it is marked completed, and Keen is put
+  at his ship).
 
 ## Keen 5 boarding gate
 
