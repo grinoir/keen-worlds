@@ -485,6 +485,8 @@ void CK_PhysUpdateNormalObj(CK_object *obj)
 
 //TODO: Finish Implementing!!!!
 
+bool AR_IsActive(void); // KEEN WORLDS (kw_arealm.c)
+
 void CK_PhysFullClipToWalls(CK_object *obj)
 {
 	uint16_t oldUnitX = obj->posX;
@@ -539,7 +541,9 @@ void CK_PhysFullClipToWalls(CK_object *obj)
 #endif
 #ifdef WITH_KEEN5
 	case EP_CK5:
-		if (obj->type == CT5_SliceStar || obj->type == CT5_Sphereful)
+		// KEEN WORLDS: Atroxian Realm clips any of its creatures this way
+		// (flying Atroxians, the Krile ghost)
+		if (obj->type == CT5_SliceStar || obj->type == CT5_Sphereful || AR_IsActive())
 		{
 			delX = delY = 512;
 		}

@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 void AR_CheckpointFrame(void); // KEEN WORLDS: Atroxian Realm (kw_arealm.c)
 bool AR_IsActive(void);
+void AR_ListRemainingItems(bool done);
 int AR_MapSongAfterZiggurat(void);
 #include "id_ca.h"
 #include "id_fs.h"
@@ -1212,6 +1213,16 @@ void CK_CheckKeys()
 		// clang-format off
 		else
 #endif
+
+		// KEEN WORLDS: Atroxian Realm's list of the items still in the level
+		// (F8 here; its own default, F2, opens the menu in this engine)
+		if (IN_GetLastScan() == IN_SC_F8 && AR_IsActive() && ca_mapOn)
+		{
+			AR_ListRemainingItems(false);
+			RF_ForceRefresh();
+			IN_ClearKeysDown();
+			SD_SetLastTimeCount(SD_GetTimeCount());
+		}
 
 		// Go back to wristwatch
 		if ((IN_GetLastScan() >= IN_SC_F2 && IN_GetLastScan() <= IN_SC_F7)

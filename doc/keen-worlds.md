@@ -220,9 +220,13 @@ A game of its own (Gridlock, 2016, GPL source written from Omnispeak's Keen
 5 code), world id `arealm`. `src/kw_arealm.c` has its episode definition
 (`EP_CK5` with extension `CKD`) and its level setup; its variable files are
 written from its source by `tools/kw_arealm.py`; its creatures are
-`src/kw_ar_act1-3.c`. It is ported and passes `/KWTEST`, but has not been
-played by eye yet. What is done and what is left:
-`../research/atroxian-realm.md`.
+`src/kw_ar_act1-3.c`. It is ported and passes `/KWTEST`; play has found
+and fixed a few things since. What is done and what was left out on
+purpose: `../research/atroxian-realm.md`.
+
+In a level, **F8** lists the items still to be found (its own key for this,
+F2, is the menu here). `%int AR_EndStats 1` in a variable file shows that
+list after every finished level, as its option does.
 
 ### Adding a fan game
 

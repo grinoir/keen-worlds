@@ -52,6 +52,8 @@ void AR_GeneratorWinMessage(void);
 void AR_ElderWinMessage(void);
 void AR_BridgeWinMessage(void);
 void AR_AfterLevelLoad(void);
+const char *AR_LevelEntryText(int level);
+void AR_LevelCompleted(int level);
 bool AR_NoFlagFlip(int level);
 bool AR_HasCheckpoint(void);
 
@@ -92,6 +94,13 @@ void CK_NewGame()
 	ck_gameState.currentLevel = 0;
 	ck_gameState.levelState = ls;
 	KW_ResetWorlds();
+	// KEEN WORLDS: A game begun on Krisle starts as Atroxian Realm does: at
+	// the crash site, with five Keens.
+	if (AR_IsActive())
+	{
+		ck_gameState.numLives = 5;
+		ck_gameState.currentLevel = 25;
+	}
 }
 
 void CK_GameOver()
@@ -674,7 +683,7 @@ void CK_LoadLevel(bool doCache, bool silent)
 #endif
 		else
 		{
-			CA_CacheMarks(CK_STRINGELEMENT(ck_str_levelEntryText, ca_mapOn));
+			CA_CacheMarks(AR_IsActive() ? AR_LevelEntryText(ca_mapOn) : CK_STRINGELEMENT(ck_str_levelEntryText, ca_mapOn));
 		}
 	}
 
@@ -994,6 +1003,8 @@ void CK_GameLoop()
 			{
 				//We've won, return to main map.
 				//TODO: Mark level as done (and more)
+				if (AR_IsActive())
+					AR_LevelCompleted(ca_mapOn); // KEEN WORLDS: its Hyper Stars and item list
 				SD_PlaySound(CK_SOUNDNUM(SOUND_LEVELEXIT));
 				ck_gameState.currentLevel = 0;
 				// KEEN WORLDS: Leaving a level completed earlier (a peaceful
@@ -1104,6 +1115,7 @@ void CK_GameLoop()
 			goto levelcomplete;
 		case LS_ARAtroxus:
 			// The talk with Atroxus, then straight on to the battle (level 17)
+			AR_LevelCompleted(ca_mapOn);
 			AR_EndScreens(3);
 			ck_lastLevelFinished = ca_mapOn;
 			ck_gameState.levelsDone[ca_mapOn] = 1;

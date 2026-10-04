@@ -125,6 +125,10 @@ void CK_KeenColFunc(CK_object *a, CK_object *b)
 #endif
 		CK_SetAction2(b, CK_ACTION(CK_ACT_itemNotify));
 	}
+	else if (AR_IsActive() && b->type == 17) // KEEN WORLDS: Atroxian Realm's Larvbat pushes Keen
+	{
+		CK_PhysPushX(a, b);
+	}
 	else if (b->type == CT_CLASS(Platform)) //Platform
 	{
 	impossibleBullet:

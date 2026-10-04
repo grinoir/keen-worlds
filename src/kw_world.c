@@ -358,12 +358,12 @@ bool KW_IsWorldCompleted(int world)
 // 4-6 only, items shared) is still read.
 
 #define KW_SAVE_BLOCK_ID "KWLD"
-#define KW_SAVE_VERSION 3
+#define KW_SAVE_VERSION 4
 #define KW_LEVELS_EXTRA (CK_LEVELS_TRACKED - CK_LEVELS_SAVED)
 
 // Atroxian Realm's extra game state (kw_arealm.c)
 bool AR_WriteState(FS_File fp);
-bool AR_ReadState(FS_File fp);
+bool AR_ReadState(FS_File fp, bool withStars);
 #define KW_SAVE_ID_LEN 8
 
 static bool kw_introduced[KW_NUM_WORLDS]; // worlds whose arrival card has been shown
@@ -457,7 +457,7 @@ bool KW_ReadSaveBlock(FS_File fp, bool *deferred)
 			memcpy(worlds[w].items, items, sizeof(items));
 		world = KW_KEEN4 + (episode - 4);
 	}
-	else if (version == 2 || version == KW_SAVE_VERSION)
+	else if (version >= 2 && version <= KW_SAVE_VERSION)
 	{
 		char wid[KW_SAVE_ID_LEN];
 		int16_t count;
@@ -480,7 +480,7 @@ bool KW_ReadSaveBlock(FS_File fp, bool *deferred)
 				worlds[w] = state;   // worlds that are no longer known are dropped
 		}
 		// Version 3: Atroxian Realm's extra state
-		if (version >= 3 && !AR_ReadState(fp))
+		if (version >= 3 && !AR_ReadState(fp, version >= 4))
 			return false;
 	}
 	else

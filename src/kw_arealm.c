@@ -454,10 +454,124 @@ void AR_KeenVines(CK_object *obj)
 	ck_gameState.levelState = LS_ARVines;
 }
 
+// The "Keen enters" text: the map's changes once the Great Ziggurat is done,
+// the crash site's after the first time there.
+#define AR_SEEN_CRASH_SITE 1u // bit 0 of hyperstarBits (no level 0 star)
+const char *AR_LevelEntryText(int level)
+{
+	if (level == 0 && ck_gameState.levelsDone[15])
+		return CK_STRING(ar_str_entryMapFinal);
+	if (level == 25)
+	{
+		bool seen = (ar_state.hyperstarBits & AR_SEEN_CRASH_SITE) != 0;
+		ar_state.hyperstarBits |= AR_SEEN_CRASH_SITE;
+		if (seen)
+			return CK_STRING(ar_str_entryCrashReturn);
+	}
+	return CK_STRINGELEMENT(ck_str_levelEntryText, level);
+}
+
 // Picking up the 3-up: it is the level's Hyper Star.
 void AR_GotHyperStar(void)
 {
 	ar_state.got3UP = true;
+}
+
+// The items still in the level (ListRemainingItems in KD_PLAY.C): on its key
+// while playing, and after a finished level if AR_EndStats is set.
+void AR_ListRemainingItems(bool done)
+{
+	extern uint16_t ck_itemPoints[];
+	unsigned items = 0, ammo = 0, sparks = 0, lives = 0, hyper = 0, mystery = 0;
+	unsigned long points = 0;
+	char str[80];
+
+	for (int y = 0; y < CA_GetMapHeight(); y++)
+		for (int x = 0; x < CA_GetMapWidth(); x++)
+		{
+			unsigned tile = CA_TileAtPos(x, y, 1);
+			if ((tile >= 1692 && tile <= 1695) || (tile >= 1710 && tile <= 1713))
+			{
+				mystery++; // the "?" items
+				continue;
+			}
+			int misc = TI_ForeMisc(tile) & 0x7F;
+			if (misc == 4)
+				sparks++;
+			else if (misc >= 21 && misc <= 26)
+			{
+				points += ck_itemPoints[misc - 17];
+				items++;
+			}
+			else if (misc == 27)
+				lives++;
+			else if (misc == 28)
+				ammo++;
+		}
+
+	for (CK_object *o = ck_keenObj; o; o = o->next)
+	{
+		if (o->type != CT5_Item)
+			continue;
+		if (o->user1 >= 4 && o->user1 <= 9)
+		{
+			points += ck_itemPoints[o->user1];
+			items++;
+		}
+		else if (o->user1 == 10)
+			lives++;
+		else if (o->user1 == 11)
+			ammo++;
+		else if (o->user1 == 12)
+			hyper++;
+	}
+
+	VL_FixRefreshBuffer();
+	US_CenterWindow(26, 8);
+	if (sparks || items || lives || ammo || hyper || mystery)
+	{
+		const struct { unsigned count; const char *name; } rows[] = {
+			{sparks, "spark"}, {items, "bonus item"}, {mystery, "mystery item"},
+			{ammo, "Neural Stunner"}, {lives, "Spark Star"}, {hyper, "Hyper Star"}};
+		US_CPrint(done ? "You missed:\n" : "You are still missing:\n");
+		int rowsShown = 0;
+		for (int i = 0; i < 6; i++)
+			rowsShown += rows[i].count != 0;
+		US_SetPrintY(US_GetPrintY() + 27 - 5 * rowsShown);
+		for (int i = 0; i < 6; i++)
+		{
+			if (!rows[i].count)
+				continue;
+			if (i == 1)
+				snprintf(str, sizeof(str), "%u bonus item%s (%lu pts)\n", items, items == 1 ? "" : "s", points);
+			else
+				snprintf(str, sizeof(str), "%u %s%s\n", rows[i].count, rows[i].name, rows[i].count == 1 ? "" : "s");
+			US_CPrint(str);
+		}
+	}
+	else
+	{
+		US_SetPrintY(US_GetPrintY() + 12);
+		US_CPrint("You collected every item\nin this level.\n\nWell done!");
+	}
+	VL_Present();
+	VL_DelayTics(30);
+	IN_ClearKeysDown();
+	IN_WaitButton();
+}
+
+// A level was finished (not left by a peaceful visit's exit alone: any way
+// the game counts as completing it). Hyper Stars (CountHyperStars in
+// KD_GAME.C): the level's star counts once, however often it is played.
+void AR_LevelCompleted(int level)
+{
+	if (ar_state.got3UP && level > 0 && level < 32 && !(ar_state.hyperstarBits & (1u << level)))
+	{
+		ar_state.hyperstarBits |= 1u << level;
+		ar_state.hyperstarCount++;
+	}
+	if (CK_INT(AR_EndStats, 0))
+		AR_ListRemainingItems(true);
 }
 
 // A vines tile (tile property 16) under a standing Keen pulls him under,
@@ -728,20 +842,20 @@ bool AR_WriteState(FS_File fp)
 		ar_state.endscreen_played[4], ar_state.doSecretEnding, ar_state.atroxusBoxesPlayed,
 		ar_state.atroxusBoxesLevels[0], ar_state.atroxusBoxesLevels[1], ar_state.atroxusBoxesLevels[2],
 		(int16_t)ar_state.axosisNum, ar_state.hyperstarCount};
+	// Since save version 4: the Hyper Star levels (bit 0: the crash site has
+	// been seen)
 	int16_t bits[2] = {(int16_t)(ar_state.hyperstarBits & 0xFFFF), (int16_t)(ar_state.hyperstarBits >> 16)};
-	if (FS_WriteInt16LE(bits, 2, fp) != 2)
-		return false;
-	return FS_WriteInt16LE(v, 14, fp) == 14;
+	return FS_WriteInt16LE(v, 14, fp) == 14 && FS_WriteInt16LE(bits, 2, fp) == 2;
 }
 
-bool AR_ReadState(FS_File fp)
+bool AR_ReadState(FS_File fp, bool withStars)
 {
-	int16_t v[14], bits[2];
-	if (FS_ReadInt16LE(bits, 2, fp) != 2 || FS_ReadInt16LE(v, 14, fp) != 14)
+	int16_t v[14], bits[2] = {0, 0};
+	if (FS_ReadInt16LE(v, 14, fp) != 14 || (withStars && FS_ReadInt16LE(bits, 2, fp) != 2))
 		return false;
 	memset(&ar_state, 0, sizeof(ar_state));
 	ar_state.hyperstarBits = (uint16_t)bits[0] | ((uint32_t)(uint16_t)bits[1] << 16);
-	ar_state.hyperstarCount = v[13];
+	ar_state.hyperstarCount = withStars ? v[13] : 0;
 	ar_state.vines = v[0];
 	ar_state.generatorsDestroyed = v[1];
 	for (int i = 0; i < 5; ++i)
@@ -904,15 +1018,7 @@ static void AR_RestoreObject(CK_object *obj, const CK_object *saved)
 // drops the checkpoint.
 void AR_AfterLevelLoad(void)
 {
-	// Hyper Stars (CountHyperStars in KD_GAME.C): the star of the level just
-	// finished counts once, however often the level is played.
-	if (AR_IsActive() && ar_state.got3UP && ck_lastLevelFinished > 0 && ck_lastLevelFinished < 32 &&
-		!(ar_state.hyperstarBits & (1u << ck_lastLevelFinished)))
-	{
-		ar_state.hyperstarBits |= 1u << ck_lastLevelFinished;
-		ar_state.hyperstarCount++;
-	}
-	ar_state.got3UP = false;
+	ar_state.got3UP = false; // a checkpoint taken after the star brings it back
 
 	if (!ar_checkpoint.valid)
 		return;
