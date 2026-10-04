@@ -88,7 +88,7 @@ CK_ACT_ColFunction CK_ACT_GetColFunction(const char *fnName)
 }
 
 #define CK_VAR_MAXVARS 8192
-#define CK_VAR_MAXACTIONS 512
+#define CK_VAR_MAXACTIONS 1024 // KEEN WORLDS: was 512 (Atroxian Realm adds its own to Keen 5's)
 #define CK_VAR_MAX_ARRAY_LEN 96
 
 STR_Table *ck_varTable;

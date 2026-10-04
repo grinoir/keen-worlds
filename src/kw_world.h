@@ -32,6 +32,7 @@ typedef enum KW_World
 	KW_KEEN7,   // Krodacia: "The Keys of Krodacia" (fan game on Keen 4)
 	KW_KEEN8,   // Calidune: "Dead in the Desert" (fan game on Keen 6)
 	KW_KEEN9,   // The Universe: "Battle of the Brains" (fan game on Keen 5)
+	KW_AREALM,  // Krisle: "Atroxian Realm" (its own game, on the Keen 5 code)
 	KW_NUM_WORLDS,
 	KW_NO_WORLD = -1,
 } KW_World;

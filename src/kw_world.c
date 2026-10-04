@@ -36,6 +36,12 @@ extern const char *ck_episodeFile;
 
 // ---- The world registry ----
 
+// Atroxian Realm's own episode definition (kw_arealm.c): Keen 5's code with
+// its own files and level setup.
+#define KW_EPISODE_AREALM 10
+extern CK_EpisodeDef ar_episode;
+
+
 typedef struct KW_WorldDef
 {
 	const char *id;          // short id: save files, /WORLD
@@ -101,6 +107,18 @@ static const KW_WorldDef kw_worldDefs[KW_NUM_WORLDS] = {
 		"\f"
 		"Music:\nGenius314, Mr. M, XkyRauh,\nthehackercat, Kosmyn, Umbrella" KW_NOT_OURS,
 		"A fan episode by Ceilick,\nMink and Tulip (2011).\nDownload \"Commander Keen 9 -\nBattle of the Brains\", for\ninstance from archive.org, and\nput its files in mods/keen9."},
+	// Atroxian Realm (Gridlock and many others, 2016): a game of its own with
+	// GPL source. play/mods/arealm holds the player's copy of its data files
+	// and the variable files tools/kw_arealm.py writes from its source.
+	{"arealm", "Krisle", KW_EPISODE_AREALM, "mods/arealm", "AREALM.CKD",
+		"Atroxian Realm",
+		"A Commander Keen fan game\nby Gridlock, 2016",
+		"Created by Gridlock\nProgramming: Lemm\nMusic: Gamebird, Gridlock\nStory graphics: T-Squared\n\n"
+		"Artwork: Bubbatom, Ceilick,\nT-Squared, Gamebird, Mobiethian,\nTulip, Preston, Fantomx,\nDoomjedi, Grimson, Szemi"
+		"\f"
+		"Testing: Fleex, Keenfan,\nT-Squared, Gamebird, Lemm\n\n"
+		"Engine programming: NY00123,\nAndy Durdin, Lemm, David Gow\n\nVersion 1.5 fixes: K1n9_Duk3" KW_NOT_OURS,
+		"A fan game by Gridlock (2016).\nDownload Atroxian Realm v1.5\n(see its thread on pckf.com)\nand put its files in\nmods/arealm."},
 };
 
 static CK_EpisodeDef *KW_EpisodeDef(int episode)
@@ -119,6 +137,8 @@ static CK_EpisodeDef *KW_EpisodeDef(int episode)
 	case 6:
 		return &ck6_episode;
 #endif
+	case KW_EPISODE_AREALM:
+		return &ar_episode;
 	default:
 		return NULL;
 	}
@@ -169,6 +189,16 @@ bool KW_IsWorldPresent(int world)
 	if (!FS_IsFileValid(f))
 		return false;
 	FS_CloseFile(f);
+	if (def->episode == KW_EPISODE_AREALM)
+	{
+		// Its support files are in its own folder too; Keen 5's variables
+		// (Omnispeak's own files) are its base.
+		f = FSL_OpenFileInDirCaseInsensitive(KW_WorldPath(world), "maptemp.ckd", false);
+		if (!FS_IsFileValid(f))
+			return false;
+		FS_CloseFile(f);
+		return FS_IsOmniFilePresent("EPISODE.CK5");
+	}
 	return FS_IsOmniFilePresent(ep->episodeFile);
 }
 
@@ -1528,6 +1558,29 @@ void KW_SelfTest(void)
 		CK_ACTION(CK5_ACT_QED)->collide || CK_ACTION(CK5_ACT_LevelEnd)->think != CK_ACT_GetFunction("CK5_LevelEnd") ||
 		CK_ACTION(CK_ACT_keenRun1)->collide != CK_ACT_GetColFunction("CK_KeenColFunc"))
 		Quit("KW_SelfTest: Keen 5 has picked up Keen 9's behaviour!");
+
+	// Atroxian Realm (when installed): every map loads, with every object's
+	// sprites in memory. (Its creatures aren't ported yet.)
+	if (KW_IsWorldPresent(KW_AREALM))
+	{
+		KW_SwitchWorld(KW_AREALM);
+		int loaded = 0;
+		for (int lv = 0; lv < 26 /* the game uses maps 0-25; the file has spares */; ++lv)
+		{
+			if (!CA_MapExists(lv))
+				continue;
+			ck_gameState.currentLevel = lv;
+			ck_gameState.levelsDone[lv] = 0;
+			CK_LoadLevel(true, true);
+			if (!ck_keenObj || !ck_keenObj->currentAction)
+				QuitF("KW_SelfTest: Atroxian Realm map %d has no Keen!", lv);
+			KW_TestLevelSpritesCached("arealm", lv);
+			++loaded;
+		}
+		if (loaded < 20)
+			Quit("KW_SelfTest: Atroxian Realm is missing levels!");
+		KW_SwitchWorld(KW_KEEN4);
+	}
 
 	// Keen 8 and 9 (when installed): every level loads, and every level when
 	// completed is peaceful.

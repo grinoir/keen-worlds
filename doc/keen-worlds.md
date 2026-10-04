@@ -208,6 +208,15 @@ file uses the right one; Keen 5's own data is left as upstream has it.
 up, that Keen 5 has none of them, and, for every level of Keen 8 and 9,
 that each creature's sprites are in memory. Not yet play-tested by eye.
 
+### Atroxian Realm (in progress)
+
+A game of its own (Gridlock, 2016, GPL source written from Omnispeak's Keen
+5 code), world id `arealm`. `src/kw_arealm.c` has its episode definition
+(`EP_CK5` with extension `CKD`) and its level setup; its variable files are
+written from its source by `tools/kw_arealm.py`. All 26 maps load; its
+creatures are not ported yet. Plan and progress:
+`../research/atroxian-realm.md`.
+
 ### Adding a fan game
 
 1. Get it converted for Omnispeak (the Omnispeak modding kit includes Keen
