@@ -941,6 +941,56 @@ static const char *KW_CheckCardsFit(void)
 	return NULL;
 }
 
+// ---- Krisle: no way back until it is saved ----
+// Atroxian Realm's story: the Megarocket is shot down over Krisle, and the
+// Krile repair it once Atroxus is defeated. So Keen can't leave that world
+// before its ending, and the menu says so before he flies there.
+
+static bool KW_IsStranded(void)
+{
+	return kw_currentWorld == KW_AREALM && !kw_worlds[KW_AREALM].completed;
+}
+
+// A card with a question; true if the player presses Y.
+static bool KW_AskCard(const char *text)
+{
+	uint16_t w, h;
+	CK_MeasureMultiline(text, &w, &h);
+	VL_FixRefreshBuffer();
+	US_CenterWindow((w + 15) / 8 + 2, (h + 7) / 8 + 2);
+	US_SetPrintY(US_GetPrintY() + 4);
+	US_CPrint(text);
+	VH_UpdateScreen();
+	KW_WaitForButtonsUp();
+	IN_SetLastScan(IN_SC_None);
+	bool yes = false;
+	while (true)
+	{
+		IN_PumpEvents();
+		IN_ScanCode scan = IN_GetLastScan();
+		if (scan != IN_SC_None)
+		{
+			yes = scan == IN_SC_Y;
+			break;
+		}
+		IN_ControlFrame frame;
+		IN_ReadControls(0, &frame);
+		if (frame.jump || frame.pogo || frame.button2)
+			break;
+		VL_Present();
+	}
+	KW_WaitForButtonsUp();
+	RF_ForceRefresh();
+	SD_SetLastTimeCount(SD_GetTimeCount());
+	return yes;
+}
+
+#define KW_KRISLE_WARNING \
+	"Krisle\n\nA distress signal comes from\nthis planet. The Megarocket\nwill be shot down there.\n\n" \
+	"Keen cannot leave Krisle\nuntil he has saved it.\n\nFly there? Press Y for yes,\nany other key to stay."
+#define KW_KRISLE_WRECK \
+	"The Megarocket is a wreck.\n\nThe Krile will repair it\nonce Atroxus is defeated.\n\nUntil then Keen stays on Krisle."
+
 // Draws the destination menu and returns the chosen world, or KW_NO_WORLD to
 // stay. Every other world is listed: one that isn't installed opens a card
 // saying where to get it. The last line is "About this world".
@@ -950,6 +1000,13 @@ static int KW_TravelMenu(void)
 	int lineY[KW_NUM_WORLDS];
 	int entries[KW_NUM_WORLDS];
 	int numEntries = 0;
+
+	if (KW_IsStranded())
+	{
+		SD_PlaySound(CK_SOUNDNUM(SOUND_NEEDKEYCARD));
+		KW_ShowCards(KW_KRISLE_WRECK);
+		return KW_NO_WORLD;
+	}
 
 	for (int w = 0; w < KW_NUM_WORLDS; ++w)
 		if (w != kw_currentWorld)
@@ -1036,6 +1093,9 @@ static int KW_TravelMenu(void)
 		KW_ShowGetWorld(result);
 		return KW_NO_WORLD;
 	}
+	// Krisle is a one-way trip until it is saved: say so first.
+	if (result == KW_AREALM && !kw_worlds[KW_AREALM].completed && !KW_AskCard(KW_KRISLE_WARNING))
+		return KW_NO_WORLD;
 	return result;
 }
 
@@ -1329,6 +1389,10 @@ void KW_SelfTest(void)
 	static const int route[] = {KW_KEEN5, KW_KEEN6, KW_KEEN4, KW_KEEN7, KW_KEEN6, KW_KEEN5, KW_KEEN7, KW_KEEN4};
 	bool haveKeen7 = KW_IsWorldPresent(KW_KEEN7);
 	kw_cardsOff = true;
+	uint16_t askW, askH;
+	CK_MeasureMultiline(KW_KRISLE_WARNING, &askW, &askH);
+	if ((askW + 15) / 8 + 2 > KW_CARD_MAX_W || (askH + 7) / 8 + 2 > KW_CARD_MAX_H)
+		Quit("KW_SelfTest: the Krisle warning doesn't fit the screen!");
 	const char *cardProblem = KW_CheckCardsFit();
 	if (cardProblem)
 		QuitF("KW_SelfTest: a world card doesn't fit the screen: %s", cardProblem);

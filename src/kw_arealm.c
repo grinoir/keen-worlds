@@ -77,6 +77,9 @@ void AR_WinGame(void)
 	AR_EndScreens(0);
 	AR_EndScreens(6);
 	AR_EndScreens(ar_state.doSecretEnding ? 5 : 8);
+	// The engine's own ending text leaves a cache level pushed, which Keen
+	// Worlds pops afterwards (KW_AfterWorldEnding). Ours don't, so push one.
+	CA_UpLevel();
 }
 
 // Its level setup (CK5_ScanInfoLayer in AR_MISC.C). Creature numbers are
