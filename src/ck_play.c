@@ -1336,6 +1336,9 @@ void CK_CheckKeys()
 }
 
 bool FF_IsActive(void);
+void FF_CenterActor(CK_object *ob);
+void FF_WorldScrollScreen(CK_object *keen);
+void FF_Camera(CK_object *keen);
 void KW_DebugInput(void);
 void KW_DebugFrame(void);
 void FF_FrameRiding(void);
@@ -1992,6 +1995,12 @@ static uint16_t screenYpx;
 
 void CK_CentreCamera(CK_object *obj)
 {
+	// KEEN WORLDS: Foray in the Forest has its own camera (kw_ff_cam.c)
+	if (FF_IsActive())
+	{
+		FF_CenterActor(obj);
+		return;
+	}
 	uint16_t screenX, screenY;
 
 	screenYpx = 140;
@@ -2036,6 +2045,11 @@ void CK_CentreCamera(CK_object *obj)
 
 void CK_MapCamera(CK_object *keen)
 {
+	if (FF_IsActive())
+	{
+		FF_WorldScrollScreen(keen);
+		return;
+	}
 	int16_t scr_y, scr_x;
 
 	if (ck_scrollDisabled)
@@ -2091,6 +2105,11 @@ void CK_MapCamera(CK_object *keen)
 
 void CK_NormalCamera(CK_object *obj)
 {
+	if (FF_IsActive())
+	{
+		FF_Camera(obj);
+		return;
+	}
 
 	int16_t deltaX = 0, deltaY = 0; // in Units
 

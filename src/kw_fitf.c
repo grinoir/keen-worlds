@@ -178,6 +178,13 @@ void FF_FrameInTiles(void)
 	}
 }
 
+// The level camera follows Keen, or the creature he controls by mind.
+void FF_ScrollScreen(CK_object *ob); // kw_ff_cam.c
+void FF_Camera(CK_object *keen)
+{
+	FF_ScrollScreen(ff_map.mindcontrolled ? ff_map.mindcontrolled : keen);
+}
+
 // After the frame is drawn: warps, timers.
 // TODO: its Nisasi music tempo, checkpoint saving (CheckpointSave), the
 // bonus level's Lindsey, wrap-around scrolling (CK_WrapScroll).
