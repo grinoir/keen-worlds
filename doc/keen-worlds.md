@@ -257,8 +257,10 @@ Keen 4–6.
   Press jump, pogo or fire at the ship to open the destination menu. Arrivals
   stand at the ship's nose rather than under it: the hull at Keen's height is
   drawn in front of sprites (tile misc bit `0x80`), which would hide him.
-- Debug shortcut: on a world map, hold **W** and press **4**, **5**, **6** or
-  **7**.
+- Debug shortcuts, on a world map or at the ship: hold **W** and press
+  **4** to **9** to fly to that world (this also leaves Krisle), or **E** to
+  play the ending of the world Keen is in (`KW_DebugEnding`: the world then
+  counts as completed).
 
 ## Keen 5 boarding gate
 

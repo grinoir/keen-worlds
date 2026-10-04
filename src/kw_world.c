@@ -1149,6 +1149,34 @@ void KW_DrawOverlay(void)
 	VL_ScreenRect(x + 4, y - 16, 8, 1, 8);
 }
 
+// Debug (W + E): end the level the way this world's game is won, so its
+// ending plays and the world counts as completed.
+static void KW_DebugEnding(void)
+{
+	switch (ck_currentEpisode->ep)
+	{
+#ifdef WITH_KEEN4
+	case EP_CK4:
+		// The last Council member: his message, then the ending.
+		ck_gameState.ep.ck4.membersRescued = CK_INT(CK4_NumCouncilsToRescue, 8) - 1;
+		ck_gameState.levelState = LS_CouncilRescued;
+		break;
+#endif
+#ifdef WITH_KEEN5
+	case EP_CK5: // Keen 5, Keen 9 and Atroxian Realm
+		ck_gameState.levelState = LS_DestroyedQED;
+		break;
+#endif
+#ifdef WITH_KEEN6
+	case EP_CK6:
+		ck_gameState.levelState = LS_Molly;
+		break;
+#endif
+	default:
+		break;
+	}
+}
+
 void KW_PlayLoopHook(void)
 {
 	// Keen has just set foot in a world for the first time: its own title
@@ -1198,9 +1226,16 @@ void KW_PlayLoopHook(void)
 		return;
 	}
 
-	// Debug shortcut: hold W and press 4 to 9.
+	// Debug shortcuts: hold W and press 4 to 9 to fly to a world, or E to
+	// see the ending of the world Keen is in (on its map or at its ship).
 	if (!IN_GetKeyState(IN_SC_W))
 		return;
+	if (IN_GetKeyState(IN_SC_E))
+	{
+		KW_WaitForButtonsUp();
+		KW_DebugEnding();
+		return;
+	}
 	if (IN_GetKeyState(IN_SC_Four))
 		KW_RequestWorld(KW_KEEN4);
 	else if (IN_GetKeyState(IN_SC_Five))
