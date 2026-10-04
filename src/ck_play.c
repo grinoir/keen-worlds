@@ -1424,7 +1424,9 @@ void StartMusic(int16_t level)
 {
 	int16_t song = -1;
 
-	if ((level >= 20) && (level != -1))
+	// KEEN WORLDS: the limit is a variable (Atroxian Realm has 26 levels and
+	// songs past them); 20 as in the original otherwise.
+	if ((level >= CK_INT(CK_NumMusicLevels, 20)) && (level != -1))
 	{
 		Quit("StartMusic() - bad level number");
 	}

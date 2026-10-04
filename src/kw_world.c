@@ -1729,6 +1729,8 @@ void KW_SelfTest(void)
 			if (!ck_keenObj || !ck_keenObj->currentAction)
 				QuitF("KW_SelfTest: Atroxian Realm map %d has no Keen!", lv);
 			KW_TestLevelSpritesCached("arealm", lv);
+			StartMusic(lv); // must not refuse the level number (levels go past 20)
+			StopMusic();
 			// A checkpoint: touching it saves the level; loading the level
 			// again puts Keen and every object back.
 			for (CK_object *obj = ck_keenObj; obj; obj = obj->next)
