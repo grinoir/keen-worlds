@@ -7,7 +7,7 @@ CK_SPEC.C of its source (Nisaba and K1n9_Duk3; GPL v2 or later).
 #include "kw_ff_keen.h"
 #include "kw_ff_act.h"
 
-void FF_SpawnWorldKeen(int tileX, int tileY); // kw_ff_map.c
+void FF_SpawnWorldKeen(int16_t tileX, int16_t tileY); // kw_ff_map.c
 
 // A sprite cache of its GRAPHCKS.H (START_LUMP/END_LUMP there)
 static void FF_NeedChunks(int first, int last)

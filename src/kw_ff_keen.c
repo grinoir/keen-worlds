@@ -71,11 +71,11 @@ uint16_t zeromap = 0;
 */
 
 void FF_KeenContact(CK_object *a, CK_object *b);
-void FF_GivePoints(int score);
-void FF_SpawnKeen(int tileX, int tileY, int direction);
-void FF_TileBonus(int tileX, int tileY, int itemNumber);
-void FF_SpawnSplash(int tileX, int tileY);
-void FF_GiveDrop(int tileX, int tileY);
+void FF_GivePoints(int16_t score);
+void FF_SpawnKeen(int16_t tileX, int16_t tileY, int16_t direction);
+void FF_TileBonus(int16_t tileX, int16_t tileY, int16_t itemNumber);
+void FF_SpawnSplash(int16_t tileX, int16_t tileY);
+void FF_GiveDrop(int16_t tileX, int16_t tileY);
 void FF_CheckInTiles(CK_object *ob);
 void FF_KeenSwitchThink(CK_object *ob);
 bool FF_CheckEnterHouse(CK_object *ob);
@@ -98,7 +98,7 @@ void FF_KeenAirThink(CK_object *ob);
 void FF_KeenAirReact(CK_object *ob);
 void FF_KeenBounceThink(CK_object *ob);
 void FF_KeenPogoThink(CK_object *ob);
-void FF_KeenToggleTrapDoor(int x, int y);
+void FF_KeenToggleTrapDoor(int16_t x, int16_t y);
 void FF_KeenPogoReact(CK_object *ob);
 void FF_KeenPosContact(CK_object *ob, CK_object *other);
 void FF_KeenSimpleReact(CK_object *ob);
@@ -130,7 +130,7 @@ void FF_T_KeenDream(CK_object *ob);
 void FF_T_DreamBubble(CK_object *ob);
 void FF_R_AutoCache(CK_object *ob);
 
-//void CK_DamageKeen(uint16_t x, uint16_t y);
+//void CK_DamageKeen(unsigned x, unsigned y);
 //void CK_KeenKnockbackReact(objtype *ob);
 void FF_T_KeenStunnedRecover(CK_object *ob);
 void FF_R_KeenStunned(CK_object *ob);
@@ -215,7 +215,7 @@ uint16_t bonussprite[] = {	FF_GEMSHADOWSPR, FF_GEMSHADOWSPR, FF_GEMSHADOWSPR, FF
 							 };
 
 
-void FF_GivePoints(int score);
+void FF_GivePoints(int16_t score);
 
 //==========================================================================
 
@@ -402,12 +402,12 @@ void FF_KeenContact(CK_object *a, CK_object *b)
 	}
 }
 
-int slopespeed[8] = {0, 0, 4, 4, 8, -4, -4, -8};
+int16_t slopespeed[8] = {0, 0, 4, 4, 8, -4, -4, -8};
 
-int ff_KeenPoleOffs[3] = {-8, 0, 8};
+int16_t ff_KeenPoleOffs[3] = {-8, 0, 8};
 
 
-void FF_GivePoints(int score)
+void FF_GivePoints(int16_t score)
 {
 	ck_gameState.keenScore += score;
 //	ck_mapState.pointsCollected += score;	// K1n9_Duk3 addition
@@ -446,7 +446,7 @@ void FF_GivePoints(int score)
 ===============
 */
 
-void FF_SpawnKeen(int tileX, int tileY, int direction)
+void FF_SpawnKeen(int16_t tileX, int16_t tileY, int16_t direction)
 {
 	ck_keenObj->type = CT_Player;
 	ck_keenObj->active = OBJ_ALWAYS_ACTIVE; 
@@ -472,7 +472,7 @@ void FF_SpawnKeen(int tileX, int tileY, int direction)
 ===============
 */
 
-void FF_SpawnItemNotify(int tileX, int tileY, int spriteNum)
+void FF_SpawnItemNotify(int16_t tileX, int16_t tileY, int16_t spriteNum)
 {
 	CK_object *new_object = CK_GetNewObj(true);
 	
@@ -497,7 +497,7 @@ void FF_SpawnItemNotify(int tileX, int tileY, int spriteNum)
 ============================
 */
 
-void FF_TileBonus(int tileX, int tileY, int itemNumber)
+void FF_TileBonus(int16_t tileX, int16_t tileY, int16_t itemNumber)
 {
 	if (itemNumber == 10)
 	{
@@ -552,7 +552,7 @@ void FF_TileBonus(int tileX, int tileY, int itemNumber)
 ===========================
 */
 
-void FF_SpawnSplash(int tileX, int tileY)
+void FF_SpawnSplash(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(true);
 	new_object->type = CT_Friendly;
@@ -572,7 +572,7 @@ void FF_SpawnSplash(int tileX, int tileY)
 ============================
 */
 
-void FF_GiveDrop(int tileX, int tileY)
+void FF_GiveDrop(int16_t tileX, int16_t tileY)
 {
 	RF_ReplaceTiles(&zeromap, 1, tileX, tileY, 1, 1);
 	SD_PlaySound(FF_GOTVITALINSND);
@@ -610,7 +610,7 @@ void FF_GiveDrop(int tileX, int tileY)
 
 void FF_CheckInTiles(CK_object *ob)
 {
-	int x,y, specialTileInfo, targetXUnit;
+	int16_t x,y, specialTileInfo, targetXUnit;
 	uint16_t warpinfo, warp, quicksand, quicksandy;
 
 	ff_map.inwater = warpinfo = warp = quicksand = 0;
@@ -631,7 +631,7 @@ void FF_CheckInTiles(CK_object *ob)
 	{
 		for (x = ob->clipRects.tileX1; x <= ob->clipRects.tileX2; ++x)
 		{
-			int tilenum = FORESPOT(x,y);
+			int16_t tilenum = FORESPOT(x,y);
 			specialTileInfo =  (TI_ForeMisc(tilenum) & INTILE_TYPEMASK);
 			switch (specialTileInfo)
 			{
@@ -745,7 +745,7 @@ void FF_CheckInTiles(CK_object *ob)
 			case MF_BetterWarp:
 				if (x == ob->clipRects.tileXmid)
 				{
-					int distX, distY;
+					int16_t distX, distY;
 					uint16_t info;
 					
 					info = INFOSPOT(x, y);
@@ -884,9 +884,9 @@ check_quicksand:
 ============================
 */
 
-void FF_OpenGemDoor(int targetX, int targetY)
+void FF_OpenGemDoor(int16_t targetX, int16_t targetY)
 {
-	int doorHeight, doorY;
+	int16_t doorHeight, doorY;
 	uint16_t doorTile;
 
 	CK_object *new_object = CK_GetNewObj(false);
@@ -929,9 +929,9 @@ void FF_OpenGemDoor(int targetX, int targetY)
 ============================
 */
 
-void FF_OpenDoubleDoor(int targetX, int targetY)
+void FF_OpenDoubleDoor(int16_t targetX, int16_t targetY)
 {
-	int doorHeight, doorY;
+	int16_t doorHeight, doorY;
 	uint16_t doorType;
 
 	if (targetX > CA_GetMapWidth() || targetX < 2 || targetY > CA_GetMapHeight() || targetY < 2)
@@ -981,14 +981,14 @@ void FF_OpenDoubleDoor(int targetX, int targetY)
 ============================
 */
 
-void FF_ParseToggleStack(int tileX, int tileY)
+void FF_ParseToggleStack(int16_t tileX, int16_t tileY)
 {
-	static int oppositearrow[8] = {2,3,0,1,6,7,4,5};
+	static int16_t oppositearrow[8] = {2,3,0,1,6,7,4,5};
 
 	uint16_t targetX, targetY, x, y;
 	uint16_t info, offset, targetOff, tile;
 
-//	uint16_t top, mid, bot, far *map;	// zapper variables
+//	unsigned top, mid, bot, far *map;	// zapper variables
 
 	offset = ((tileY) * CA_GetMapWidth()) + tileX;
 
@@ -1079,7 +1079,7 @@ void FF_ParseToggleStack(int tileX, int tileY)
 				for (x = targetX - y,targetOff = ((targetY) * CA_GetMapWidth()) + x; x < CA_GetMapWidth(); x++, targetOff++)
 				{
 					{
-						 int anim;
+						 int16_t anim;
 
 						tile = FF_MapAt(1, targetOff);
 						anim = TI_ForeAnimTile(tile);
@@ -1113,14 +1113,14 @@ void FF_ParseToggleStack(int tileX, int tileY)
 =======================
 */
 
-void FF_ToggleSwitch(int switchTileX, int switchTileY)
+void FF_ToggleSwitch(int16_t switchTileX, int16_t switchTileY)
 {
 /*
 	int tileY, tileX;
-	uint16_t currentTile, newTile;
+	unsigned currentTile, newTile;
 	static int infoPlaneInverses[8] = {2,3,0,1,6,7,4,5};	// K1n9_Duk3 mod: added 'static'
-	uint16_t infoPlaneValue;
-	uint16_t switchTarget = INFOSPOT(switchTileX, switchTileY);
+	unsigned infoPlaneValue;
+	unsigned switchTarget = INFOSPOT(switchTileX, switchTileY);
 	int switchTargetX = (switchTarget >> 8);
 	int switchTargetY = (switchTarget & 0xFF);
 */
@@ -1453,7 +1453,7 @@ bool FF_CheckEnterHouse(CK_object *ob)
 
 void FF_T_LineUp(CK_object *ob)
 {
-	int deltaX = ob->user1 - ob->posX;
+	int16_t deltaX = ob->user1 - ob->posX;
 	if (deltaX < 0)
 	{
 		// Move left one px per tick.
@@ -1607,7 +1607,7 @@ void FF_HandleRiding(CK_object *ob)
 {
 	// Save the platform pointer, we might be wiping it.
 	CK_object *plat = ck_keenState.platform;
-	int deltax = ob->deltaPosX;	// K1n9_Duk3 addition
+	int16_t deltax = ob->deltaPosX;	// K1n9_Duk3 addition
 
 
 	if (ob->clipRects.unitX2 < plat->clipRects.unitX1 || ob->clipRects.unitX1 > plat->clipRects.unitX2)
@@ -1814,7 +1814,7 @@ void FF_KeenWalkThink(CK_object *ob)
 #else
 	// FITF version:
 	{
-		 int slopeadjust;
+		 int16_t slopeadjust;
 
 		slopeadjust = slopespeed[ob->topTI & SLOPEMASK] * SD_GetSpriteSync();
 		if (ff_map.nisasi || ff_map.inwater)
@@ -1886,7 +1886,7 @@ void FF_KeenStandThink(CK_object *ob)
 		// up to 5*24 = 120 units in 5 tics. But if Keen just started walking and
 		// there are 4 tics left after this routine is executed, Keen will move
 		// (24*5)/4 + 4*24 = 30 + 96 = 126 units! 
-		ck_nextX = (int)(ob->xDirection * ob->currentAction->velX * SD_GetSpriteSync())/4;
+		ck_nextX = (int16_t)(ob->xDirection * ob->currentAction->velX * SD_GetSpriteSync())/4;
 		
 		// K1n9_Duk3 addition: don't modify this xtry value in StateMachine():
 		ff_keenMustAdjustNextX = false;
@@ -2055,7 +2055,7 @@ void FF_KeenLookUpThink(CK_object *ob)
 
 void FF_KeenLookDownThink(CK_object *ob)
 {
-	int tile1, tile2;
+	int16_t tile1, tile2;
 	uint16_t deltay;
 
 	//Try to jump down
@@ -2325,7 +2325,7 @@ void FF_T_KeenDream(CK_object *ob)
 
 void FF_T_DreamBubble(CK_object *ob)
 {
-	 int randnum;
+	 int16_t randnum;
 
 	if (!ob->user3)
 	{
@@ -2757,13 +2757,13 @@ void FF_KeenAirReact(CK_object *ob)
 				// K1n9_Duk3 mod: use correct timing and also handle second shooting state
 				if (ob->currentAction == CK_ACTION(CK_ACT_keenJumpShoot1))
 				{
-					int temp = ob->actionTimer;
+					int16_t temp = ob->actionTimer;
 					CK_SetAction2(ob, CK_ACTION(CK_ACT_keenShoot1));
 					ob->actionTimer = temp;
 				}
 				else if (ob->currentAction == CK_ACTION(CK_ACT_keenJumpShootUp1))
 				{
-					int temp = ob->actionTimer;
+					int16_t temp = ob->actionTimer;
 					CK_SetAction2(ob, CK_ACTION(CK_ACT_keenShootUp1));
 					ob->actionTimer = temp;
 				}
@@ -2797,7 +2797,7 @@ void FF_KeenAirReact(CK_object *ob)
 		// temp8 = Keen's current upper y coord - 1.5 tiles, rounded to nearest tile, + 1.5 tiles
 		uint16_t temp8 = ((ob->clipRects.unitY1 - 64) & 0xFF00) + 64;
 		// temp10 = temp8 in tile coords, - 1
-		int temp10 = ((uint16_t)temp8 >> G_T_SHIFT) - 1 ;
+		int16_t temp10 = ((uint16_t)temp8 >> G_T_SHIFT) - 1 ;
 
 		// If we're moving past a tile boundary.
 		if (temp6 < temp8 && ob->clipRects.unitY1 >= temp8 && !ff_map.nisasi)	// K1n9_Duk3 mod: don't grab with Nisasi
@@ -2805,11 +2805,11 @@ void FF_KeenAirReact(CK_object *ob)
 			// Moving left...
 			if (ck_inputFrame.xDirection == -1 && (ob->clipRects.unitX1 & 0xFF) == 0)	// if left edge of hitbox is aligned on a tile boundary
 			{
-				int tileX = ob->clipRects.tileX1 - ((ob->rightTI)?1:0);
-				int tileY = temp10;
+				int16_t tileX = ob->clipRects.tileX1 - ((ob->rightTI)?1:0);
+				int16_t tileY = temp10;
 				//VL_ScreenRect((tileX << 4) - (originxglobal >> 4), (tileY << 4) - (originyglobal >> 4), 16, 16, 1);
-				int upperTile = FORESPOT(tileX, tileY);
-				int lowerTile = FORESPOT(tileX, tileY+1);
+				int16_t upperTile = FORESPOT(tileX, tileY);
+				int16_t lowerTile = FORESPOT(tileX, tileY+1);
 				if ( (!TI_ForeLeft(upperTile) && !TI_ForeRight(upperTile) && !TI_ForeTop(upperTile) && !TI_ForeBottom(upperTile)) &
 					TI_ForeRight(lowerTile) && TI_ForeTop(lowerTile))
 				{
@@ -2823,10 +2823,10 @@ void FF_KeenAirReact(CK_object *ob)
 			}
 			else if (ck_inputFrame.xDirection == 1 && (ob->clipRects.unitX2 & 0xFF) == 0xFF)	// if right edge of hitbox is aligned on a tile boundary
 			{
-				int tileX = ob->clipRects.tileX2 + ((ob->leftTI)?1:0);
-				int tileY = temp10;
-				int upperTile = FORESPOT(tileX, tileY);
-				int lowerTile = FORESPOT(tileX, tileY+1);
+				int16_t tileX = ob->clipRects.tileX2 + ((ob->leftTI)?1:0);
+				int16_t tileY = temp10;
+				int16_t upperTile = FORESPOT(tileX, tileY);
+				int16_t lowerTile = FORESPOT(tileX, tileY+1);
 
 				if (!TI_ForeLeft(upperTile) && !TI_ForeRight(upperTile) && !TI_ForeTop(upperTile) && !TI_ForeBottom(upperTile) &
 					TI_ForeLeft(lowerTile) && TI_ForeTop(lowerTile))
@@ -2962,13 +2962,13 @@ void FF_KeenPogoThink(CK_object *ob)
 =======================
 */
 
-void FF_KeenToggleTrapDoor(int x, int y)
+void FF_KeenToggleTrapDoor(int16_t x, int16_t y)
 {
 /*
 	//
 	// old fuse-breaking code from Keen 5
 	//
-	uint16_t brokenFuseTiles[] = {0, 0};
+	unsigned brokenFuseTiles[] = {0, 0};
 
 	CK5_SpawnFuseExplosion(x,y);
 	if (!(--ff_state.fusesRemaining))
@@ -3473,7 +3473,7 @@ void FF_PoleActions(CK_object *ob)
 
 void FF_KeenPoleThink(CK_object *ob)
 {
-	int groundTile;
+	int16_t groundTile;
 
 	if (ck_inputFrame.yDirection == 1)
 	{
@@ -3517,7 +3517,7 @@ void FF_KeenPoleThink(CK_object *ob)
 
 void FF_KeenClimbThink(CK_object *ob)
 {
-	int topTile = FORESPOT(ob->clipRects.tileXmid, ob->clipRects.tileY1);
+	int16_t topTile = FORESPOT(ob->clipRects.tileXmid, ob->clipRects.tileY1);
 	
 	if ((TI_ForeMisc(topTile) & INTILE_TYPEMASK) != MF_Pole)
 	{
@@ -3591,7 +3591,7 @@ void FF_T_KeenPoleShoot(CK_object *ob)
 void FF_KeenDropThink(CK_object *ob)
 {
 
-	int tileUnderneath = FORESPOT(ob->clipRects.tileXmid, RF_UnitToTile(ob->clipRects.unitY2-4*16));
+	int16_t tileUnderneath = FORESPOT(ob->clipRects.tileXmid, RF_UnitToTile(ob->clipRects.unitY2-4*16));
 
 	if ((TI_ForeMisc(tileUnderneath) & INTILE_TYPEMASK) != MF_Pole)
 	{
@@ -3636,7 +3636,7 @@ void FF_KeenPoleReact(CK_object *ob)
 
 	if (TI_ForeTop(FORESPOT(ob->clipRects.tileXmid, ob->clipRects.tileY2)) == 1)
 	{
-		int ymove = (ob->clipRects.unitY2 & 255) + 1;
+		int16_t ymove = (ob->clipRects.unitY2 & 255) + 1;
 		// move Keen out of the floor:
 		ob->posY -= ymove;
 		ob->clipRects.unitY2 -= ymove;	// adjust bottom end of hit rectangle
@@ -3660,7 +3660,7 @@ void FF_KeenPoleReact(CK_object *ob)
 ======================
 */
 
-void FF_SpawnShot(int x, int y, IN_Direction dir)
+void FF_SpawnShot(int16_t x, int16_t y, IN_Direction dir)
 {
 	CK_object *shot, *hit;
 
@@ -3965,7 +3965,7 @@ void FF_KeenShootThink(CK_object *ob)
 
 /*
 // Knocks keen away from the coordinate passed as an argument
-void CK_DamageKeen(uint16_t x, uint16_t y)
+void CK_DamageKeen(unsigned x, unsigned y)
 {
 	if (ck_gameState.difficulty == D_Classic)
 	{
@@ -4026,7 +4026,7 @@ void CK_KeenKnockbackReact(objtype *ob)
 #define STUN_COOLDOWN	(2*70)
 #define RESTUN_DELAY	(70/5)
 
-void FF_StunKeen(int midx)
+void FF_StunKeen(int16_t midx)
 {
 	// make sure Keen isn't dead:
 	// (stunning a dead Keen would revive him in a glitched state!)
@@ -4147,9 +4147,9 @@ bool FF_KeenIsDead(void)
 =======================
 */
 
-void FF_DrownKeen(int tileY)
+void FF_DrownKeen(int16_t tileY)
 {
-	 int i;
+	 int16_t i;
 	 CK_object *ob = ck_keenObj;
 	uint16_t oldx = ob->posX, oldy = ob->posY;
 
@@ -4356,7 +4356,7 @@ void FF_R_KeenBurn(CK_object *ob)
 
 void FF_T_KeenSink(CK_object *ob)
 {
-	 int speed = SD_GetSpriteSync()*3;
+	 int16_t speed = SD_GetSpriteSync()*3;
 
 	ck_nextY = speed;
 	if ((ob->user2 += speed) >= 18*16)

@@ -84,7 +84,7 @@ void FF_CenterActor(CK_object *ob)
 
 void FF_WorldScrollScreen( CK_object *keen )
 {
-	int scr_y, scr_x;
+	int16_t scr_y, scr_x;
 
 	if (ff_keenKilled)
 		return;
@@ -140,8 +140,8 @@ void FF_WorldScrollScreen( CK_object *keen )
 
 void FF_ScrollScreen(CK_object *ob)
 {
-	int pxToMove, cmpAmt;
-	int deltaX = 0, deltaY = 0;	// in Units
+	int16_t pxToMove, cmpAmt;
+	int16_t deltaX = 0, deltaY = 0;	// in Units
 
 	// Don't scroll when Keen got killed, so he can fall out at the bottom
 	if (ff_keenKilled)
@@ -193,7 +193,7 @@ void FF_ScrollScreen(CK_object *ob)
 	}
 	else if (ob->currentAction == CK_ACTION(CK_ACT_keenLookDown3))
 	{
-		int pxToMove;
+		int16_t pxToMove;
 		if (ff_map.screenYpx - SD_GetSpriteSync() < 20)
 		{
 			// Keen should never be so high on the screen that his
@@ -227,7 +227,7 @@ void FF_ScrollScreen(CK_object *ob)
 			cmpAmt = (ff_map.screenYpx << G_P_SHIFT) + rf_scrollYUnit + deltaY;
 			if (cmpAmt != ob->clipRects.unitY2)
 			{
-				int oneDiff, otherDiff;
+				int16_t oneDiff, otherDiff;
 				if (ob->clipRects.unitY2 < cmpAmt)
 					oneDiff = cmpAmt - ob->clipRects.unitY2;
 				else
@@ -249,8 +249,8 @@ void FF_ScrollScreen(CK_object *ob)
 				else
 					deltaY += otherDiff;
 #if 0
-				int adjAmt = (((ff_map.screenYpx << G_P_SHIFT) + rf_scrollYUnit + deltaY - ob->clipRects.unitY2));
-				int adjAmt2 = abs(adjAmt / 8);
+				int16_t adjAmt = (((ff_map.screenYpx << G_P_SHIFT) + rf_scrollYUnit + deltaY - ob->clipRects.unitY2));
+				int16_t adjAmt2 = abs(adjAmt / 8);
 				adjAmt2 = (adjAmt2 <= 48) ? adjAmt2 : 48;
 				if (adjAmt > 0)
 					deltaY -= adjAmt2;
@@ -342,7 +342,7 @@ void FF_WrapScroll(void)
 {
 	if (ff_map.wrapScroll)
 	{
-		int dx, dy;
+		int16_t dx, dy;
 
 		if (rf_scrollXUnit < rf_scrollXMinUnit+256)
 		{

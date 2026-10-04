@@ -17,17 +17,17 @@ void FF_R_Stunned(CK_object *ob);
 void FF_StunObj(CK_object *ob, CK_object *shot, CK_action *stunstate);
 void FF_DoorOpen(CK_object *ob);
 bool FF_DoorsActive(void);
-CK_object *FF_SpawnBonus(int tileX, int tileY, int itemNumber);
+CK_object *FF_SpawnBonus(int16_t tileX, int16_t tileY, int16_t itemNumber);
 void FF_T_Bonus(CK_object *ob);
-void FF_SpawnStaticPlat(int tileX, int tileY);
-void FF_SpawnPlatform(int tileX, int tileY, int direction);
+void FF_SpawnStaticPlat(int16_t tileX, int16_t tileY);
+void FF_SpawnPlatform(int16_t tileX, int16_t tileY, int16_t direction);
 void FF_T_Platform(CK_object *ob);
 void FF_R_Platform(CK_object *ob);
-void FF_SpawnDropPlat(int tileX, int tileY);
+void FF_SpawnDropPlat(int16_t tileX, int16_t tileY);
 void FF_T_DropPlatSit (CK_object *ob);
 void FF_T_DropPlatFall (CK_object *ob);
 void FF_T_DropPlatRise (CK_object *ob);
-void FF_SpawnSlug(int tileX, int tileY);
+void FF_SpawnSlug(int16_t tileX, int16_t tileY);
 void FF_T_Slug(CK_object *ob);
 void FF_T_SlugPiss(CK_object *ob);
 void FF_C_Slug(CK_object *a, CK_object *b);
@@ -35,49 +35,49 @@ void FF_C_SlugSlime(CK_object *a, CK_object *b);
 void FF_R_SlugWalk(CK_object *ob);
 void FF_SmirkyCheckTiles(CK_object *ob);
 void FF_R_PestRest(CK_object *ob);
-void FF_SpawnSkypest(int tileX, int tileY);
+void FF_SpawnSkypest(int16_t tileX, int16_t tileY);
 void FF_T_PestFly(CK_object *ob);
 void FF_C_PestFly(CK_object *a, CK_object *b);
 void FF_C_Squashable(CK_object *a, CK_object *b);
 void FF_T_PestRest(CK_object *ob);
 void FF_R_Pest(CK_object *ob);
-void FF_SpawnPatPat(int tileX, int tileY, int dir);
+void FF_SpawnPatPat(int16_t tileX, int16_t tileY, int16_t dir);
 void FF_T_PatPat(CK_object *ob);
-void FF_SpawnCouncilMember(int tileX, int tileY, int number);
+void FF_SpawnCouncilMember(int16_t tileX, int16_t tileY, int16_t number);
 void FF_T_Council(CK_object *ob);
 void FF_T_CouncilMop(CK_object *ob);
 void FF_C_Council(CK_object *ob, CK_object *hit);
 void FF_R_Council(CK_object *ob);
 void FF_R_Bucket(CK_object *ob);
-void FF_SpawnLindsey(int tileX, int tileY, int num);
+void FF_SpawnLindsey(int16_t tileX, int16_t tileY, int16_t num);
 void FF_T_Lindsey(CK_object *ob);
 void FF_R_Lindsey(CK_object *ob);
 void FF_LindseyVanish(CK_object *ob);
-void FF_SpawnXkyLick(int tileX, int tileY);
+void FF_SpawnXkyLick(int16_t tileX, int16_t tileY);
 void FF_T_XkyLickBounce(CK_object *ob);
 void FF_T_XkyLickShuffle(CK_object *ob);
 void FF_C_XkyLick(CK_object *a, CK_object *b);
 void FF_C_XkyLickAttack(CK_object *a, CK_object *b);
 void FF_R_XkyLickAir(CK_object *ob);
 void FF_R_XkyLick(CK_object *ob);
-void FF_SpawnYorp(int tileX, int tileY);
+void FF_SpawnYorp(int16_t tileX, int16_t tileY);
 void FF_T_YorpWalk(CK_object *ob);
 void FF_T_YorpSearch(CK_object *ob);
 void FF_C_Yorp(CK_object *a, CK_object *b);
-void FF_SpawnDungBeetle(int tileX, int tileY);
-void FF_SpawnChemolain(int tileX, int tileY);
+void FF_SpawnDungBeetle(int16_t tileX, int16_t tileY);
+void FF_SpawnChemolain(int16_t tileX, int16_t tileY);
 void FF_ChemCountdown(CK_object *ob);
 void FF_T_ChemStand(CK_object *ob);
 void FF_T_ChemCycle(CK_object *ob);
 void FF_T_ChemHidden(CK_object *ob);
 void FF_C_ChemRide(CK_object *a, CK_object *b);
 void FF_C_Chem(CK_object *a, CK_object *b);
-void FF_SpawnLogPlatform(int tileX, int tileY, int xdir);
+void FF_SpawnLogPlatform(int16_t tileX, int16_t tileY, int16_t xdir);
 void FF_T_Log(CK_object *ob);
 void FF_R_Log(CK_object *ob);
-void FF_SpawnSalamander(int tileX, int tileY);
+void FF_SpawnSalamander(int16_t tileX, int16_t tileY);
 void FF_SalamanderThink(CK_object *ob);
-void FF_SpawnWormouth(int tileX, int tileY);
+void FF_SpawnWormouth(int16_t tileX, int16_t tileY);
 void FF_WormouthLookRightThink(CK_object *ob);
 void FF_WormouthLookThink(CK_object *ob);
 void FF_WormouthLookLeftThink(CK_object *ob);
@@ -85,21 +85,21 @@ void FF_WormouthThink(CK_object *ob);
 void FF_WormouthLookContact(CK_object *ob, CK_object *hit);
 void FF_WormouthBiteContact(CK_object *ob, CK_object *hit);
 void FF_WormouthWalkReact(CK_object *ob);
-void FF_SpawnShrubbery(int tileX, int tileY);
+void FF_SpawnShrubbery(int16_t tileX, int16_t tileY);
 void FF_T_Shrubbery(CK_object *ob);
 void FF_ShrubberyLookThink(CK_object *ob);
 void FF_T_ShrubberyWalk(CK_object *ob);
 void FF_C_Shrubbery(CK_object *ob, CK_object *hit);
 void FF_R_ShrubberyFall(CK_object *ob);
-void FF_SpawnBounder(int tileX, int tileY);
+void FF_SpawnBounder(int16_t tileX, int16_t tileY);
 void FF_T_Bounder(CK_object *ob);
 void FF_C_Bounder(CK_object *ob, CK_object *hit);
 void FF_R_Bounder(CK_object *ob);
-void FF_SpawnTentacle(int tileX, int tileY);
+void FF_SpawnTentacle(int16_t tileX, int16_t tileY);
 void FF_T_Tentacle(CK_object *ob);
 void FF_T_TentacleAttack(CK_object *ob);
 void FF_C_Tentacle(CK_object *ob, CK_object *hit);
-void FF_SpawnPoleknawel(int tileX, int tileY);
+void FF_SpawnPoleknawel(int16_t tileX, int16_t tileY);
 void FF_T_PoleknawelLand(CK_object *ob);
 void FF_T_PoleknawelWalk(CK_object *ob);
 void FF_T_PoleknawelSlide(CK_object *ob);
@@ -108,20 +108,20 @@ void FF_C_Poleknawel(CK_object *ob, CK_object *hit);
 void FF_R_PoleknawelWalk(CK_object *ob);
 void FF_R_PoleknawelFall(CK_object *ob);
 void FF_KnawlReact(CK_object *ob);
-void FF_SpawnKitten(int tileX, int tileY);
+void FF_SpawnKitten(int16_t tileX, int16_t tileY);
 void FF_T_KittenIdle(CK_object *ob);
 void FF_T_KittenRoll(CK_object *ob);
 void FF_T_KittenExplode(CK_object *ob);
 void FF_C_Kitten(CK_object *ob, CK_object *hit);
-void FF_SpawnGellyGhost(int tileX, int tileY);
+void FF_SpawnGellyGhost(int16_t tileX, int16_t tileY);
 void FF_T_GellyGhost(CK_object *ob);
 void FF_C_GellyGhost(CK_object *ob, CK_object *hit);
 void FF_R_GellyGhost(CK_object *ob);
-void FF_SpawnCollectible(int tileX, int tileY, int number);
-void FF_SpawnRoots(int tileX, int tileY);
+void FF_SpawnCollectible(int16_t tileX, int16_t tileY, int16_t number);
+void FF_SpawnRoots(int16_t tileX, int16_t tileY);
 void FF_T_Roots(CK_object *ob);
 void FF_C_Roots(CK_object *ob, CK_object *hit);
-void FF_SpawnYeti(int tileX, int tileY);
+void FF_SpawnYeti(int16_t tileX, int16_t tileY);
 void FF_PushKeenX(CK_object *hit, CK_object *ob);
 void FF_T_Yeti(CK_object *ob);
 void FF_C_Yeti(CK_object *ob, CK_object *hit);
@@ -132,21 +132,21 @@ void FF_T_TinyYetiJump(CK_object *ob);
 void FF_C_TinyYeit(CK_object *ob, CK_object *hit);
 void FF_R_TinyYetiJump(CK_object *ob);
 void FF_R_TinyYetiRoll(CK_object *ob);
-void FF_SpawnCloud(int tileX, int tileY);
+void FF_SpawnCloud(int16_t tileX, int16_t tileY);
 void FF_SpawnInvisibleCloud(uint16_t unitX, uint16_t unitY, uint16_t w, uint16_t h);
 void FF_T_Cloud(CK_object *ob);
 void FF_SpawnMoletDirt(uint16_t unitX, uint16_t unitY);
 void FF_T_MoletDirt(CK_object *ob);
-void FF_SpawnMolet(int tileX, int tileY);
+void FF_SpawnMolet(int16_t tileX, int16_t tileY);
 void FF_T_Molet(CK_object *ob);
 void FF_T_MoletDig(CK_object *ob);
 void FF_T_MoletFall(CK_object *ob);
 void FF_C_Molet(CK_object *ob, CK_object *hit);
 void FF_MoletWalkReact(CK_object *ob);
 void FF_R_MoletFall(CK_object *ob);
-void FF_SpawnBird(int tileX, int tileY);
-int FF_CountBirds(void);
-int FF_CountEggs(void);
+void FF_SpawnBird(int16_t tileX, int16_t tileY);
+int16_t FF_CountBirds(void);
+int16_t FF_CountEggs(void);
 void FF_T_BirdFly(CK_object *ob);
 void FF_T_BirdAttack(CK_object *ob);
 void FF_T_BirdLayEgg(CK_object *ob);
@@ -156,10 +156,10 @@ void FF_T_BirdEgg(CK_object *ob);
 void FF_C_BirdEgg(CK_object *ob, CK_object *hit);
 void FF_R_BirdEgg(CK_object *ob);
 void FF_R_EggPiece(CK_object *ob);
-void FF_SpawnSneakyTree(int tileX, int tileY);
+void FF_SpawnSneakyTree(int16_t tileX, int16_t tileY);
 void FF_T_SneakyTree(CK_object *ob);
 void FF_R_SneakyTree(CK_object *ob);
-void FF_SpawnCroc(int tileX, int tileY);
+void FF_SpawnCroc(int16_t tileX, int16_t tileY);
 void FF_CrocCheckTiles(CK_object *ob);
 void FF_T_CrocWalk(CK_object *ob);
 void FF_T_CrocJump(CK_object *ob);
@@ -169,65 +169,65 @@ void FF_C_Croc(CK_object *ob, CK_object *hit);
 void FF_R_CrocWalk(CK_object *ob);
 void FF_R_CrocJump(CK_object *ob);
 void FF_R_CrocSnap(CK_object *ob);
-void FF_SpawnTentacleNest(int tileX, int tileY);
+void FF_SpawnTentacleNest(int16_t tileX, int16_t tileY);
 void FF_T_TantacleNest(CK_object *ob);
 void FF_C_TantacleNest(CK_object *ob, CK_object *hit);
 void FF_T_Swallowed(CK_object *ob);
-void FF_SpawnCheckpoint(int tileX, int tileY);
+void FF_SpawnCheckpoint(int16_t tileX, int16_t tileY);
 void FF_T_Checkpoint(CK_object *ob);
 void FF_T_CheckpointCap(CK_object *ob);
-CK_object * FF_SpawnSmoke(int x, int y);
+CK_object * FF_SpawnSmoke(int16_t x, int16_t y);
 void FF_T_Smoke(CK_object *ob);
 void FF_CheckpointSave(CK_object *ob);
 bool FF_CheckpointLoad(void);
 void FF_R_Checkpoint(CK_object* ob);
 void FF_RemoveLeaf(CK_object *ob);
-void FF_SpawnLeaveaTrip(int tileX, int tileY);
+void FF_SpawnLeaveaTrip(int16_t tileX, int16_t tileY);
 void FF_T_LeaveaTree(CK_object *ob);
 void FF_T_LeaveaFall(CK_object *ob);
 void FF_R_LeaveaFall(CK_object *ob);
 void FF_T_LeaveaWalk(CK_object *ob);
 void FF_C_LeaveaWalk(CK_object *ob, CK_object *hit);
 void FF_R_LeaveaWalk(CK_object *ob);
-void FF_SpawnWarble(int tileX, int tileY);
+void FF_SpawnWarble(int16_t tileX, int16_t tileY);
 void FF_T_Warble(CK_object *ob);
 void FF_C_Warble(CK_object *ob, CK_object *hit);
-CK_object *FF_SpawnStaticSprite(uint16_t tileX, uint16_t tileY, int chunk, int priority);
+CK_object *FF_SpawnStaticSprite(uint16_t tileX, uint16_t tileY, int16_t chunk, int16_t priority);
 void FF_SpawnEfree(uint16_t x, uint16_t y);
 void FF_T_Efree(CK_object *ob);
 void FF_EfreeGrabKeen(CK_object *ob);
-void FF_SpawnNisasi(int tileX, int tileY);
+void FF_SpawnNisasi(int16_t tileX, int16_t tileY);
 void FF_NisasiLetGo(CK_object *ob);
 void FF_T_Nisasi(CK_object *ob);
 void FF_C_Nisasi(CK_object *ob, CK_object *hit);
 void FF_R_Nisasi(CK_object *ob);
 void FF_DropNisasi(void);
 void FF_ObjDropNisasi(CK_object *ob);
-void FF_SpawnCouncilPage(int tileX, int tileY, int type);
+void FF_SpawnCouncilPage(int16_t tileX, int16_t tileY, int16_t type);
 void FF_T_Page(CK_object *ob);
 void FF_R_Page(CK_object *ob);
 CK_object *FF_FindPageObj(uint16_t infoval);
 void FF_ControlPage(CK_object *ob);
 void FF_T_KeenEnterMachine(CK_object *ob);
 void FF_T_KeenMindcontrol(CK_object *ob);
-CK_object *FF_SpawnSlideDoor(int tileX, int tileY, int type);
+CK_object *FF_SpawnSlideDoor(int16_t tileX, int16_t tileY, int16_t type);
 void FF_T_SlideDoor(CK_object *ob);
-void FF_SpawnCloneMachine(int tileX, int tileY, int type, int dir);
+void FF_SpawnCloneMachine(int16_t tileX, int16_t tileY, int16_t type, int16_t dir);
 void FF_AnimateCloneObj(CK_object *ob);
 void FF_T_CloneMachine(CK_object *ob);
 void FF_C_CloneMachine(CK_object *ob, CK_object *hit);
 void FF_T_CloneAnimation(CK_object *ob);
 void FF_T_CloneObj(CK_object *ob);
 void FF_R_CloneObj(CK_object *ob);
-void FF_ToggleCloneMachine(int tileX, int tileY);
-void FF_SpawnCoronaPlant(int tileX, int tileY, int dir);
+void FF_ToggleCloneMachine(int16_t tileX, int16_t tileY);
+void FF_SpawnCoronaPlant(int16_t tileX, int16_t tileY, int16_t dir);
 void FF_T_CoronaPlant(CK_object *ob);
 void FF_T_CoronaBall(CK_object *ob);
 void FF_R_CoronaBall(CK_object *ob);
-void FF_SpawnNipnap(int tileX, int tileY);
+void FF_SpawnNipnap(int16_t tileX, int16_t tileY);
 void FF_T_Nipnap(CK_object *ob);
 void FF_C_Nipnap(CK_object *ob, CK_object *hit);
-void FF_SpawnCrab(int tileX, int tileY, bool onCeiling);
+void FF_SpawnCrab(int16_t tileX, int16_t tileY, bool onCeiling);
 void FF_R_CrabTurn(CK_object *ob);
 void FF_T_CrabFloor(CK_object *ob);
 void FF_T_CrabTurn(CK_object *ob);
@@ -240,22 +240,22 @@ void FF_R_CrabWall(CK_object *ob);
 void FF_R_CrabCeiling(CK_object *ob);
 void FF_CrabFallReact(CK_object *ob);
 void FF_C_Crab(CK_object *ob, CK_object *hit);
-void FF_SpawnBrainFucl(int tileX, int tileY);
+void FF_SpawnBrainFucl(int16_t tileX, int16_t tileY);
 void FF_T_BrainFucl(CK_object *ob);
 void FF_C_BrainFucl(CK_object *ob, CK_object *hit);
-void FF_SpawnDonut(int tileX, int tileY);
+void FF_SpawnDonut(int16_t tileX, int16_t tileY);
 void FF_T_Donut(CK_object *ob);
-void FF_SpawnBalloonSmirky(int tileX, int tileY);
+void FF_SpawnBalloonSmirky(int16_t tileX, int16_t tileY);
 void FF_T_BalloonSmirky(CK_object *ob);
-void FF_SpawnFungusAmongus(int tileX, int tileY);
+void FF_SpawnFungusAmongus(int16_t tileX, int16_t tileY);
 void FF_T_Fungus(CK_object *ob);
 void FF_C_Fungus(CK_object *ob, CK_object *hit);
 void FF_R_Fungus(CK_object *ob);
 void FF_R_FungusFall(CK_object *ob);
-void FF_SpawnWorldNessie(int tileX, int tileY);
+void FF_SpawnWorldNessie(int16_t tileX, int16_t tileY);
 void FF_T_WorldNessie(CK_object *ob);
 void FF_R_WorldNessie(CK_object *ob);
-void FF_SpawnFrog(int tileX, int tileY);
+void FF_SpawnFrog(int16_t tileX, int16_t tileY);
 void FF_T_Frog(CK_object *ob);
 void FF_R_Frog(CK_object *ob);
 void FF_PageWalk(CK_object *ob);
@@ -264,15 +264,15 @@ void FF_PageWalkReact(CK_object *ob);
 void FF_KeenLook(CK_object *ob);
 void FF_SpawnQuicksand(uint16_t x, uint16_t y);
 void FF_T_Quicksand(CK_object *ob);
-void FF_SpawnFallBlock(int tileX, int tileY);
+void FF_SpawnFallBlock(int16_t tileX, int16_t tileY);
 void FF_T_FallBlock(CK_object *ob);
 void FF_C_FallBlock(CK_object *ob, CK_object *hit);
 void FF_R_FallBlock(CK_object *ob);
-void FF_SpawnObelisk(int tileX, int tileY);
+void FF_SpawnObelisk(int16_t tileX, int16_t tileY);
 void FF_T_Obelisk(CK_object *ob);
 void FF_C_Obelisk(CK_object *ob, CK_object *hit);
 void FF_R_Obelisk(CK_object *ob);
-void FF_SpawnMummySpawner(int tileX, int tileY);
+void FF_SpawnMummySpawner(int16_t tileX, int16_t tileY);
 void FF_T_MummySpawner(CK_object *ob);
 void FF_MummyCheckForKeen(CK_object *ob);
 void FF_T_Mummy(CK_object *ob);
@@ -281,16 +281,16 @@ void FF_R_Mummy(CK_object *ob);
 void FF_T_KeenMummy(CK_object *ob);
 void FF_C_KeenMummy(CK_object *ob, CK_object *hit);
 void FF_T_Bandage(CK_object *ob);
-void FF_SpawnLemonShark(int tileX, int tileY);
+void FF_SpawnLemonShark(int16_t tileX, int16_t tileY);
 void FF_T_LemonShark(CK_object *ob);
-void FF_SpawnDonutCloud(int tileX, int tileY);
+void FF_SpawnDonutCloud(int16_t tileX, int16_t tileY);
 void FF_T_DonutCloud(CK_object *ob);
-void FF_SpawnJediBoot(int tileX, int tileY);
+void FF_SpawnJediBoot(int16_t tileX, int16_t tileY);
 void FF_T_JediBoot(CK_object *ob);
 void FF_C_JediBoot(CK_object *ob, CK_object *hit);
 void FF_T_KeenSmoke(CK_object *ob);
-void FF_SpawnSlugCans(int tileX, int tileY);
-void FF_SpawnBigShroom(int tileX, int tileY);
+void FF_SpawnSlugCans(int16_t tileX, int16_t tileY);
+void FF_SpawnBigShroom(int16_t tileX, int16_t tileY);
 
 /* "Foray in the Forest" Source Code
  * Copyright (C) 2022-2024 Nisaba
@@ -535,7 +535,7 @@ void FF_R_Fall(CK_object *ob)
 //
 void FF_R_Stunned(CK_object *ob)
 {
-	int starsX, starsY;
+	int16_t starsX, starsY;
 
 	FF_R_Fall(ob);
 /*
@@ -632,7 +632,7 @@ void FF_StunObj(CK_object *ob, CK_object *shot, CK_action *stunstate)
 
 void FF_DoorOpen(CK_object *ob)
 {
-	int i;
+	int16_t i;
 	uint16_t tilesToReplace[0x30];
 
 	if (ob->user1 > 0x30)
@@ -666,7 +666,7 @@ bool FF_DoorsActive(void)
 void CardDoorOpen(objtype *ob)
 {
 	int x, y;
-	uint16_t tilesToReplace[0x30];
+	unsigned tilesToReplace[0x30];
 	for (y = 0; y < 4; ++y)
 	{
 		for (x = 0; x < 4; ++x)
@@ -700,7 +700,7 @@ uint16_t bonusshape[] ={
 	FF_ITEM3UP1SPR, FF_ITEMSTUNNER1SPR
 };
 
-CK_object *FF_SpawnBonus(int tileX, int tileY, int itemNumber)
+CK_object *FF_SpawnBonus(int16_t tileX, int16_t tileY, int16_t itemNumber)
 {
 
 	CK_object *new_object = CK_GetNewObj(false);
@@ -774,7 +774,7 @@ void FF_T_Bonus(CK_object *ob)
 #if 0	// static platforms are not used in FITF
 
 
-void FF_SpawnStaticPlat(int tileX, int tileY)
+void FF_SpawnStaticPlat(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 
@@ -791,7 +791,7 @@ void FF_SpawnStaticPlat(int tileX, int tileY)
 #endif
 
 
-void FF_SpawnPlatform(int tileX, int tileY, int direction)
+void FF_SpawnPlatform(int16_t tileX, int16_t tileY, int16_t direction)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 
@@ -943,7 +943,7 @@ void FF_R_Platform(CK_object *ob)
 
 
 
-void FF_SpawnDropPlat(int tileX, int tileY)
+void FF_SpawnDropPlat(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->type = CT5_Platform;
@@ -1035,7 +1035,7 @@ void FF_R_SlugWalk(CK_object *ob);
 
 
 
-void FF_SpawnSlug(int tileX, int tileY)
+void FF_SpawnSlug(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->type = FF_CT_Slug;
@@ -1052,7 +1052,7 @@ void FF_T_Slug(CK_object *ob)
 {
 	if (!ob->user4)	// K1n9_Duk3 mod: don't slime with Nisasi
 	{
-		 int rnd;	// cannot use uint16_t here!
+		 int16_t rnd;	// cannot use unsigned here!
 
 		rnd = US_RndT();
 		if (ck_gameState.difficulty >= D_Hard)
@@ -1138,7 +1138,7 @@ void FF_R_SlugWalk(CK_object *ob)
 	// If shot, slug gets stunned and the donut can be collected as a point item.
 	if (ob->user1)
 	{
-		int xoff, yoff;
+		int16_t xoff, yoff;
 		
 		switch (ob->gfxChunk)
 		{
@@ -1349,12 +1349,12 @@ void CK_SmirkyCol(objtype *a, objtype *b)
 #ifdef EXTRA_INTERACTIONS
 void FF_SmirkyCheckTiles(CK_object *ob)
 {
-	int x, y;
+	int16_t x, y;
 	for (y = ob->clipRects.tileY1; y <= ob->clipRects.tileY2; y++)
 	{
 		for (x = ob->clipRects.tileX1; x <= ob->clipRects.tileX2; x++)
 		{
-			int mf = TI_ForeMisc(FORESPOT(x, y)) & INTILE_TYPEMASK;
+			int16_t mf = TI_ForeMisc(FORESPOT(x, y)) & INTILE_TYPEMASK;
 			if (mf == MF_Centilife || mf >= MF_Points100 && mf <= MF_Stunner)
 			{
 				CK_object *new_object = CK_GetNewObj(true);
@@ -1424,7 +1424,7 @@ void FF_R_PestRest(CK_object *ob)
 }
 
 
-void FF_SpawnSkypest(int tileX, int tileY)
+void FF_SpawnSkypest(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->type = FF_CT_Skypest;
@@ -1609,9 +1609,9 @@ void CK_SpawnMimrock(int tileX, int tileY)
 
 void CK_MimrockWait(objtype *ob)
 {
-	if (ABS((uint16_t)(ob->clipRects.unitY2 - player->clipRects.unitY2)) <= 0x500)
+	if (ABS((unsigned)(ob->clipRects.unitY2 - player->clipRects.unitY2)) <= 0x500)
 	{
-		if (ABS((uint16_t)(ob->posX - player->posX)) > 0x300)
+		if (ABS((unsigned)(ob->posX - player->posX)) > 0x300)
 		{
 			if (player->posX < ob->posX)
 			{
@@ -1635,10 +1635,10 @@ void CK_MimrockWait(objtype *ob)
 
 void CK_MimrockCheckJump(objtype *ob)
 {
-	if ((ABS((uint16_t)(ob->clipRects.unitY2 - player->clipRects.unitY2)) <= 0x500) &&
+	if ((ABS((unsigned)(ob->clipRects.unitY2 - player->clipRects.unitY2)) <= 0x500) &&
 			(ob->xDirection == player->xDirection))
 	{
-		if (ABS((uint16_t)(ob->posX - player->posX)) < 0x400)
+		if (ABS((unsigned)(ob->posX - player->posX)) < 0x400)
 		{
 			ob->velX = ob->xDirection * 20;
 			ob->velY = -40;
@@ -1723,7 +1723,7 @@ void CK_MimrockBounceDraw(objtype *ob)
 void FF_T_PatPat(CK_object *ob); 
 
 
-void FF_SpawnPatPat(int tileX, int tileY, int dir)
+void FF_SpawnPatPat(int16_t tileX, int16_t tileY, int16_t dir)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->type = FF_CT_PatPat;
@@ -1749,8 +1749,8 @@ void FF_SpawnPatPat(int tileX, int tileY, int dir)
 
 void FF_T_PatPat(CK_object *ob) 
 {
-	int delta;
-	int xdist;
+	int16_t delta;
+	int16_t xdist;
 	uint16_t ydist;
 	bool gofast = false;
 
@@ -1781,7 +1781,7 @@ void FF_T_PatPat(CK_object *ob)
 
 	if ((ob->user1 -= delta) <= 0)
 	{
-		int extra = -ob->user1;
+		int16_t extra = -ob->user1;
 		CK_SetAction2(ob, ob->currentAction->next);
 		ob->user1 = ob->currentAction->timer - extra;
 	}
@@ -1813,9 +1813,9 @@ void FF_T_PatPat(CK_object *ob)
 //extern statetype s_councilstand;
 
 
-void FF_SpawnCouncilMember(int tileX, int tileY, int number)
+void FF_SpawnCouncilMember(int16_t tileX, int16_t tileY, int16_t number)
 {	
-	int addr;
+	int16_t addr;
 	
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->type = FF_CT_CouncilMember;
@@ -1889,7 +1889,7 @@ void FF_C_Council(CK_object *ob, CK_object *hit)
 
 void FF_R_Council(CK_object *ob)
 {
-	int xdir = ob->xDirection;
+	int16_t xdir = ob->xDirection;
 
 	FF_R_Walk(ob);
 
@@ -1928,7 +1928,7 @@ void FF_T_Lindsey(CK_object *ob);
 void FF_R_Lindsey(CK_object *ob);
 
 
-void FF_SpawnLindsey(int tileX, int tileY, int num)
+void FF_SpawnLindsey(int16_t tileX, int16_t tileY, int16_t num)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	//new->active = ac_yes;	//redundant - GetNewObj always sets active to ac_yes
@@ -1965,10 +1965,10 @@ void FF_T_Lindsey(CK_object *ob)
 	}
 
 	FF_AccelerateY(ob, ob->yDirection, 8);
-	if ((int)(ob->user1 - ob->posY) > 0x20)
+	if ((int16_t)(ob->user1 - ob->posY) > 0x20)
 		ob->yDirection = IN_motion_Down;
 
-	if ((int)(ob->posY - ob->user1) > 0x20)
+	if ((int16_t)(ob->posY - ob->user1) > 0x20)
 		ob->yDirection = IN_motion_Up;
 }
 
@@ -2004,7 +2004,7 @@ void FF_LindseyVanish(CK_object *ob)
 
 
 
-void FF_SpawnXkyLick(int tileX, int tileY);
+void FF_SpawnXkyLick(int16_t tileX, int16_t tileY);
 void FF_T_XkyLickBounce(CK_object *ob);
 void FF_T_XkyLickShuffle(CK_object *ob);
 void FF_C_XkyLick(CK_object *a, CK_object *b);
@@ -2019,7 +2019,7 @@ void FF_R_XkyLick(CK_object *ob);
 #define MUSHROOMDELAY (-42)	// counted in bounces (must be negative!)
 
 
-void FF_SpawnXkyLick(int tileX, int tileY)
+void FF_SpawnXkyLick(int16_t tileX, int16_t tileY)
 {
 
 	CK_object *new_object = CK_GetNewObj(false);
@@ -2037,7 +2037,7 @@ void FF_SpawnXkyLick(int tileX, int tileY)
 void FF_T_XkyLickBounce(CK_object *ob) 
 {
 	CK_object *target = ck_keenObj;
-	int dx, dy=0;
+	int16_t dx, dy=0;
 
 	if (ob->user3 > 0)
 	{
@@ -2233,7 +2233,7 @@ void FF_R_XkyLick(CK_object *ob)
 ==============================================================================
 */
 
-void FF_SpawnYorp(int tileX, int tileY)
+void FF_SpawnYorp(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->type = FF_CT_Yorp;
@@ -2248,7 +2248,7 @@ void FF_SpawnYorp(int tileX, int tileY)
 
 void FF_T_YorpWalk(CK_object *ob)
 {
-	int r = US_RndT();
+	int16_t r = US_RndT();
 	if (r < 0x20) 
 	{
 		ob->user1 = 5 + (r >> 3);
@@ -2390,7 +2390,7 @@ void CK_EarlFishDraw(objtype *ob)
 
 
 
-void FF_SpawnDungBeetle(int tileX, int tileY)
+void FF_SpawnDungBeetle(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->type = FF_CT_DungBeetle;
@@ -2422,7 +2422,7 @@ void FF_SpawnDungBeetle(int tileX, int tileY)
 
 
 
-void FF_SpawnChemolain(int tileX, int tileY)
+void FF_SpawnChemolain(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->type = FF_CT_Chemolain;
@@ -2439,7 +2439,7 @@ void FF_SpawnChemolain(int tileX, int tileY)
 
 void FF_ChemCountdown(CK_object *ob)
 {
-	int temp = 1;
+	int16_t temp = 1;
 
 	// count down at 4x the speed if Keen is near:
 	if (abs(ck_keenObj->posX - ob->posX) < 10*256)
@@ -2464,7 +2464,7 @@ void FF_ChemCountdown(CK_object *ob)
 
 void FF_T_ChemStand(CK_object *ob)
 {
-	int temp = US_RndT();
+	int16_t temp = US_RndT();
 
 	if (temp < 2)
 	{
@@ -2660,7 +2660,7 @@ void FF_C_Chem(CK_object *a, CK_object *b)
 */
 
 
-void FF_SpawnLogPlatform(int tileX, int tileY, int xdir)
+void FF_SpawnLogPlatform(int16_t tileX, int16_t tileY, int16_t xdir)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->type = FF_CT_LogPlatform;
@@ -2683,7 +2683,7 @@ void FF_T_Log(CK_object *ob)
 		// Keen is standing on this log, so make it sink slowly:
 		ck_nextY = SD_GetSpriteSync();
 
-		if ((int)(ob->posY - ob->user1) >= 16*16)
+		if ((int16_t)(ob->posY - ob->user1) >= 16*16)
 		{
 			// make Keen fall off:
 			ob->type = FF_CT_SlipperyLog;
@@ -2694,7 +2694,7 @@ void FF_T_Log(CK_object *ob)
 	{
 		// Keen is no longer standing on this log and it hasn't reached its
 		// initial y position again, so make it rise (faster than it sinks):
-		 int speed = -(SD_GetSpriteSync()*4);
+		 int16_t speed = -(SD_GetSpriteSync()*4);
 		if ((ck_nextY = ob->user1 - ob->posY) < speed)
 			ck_nextY = speed;
 	}
@@ -2771,7 +2771,7 @@ void FF_R_Log(CK_object *ob)
 
 
 
-void FF_SpawnSalamander(int tileX, int tileY)
+void FF_SpawnSalamander(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->type = FF_CT_Salamander;
@@ -2788,14 +2788,14 @@ void FF_SpawnSalamander(int tileX, int tileY)
 void FF_SalamanderThink(CK_object *ob)
 {
 	if (abs(ob->clipRects.unitXmid - ck_keenObj->clipRects.unitXmid) < 6*256
-		&& (int)(ob->clipRects.unitY1 - ck_keenObj->clipRects.unitY2) < 3*256
-		&& (int)(ck_keenObj->clipRects.unitY1 - ob->clipRects.unitY2) < 2*256)
+		&& (int16_t)(ob->clipRects.unitY1 - ck_keenObj->clipRects.unitY2) < 3*256
+		&& (int16_t)(ck_keenObj->clipRects.unitY1 - ob->clipRects.unitY2) < 2*256)
 	{
 		CK_SetAction2(ob, CK_ACTION(FF_ACT_SalamanderVanish1));
 	}
 	else if (ob->currentAction == CK_ACTION(FF_ACT_SalamanderStand))
 	{
-		 int rnd = US_RndT();
+		 int16_t rnd = US_RndT();
 		if (rnd < 16)
 		{
 			CK_SetAction2(ob, CK_ACTION(FF_ACT_SalamanderLick1));
@@ -2814,7 +2814,7 @@ void FF_SalamanderThink(CK_object *ob)
 */
 
 
-void FF_SpawnWormouth(int tileX, int tileY)
+void FF_SpawnWormouth(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->type = FF_CT_Wormouth;
@@ -2872,7 +2872,7 @@ void FF_WormouthLookLeftThink(CK_object *ob)
 
 void FF_WormouthThink(CK_object *ob)
 {
-	int xdist, ydist;
+	int16_t xdist, ydist;
 
 	xdist = ck_keenObj->posX - ob->posX;
 	ydist = ck_keenObj->clipRects.unitY2 - ob->clipRects.unitY2;
@@ -2945,7 +2945,7 @@ void FF_WormouthWalkReact(CK_object *ob)
 //extern statetype s_ShrubberyLook3;
 //extern statetype s_ShrubberyLook4;
 
-void FF_SpawnShrubbery(int tileX, int tileY)
+void FF_SpawnShrubbery(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->type = FF_CT_Shrubbery;
@@ -2973,7 +2973,7 @@ void FF_T_Shrubbery(CK_object *ob)
 	else if (ob->gfxChunk == FF_SHRUBBERYSPR)	// only when not already looking around
 	{
 		// randomly start looking around:
-		int rnd = US_RndT();
+		int16_t rnd = US_RndT();
 
 		if (rnd < 0x08)
 		{
@@ -3029,7 +3029,7 @@ void FF_T_ShrubberyWalk(CK_object *ob)
 
 void FF_C_Shrubbery(CK_object *ob, CK_object *hit)
 {
-	int ymove;
+	int16_t ymove;
 
 	switch (hit->type)
 	{
@@ -3110,7 +3110,7 @@ void FF_R_ShrubberyFall(CK_object *ob)
 #define BOUNDER_ACCELERATION_DELAY 20
 
 
-void FF_SpawnBounder(int tileX, int tileY)
+void FF_SpawnBounder(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->type = FF_CT_Bounder;
@@ -3127,7 +3127,7 @@ void FF_SpawnBounder(int tileX, int tileY)
 
 void FF_T_Bounder(CK_object *ob)
 {
-	 int temp;
+	 int16_t temp;
 
 	// If we have a movement speed, the think function was already executed
 	// for this frame and the animation (state change) caused the game to
@@ -3189,7 +3189,7 @@ void FF_T_Bounder(CK_object *ob)
 	//if (((temp ^ ob->velY) & 0x8000) && temp >= 0 && ob->gfxChunk != BOUNDERFLOATSHOTSPR)
 	if ((((temp ^ ob->velY) & 0x8000) && temp >= 0 || ob->topTI) && ob->gfxChunk != FF_BOUNDERFLOATSHOTSPR)
 	{
-		int xdist;
+		int16_t xdist;
 		xdist = ck_keenObj->clipRects.unitXmid - ob->clipRects.unitXmid;
 		if (ob->user2)
 		{
@@ -3346,7 +3346,7 @@ void FF_R_Bounder(CK_object *ob)
 */
 
 
-void FF_SpawnTentacle(int tileX, int tileY)
+void FF_SpawnTentacle(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->type = FF_CT_Tentacle;
@@ -3360,15 +3360,15 @@ void FF_SpawnTentacle(int tileX, int tileY)
 
 void FF_T_Tentacle(CK_object *ob)
 {
-	int xdist =  ck_keenObj->clipRects.unitXmid - ob->clipRects.unitXmid;
+	int16_t xdist =  ck_keenObj->clipRects.unitXmid - ob->clipRects.unitXmid;
 	if (abs(ob->posY - ck_keenObj->posY) < 6*256)
 	{
-		if (xdist < 0 && xdist >= (int)(-3.5*256))
+		if (xdist < 0 && xdist >= (int16_t)(-3.5*256))
 		{
 			ob->xDirection = IN_motion_Left;
 			ob->currentAction = CK_ACTION(FF_ACT_TentacleAttack1);
 		}
-		else if (xdist >= 0 && xdist <= (int)(3.5*256))
+		else if (xdist >= 0 && xdist <= (int16_t)(3.5*256))
 		{
 			ob->xDirection = IN_motion_Right;
 			ob->currentAction = CK_ACTION(FF_ACT_TentacleAttack1);
@@ -3409,7 +3409,7 @@ void FF_C_Tentacle(CK_object *ob, CK_object *hit)
 
 
 
-void FF_SpawnPoleknawel(int tileX, int tileY)
+void FF_SpawnPoleknawel(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->type = FF_CT_Poleknawel;
@@ -3454,7 +3454,7 @@ void FF_T_PoleknawelWalk(CK_object *ob)
 	}
 	else
 	{
-		 int rnd;	// cannot use uint16_t here!
+		 int16_t rnd;	// cannot use unsigned here!
 		
 		rnd = US_RndT();
 		if (!(ck_gameState.difficulty == D_Easy))
@@ -3478,7 +3478,7 @@ void FF_T_PoleknawelSlide(CK_object *ob)
 	}
 	else
 	{
-		 int rnd;	// cannot use uint16_t here!
+		 int16_t rnd;	// cannot use unsigned here!
 		
 		rnd = US_RndT();
 		if (!(ck_gameState.difficulty == D_Easy))
@@ -3630,7 +3630,7 @@ void FF_KnawlReact(CK_object *ob)
 */
 
 
-void FF_SpawnKitten(int tileX, int tileY)
+void FF_SpawnKitten(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->type = FF_CT_Kitten;
@@ -3721,7 +3721,7 @@ void FF_C_Kitten(CK_object *ob, CK_object *hit)
 enum {GG_NORMAL, GG_VANISH, GG_APPEAR, GG_HIDDEN};
 
 
-void FF_SpawnGellyGhost(int tileX, int tileY)
+void FF_SpawnGellyGhost(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->type = FF_CT_GellyGhost;
@@ -3740,7 +3740,7 @@ void FF_SpawnGellyGhost(int tileX, int tileY)
 
 void FF_T_GellyGhost(CK_object *ob)
 {
-	int dx, dy;
+	int16_t dx, dy;
 
 	if (ob->velY == 0)
 	{
@@ -3962,9 +3962,9 @@ void FF_R_GellyGhost(CK_object *ob)
 
 // Note: Keen touching the item is handled in KeenContact() in CK_KEEN.C !
 
-void FF_SpawnCollectible(int tileX, int tileY, int number)
+void FF_SpawnCollectible(int16_t tileX, int16_t tileY, int16_t number)
 {
-	int bit;
+	int16_t bit;
 
 	bit = 1 << number;
 
@@ -3975,8 +3975,8 @@ void FF_SpawnCollectible(int tileX, int tileY, int number)
 		// offsets to allow pixel-perfect positions in BWB cockpit:
 		// (these are in pixel units, relative to the tile position)
 		// Yorp, Bear, Keen, Vort, Garg, Mort, 
-		static  int xoffs[6] = {-3, +3, -6, +1, +0, +3};
-		static  int yoffs[6] = {-2, -3, +6, +0, -5, +1};
+		static  int16_t xoffs[6] = {-3, +3, -6, +1, +0, +3};
+		static  int16_t yoffs[6] = {-2, -3, +6, +0, -5, +1};
 
 		// only spawn the collectible if the player has collected it:
 		if (ff_state.collectiblesTotal & bit)
@@ -4057,7 +4057,7 @@ void FF_SpawnCollectible(int tileX, int tileY, int number)
 */
 
 
-void FF_SpawnRoots(int tileX, int tileY)
+void FF_SpawnRoots(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->clipped = CLIP_not;
@@ -4149,7 +4149,7 @@ void FF_C_Roots(CK_object *ob, CK_object *hit)
 #define TINY_YETI_COUNT_EASY 3	// Also remember that this code needs TINY_YETI_COUNT-1 growing sprites!
 
 
-void FF_SpawnYeti(int tileX, int tileY)
+void FF_SpawnYeti(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->type = FF_CT_Yeti;
@@ -4170,10 +4170,10 @@ void  FF_PushKeenX(CK_object *hit, CK_object *ob)
 	if (hit->currentAction->collide == &FF_KeenContact)
 	{
 		// remember hitnorth, so Keen can still land while being pushed
-		int oldHitNorth = hit->topTI;
-		int oldHitSouth = hit->bottomTI;
-		int oldY = hit->posY;
-		int oldPush = hit->currentAction->stickToGround;
+		int16_t oldHitNorth = hit->topTI;
+		int16_t oldHitSouth = hit->bottomTI;
+		int16_t oldY = hit->posY;
+		int16_t oldPush = hit->currentAction->stickToGround;
 		
 		if (ck_keenState.platform)
 			hit->currentAction->stickToGround = 0;	// don't push Keen down when he's on a platform object
@@ -4275,7 +4275,7 @@ void FF_C_Yeti(CK_object *ob, CK_object *hit)
 		//if (++ob->user1 >= 5)
 		if (++ob->user1 >= (ck_gameState.difficulty == D_Easy? 4 : 5))
 		{
-			 int i;
+			 int16_t i;
 
 			// turn big yeti into tiny yeti:
 			ob->user1 = 10*70;
@@ -4337,8 +4337,8 @@ void FF_C_YetiCloud(CK_object *ob, CK_object *hit)
 
 void FF_T_TinyYetiRoll(CK_object *ob)
 {
-	int xmove = SD_GetSpriteSync() * 28;
-	int xdist = ob->posX - ob->user4;
+	int16_t xmove = SD_GetSpriteSync() * 28;
+	int16_t xdist = ob->posX - ob->user4;
 
 	if ((ob->user1 -= SD_GetSpriteSync()) < 0)
 		ob->user1 = 0;
@@ -4442,7 +4442,7 @@ void FF_T_TinyYetiRoll(CK_object *ob)
 
 void FF_T_TinyYetiJump(CK_object *ob)
 {
-	int xdist = ob->posX - ob->user4;
+	int16_t xdist = ob->posX - ob->user4;
 
 	if ((ob->user1 -= SD_GetSpriteSync()) < 0)
 		ob->user1 = 0;
@@ -4581,7 +4581,7 @@ void FF_R_TinyYetiRoll(CK_object *ob)
 */
 
 
-void FF_SpawnCloud(int tileX, int tileY)
+void FF_SpawnCloud(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->type = FF_CT_Cloud;
@@ -4706,7 +4706,7 @@ void FF_T_MoletDirt(CK_object *ob)
 
 
 
-void FF_SpawnMolet(int tileX, int tileY)
+void FF_SpawnMolet(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->type = CT_Friendly;
@@ -4746,7 +4746,7 @@ void FF_T_Molet(CK_object *ob)
 
 void FF_T_MoletDig(CK_object *ob)
 {
-	int oldchunk = ob->gfxChunk;
+	int16_t oldchunk = ob->gfxChunk;
 	FF_T_Molet(ob);
 	if (ob->gfxChunk != oldchunk)
 	{
@@ -4918,7 +4918,7 @@ void FF_R_MoletFall(CK_object *ob)
 
 
 
-void FF_SpawnBird(int tileX, int tileY)
+void FF_SpawnBird(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->type = FF_CT_Bird;
@@ -4929,9 +4929,9 @@ void FF_SpawnBird(int tileX, int tileY)
 	CK_SetAction(new_object, CK_ACTION(FF_ACT_BirdFly2));
 }
 
-int  FF_CountBirds(void)
+int16_t  FF_CountBirds(void)
 {
-	int count = 0;
+	int16_t count = 0;
 	CK_object *ob;
 
 	for (ob = ck_keenObj->next; ob; ob = ob->next)
@@ -4945,9 +4945,9 @@ int  FF_CountBirds(void)
 	return count;
 }
 
-int  FF_CountEggs(void)
+int16_t  FF_CountEggs(void)
 {
-	int count = 0;
+	int16_t count = 0;
 	CK_object *ob;
 
 	for (ob = ck_keenObj->next; ob; ob = ob->next)
@@ -4962,8 +4962,8 @@ int  FF_CountEggs(void)
 
 void FF_T_BirdFly(CK_object *ob)
 {
-	int ydist = ob->clipRects.unitY2 + 55*16 - ck_keenObj->clipRects.unitY2;
-	int xdist = ck_keenObj->clipRects.unitXmid - ob->clipRects.unitXmid;
+	int16_t ydist = ob->clipRects.unitY2 + 55*16 - ck_keenObj->clipRects.unitY2;
+	int16_t xdist = ck_keenObj->clipRects.unitXmid - ob->clipRects.unitXmid;
 
 	// If we have a movement speed, the think function was already executed
 	// for this frame and the animation (state change) caused the game to
@@ -5295,7 +5295,7 @@ void FF_T_BirdEgg(CK_object *ob)
 
 				// spawn some flying shell pieces
 				{
-					int i;
+					int16_t i;
 
 					for (i=2; i>0; i--)			// Nisaba patch: we only need two eggshell splitter
 					{
@@ -5459,7 +5459,7 @@ enum {ST_LOOK, ST_EXTEND, ST_RETRACT, ST_SLIDE};
 #define SNEAKYTREE_SLIDESPEED2 32
 
 
-void FF_SpawnSneakyTree(int tileX, int tileY)
+void FF_SpawnSneakyTree(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->posX = RF_TileToUnit(tileX);
@@ -5594,7 +5594,7 @@ void FF_T_SneakyTree(CK_object *ob)
 	}
 	else //if (ob->user1 == ST_LOOK)
 	{
-		int xdist = abs(ob->clipRects.unitXmid - ck_keenObj->clipRects.unitXmid);
+		int16_t xdist = abs(ob->clipRects.unitXmid - ck_keenObj->clipRects.unitXmid);
 
 		if (ck_keenObj->xDirection < 0 && ck_keenObj->clipRects.unitX2 < ob->clipRects.unitX1)
 		{
@@ -5679,7 +5679,7 @@ void FF_R_SneakyTree(CK_object *ob)
 #define CROC_XSPEED    26
 
 
-void FF_SpawnCroc(int tileX, int tileY)
+void FF_SpawnCroc(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 
@@ -5702,7 +5702,7 @@ void FF_SpawnCroc(int tileX, int tileY)
 
 void FF_CrocCheckTiles(CK_object *ob)
 {
-	int w,h,i,skip,off;
+	int16_t w,h,i,skip,off;
 
 	h = ob->clipRects.tileY2 - ob->clipRects.tileY1 + 1;
 	w = ob->clipRects.tileX2 - ob->clipRects.tileX1 + 1;
@@ -5713,7 +5713,7 @@ void FF_CrocCheckTiles(CK_object *ob)
 		i = w;
 		while (i--)
 		{
-			 int info = FF_MapAt(2, off++);
+			 int16_t info = FF_MapAt(2, off++);
 
 			switch (info-DIRARROWSTART)
 			{
@@ -5738,7 +5738,7 @@ void FF_CrocCheckTiles(CK_object *ob)
 
 void FF_T_CrocWalk(CK_object *ob)
 {
-	int xdist, ydist;
+	int16_t xdist, ydist;
 
 	FF_CrocCheckTiles(ob);
 
@@ -6056,7 +6056,7 @@ void FF_R_CrocSnap(CK_object *ob)
 #define NEST_ANIMDELAY 10
 
 
-void FF_SpawnTentacleNest(int tileX, int tileY)
+void FF_SpawnTentacleNest(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->type = FF_CT_TentacleNest;
@@ -6177,7 +6177,7 @@ void FF_T_Swallowed(CK_object *ob)
 
 
 
-void FF_SpawnCheckpoint(int tileX, int tileY)
+void FF_SpawnCheckpoint(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->type = FF_CT_Checkpoint;
@@ -6212,7 +6212,7 @@ void FF_T_CheckpointCap(CK_object *ob)
 		CK_RemoveObj(ob);
 }
 
-CK_object * FF_SpawnSmoke(int x, int y)
+CK_object * FF_SpawnSmoke(int16_t x, int16_t y)
 {
 	CK_object *new_object = CK_GetNewObj(true);
 	SD_PlaySound(FF_CHECKPOINTSND);
@@ -6229,7 +6229,7 @@ CK_object * FF_SpawnSmoke(int x, int y)
 
 void FF_T_Smoke(CK_object *ob)
 {
-	 int maxtics = ob->type == FF_CT_LindseyVanish? 8 : 20;
+	 int16_t maxtics = ob->type == FF_CT_LindseyVanish? 8 : 20;
 
 	if ((ob->actionTimer += SD_GetSpriteSync()) >= maxtics)
 	{
@@ -6470,7 +6470,7 @@ void  FF_RemoveLeaf(CK_object *ob)
 	CK_RemoveObj(ob);
 }
 
-void FF_SpawnLeaveaTrip(int tileX, int tileY)
+void FF_SpawnLeaveaTrip(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->posX = RF_TileToUnit(tileX);
@@ -6482,7 +6482,7 @@ void FF_SpawnLeaveaTrip(int tileX, int tileY)
 
 void FF_T_LeaveaTree(CK_object *ob)
 {
-	int xdist;
+	int16_t xdist;
 
 	switch (ob->user1)
 	{
@@ -6597,7 +6597,7 @@ void FF_R_LeaveaFall(CK_object *ob)
 
 void FF_T_LeaveaWalk(CK_object *ob)
 {
-	int xdist;
+	int16_t xdist;
 	ob->zLayer = 2;
 
 	if (!CK_ObjectVisible(ob))
@@ -6679,7 +6679,7 @@ enum {WARBLE_RISE, WARBLE_IDLE, WARBLE_SINK, WARBLE_HIDE};
 #define WARBLE_ANIM_DELAY 18
 
 
-void FF_SpawnWarble(int tileX, int tileY)
+void FF_SpawnWarble(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 
@@ -6694,7 +6694,7 @@ void FF_SpawnWarble(int tileX, int tileY)
 
 void FF_T_Warble(CK_object *ob)
 {
-	int xdist = ob->clipRects.unitXmid - ck_keenObj->clipRects.unitXmid;
+	int16_t xdist = ob->clipRects.unitXmid - ck_keenObj->clipRects.unitXmid;
 	xdist = abs(xdist);
 	switch (ob->user1)
 	{
@@ -6809,7 +6809,7 @@ void FF_C_Warble(CK_object *ob, CK_object *hit)
 ==============================================================================
 */
 
-CK_object *FF_SpawnStaticSprite(uint16_t tileX, uint16_t tileY, int chunk, int priority)
+CK_object *FF_SpawnStaticSprite(uint16_t tileX, uint16_t tileY, int16_t chunk, int16_t priority)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->posX = RF_TileToUnit(tileX);
@@ -6879,7 +6879,7 @@ void FF_T_Efree(CK_object *ob)
 			ob->actionTimer -= 6;
 			if (ob->user2 < 5)
 			{
-				static uint16_t anim[] = {EFREE3SPR, EFREE1SPR, EFREE4SPR, EFREE1SPR, EFREE5SPR};
+				static unsigned anim[] = {EFREE3SPR, EFREE1SPR, EFREE4SPR, EFREE1SPR, EFREE5SPR};
 				ob->gfxChunk = anim[ob->user2++];
 			}
 			else
@@ -6947,7 +6947,7 @@ animate:
 			else
 			{
 				//random blink animation:
-				int rnd = US_RndT();
+				int16_t rnd = US_RndT();
 				if (rnd < 24)
 				{
 					ob->user2 &= 0x8000;
@@ -6994,7 +6994,7 @@ void FF_EfreeGrabKeen(CK_object *ob)
 */
 
 
-void FF_SpawnNisasi(int tileX, int tileY)
+void FF_SpawnNisasi(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->posX = RF_TileToUnit(tileX);
@@ -7099,7 +7099,7 @@ normal:
 		ob->gfxChunk = FF_NISASIHANGLSPR + 2 + ob->xDirection*2;
 		if (!ob->topTI)
 		{
-			int wall;
+			int16_t wall;
 			if (ob->leftTI)
 				wall = TI_ForeLeft(FORESPOT(ob->clipRects.tileX2+1, ob->clipRects.tileY2));
 			else
@@ -7744,7 +7744,7 @@ enum {
 
 
 
-void FF_SpawnCouncilPage(int tileX, int tileY, int type)
+void FF_SpawnCouncilPage(int16_t tileX, int16_t tileY, int16_t type)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->posX = RF_TileToUnit(tileX) + 8*16;
@@ -7865,7 +7865,7 @@ inactive:
 		else
 		{
 			// slide to the middle of the switch tile:
-			 int maxspeed = SD_GetSpriteSync()*PAGE_SLIDESPEED;
+			 int16_t maxspeed = SD_GetSpriteSync()*PAGE_SLIDESPEED;
 			ck_nextX = ob->user1-ob->clipRects.unitX1;
 			if (ck_nextX < -maxspeed)
 			{
@@ -8107,7 +8107,7 @@ void FF_T_KeenMindcontrol(CK_object *ob)
 #define DOOR_ANIM_DELAY 4
 
 
-CK_object *FF_SpawnSlideDoor(int tileX, int tileY, int type)
+CK_object *FF_SpawnSlideDoor(int16_t tileX, int16_t tileY, int16_t type)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->type = FF_CT_SlideDoor;
@@ -8229,9 +8229,9 @@ enum {CLONE_POLEKNAWEL, CLONE_MOLET, CLONE_CHEMOLAIN, CLONE_NISASI, CLONE_JANITO
 #error bad SCAN_DIR
 #endif
 
-static int cloneBaseSprite[NUMCLONETYPES] = {FF_POLEKNAWELWALK1SPR, FF_MOLETWALKR1SPR, FF_CHEMLOOK1SPR, FF_NISASIFLOORSPR, FF_COUNCILSTANDRSPR};
+static int16_t cloneBaseSprite[NUMCLONETYPES] = {FF_POLEKNAWELWALK1SPR, FF_MOLETWALKR1SPR, FF_CHEMLOOK1SPR, FF_NISASIFLOORSPR, FF_COUNCILSTANDRSPR};
 
-void FF_SpawnCloneMachine(int tileX, int tileY, int type, int dir)
+void FF_SpawnCloneMachine(int16_t tileX, int16_t tileY, int16_t type, int16_t dir)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->type = FF_CT_CloneMachineOff;
@@ -8457,7 +8457,7 @@ void C_CloneMachine(objtype *ob, objtype *hit)
 //New:
 void FF_C_CloneMachine(CK_object *ob, CK_object *hit)
 {
-	int xdist;
+	int16_t xdist;
 	uint16_t tile;
 
 	if (ob->user1 == CLONE_JANITOR)
@@ -8622,7 +8622,7 @@ void FF_R_CloneObj(CK_object *ob)
 }
 
 
-void FF_ToggleCloneMachine(int tileX, int tileY)
+void FF_ToggleCloneMachine(int16_t tileX, int16_t tileY)
 {
 	CK_object *o;
 	uint16_t position = tileX | (tileY << 8);
@@ -8662,7 +8662,7 @@ void FF_ToggleCloneMachine(int tileX, int tileY)
 */
 
 
-void FF_SpawnCoronaPlant(int tileX, int tileY, int dir)
+void FF_SpawnCoronaPlant(int16_t tileX, int16_t tileY, int16_t dir)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->type = FF_CT_CoronaPlant;
@@ -8750,7 +8750,7 @@ void FF_T_CoronaBall(CK_object *ob)
 		//
 
 		// remove after 1.4 / 1.0 seconds
-		if (ob->actionTimer >= (ck_gameState.difficulty >= D_Hard? (int)(1.4*70) : (int)(1.0*70)))
+		if (ob->actionTimer >= (ck_gameState.difficulty >= D_Hard? (int16_t)(1.4*70) : (int16_t)(1.0*70)))
 		//if (ob->actionTimer >= (int)(1.0*TickBase))
 			CK_RemoveObj(ob);
 	}
@@ -8799,7 +8799,7 @@ void FF_R_CoronaBall(CK_object *ob)
 enum {NIPNAP_IDLE, NIPNAP_DOWN, NIPNAP_UP, NIPNAP_PAUSE};
 
 
-void FF_SpawnNipnap(int tileX, int tileY)
+void FF_SpawnNipnap(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->type = FF_CT_Nipnap;
@@ -8931,7 +8931,7 @@ typedef enum {
 // left or right side of the crab. If the crab is climbing the left side of a
 // wall, then the wall will be on the right side of the crab (and vice versa).
 
-void FF_SpawnCrab(int tileX, int tileY, bool onCeiling)
+void FF_SpawnCrab(int16_t tileX, int16_t tileY, bool onCeiling)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->type = FF_CT_Crab;
@@ -8986,11 +8986,11 @@ void FF_CrabStartTurn(CK_object *ob, uint16_t tx, uint16_t ty, turntype turn)
 #define XOFF (CRAB_XMID/2) 
 #define YOFF (CRAB_YMID/2) 
 #if 1
-		static int xoff[8] = {-XOFF, XOFF,  XOFF, -XOFF, -XOFF,  XOFF, XOFF, -XOFF};
-		static int yoff[8] = { YOFF, YOFF, -YOFF, -YOFF, -YOFF, -YOFF, YOFF,  YOFF};
+		static int16_t xoff[8] = {-XOFF, XOFF,  XOFF, -XOFF, -XOFF,  XOFF, XOFF, -XOFF};
+		static int16_t yoff[8] = { YOFF, YOFF, -YOFF, -YOFF, -YOFF, -YOFF, YOFF,  YOFF};
 #else
-		static int xoff[8] = {-XOFF, XOFF,  XOFF, -XOFF, -XOFF,  XOFF, XOFF, -XOFF-4*16};
-		static int yoff[8] = { YOFF, YOFF, -YOFF, -YOFF, -YOFF, -YOFF-4*16, YOFF,  YOFF-4*16};
+		static int16_t xoff[8] = {-XOFF, XOFF,  XOFF, -XOFF, -XOFF,  XOFF, XOFF, -XOFF-4*16};
+		static int16_t yoff[8] = { YOFF, YOFF, -YOFF, -YOFF, -YOFF, -YOFF-4*16, YOFF,  YOFF-4*16};
 #endif
 #undef XOFF
 #undef YOFF
@@ -9042,13 +9042,13 @@ void FF_T_CrabFloor(CK_object *ob)
 
 void FF_T_CrabTurn(CK_object *ob)
 {
-	 int turn = ob->user2;
+	 int16_t turn = ob->user2;
 	
 	if (turn >= outer_start)
 	{
 		// these tables now define the EXACT position of the Crab after turning,
 		// in relation to the tile it climbed around (in global units):
-		static int xoff[8] =
+		static int16_t xoff[8] =
 		{
 			// outer_FloorToLeftWall, outer_FloorToRightWall:
 			-(CRAB_X2+1), 256-CRAB_X1,
@@ -9059,7 +9059,7 @@ void FF_T_CrabTurn(CK_object *ob)
 			// outer_LeftWallToCeiling, outer_RightWallToCeiling:
 			-CRAB_XMID+16, 256-CRAB_XMID-16,
 		};
-		static int yoff[8] =
+		static int16_t yoff[8] =
 		{
 			// outer_FloorToLeftWall, outer_FloorToRightWall:
 			-CRAB_YMID+16, -CRAB_YMID+16,
@@ -9092,7 +9092,7 @@ void FF_T_CrabTurn(CK_object *ob)
 
 void FF_T_CrabWall(CK_object *ob)
 {
-	int tx, ty;
+	int16_t tx, ty;
 
 	//
 	// update animation:
@@ -9236,8 +9236,8 @@ void FF_R_CrabFloor(CK_object *ob)
 	}
 	else if (!ob->topTI)
 	{
-		int tx = RF_UnitToTile(ob->posX - ob->deltaPosX + CRAB_XMID);
-		int ty = RF_UnitToTile(ob->posY + CRAB_Y2 + 16);
+		int16_t tx = RF_UnitToTile(ob->posX - ob->deltaPosX + CRAB_XMID);
+		int16_t ty = RF_UnitToTile(ob->posY + CRAB_Y2 + 16);
 		
 		if (ob->xDirection > 0)
 		{
@@ -9342,8 +9342,8 @@ void FF_R_CrabCeiling(CK_object *ob)
 	}
 	else if (!ob->bottomTI)
 	{
-		int tx = RF_UnitToTile(ob->posX - ob->deltaPosX + CRAB_XMID);
-		int ty = RF_UnitToTile(ob->posY + CRAB_Y1 - 16);
+		int16_t tx = RF_UnitToTile(ob->posX - ob->deltaPosX + CRAB_XMID);
+		int16_t ty = RF_UnitToTile(ob->posY + CRAB_Y1 - 16);
 
 		if (ob->xDirection > 0)
 		{
@@ -9420,7 +9420,7 @@ void FF_C_Crab(CK_object *ob, CK_object *hit)
 */
 
 
-void FF_SpawnBrainFucl(int tileX, int tileY)
+void FF_SpawnBrainFucl(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->type = FF_CT_BrainFucl;
@@ -9437,7 +9437,7 @@ void FF_T_BrainFucl(CK_object *ob)
 {
 	if (ob->user1)
 	{
-		 int maxspeed = SD_GetSpriteSync()*2;
+		 int16_t maxspeed = SD_GetSpriteSync()*2;
 
 		ck_nextX = ck_keenObj->posX + 5*16 - ob->posX;
 
@@ -9551,7 +9551,7 @@ void FF_C_BrainFucl(CK_object *ob, CK_object *hit)
 #define DONUT_ANIM_DELAY 6
 
 
-void FF_SpawnDonut(int tileX, int tileY)
+void FF_SpawnDonut(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->clipped = CLIP_not;
@@ -9581,14 +9581,14 @@ void FF_T_Donut(CK_object *ob)
 
 	ob->gfxChunk = ob->actionTimer < DONUT_ANIM_DELAY ? FF_FLYDONUT1SPR : FF_FLYDONUT2SPR; 
 
-	if ((int)(ob->user2 - ob->posX) > 74*16)
+	if ((int16_t)(ob->user2 - ob->posX) > 74*16)
 		ob->xDirection = IN_motion_Right;
-	if ((int)(ob->posX - ob->user2) > 74*16)
+	if ((int16_t)(ob->posX - ob->user2) > 74*16)
 		ob->xDirection = IN_motion_Left;
 
-	if ((int)(ob->user3 - ob->posY) > 24*16)
+	if ((int16_t)(ob->user3 - ob->posY) > 24*16)
 		ob->yDirection = IN_motion_Down;
-	if ((int)(ob->posY - ob->user3) > 24*16)
+	if ((int16_t)(ob->posY - ob->user3) > 24*16)
 		ob->yDirection = IN_motion_Up;
 
 	FF_AccelerateX(ob, ob->xDirection, 9);
@@ -9610,7 +9610,7 @@ void FF_T_Donut(CK_object *ob)
 */
 
 
-void FF_SpawnBalloonSmirky(int tileX, int tileY)
+void FF_SpawnBalloonSmirky(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->clipped = CLIP_not;
@@ -9658,7 +9658,7 @@ void FF_T_BalloonSmirky(CK_object *ob)
 
 enum {FU_IDLE, FU_WALK, FU_STUNNED, FU_WAKEUP};
 
-void FF_SpawnFungusAmongus(int tileX, int tileY)
+void FF_SpawnFungusAmongus(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->posX = RF_TileToUnit(tileX-1);
@@ -9801,7 +9801,7 @@ void FF_R_FungusFall(CK_object *ob)
 #define WORDLNESSIE_DELAY 1
 
 
-void FF_SpawnWorldNessie(int tileX, int tileY)
+void FF_SpawnWorldNessie(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->clipped = CLIP_not;
@@ -9813,7 +9813,7 @@ void FF_SpawnWorldNessie(int tileX, int tileY)
 
 void FF_T_WorldNessie(CK_object *ob)
 {
-	int xdist, ydist;
+	int16_t xdist, ydist;
 
 	switch (ob->user1)
 	{
@@ -9886,7 +9886,7 @@ void FF_R_WorldNessie(CK_object *ob)
 	if (ob->user2)
 	{
 		// draw with clipping
-		int skip = WORLDNESSIE_SPRITEHEIGHT - ob->user2;
+		int16_t skip = WORLDNESSIE_SPRITEHEIGHT - ob->user2;
 		RF_PlaceSpriteClipped(&ob->sde, ob->posX, ob->posY+RF_PixelToUnit(skip), ob->gfxChunk, false, ob->zLayer, -skip);
 		//R_Draw(ob);
 	}
@@ -9917,7 +9917,7 @@ void FF_R_WorldNessie(CK_object *ob)
 #define FROG_MAXJUMPDELAY (18*70)
 
 
-void FF_SpawnFrog(int tileX, int tileY)
+void FF_SpawnFrog(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->posX = RF_TileToUnit(tileX);
@@ -10158,7 +10158,7 @@ void FF_T_Quicksand(CK_object *ob)
 */
 
 
-void FF_SpawnFallBlock(int tileX, int tileY)
+void FF_SpawnFallBlock(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(true);
 
@@ -10180,7 +10180,7 @@ void FF_T_FallBlock(CK_object *ob)
 			&& ck_keenObj->clipRects.unitY1 > ob->clipRects.unitY2)
 		{
 			// abort if any blocking tiles are in the way:
-			 int y;
+			 int16_t y;
 			 uint16_t mapoff = ((ob->clipRects.tileY2) * CA_GetMapWidth()) + ob->clipRects.tileXmid;
 			for (y = ob->clipRects.tileY2; y <= ck_keenObj->clipRects.tileY1; y++, mapoff+=CA_GetMapWidth())
 			{
@@ -10256,7 +10256,7 @@ void FF_R_FallBlock(CK_object *ob)
 #define OBELISK_MAXSINK		80	// how many pixels the Obelisk can sink in total
 #define OBELISK_PERSHOT		8	// sink this many pixels after each shot
 
-void FF_SpawnObelisk(int tileX, int tileY)
+void FF_SpawnObelisk(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 
@@ -10354,7 +10354,7 @@ void FF_R_Obelisk(CK_object *ob)
 enum {MUMMY_STAND, MUMMY_RISE, MUMMY_SINK, MUMMY_HIDDEN, MUMMY_RUN, MUMMY_SPIN, MUMMY_SPINDONE, MUMMY_LOOK, MUMMY_AFTERLOOK};
 enum {KMUMMY_FALL, KMUMMY_PREWRAP, KMUMMY_WRAP, KMUMMY_POSTWRAP, KMUMMY_VANISH, KMUMMY_WAITSCROLL, KMUMMY_UNWRAP, KMUMMY_DONE};
 
-void FF_SpawnMummySpawner(int tileX, int tileY)
+void FF_SpawnMummySpawner(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 
@@ -10655,7 +10655,7 @@ void FF_R_Mummy(CK_object *ob)
 {
 	if (!ob->topTI || ob->leftTI && ob->xDirection > 0 || ob->rightTI && ob->xDirection < 0)
 	{
-		 int oldtimer = ob->actionTimer;
+		 int16_t oldtimer = ob->actionTimer;
 		ob->posX -= ob->deltaPosX;
 		ob->xDirection = -ob->xDirection;
 		CK_SetAction2(ob, ob->currentAction);
@@ -10856,7 +10856,7 @@ void FF_T_Bandage(CK_object *ob)
 */
 
 
-void FF_SpawnLemonShark(int tileX, int tileY)
+void FF_SpawnLemonShark(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->clipped = CLIP_not;
@@ -10891,7 +10891,7 @@ void FF_T_LemonShark(CK_object *ob)
 */
 
 
-void FF_SpawnDonutCloud(int tileX, int tileY)
+void FF_SpawnDonutCloud(int16_t tileX, int16_t tileY)
 {
 	if (ck_gameState.keenScore >= BONUSLEVEL_SCORELIMIT && !ff_state.cheated && !ck_gameState.levelsDone[MAP_BONUSLEVEL])
 	{
@@ -10942,7 +10942,7 @@ void FF_T_DonutCloud(CK_object *ob)
 */
 
 
-void FF_SpawnJediBoot(int tileX, int tileY)
+void FF_SpawnJediBoot(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->type = FF_CT_JediBoot;
@@ -11052,7 +11052,7 @@ void FF_T_KeenSmoke(CK_object *ob)
 ==============================================================================
 */
 
-void FF_SpawnSlugCans(int tileX, int tileY)
+void FF_SpawnSlugCans(int16_t tileX, int16_t tileY)
 {
 	// Note: The static sprites use MAXPRIORITY to make sure they are drawn on
 	// on top of the BWB sprite. This could cause conflicts with the score box,
@@ -11060,7 +11060,7 @@ void FF_SpawnSlugCans(int tileX, int tileY)
 	// box will never overlap.
 	
 	CK_object *ob;
-	int toplace = ff_state.slugcans;
+	int16_t toplace = ff_state.slugcans;
 	
 	// Note: Cheaters can collect an infinite amount of slug cans, which will
 	// lead to extra cans being spawned at a weird position and will eventually
@@ -11162,7 +11162,7 @@ void FF_SpawnSlugCans(int tileX, int tileY)
 ==============================================================================
 */
 
-void FF_SpawnBigShroom(int tileX, int tileY)
+void FF_SpawnBigShroom(int16_t tileX, int16_t tileY)
 {
 	CK_object *new_object = CK_GetNewObj(false);
 	new_object->posX = RF_TileToUnit(tileX);

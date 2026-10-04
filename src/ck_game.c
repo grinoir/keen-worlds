@@ -701,6 +701,7 @@ bool FF_IsActive(void); // KEEN WORLDS: Foray in the Forest has its own box (kw_
 void FF_BeginCacheBox(const char *title, int numChunks);
 void FF_UpdateCacheBox(void);
 void FF_LevelEnded(void);
+void FF_NewGame(void);
 void FF_AfterLevelEnded(void);
 
 void CK_BeginCacheBox(const char *title, int numChunks)
@@ -950,6 +951,8 @@ void CK_GameLoop()
 			if (getenv("KW_AUTOLEVEL"))
 				ck_gameState.currentLevel = atoi(getenv("KW_AUTOLEVEL"));
 			ck_gameState.difficulty = ck_startingDifficulty;
+			if (FF_IsActive())
+				FF_NewGame(); // KEEN WORLDS: Foray in the Forest's lives and ammo by difficulty
 			ck_startingDifficulty = D_NotPlaying;
 		loadLevel:
 			CK_LoadLevel(true, false);

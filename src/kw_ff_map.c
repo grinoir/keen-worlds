@@ -64,17 +64,17 @@ void FF_T_MapShip(CK_object *ob);
 //===========================================================================
 
 
-static int worldshapes[] ={ FF_WORLDKEENU1SPR-1, FF_WORLDKEENUR1SPR-1, FF_WORLDKEENR1SPR-1, FF_WORLDKEENDR1SPR-1, FF_WORLDKEEND1SPR-1, FF_WORLDKEENDL1SPR-1, FF_WORLDKEENL1SPR-1, FF_WORLDKEENUL1SPR-1 };
-static int worldanims[] ={ 2, 3, 1, 3}; 
+static int16_t worldshapes[] ={ FF_WORLDKEENU1SPR-1, FF_WORLDKEENUR1SPR-1, FF_WORLDKEENR1SPR-1, FF_WORLDKEENDR1SPR-1, FF_WORLDKEEND1SPR-1, FF_WORLDKEENDL1SPR-1, FF_WORLDKEENL1SPR-1, FF_WORLDKEENUL1SPR-1 };
+static int16_t worldanims[] ={ 2, 3, 1, 3}; 
 
-void FF_SpawnWorldKeen(int tileX, int tileY)
+void FF_SpawnWorldKeen(int16_t tileX, int16_t tileY)
 {
 	uint16_t info = INFOSPOT(tileX+1, tileY);
 
 	ck_keenObj->active = OBJ_ALWAYS_ACTIVE;
 	if (ck_gameState.mapPosX == 0 && info != 0)
 	{
-		int px, py;
+		int16_t px, py;
 
 		ck_keenObj->clipped = CLIP_not;
 		ck_keenObj->type = CT_Friendly;
@@ -145,8 +145,8 @@ void FF_T_MapShip(CK_object *ob)	// K1n9_Duk3 addition
 	}
 	else
 	{
-		int xdist, ydist, vx, vy;
-		int dist, speed;
+		int16_t xdist, ydist, vx, vy;
+		int16_t dist, speed;
 
 		// calculate distance from target:
 		xdist = ob->user1 - ob->posX;
@@ -176,13 +176,13 @@ void FF_T_MapShip(CK_object *ob)	// K1n9_Duk3 addition
 		// set movement speed for the current vector
 		if (vx > vy)
 		{
-			long tmp = (long)ydist * (long)speed;
+			int32_t tmp = (int32_t)ydist * (int32_t)speed;
 			ck_nextY = tmp / vx;
 			ck_nextX = (xdist < 0) ? -speed : speed;
 		}
 		else
 		{
-			long tmp = (long)xdist * (long)speed;
+			int32_t tmp = (int32_t)xdist * (int32_t)speed;
 			ck_nextX = tmp / vy;
 			ck_nextY = (ydist < 0) ? -speed : speed;
 		}
@@ -225,7 +225,7 @@ void FF_T_MapShip(CK_object *ob)	// K1n9_Duk3 addition
 void FF_CheckEnterLevel(CK_object * ob)
 {
 
-	int tx, ty;
+	int16_t tx, ty;
 
 	for (ty = ob->clipRects.tileY1; ty <= ob->clipRects.tileY2; ty++)
 	{
@@ -349,7 +349,7 @@ void FF_T_KeenWorldWalk(CK_object * ob)
 void FF_CheckWorldInTiles(CK_object *keen)
 {
 
-	int midTileX, midTileY;
+	int16_t midTileX, midTileY;
 	uint16_t tile;
 	uint8_t info;
 
@@ -383,7 +383,7 @@ void FF_CheckWorldInTiles(CK_object *keen)
 
 void FF_SpawnFlag(uint16_t tileX, uint16_t tileY, uint16_t spriteoff);
 /*
-void CK_SpawnFlippingFlag(uint16_t tileX, uint16_t tileY, uint16_t spriteoff);
+void CK_SpawnFlippingFlag(unsigned tileX, unsigned tileY, unsigned spriteoff);
 void TossThink (objtype *ob);
 void PathThink (objtype *ob);
 void FlagAlign(objtype *ob);
@@ -393,7 +393,7 @@ void FF_R_Flag(CK_object *ob);
 /*
 */
 
-//void SpawnRisingFlag(uint16_t tileX, uint16_t tileY, uint16_t spriteoff);
+//void SpawnRisingFlag(unsigned tileX, unsigned tileY, unsigned spriteoff);
 void FF_T_FlagRise(CK_object *ob);
 
 
@@ -452,12 +452,12 @@ void FF_T_FlagRise(CK_object *ob)
 
 /*
 typedef struct {
-	uint16_t x, y;
+	unsigned x, y;
 } flagpointtype;
 
 flagpointtype flagpoints[30];
 
-void CK_SpawnFlippingFlag(uint16_t tileX, uint16_t tileY, uint16_t spriteoff)
+void CK_SpawnFlippingFlag(unsigned tileX, unsigned tileY, unsigned spriteoff)
 {
 	long deltaX, deltaY;
 	int i;

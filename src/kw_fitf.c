@@ -503,12 +503,48 @@ void FF_DrawStatusWindow(void)
 	US_SetPrintColour(oldcolor);
 }
 
+// ---- What a difficulty sets (ApplyDifficulty in CK_GAME.C) ----
+
+// The limits always; lives and ammo only for a game begun in this world
+// (Keen arriving from another world keeps what he has).
+static void FF_ApplyDifficulty(bool newGame)
+{
+	static const struct { int restarts, ammo, maxammo, lives, clip; } table[] = {
+		{2, 5, 25, 3, 5}, // (not playing: as Normal)
+		{3, 10, 25, 5, 8}, // Easy
+		{2, 5, 25, 3, 5}, // Normal
+		{1, 3, 20, 3, 5}, // Hard
+		{0, 3, 20, 3, 5}, // Expert
+	};
+	int d = ck_gameState.difficulty;
+	if (d < 0 || d > FF_D_Expert)
+		d = D_Normal;
+	ff_state.freeRestartsPerCheckpoint = table[d].restarts;
+	ff_state.maxammo = table[d].maxammo;
+	ff_state.shotsinclip = table[d].clip;
+	if (newGame)
+	{
+		ck_gameState.numShots = table[d].ammo;
+		ck_gameState.numLives = table[d].lives;
+	}
+}
+
+// A new game begun in this world (called by the engine's game loop once the
+// difficulty is known).
+void FF_NewGame(void)
+{
+	memset(&ff_state, 0, sizeof(ff_state));
+	FF_ApplyDifficulty(true);
+}
+
 // Its level setup: kw_ff_scan.c (ScanInfoPlane in CK_SPEC.C).
 void FF_ScanInfoPlane(void);
 void FF_ScanInfoLayer(void)
 {
 	memset(&ff_map, 0, sizeof(ff_map));
 	ff_keenKilled = false;
+	if (!ff_state.maxammo)
+		FF_ApplyDifficulty(false); // arrived from another world
 	FF_ScanInfoPlane();
 }
 
