@@ -27,6 +27,9 @@ void KW_CheckTalk(void);
 // restores the level theme when Keen walks back out.
 void KW_UpdateMusicZone(void);
 
+// Krisle's repaired Megarocket is on the loaded map (for /KWTEST).
+bool KW_KrisleShipIsPlaced(void);
+
 // Called every frame from the play loop: in a peaceful level, walking into
 // the map's right edge leaves the level.
 void KW_CheckPeacefulExit(void);

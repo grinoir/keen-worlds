@@ -1852,6 +1852,16 @@ void KW_SelfTest(void)
 		int plaqueX, plaqueY;
 		if (!KW_PlaquePixel(&plaqueX, &plaqueY) || plaqueX != (arShip->arrivalX - 1) * 16)
 			Quit("KW_SelfTest: Atroxian Realm's registry plaque is missing!");
+		// Keen is stranded there until the world is completed; then the
+		// Megarocket stands repaired where the wreck was.
+		if (!KW_IsStranded() || KW_KrisleShipIsPlaced())
+			Quit("KW_SelfTest: Keen should be stranded on Krisle beside a wreck!");
+		kw_worlds[KW_AREALM].completed = true;
+		CK_LoadLevel(true, true);
+		if (KW_IsStranded() || !KW_KrisleShipIsPlaced())
+			Quit("KW_SelfTest: Krisle's Megarocket isn't repaired once the world is completed!");
+		KW_TestLevelSpritesCached("arealm", arShip->level);
+		kw_worlds[KW_AREALM].completed = false;
 		KW_SwitchWorld(KW_KEEN4);
 	}
 

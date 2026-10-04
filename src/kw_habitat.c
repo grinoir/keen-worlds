@@ -206,8 +206,38 @@ static bool KW_IsShown(KW_When when, bool completed)
 	return when == KW_ALWAYS || (when == KW_AFTER) == completed;
 }
 
+// ---- Krisle: the Megarocket, repaired ----
+// Atroxian Realm's wreck stands whole again in its crash site level once
+// that world is completed (the Krile repair it, as its story says): Keen 4's
+// own Megarocket, drawn over the wreck (tools/kw_krisle_ship_art.py).
+
+#include "kw_krisle_ship_art.h"
+
+static const KW_Art kw_krisleShipArt = {
+	KW_KRISLE_SHIP_X, KW_KRISLE_SHIP_Y, KW_KRISLE_SHIP_W, KW_KRISLE_SHIP_H, 1,
+	&kw_krisleShipSlots[0][0][0], &kw_krisleShipTiles[0][0][0][0],
+	-1, 0, NULL, false, false, NULL,
+};
+
+static void KW_PlaceKrisleShip(void)
+{
+	if (KW_CurrentWorld() != KW_AREALM || ca_mapOn != KW_KRISLE_SHIP_LEVEL || !KW_IsWorldCompleted(KW_AREALM))
+		return;
+	// What shows of the wreck above the hull goes (background plane).
+	for (int i = 0; kw_krisleWreckClear[i][0]; ++i)
+		CA_SetTileAtPos(kw_krisleWreckClear[i][0], kw_krisleWreckClear[i][1], 0,
+			CA_TileAtPos(kw_krisleWreckClear[i][2], kw_krisleWreckClear[i][3], 0));
+	KW_PlaceArt(&kw_krisleShipArt);
+}
+
+bool KW_KrisleShipIsPlaced(void)
+{
+	return CA_TileAtPos(KW_KRISLE_SHIP_X + 7, KW_KRISLE_SHIP_Y + 2, 1) == kw_krisleShipSlots[0][2][7];
+}
+
 static void KW_ChangeLevel(void)
 {
+	KW_PlaceKrisleShip();
 	bool completed = ca_mapOn > 0 && ca_mapOn < CK_LEVELS_TRACKED && ck_gameState.levelsDone[ca_mapOn];
 	for (int i = 0; i < (int)(sizeof(kw_levelEdits) / sizeof(kw_levelEdits[0])); ++i)
 	{
