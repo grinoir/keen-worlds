@@ -396,7 +396,9 @@ bool KW_IsWorldCompleted(int world)
 // 4-6 only, items shared) is still read.
 
 #define KW_SAVE_BLOCK_ID "KWLD"
-#define KW_SAVE_VERSION 5
+static int kw_boardedFrom = KW_KEEN4; // the world the Megarocket stands on (see KW_ShipRoomFrame)
+
+#define KW_SAVE_VERSION 6
 #define KW_LEVELS_EXTRA (CK_LEVELS_TRACKED - CK_LEVELS_SAVED)
 
 // Atroxian Realm's extra game state (kw_arealm.c)
@@ -471,8 +473,10 @@ bool KW_WriteSaveBlock(FS_File fp)
 			FS_WriteInt16LE(state.levelsDone + CK_LEVELS_SAVED, KW_LEVELS_EXTRA, fp) != KW_LEVELS_EXTRA)
 			return false;
 	}
-	// Version 5: Foray in the Forest's state follows Atroxian Realm's
-	return AR_WriteState(fp) && FF_WriteState(fp);
+	// Version 5: Foray in the Forest's state follows Atroxian Realm's.
+	// Version 6: then the world the Megarocket stands on (for a game saved
+	// inside the ship).
+	return AR_WriteState(fp) && FF_WriteState(fp) && KW_WriteId(fp, kw_worldDefs[kw_boardedFrom].id);
 }
 
 bool KW_ReadSaveBlock(FS_File fp, bool *deferred)
@@ -533,6 +537,17 @@ bool KW_ReadSaveBlock(FS_File fp, bool *deferred)
 			return false;
 		if (version < 5)
 			FF_ResetState();
+		kw_boardedFrom = KW_KEEN4;
+		if (version >= 6)
+		{
+			char from[KW_SAVE_ID_LEN];
+			if (FS_Read(from, KW_SAVE_ID_LEN, 1, fp) != 1)
+				return false;
+			from[KW_SAVE_ID_LEN - 1] = 0;
+			int w = KW_WorldById(from);
+			if (w != KW_NO_WORLD && w != KW_SHIP)
+				kw_boardedFrom = w;
+		}
 	}
 	else
 		return false;
@@ -644,6 +659,8 @@ void KW_ResetWorlds(void)
 	kw_placeArrivalAtShip = false;
 }
 
+#define KW_SHIP_LEVEL 1 // the Megarocket's one room (see KW_ShipRoomFrame)
+
 void KW_RequestWorld(int world)
 {
 	if (world == kw_currentWorld || !KW_IsWorldPresent(world))
@@ -705,6 +722,13 @@ void KW_SwitchWorld(int world)
 	const KW_Ship *ship = KW_ShipFor(world);
 	ck_gameState.currentLevel = ship ? ship->level : 0;
 	kw_placeArrivalAtShip = ship != NULL || KW_MapShipFor(world) != NULL;
+	// The inside of the Megarocket is one room, entered where its map says.
+	if (world == KW_SHIP)
+	{
+		ck_gameState.currentLevel = KW_SHIP_LEVEL;
+		kw_placeArrivalAtShip = false;
+		kw_introduced[KW_SHIP] = true; // no arrival card for Keen's own ship
+	}
 }
 
 // ---- The Megarocket ----
@@ -1104,6 +1128,15 @@ static int KW_TravelMenu(void)
 		return KW_NO_WORLD;
 	}
 
+	// Developer tool: KW_AUTODEST=id answers the menu (scripted runs)
+	if (getenv("KW_AUTODEST"))
+	{
+		int w = KW_WorldById(getenv("KW_AUTODEST"));
+		printf("KW_AUTODEST: the travel menu was opened in world %s; choosing %s\n",
+			kw_worldDefs[kw_currentWorld].id, getenv("KW_AUTODEST"));
+		return (w >= 0 && KW_IsWorldPresent(w)) ? w : KW_NO_WORLD;
+	}
+
 	for (int w = 0; w < KW_NUM_WORLDS; ++w)
 		if (w != kw_currentWorld && w != KW_SHIP) // (the ship is where one travels from, not to)
 			entries[numEntries++] = w;
@@ -1275,6 +1308,53 @@ static void KW_DebugEnding(void)
 	}
 }
 
+// ---- Inside the Megarocket (Keen Worlds' own world, tools/kw_shipworld.py).
+// Its map marks two places in the info plane: the flight console, where
+// "up" opens the list of worlds, and the hatch, where "up" takes Keen back
+// out to the world the ship stands on. ----
+
+#define KW_SHIP_CONSOLE 0x7701
+#define KW_SHIP_HATCH 0x7702
+
+
+static void KW_ShipRoomFrame(void)
+{
+	if (!ck_keenObj || !ck_keenObj->topTI || ck_inputFrame.yDirection != IN_motion_Up)
+		return;
+	// the marker is at Keen's feet or head, in the column he stands in
+	int x = ck_keenObj->clipRects.tileXmid;
+	uint16_t marker = 0;
+	for (int y = ck_keenObj->clipRects.tileY1; y <= ck_keenObj->clipRects.tileY2 && !marker; ++y)
+	{
+		uint16_t info = CA_TileAtPos(x, y, 2);
+		if (info == KW_SHIP_CONSOLE || info == KW_SHIP_HATCH)
+			marker = info;
+	}
+	if (!marker)
+		return;
+	int destination = KW_NO_WORLD;
+	if (marker == KW_SHIP_CONSOLE)
+	{
+		destination = KW_TravelMenu();
+		RF_ForceRefresh();
+		SD_SetLastTimeCount(SD_GetTimeCount());
+	}
+	else
+		destination = KW_IsWorldPresent(kw_boardedFrom) ? kw_boardedFrom : KW_KEEN4;
+	// Don't act again until the key has been let go.
+	while (!kw_cardsOff && ck_inputFrame.yDirection != 0)
+	{
+		IN_PumpEvents();
+		IN_ReadControls(0, &ck_inputFrame);
+	}
+	if (destination != KW_NO_WORLD)
+	{
+		// Wherever Keen flies, that is where the ship now stands.
+		kw_boardedFrom = destination;
+		KW_RequestWorld(destination);
+	}
+}
+
 void KW_PlayLoopHook(void)
 {
 	// Keen has just set foot in a world for the first time: its own title
@@ -1289,6 +1369,13 @@ void KW_PlayLoopHook(void)
 		kw_arrivalCard = KW_NO_WORLD;
 		kw_introduced[kw_currentWorld] = true;
 		KW_ShowArrivalCard(kw_currentWorld);
+	}
+
+	// Inside the Megarocket: the flight console and the hatch.
+	if (kw_currentWorld == KW_SHIP)
+	{
+		KW_ShipRoomFrame();
+		return;
 	}
 
 	if (ca_mapOn != 0 && !KW_IsShipLevel())
@@ -1318,6 +1405,21 @@ void KW_PlayLoopHook(void)
 	if (kw_launchRequested)
 	{
 		kw_launchRequested = false;
+		// Boarding takes Keen inside his ship (Keen Worlds' own world),
+		// where the flight console is. Without that world's folder, the
+		// menu opens here as it used to.
+		if (KW_IsWorldPresent(KW_SHIP))
+		{
+			if (KW_IsStranded())
+			{
+				SD_PlaySound(CK_SOUNDNUM(SOUND_NEEDKEYCARD));
+				KW_ShowCards(KW_KRISLE_WRECK);
+				return;
+			}
+			kw_boardedFrom = kw_currentWorld;
+			KW_RequestWorld(KW_SHIP);
+			return;
+		}
 		int destination = KW_TravelMenu();
 		RF_ForceRefresh();
 		SD_SetLastTimeCount(SD_GetTimeCount());
@@ -1640,7 +1742,8 @@ void KW_DebugFrame(void)
 	if (!frames || ++count < frames)
 		return;
 	KW_DumpScreen(path);
-	printf("KW_AUTOSHOT: level %d, Keen at tile %d,%d, sprite %d, level state %d -> %s\n", ca_mapOn,
+	printf("KW_AUTOSHOT: world %s level %d, Keen at tile %d,%d, sprite %d, level state %d -> %s\n",
+		kw_worldDefs[kw_currentWorld].id, ca_mapOn,
 		(int)RF_UnitToTile(ck_keenObj->posX), (int)RF_UnitToTile(ck_keenObj->posY), ck_keenObj->gfxChunk,
 		(int)ck_gameState.levelState, path);
 	Quit(0);
@@ -2332,6 +2435,17 @@ void KW_SelfTest(void)
 	if (!ck_keenObj || !ck_keenObj->currentAction || ca_mapOn != 1)
 		Quit("KW_SelfTest: the Megarocket's room has no Keen!");
 	KW_TestLevelSpritesCached("megarocket", 1);
+	{
+		bool console = false, hatch = false;
+		for (int y = 0; y < CA_GetMapHeight(); ++y)
+			for (int x = 0; x < CA_GetMapWidth(); ++x)
+			{
+				console |= CA_TileAtPos(x, y, 2) == KW_SHIP_CONSOLE;
+				hatch |= CA_TileAtPos(x, y, 2) == KW_SHIP_HATCH;
+			}
+		if (!console || !hatch)
+			Quit("KW_SelfTest: the Megarocket's room has no flight console or no hatch!");
+	}
 	KW_TestRunObjects(60);
 	KW_SwitchWorld(KW_KEEN4);
 
