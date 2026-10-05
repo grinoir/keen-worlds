@@ -266,21 +266,28 @@ void CK_DemoLoop()
 			// playing on through both
 			KW_PlayOwnStory(true);
 			break;
+		// KEEN WORLDS: no demos (they are the running episode's own, of one
+		// world of many; /KWDEMOS brings them back): the title, the story,
+		// the high scores, and round again.
 		case 2:
-			CK_PlayDemo(0);
+			if (US_ParmPresent("KWDEMOS"))
+				CK_PlayDemo(0);
 			break;
 		case 3:
-			CK_PlayDemo(1);
+			if (US_ParmPresent("KWDEMOS"))
+				CK_PlayDemo(1);
 			break;
 		case 4:
 			CK_DoHighScores(); // High Scores
 			// CK_PlayDemo(4);
 			break;
 		case 5:
-			CK_PlayDemo(2);
+			if (US_ParmPresent("KWDEMOS"))
+				CK_PlayDemo(2);
 			break;
 		case 6:
-			CK_PlayDemo(3);
+			if (US_ParmPresent("KWDEMOS"))
+				CK_PlayDemo(3);
 #else
 			CK_HandleDemoKeys();
 #endif

@@ -435,12 +435,18 @@ the episode's "Commander Keen" scroller, which ends on the episode's title,
 is left out unless `/KWTERMINATOR` is given), and scrolls Keen Worlds' own
 story (`kw_ownStory`, `KW_PlayOwnStory`) over the episode's star field.
 Each world's own story still plays when that world is chosen. When every installed world is saved, in either way of playing, the
-ending picture is shown once, in the cabin. The story scrolls over a picture of its own (`KW_DrawStoryBackdrop`): the
-text is drawn in the fourth bit plane, as in the games, so the picture has
-eight colours, chosen for it from the EGA's 64 and shown while it scrolls.
-The pictures are in `src/kw_title_art.h`, made by `tools/kw_title_art.py`
-from `art/title` (image1 the title, image2 under the story, image3 the
-ending; 320x200). `KW_AUTOTITLE=file.ppm` saves
+ending picture is shown once, in the cabin. The story scrolls over a picture of its own (`KW_DrawStoryBackdrop`), in
+fifteen colours picked for it (the sixteenth is the letters'); the scroller
+writes each pixel whole there instead of using the fourth bit plane
+(`KW_StoryPixel`). The ending picture has sixteen colours of its own too
+(`VL_SetCustomColors` while it is up); the title keeps the standard EGA
+ones, because the menu opens over it. The pictures are in
+`src/kw_title_art.h`, made by `tools/kw_title_art.py` from `art/title`
+(image1 the title, image2 under the story, image3 the ending; 320x200).
+The opening has no demos (`/KWDEMOS` brings them back): title, story, high
+scores, and round again. Every world shows its own game's title for five
+seconds before its story (`KW_PlayWorldStory`).
+`KW_AUTOTITLE=file.ppm` saves
 the title (with `KW_AUTOENDING=1` the ending, `=story` the story's picture) and quits;
 `KW_AUTOOWNSTORY=1` plays the story in a scripted run.
 

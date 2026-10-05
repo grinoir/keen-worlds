@@ -34,6 +34,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 // KEEN WORLDS: its own title picture and story (kw_world.c)
 bool KW_DrawTitlePicture(void);
 bool KW_DrawStoryBackdrop(void);
+int KW_StoryPixel(int x, int y);
 void KW_StartTitleMusic(void);
 void KW_PlayOwnStory(bool handleDemoKeys);
 
@@ -1392,6 +1393,12 @@ void CK_ScrollSWText()
 	SD_SetSpriteSync(0);
 	// We draw the text on plane 4.
 	VL_SetMapMask(8);
+	// KEEN WORLDS: over its own picture (which has fifteen colours, not
+	// eight) each pixel is written whole instead: the text's colour, or
+	// the picture's again where the text has moved on.
+	bool ownPicture = ck_starWarsTextOverride && KW_StoryPixel(0, 0) >= 0;
+	if (ownPicture)
+		VL_SetMapMask(15);
 
 	uint16_t scrollDistance = 0;
 	VL_SwapOnNextPresent();
@@ -1428,7 +1435,10 @@ void CK_ScrollSWText()
 				int masterPixelX = CK_SWunitsToPixels(masterX);
 				int pixelValue = VL_SurfacePGet(ck_starWarsTextSurface, masterPixelX, masterRowToDraw);
 
-				VL_ScreenRect_PM(screenX, row, 1, 1, pixelValue);
+				if (ownPicture)
+					VL_ScreenRect_PM(screenX, row, 1, 1, pixelValue ? 15 : KW_StoryPixel(screenX, row));
+				else
+					VL_ScreenRect_PM(screenX, row, 1, 1, pixelValue);
 				masterX += ck_SWRowPixelDistance[row];
 			}
 		}

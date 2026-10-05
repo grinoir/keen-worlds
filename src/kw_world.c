@@ -1262,6 +1262,25 @@ static bool KW_StoryIsDue(int world)
 static void KW_PlayWorldStory(void)
 {
 	kw_storyShown[kw_currentWorld] = true;
+	// The game's own title first, for a few seconds or until a key.
+	if (!getenv("KW_AUTOSHOT") || getenv("KW_AUTOSTORY"))
+	{
+		KW_StopVoice();
+		VL_ClearScreen(0);
+		VL_SetScrollCoords(0, 0);
+		VL_SetDefaultPalette();
+		CA_CacheGrChunk(CK_CHUNKNUM(PIC_TITLESCREEN));
+		if (ca_graphChunks[CK_CHUNKNUM(PIC_TITLESCREEN)])
+		{
+			printf("KW_AUTOSTORY: the title of %s\n", kw_worldDefs[kw_currentWorld].id);
+			VH_DrawBitmap(0, 0, CK_CHUNKNUM(PIC_TITLESCREEN));
+			VH_UpdateScreen();
+			IN_ClearKeysDown();
+			IN_UserInput(5 * 70, false);
+			IN_ClearKeysDown();
+		}
+		VL_ClearScreen(0);
+	}
 	if (!*CK_STRING(ck_str_storyText))
 		return;
 	printf("KW_AUTOSTORY: the story of %s\n", kw_worldDefs[kw_currentWorld].id);
@@ -1884,22 +1903,9 @@ void KW_BeginInShip(void)
 	}
 	int from = kw_currentWorld;
 	kw_courseTold[from] = 1;
-	// The game that begins shows its own title (Keen Worlds' own is the one
-	// seen when the program is launched)...
-	if (!kw_cardsOff && !getenv("KW_AUTOSHOT"))
-	{
-		VL_ClearScreen(0);
-		VL_SetScrollCoords(0, 0);
-		VL_SetDefaultPalette();
-		CA_CacheGrChunk(CK_CHUNKNUM(PIC_TITLESCREEN));
-		VH_DrawBitmap(0, 0, CK_CHUNKNUM(PIC_TITLESCREEN));
-		VH_UpdateScreen();
-		IN_ClearKeysDown();
-		IN_UserInput(5 * 70, false);
-		IN_ClearKeysDown();
-		VL_ClearScreen(0);
-	}
-	// ...and tells its story first
+	// The game that begins shows its own title and tells its story first
+	// (Keen Worlds' own title is the one seen when the program is launched).
+
 	if (KW_StoryIsDue(from))
 		KW_PlayWorldStory();
 	if (from == KW_AREALM && !kw_worlds[KW_AREALM].completed)
@@ -2238,7 +2244,10 @@ bool KW_DrawTitlePicture(void)
 		if (getenv("KW_AUTOENDING") && !strcmp(getenv("KW_AUTOENDING"), "story"))
 			KW_DrawStoryBackdrop();
 		else if (getenv("KW_AUTOENDING"))
+		{
 			KW_DrawPicture(kw_endingPicture);
+			VL_SetCustomColors(kw_endingColors);
+		}
 		VL_SetScrollCoords(0, 0);
 		KW_DumpScreen(getenv("KW_AUTOTITLE"));
 		Quit(NULL);
@@ -2246,9 +2255,10 @@ bool KW_DrawTitlePicture(void)
 	return true;
 }
 
-// What the story scrolls over (ck_inter.c): the picture and its colours. The
-// text is drawn in the fourth bit plane, so colours 8 to 15 are all the
-// text's. The standard colours come back when the scroll is over
+// What the story scrolls over (ck_inter.c): the picture, in fifteen colours
+// of its own; the sixteenth is the colour of the letters. The scroller writes
+// each pixel whole (KW_StoryPixel: the picture's, where the text has moved
+// on). The standard colours come back when the scroll is over
 // (KW_PlayOwnStory).
 bool KW_DrawStoryBackdrop(void)
 {
@@ -2257,6 +2267,14 @@ bool KW_DrawStoryBackdrop(void)
 	VL_SetDefaultPalette();
 	VL_SetCustomColors(kw_storyColors);
 	return true;
+}
+
+int KW_StoryPixel(int x, int y)
+{
+	if (x < 0 || x >= 320 || y < 0 || y >= 200)
+		return 0;
+	uint8_t b = kw_storyPicture[y * 160 + x / 2];
+	return (x & 1) ? (b & 15) : (b >> 4);
 }
 
 // The story, told the way each episode tells its own: scrolling away into
@@ -2329,8 +2347,9 @@ void KW_PlayOwnStory(bool handleDemoKeys)
 		CK_HandleDemoKeys();
 }
 
-// A picture on the whole screen until a key is pressed.
-static void KW_ShowPicture(const uint8_t *packed)
+// A picture on the whole screen, in its own sixteen colours, until a key is
+// pressed.
+static void KW_ShowPicture(const uint8_t *packed, const uint8_t colours[16][3])
 {
 	VL_FadeToBlack();
 	VL_FixRefreshBuffer();
@@ -2338,12 +2357,14 @@ static void KW_ShowPicture(const uint8_t *packed)
 	VL_SetScrollCoords(0, 0);
 	KW_DrawPicture(packed);
 	VH_UpdateScreen();
+	VL_SetCustomColors(colours);
 	VL_FadeFromBlack();
 	KW_WaitForButtonsUp();
 	IN_ClearKeysDown();
 	IN_WaitButton();
 	KW_WaitForButtonsUp();
 	VL_FadeToBlack();
+	VL_SetCustomColors(NULL);
 	RF_ForceRefresh();
 	RF_Refresh();
 	VL_FadeFromBlack();
@@ -2481,7 +2502,7 @@ void KW_PlayLoopHook(void)
 			{
 				kw_chronicleEndTold = 1;
 				printf("KW_AUTOENDING: every world is saved\n");
-				KW_ShowPicture(kw_endingPicture);
+				KW_ShowPicture(kw_endingPicture, kw_endingColors);
 				KW_ShowCards(!kw_chronicle ? "Every world is saved.\nThe galaxy is quiet, and\nthe Megarocket knows the\nway to all of it." "\fThe ship is yours, Keen.\nFly where you like." :
 					"The Chronicle\n\nEvery world is saved.\nThe galaxy is quiet, and\nthe Megarocket knows the\nway to all of it."
 					"\fThe ship is yours, Keen.\nFly where you like.");
