@@ -421,6 +421,15 @@ the stories in scripted developer runs.
   world Keen has been to stays open. `KW_AUTOCHRONICLE=1` chooses it in
   scripted developer runs. It is kept in the save block's spare words.
 
+**A world saved**: when a world's game has been won and Keen is next in the
+cabin, the ship computer says its piece about it, once (`SAVED_<ID>.RAW`,
+words in `tools/kw_landing_voice.py`), in both ways of playing. The flight
+menu marks such worlds "(saved)". In the Chronicle a landing on a new world
+is headed by a chapter card (the worlds counted in the order Keen comes to
+them), and when every installed world is saved a last card says so. All
+this is kept in the save block's spare words (with what dying takes back on
+the Shikadi Station).
+
 **After dying**: the engine's menu has a third choice in every world when
 there is a saved game to go back to: "Load last save" (the slot last saved
 to or loaded from; `US_LoadQuickSave`). Foray in the Forest has this in its

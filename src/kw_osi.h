@@ -30,6 +30,8 @@ extern int osi_screenShakeOffset;
 // Dying takes back what was gained in the level, as its settings say.
 void OSI_RememberLevelStart(void);
 void OSI_TakeBackOnDeath(void);
+void OSI_GetState(int16_t out[8]);
+void OSI_SetState(const int16_t in[8]);
 
 void OSI_SetupFunctions(void);
 

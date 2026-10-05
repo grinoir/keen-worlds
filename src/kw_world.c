@@ -456,6 +456,8 @@ static int kw_storyWorld = KW_NO_WORLD;   // the world whose story plays before 
 // begins and kept in its saved games.
 static int16_t kw_chronicle = 0;
 static int16_t kw_courseTold[KW_NUM_WORLDS]; // the ship computer has announced this world's course
+static int16_t kw_savedTold[KW_NUM_WORLDS];  // ... has said its piece about this world being saved
+static int16_t kw_chronicleEndTold = 0;      // the Chronicle's last card has been shown
 static bool kw_crashLanding = false;      // the ship is being shot down over Krisle (see KW_CrashLanding)
 const char *kw_loadingFileName = NULL;
 static int kw_deferredWorld = KW_NO_WORLD;
@@ -525,7 +527,12 @@ bool KW_WriteSaveBlock(FS_File fp)
 	int16_t extra[261] = {0};
 	extra[0] = kw_chronicle;
 	for (int w = 0; w < KW_NUM_WORLDS; ++w)
+	{
 		extra[1 + w] = kw_courseTold[w];
+		extra[40 + w] = kw_savedTold[w]; // (from word 40: which worlds' saving it has spoken of)
+	}
+	extra[80] = kw_chronicleEndTold;
+	OSI_GetState(&extra[90]); // (from word 90: what dying takes back on the Shikadi Station)
 	return AR_WriteState(fp) && FF_WriteState(fp) && KW_WriteId(fp, kw_worldDefs[kw_boardedFrom].id) &&
 		FS_WriteInt16LE(extra, 261, fp) == 261;
 }
@@ -610,7 +617,12 @@ bool KW_ReadSaveBlock(FS_File fp, bool *deferred)
 			// only 0 and 1 mean anything)
 			kw_chronicle = extra[0] == 1;
 			for (int w = 0; w < KW_NUM_WORLDS; ++w)
+			{
 				kw_courseTold[w] = kw_chronicle && extra[1 + w] == 1;
+				kw_savedTold[w] = extra[40 + w] == 1;
+			}
+			kw_chronicleEndTold = extra[80] == 1;
+			OSI_SetState(&extra[90]);
 		}
 	}
 	else
@@ -724,6 +736,8 @@ void KW_ResetWorlds(void)
 	kw_crashLanding = false;
 	kw_chronicle = 0;
 	memset(kw_courseTold, 0, sizeof(kw_courseTold));
+	memset(kw_savedTold, 0, sizeof(kw_savedTold));
+	kw_chronicleEndTold = 0;
 	kw_pendingWorld = KW_NO_WORLD;
 	kw_placeArrivalAtShip = false;
 }
@@ -1445,6 +1459,8 @@ static int KW_TravelMenu(void)
 			snprintf(line, sizeof(line), "About this world");
 		else if (KW_IsWorldPresent(entries[i]) && !KW_CourseIsOpen(entries[i]))
 			snprintf(line, sizeof(line), "%s (locked)", kw_worldDefs[entries[i]].name);
+		else if (KW_IsWorldPresent(entries[i]) && KW_WorldIsSaved(entries[i]))
+			snprintf(line, sizeof(line), "%s (saved)", kw_worldDefs[entries[i]].name);
 		else if (KW_IsWorldPresent(entries[i]))
 			snprintf(line, sizeof(line), "%s", kw_worldDefs[entries[i]].name);
 		else
@@ -1939,7 +1955,57 @@ void KW_PlayLoopHook(void)
 			kw_landingToAnnounce = KW_NO_WORLD;
 			KW_VoiceComingUp(false);
 			printf("KW_AnnounceLanding: %s\n", kw_worldDefs[world].id);
+			if (kw_chronicle && !kw_cardsOff && !kw_worlds[world].visited)
+			{
+				// The Chronicle counts its chapters: the worlds in the order
+				// Keen has come to them.
+				static const char *const numbers[] = {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"};
+				int chapter = 0;
+				for (int w = 0; w < KW_NUM_WORLDS; ++w)
+					if (w != KW_SHIP && w != world && (kw_worlds[w].visited || KW_WorldIsSaved(w)))
+						++chapter;
+				char text[160];
+				snprintf(text, sizeof(text), "The Chronicle\n\nChapter %s:\n%s", numbers[chapter < 12 ? chapter : 11], kw_worldDefs[world].name);
+				KW_ShowCards(text);
+			}
 			KW_AnnounceLanding(world);
+		}
+		// A world has been saved since Keen was last in the cabin: the ship
+		// computer has something to say about it (once for each world).
+		if (!kw_cardsOff && !vl_screenFaded && !KW_VoiceSpeaking())
+		{
+			for (int w = 0; w < KW_NUM_WORLDS; ++w)
+			{
+				if (w == KW_SHIP || kw_savedTold[w] || !KW_WorldIsSaved(w))
+					continue;
+				kw_savedTold[w] = 1;
+				for (int i = 0; i < (int)(sizeof(kw_savedLines) / sizeof(kw_savedLines[0])); ++i)
+				{
+					if (strcmp(kw_savedLines[i].id, kw_worldDefs[w].id))
+						continue;
+					KW_Speak(kw_savedLines[i].file, true);
+					KW_ShowCards(kw_savedLines[i].text);
+					KW_StopVoice();
+				}
+				break; // one at a time
+			}
+		}
+		// The Chronicle: every world of it is saved.
+		if (kw_chronicle && !kw_chronicleEndTold && !kw_cardsOff && !vl_screenFaded && !KW_VoiceSpeaking())
+		{
+			bool all = true, any = false;
+			for (int w = 0; w < KW_NUM_WORLDS; ++w)
+				if (w != KW_SHIP && KW_IsWorldPresent(w))
+				{
+					any = true;
+					all = all && KW_WorldIsSaved(w) && kw_savedTold[w];
+				}
+			if (any && all)
+			{
+				kw_chronicleEndTold = 1;
+				KW_ShowCards("The Chronicle\n\nEvery world is saved.\nThe galaxy is quiet, and\nthe Megarocket knows the\nway to all of it."
+					"\fThe ship is yours, Keen.\nFly where you like.");
+			}
 		}
 		// The Chronicle: a world has been saved, and the ship has learned
 		// the course to the next.

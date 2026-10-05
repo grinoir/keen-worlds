@@ -96,8 +96,8 @@ void CK_KeenStunnedDraw(CK_object *obj)
 }
 
 // ---- What dying takes back (ck_game.c). The mod keeps these in the game
-// state and its saved games; here they are kept beside it (a game loaded in
-// the middle of a level takes the moment of loading as the level's start).
+// state and its saved games; here they are kept beside it, and saved in the
+// Keen Worlds block of a saved game (OSI_GetState).
 
 static int32_t osi_oldScore, osi_oldKeenAt;
 static int16_t osi_oldShots, osi_oldCentilife, osi_oldLives;
@@ -109,6 +109,33 @@ void OSI_RememberLevelStart(void)
 	osi_oldShots = ck_gameState.numShots;
 	osi_oldCentilife = ck_gameState.numCentilife;
 	osi_oldLives = ck_gameState.numLives;
+}
+
+// For saved games (the Keen Worlds block): eight 16-bit words.
+void OSI_GetState(int16_t out[8])
+{
+	out[0] = (int16_t)(osi_oldScore & 0xFFFF);
+	out[1] = (int16_t)((osi_oldScore >> 16) & 0xFFFF);
+	out[2] = (int16_t)(osi_oldKeenAt & 0xFFFF);
+	out[3] = (int16_t)((osi_oldKeenAt >> 16) & 0xFFFF);
+	out[4] = osi_oldShots;
+	out[5] = osi_oldCentilife;
+	out[6] = osi_oldLives;
+	out[7] = 1; // (there is something here)
+}
+
+void OSI_SetState(const int16_t in[8])
+{
+	if (in[7] != 1)
+	{
+		OSI_RememberLevelStart(); // an older saved game: from where it was saved
+		return;
+	}
+	osi_oldScore = (int32_t)((uint16_t)in[0] | ((uint32_t)(uint16_t)in[1] << 16));
+	osi_oldKeenAt = (int32_t)((uint16_t)in[2] | ((uint32_t)(uint16_t)in[3] << 16));
+	osi_oldShots = in[4];
+	osi_oldCentilife = in[5];
+	osi_oldLives = in[6];
 }
 
 void OSI_TakeBackOnDeath(void)
