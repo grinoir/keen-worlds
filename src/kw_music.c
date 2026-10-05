@@ -17,6 +17,18 @@ untouched.
 // The tune: an original jig, written out by tools/kw_tavern_music.py.
 #include "kw_tavern_music.h"
 
+// The Megarocket's tune: space funk, written out by tools/kw_ship_music.py.
+#include "kw_ship_music.h"
+
+// Inside the ship its own tune plays instead of a level's song.
+bool KW_StartShipMusic(void)
+{
+	if (KW_CurrentWorld() != KW_SHIP)
+		return false;
+	SD_StartMusicData(kw_shipMusic, sizeof(kw_shipMusic));
+	return true;
+}
+
 static bool kw_tavernThemePlaying;
 
 static bool KW_IsInTavern(void)

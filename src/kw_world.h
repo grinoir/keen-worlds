@@ -136,4 +136,8 @@ void KW_WaitForButtonsUp(void);
 void KW_SelfTest(void);
 void KW_Screenshot(const char *worldId, int level, const char *path);
 
+// A new game: Keen begins inside his ship (when the Megarocket's world is
+// there), landed on the world the game starts in.
+void KW_BeginInShip(void);
+
 #endif

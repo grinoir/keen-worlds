@@ -962,6 +962,12 @@ Channel* Channel__BlockTemplate(Channel *self, Chip* chip,
 		}
 		break;
 
+	// KEEN WORLDS: the drum modes have no such shortcut (as in DOSBox's
+	// own dbopl.cpp); the Megarocket's tune uses the OPL2's drums.
+	case sm2Percussion:
+	case sm3Percussion:
+		break;
+
         default:
                 abort();
 	}

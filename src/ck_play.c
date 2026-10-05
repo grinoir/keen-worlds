@@ -21,6 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ck_play.h"
 #include "kw_world.h"
 #include "kw_habitat.h"
+#include "kw_music.h"
 
 void AR_CheckpointFrame(void); // KEEN WORLDS: Atroxian Realm (kw_arealm.c)
 bool AR_IsActive(void);
@@ -1473,6 +1474,10 @@ void StartMusic(int16_t level)
 	// KEEN WORLDS: Foray in the Forest's levels name their song in the map
 	if (FF_IsActive() && level != -1)
 		level = FF_SongFor(level);
+
+	// KEEN WORLDS: the inside of the Megarocket has its own tune
+	if (level != -1 && KW_StartShipMusic())
+		return;
 
 	// KEEN WORLDS: the limit is a variable (Atroxian Realm has 26 levels and
 	// songs past them); 20 as in the original otherwise.

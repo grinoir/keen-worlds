@@ -1078,7 +1078,9 @@ static const char *KW_CheckCardsFit(void)
 
 static bool KW_IsStranded(void)
 {
-	return kw_currentWorld == KW_AREALM && !kw_worlds[KW_AREALM].completed;
+	// (inside the ship: where the ship stands)
+	int where = kw_currentWorld == KW_SHIP ? kw_boardedFrom : kw_currentWorld;
+	return where == KW_AREALM && !kw_worlds[KW_AREALM].completed;
 }
 
 // A card with a question; true if the player presses Y.
@@ -1328,8 +1330,53 @@ static void KW_DebugEnding(void)
 #define KW_SHIP_WAY_AFT 0x7703  // walking here takes Keen to the exit room
 #define KW_SHIP_WAY_FORE 0x7704 // ... and here, back to the flight room
 #define KW_SHIP_AMMO 0x7705     // the box of stunners: "up" tops Keen's shots up
-#define KW_SHIP_AMMO_SHOTS 5
+#define KW_SHIP_AMMO_SHOTS 20
 
+
+// The ship computer says where the ship has landed, with a warning (words
+// and voice clips: tools/kw_landing_voice.py). The clip plays on while the
+// card with the same words is up, and after.
+#include "kw_landing_text.h"
+static int kw_landingToAnnounce = KW_NO_WORLD;
+
+static void KW_AnnounceLanding(int world)
+{
+	static uint8_t *clip = NULL;
+	for (int i = 0; i < (int)(sizeof(kw_landings) / sizeof(kw_landings[0])); ++i)
+	{
+		if (strcmp(kw_landings[i].id, kw_worldDefs[world].id))
+			continue;
+		SD_StopVoice();
+		free(clip);
+		clip = NULL;
+		if (SD_GetSoundMode() != sdm_Off && FS_IsKeenFilePresent(kw_landings[i].file))
+		{
+			FS_File f = FS_OpenKeenFile(kw_landings[i].file);
+			size_t size = FS_IsFileValid(f) ? FS_GetFileSize(f) : 0;
+			if (size && (clip = (uint8_t *)malloc(size)) != NULL && FS_Read(clip, 1, size, f) == size)
+				SD_PlayVoice(clip, (uint32_t)size, KW_LANDING_RATE);
+			if (FS_IsFileValid(f))
+				FS_CloseFile(f);
+		}
+		if (!kw_cardsOff)
+			KW_ShowCards(kw_landings[i].text);
+		return;
+	}
+}
+
+// A new game: Keen begins inside his ship, landed on the world the game
+// starts in, and steps out through the hatch.
+void KW_BeginInShip(void)
+{
+	bool tool = (us_tedLevel || getenv("KW_AUTOLEVEL")) && !getenv("KW_AUTOSHIP");
+	if (tool || kw_currentWorld == KW_SHIP || !KW_IsWorldPresent(KW_SHIP))
+		return;
+	int from = kw_currentWorld;
+	KW_SwitchWorld(KW_SHIP);
+	kw_worlds[from].visited = false; // Keen has not set foot in it yet
+	kw_boardedFrom = from;
+	kw_landingToAnnounce = from;
+}
 
 // The ship has two rooms, each its own screen. Walking into the open end of
 // one puts Keen at the open end of the other.
@@ -1372,8 +1419,13 @@ static void KW_ShipRoomFrame(void)
 		KW_ShipChangeRoom(marker, markerY);
 		return;
 	}
-	if (!marker || !ck_keenObj->topTI || ck_inputFrame.yDirection != IN_motion_Up)
+	// One press of "up", one use (the scripted developer runs hold it down).
+	static bool upUsed = false;
+	if (ck_inputFrame.yDirection != IN_motion_Up)
+		upUsed = false;
+	if (!marker || !ck_keenObj->topTI || ck_inputFrame.yDirection != IN_motion_Up || upUsed)
 		return;
+	upUsed = true;
 	if (marker == KW_SHIP_AMMO)
 	{
 		// As in Foray in the Forest's ship: Keen never leaves without shots.
@@ -1398,19 +1450,37 @@ static void KW_ShipRoomFrame(void)
 		RF_ForceRefresh();
 		SD_SetLastTimeCount(SD_GetTimeCount());
 	}
-	else
-		destination = KW_IsWorldPresent(kw_boardedFrom) ? kw_boardedFrom : KW_KEEN4;
 	// Don't act again until the key has been let go.
 	while (!kw_cardsOff && ck_inputFrame.yDirection != 0)
 	{
 		IN_PumpEvents();
 		IN_ReadControls(0, &ck_inputFrame);
 	}
+	if (marker == KW_SHIP_HATCH)
+	{
+		// out, to the world the ship stands on
+		KW_RequestWorld(KW_IsWorldPresent(kw_boardedFrom) ? kw_boardedFrom : KW_KEEN4);
+		return;
+	}
 	if (destination != KW_NO_WORLD)
 	{
-		// Wherever Keen flies, that is where the ship now stands.
+		// The flight: the screen goes dark, and when it comes back the ship
+		// stands on the chosen world. Keen is still inside; the computer
+		// says where he is, and the hatch is the way out.
+		if (!kw_cardsOff)
+		{
+			VL_FadeToBlack();
+			VL_DelayTics(35);
+		}
 		kw_boardedFrom = destination;
-		KW_RequestWorld(destination);
+		RF_ForceRefresh();
+		if (!kw_cardsOff)
+		{
+			RF_Refresh();
+			VL_FadeFromBlack();
+		}
+		SD_SetLastTimeCount(SD_GetTimeCount());
+		kw_landingToAnnounce = destination;
 	}
 }
 
@@ -1433,6 +1503,13 @@ void KW_PlayLoopHook(void)
 	// Inside the Megarocket: the flight console and the hatch.
 	if (kw_currentWorld == KW_SHIP)
 	{
+		if (kw_landingToAnnounce != KW_NO_WORLD && !vl_screenFaded && IN_DemoGetMode() == IN_Demo_Off)
+		{
+			int world = kw_landingToAnnounce;
+			kw_landingToAnnounce = KW_NO_WORLD;
+			printf("KW_AnnounceLanding: %s\n", kw_worldDefs[world].id);
+			KW_AnnounceLanding(world);
+		}
 		KW_ShipRoomFrame();
 		return;
 	}

@@ -386,6 +386,8 @@ void SD_SDL_CallBack(void *unused, Uint8 *stream, int len)
 		// PC Speaker
 		if (SD_PC_Speaker_On)
 			PCSpeakerUpdateOne(currSamplePtr, currNumOfSamples);
+		// KEEN WORLDS: a voice clip
+		SD_MixVoice(currSamplePtr, currNumOfSamples, numChannels, SD_SDL_AudioSpec.freq);
 		// We're done for now
 		currSamplePtr += currNumOfSamples * numChannels;
 		SD_SDL_SampleOffsetInSound += currNumOfSamples;

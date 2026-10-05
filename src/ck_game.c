@@ -982,6 +982,7 @@ void CK_GameLoop()
 			ck_gameState.difficulty = ck_startingDifficulty;
 			if (FF_IsActive())
 				FF_NewGame(); // KEEN WORLDS: Foray in the Forest's lives and ammo by difficulty
+			KW_BeginInShip(); // KEEN WORLDS: every game begins inside the Megarocket
 			ck_startingDifficulty = D_NotPlaying;
 		loadLevel:
 			CK_LoadLevel(true, false);

@@ -747,6 +747,61 @@ void SD_StartMusicData(const uint8_t *data, uint16_t length)
 	}
 }
 
+// KEEN WORLDS: a digitized voice clip, mixed into the output by the backend
+// (SD_MixVoice is called from its audio callback).
+static const uint8_t *volatile sd_voiceData;
+static uint32_t sd_voiceLength, sd_voiceRate;
+static uint64_t sd_voicePos; // 32.32 fixed point
+
+void SD_PlayVoice(const uint8_t *data, uint32_t length, uint32_t rate)
+{
+	if (!sd_backend || !data || !length || !rate)
+		return;
+	sd_backend->lock();
+	sd_voiceLength = length;
+	sd_voiceRate = rate;
+	sd_voicePos = 0;
+	sd_voiceData = data;
+	sd_backend->unlock();
+}
+
+void SD_StopVoice(void)
+{
+	if (!sd_backend)
+		return;
+	sd_backend->lock();
+	sd_voiceData = NULL;
+	sd_backend->unlock();
+}
+
+bool SD_VoicePlaying(void)
+{
+	return sd_voiceData != NULL;
+}
+
+void SD_MixVoice(int16_t *out, int frames, int channels, int outRate)
+{
+	if (!sd_voiceData || outRate <= 0)
+		return;
+	uint64_t step = ((uint64_t)sd_voiceRate << 32) / (uint32_t)outRate;
+	for (int i = 0; i < frames; ++i)
+	{
+		uint32_t index = (uint32_t)(sd_voicePos >> 32);
+		if (index >= sd_voiceLength)
+		{
+			sd_voiceData = NULL;
+			return;
+		}
+		int sample = ((int)sd_voiceData[index] - 128) * 180;
+		for (int c = 0; c < channels; ++c)
+		{
+			int mixed = out[i * channels + c] + sample;
+			out[i * channels + c] = (int16_t)(mixed > 32767 ? 32767 : mixed < -32768 ? -32768 : mixed);
+		}
+		sd_voicePos += step;
+	}
+}
+
 // Stop the current music track (identical to SD_MusicOff() -- doesn't actually fade)
 void SD_FadeOutMusic(void)
 {

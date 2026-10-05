@@ -61,6 +61,12 @@ void SD_StartMusic(SD_MusicTrack *music);
 // Play an IMF event stream stored by the engine rather than in AUDIO.CKx.
 // The data must remain valid until another track is started.
 void SD_StartMusicData(const uint8_t *data, uint16_t length);
+// KEEN WORLDS: one digitized voice clip at a time (unsigned 8-bit mono; the
+// data must stay valid while it plays). The SDL backend mixes it in.
+void SD_PlayVoice(const uint8_t *data, uint32_t length, uint32_t rate);
+void SD_StopVoice(void);
+bool SD_VoicePlaying(void);
+void SD_MixVoice(int16_t *out, int frames, int channels, int outRate);
 void SD_FadeOutMusic(void);
 bool SD_MusicPlaying(void); // Actually return false for all time
 

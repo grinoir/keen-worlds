@@ -263,9 +263,31 @@ his pogo stick, his bag and a bed (for a later way into Keen Dreams).
 The flight room follows Foray's own layout (read from its level and tile
 properties): Keen can jump up onto the flight deck, which is as wide as
 Foray's so he stays under the glass, and the box of stunners under the deck
-is the ammo station ("up" there tops his shots up to 5). "Up" opens the
+is the ammo station. "Up" opens the
 list of worlds at the navigation screen in the nose, where a small sign
 with an arrow blinks, and also on the flight deck at the controls.
+
+**Every game begins inside the ship** (`KW_BeginInShip`, called for a new
+game): the ship has landed on the world the game starts in, and Keen steps
+out through the hatch. Choosing a world at the controls no longer puts Keen
+outside: the screen goes dark, the ship now stands on that world, and Keen
+is still inside. On Krisle the controls then refuse (the ship is wrecked
+until that game is finished).
+
+**Landing announcements**: when the ship has landed (new game, or after a
+flight) the ship computer says where, with a warning about the locals, in a
+different voice for every world. `tools/kw_landing_voice.py` holds the
+words; it writes the clips (`data/megarocket/LAND_<ID>.RAW`, made with
+espeak-ng and ffmpeg) and `src/kw_landing_text.h` for the card shown with
+them. The engine plays one voice clip at a time, mixed into the SDL sound
+output (`SD_PlayVoice` in `id_sd.c`).
+
+**Music**: inside the ship an original space-funk tune plays
+(`tools/kw_ship_music.py` -> `src/kw_ship_music.h`, started by
+`KW_StartShipMusic`). It uses the OPL2's drum mode, which the sound
+emulator (`opl/dbopl.c`) aborted on; that is fixed there.
+
+The box of stunners gives Keen 20 shots whenever he has fewer.
 
 Around the ship the screen is black, as in Foray. (The picture is
 see-through there and the level's background tiles are black.)
