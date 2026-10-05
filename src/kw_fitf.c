@@ -247,6 +247,250 @@ bool FF_LoadCheckpoint(void)
 	return true;
 }
 
+// ---- Saved games (Keen Worlds' save block, kw_world.c). Its progress
+// (FF_State) always; and, for a game saved inside one of its levels, the
+// level's state and where each object sits in the object array: its code
+// points at objects by their place there, and the engine loads objects
+// packed in list order. A checkpoint isn't saved. ----
+
+extern CK_object *ck_scoreBoxObj;
+
+static int16_t FF_Slot(CK_object *ob)
+{
+	return (ob >= ck_objArray && ob < ck_objArray + CK_MAX_OBJECTS) ? (int16_t)(ob - ck_objArray) : -1;
+}
+static CK_object *FF_AtSlot(int16_t slot)
+{
+	return (slot >= 0 && slot < CK_MAX_OBJECTS) ? &ck_objArray[slot] : NULL;
+}
+
+#define FF_SAVE_STATE_WORDS 14
+#define FF_SAVE_MAP_WORDS 29
+
+static void FF_PackMap(const FF_MapState *m, int16_t *v)
+{
+	int16_t w[FF_SAVE_MAP_WORDS] = {(int16_t)m->collectiblesNew, (int16_t)m->slugcans, m->nextLevel, (int16_t)m->doneFlags,
+		(int16_t)m->dreamMsg, (int16_t)m->warpInfo, FF_Slot(m->riding), FF_Slot(m->checkpointTouched),
+		FF_Slot(m->lastCheckpoint), FF_Slot(m->nisasi), FF_Slot(m->mindcontrolled), FF_Slot(m->quicksand),
+		FF_Slot(m->mummy), m->playerkludgeclipcancel, m->invincibilityTimer, m->stunCounter, m->stunCooldown,
+		m->moontile, m->inwater, m->brainfucl, m->machinesActive, m->music, m->shaketics, m->shakecount,
+		m->screenYpx, m->wrapScroll, (int16_t)m->itemsTotal, (int16_t)m->itemsCollected, (int16_t)ff_brainfucled};
+	memcpy(v, w, sizeof(w));
+}
+
+static void FF_UnpackMap(const int16_t *v, FF_MapState *m)
+{
+	memset(m, 0, sizeof(*m));
+	m->collectiblesNew = v[0]; m->slugcans = v[1]; m->nextLevel = v[2]; m->doneFlags = v[3];
+	m->dreamMsg = v[4]; m->warpInfo = v[5];
+	m->riding = FF_AtSlot(v[6]); m->checkpointTouched = NULL; m->lastCheckpoint = FF_AtSlot(v[8]);
+	m->nisasi = FF_AtSlot(v[9]); m->mindcontrolled = FF_AtSlot(v[10]); m->quicksand = FF_AtSlot(v[11]);
+	m->mummy = FF_AtSlot(v[12]);
+	m->playerkludgeclipcancel = v[13] != 0; m->invincibilityTimer = v[14]; m->stunCounter = v[15];
+	m->stunCooldown = v[16]; m->moontile = v[17]; m->inwater = v[18]; m->brainfucl = v[19];
+	m->machinesActive = v[20]; m->music = v[21]; m->shaketics = v[22]; m->shakecount = v[23];
+	m->screenYpx = v[24]; m->wrapScroll = v[25]; m->itemsTotal = v[26]; m->itemsCollected = v[27];
+	ff_brainfucled = v[28];
+	m->checkpointSaved = false; // a checkpoint isn't in the save
+}
+
+bool FF_WriteState(FS_File fp)
+{
+	int16_t s[FF_SAVE_STATE_WORDS] = {(int16_t)(ff_state.oldscore & 0xFFFF), (int16_t)(ff_state.oldscore >> 16),
+		ff_state.drops, (int16_t)ff_state.collectiblesTotal, (int16_t)ff_state.janitorMessageShown,
+		(int16_t)ff_state.slugcans, ff_state.cheated, ff_state.brainfucled, (int16_t)ff_state.continuesUsed,
+		(int16_t)ff_state.jokeNumber, ff_state.savebits, (int16_t)ff_state.freeRestartsPerCheckpoint,
+		ff_state.maxammo, ff_state.shotsinclip};
+	// Is the game being saved inside one of its levels (or on its map)?
+	int16_t count = FF_IsActive() ? (int16_t)ck_numObjects : 0;
+	if (FS_WriteInt16LE(s, FF_SAVE_STATE_WORDS, fp) != FF_SAVE_STATE_WORDS || FS_WriteInt16LE(&count, 1, fp) != 1)
+		return false;
+	if (!count)
+		return true;
+	int16_t m[FF_SAVE_MAP_WORDS];
+	FF_PackMap(&ff_map, m);
+	if (FS_WriteInt16LE(m, FF_SAVE_MAP_WORDS, fp) != FF_SAVE_MAP_WORDS)
+		return false;
+	int16_t written = 0;
+	for (CK_object *ob = ck_keenObj; ob; ob = ob->next, ++written)
+	{
+		int16_t slot = FF_Slot(ob);
+		if (FS_WriteInt16LE(&slot, 1, fp) != 1)
+			return false;
+	}
+	// (the count written above must be the number of slots that follow)
+	return written == count;
+}
+
+static struct
+{
+	bool pending;
+	int16_t map[FF_SAVE_MAP_WORDS];
+	int16_t count;
+	int16_t slots[CK_MAX_OBJECTS];
+} ff_loaded;
+
+bool FF_ReadState(FS_File fp)
+{
+	int16_t s[FF_SAVE_STATE_WORDS], count;
+	ff_loaded.pending = false;
+	if (FS_ReadInt16LE(s, FF_SAVE_STATE_WORDS, fp) != FF_SAVE_STATE_WORDS || FS_ReadInt16LE(&count, 1, fp) != 1)
+		return false;
+	ff_state.oldscore = (int32_t)(((uint32_t)(uint16_t)s[1] << 16) | (uint16_t)s[0]);
+	ff_state.drops = s[2]; ff_state.collectiblesTotal = s[3]; ff_state.janitorMessageShown = s[4];
+	ff_state.slugcans = s[5]; ff_state.cheated = s[6] != 0; ff_state.brainfucled = s[7];
+	ff_state.continuesUsed = s[8]; ff_state.jokeNumber = s[9]; ff_state.savebits = (uint8_t)s[10];
+	ff_state.freeRestartsPerCheckpoint = s[11]; ff_state.maxammo = s[12]; ff_state.shotsinclip = s[13];
+	if (!count)
+		return true;
+	if (count < 0 || count > CK_MAX_OBJECTS ||
+		FS_ReadInt16LE(ff_loaded.map, FF_SAVE_MAP_WORDS, fp) != FF_SAVE_MAP_WORDS ||
+		FS_ReadInt16LE(ff_loaded.slots, count, fp) != (size_t)count)
+		return false;
+	ff_loaded.count = count;
+	ff_loaded.pending = true;
+	return true;
+}
+
+// The engine has loaded the save's level and objects (packed into the
+// first places of the object array, in list order): put every object back
+// in the place it had when the game was saved, then the level's state.
+static void FF_ApplyLoadedState(void)
+{
+	ff_loaded.pending = false;
+	int n = 0;
+	for (CK_object *ob = ck_keenObj; ob; ob = ob->next)
+		++n;
+	bool ok = FF_IsActive() && n == ff_loaded.count && n == ck_numObjects && ff_loaded.slots[0] == 0;
+	static bool used[CK_MAX_OBJECTS];
+	memset(used, 0, sizeof(used));
+	for (int i = 0; ok && i < n; ++i)
+	{
+		int16_t slot = ff_loaded.slots[i];
+		if (slot < 0 || slot >= CK_MAX_OBJECTS || used[slot] || ck_keenObj + i != &ck_objArray[i])
+			ok = false;
+		else
+			used[slot] = true;
+	}
+	if (!ok)
+		return; // not the save's level after all: leave everything as loaded
+	static CK_object packed[CK_MAX_OBJECTS];
+	int scoreBoxIndex = (int)(ck_scoreBoxObj - ck_objArray);
+	memcpy(packed, ck_objArray, sizeof(CK_object) * n);
+	for (int i = 0; i < n; ++i)
+	{
+		CK_object *ob = &ck_objArray[ff_loaded.slots[i]];
+		*ob = packed[i];
+		ob->prev = i ? &ck_objArray[ff_loaded.slots[i - 1]] : NULL;
+		ob->next = i + 1 < n ? &ck_objArray[ff_loaded.slots[i + 1]] : NULL;
+		ob->sde = NULL;
+		ob->visible = true;
+		switch (ob->type)
+		{
+		case FF_CT_FallBlock:
+		case CT5_StunnedCreature:
+		case FF_CT_Slug:
+		case FF_CT_Checkpoint:
+			ob->user3 = 0; // the stars, foreground, donut or overlay sprite
+			break;
+		case CT5_Platform:
+			ob->user2 = ob->user3 = 0; // the thrusters
+			break;
+		}
+	}
+	ck_lastObject = &ck_objArray[ff_loaded.slots[n - 1]];
+	if (scoreBoxIndex >= 0 && scoreBoxIndex < n)
+		ck_scoreBoxObj = &ck_objArray[ff_loaded.slots[scoreBoxIndex]];
+	// the free places, chained as the engine chains them (by "prev")
+	ck_freeObject = NULL;
+	for (int slot = CK_MAX_OBJECTS - 1; slot >= 0; --slot)
+		if (!used[slot])
+		{
+			memset(&ck_objArray[slot], 0, sizeof(CK_object));
+			ck_objArray[slot].prev = ck_freeObject;
+			ck_freeObject = &ck_objArray[slot];
+		}
+	FF_UnpackMap(ff_loaded.map, &ff_map);
+	FF_ForceScoreboxUpdate();
+}
+
+void FF_PlayLoopStart(void);
+
+void FF_ResetState(void)
+{
+	memset(&ff_state, 0, sizeof(ff_state));
+	ff_loaded.pending = false;
+}
+
+// For /KWTEST: a save made in one of its levels comes back with every object
+// in its place and the level's state. Returns what is wrong, or NULL.
+const char *FF_TestSaveRoundTrip(bool (*save)(void), bool (*load)(void))
+{
+	// make a gap in the object array, and state worth checking
+	CK_object *victim = NULL, *marked = NULL;
+	for (CK_object *ob = ck_keenObj->next ? ck_keenObj->next->next : NULL; ob && ob->next; ob = ob->next)
+	{
+		if (!victim)
+			victim = ob;
+		else
+			marked = ob; // ends as the last but one
+	}
+	if (!victim || !marked)
+		return NULL; // too few objects in this level to say anything
+	CK_RemoveObj(victim);
+	// (CK_RemoveObj leaves the place free one frame later in the play loop;
+	// the place is free now for our purpose)
+	int markedSlot = FF_Slot(marked), markedType = marked->type, markedX = marked->posX;
+	ff_map.lastCheckpoint = marked;
+	ff_map.itemsCollected = 7;
+	ff_map.music = 9;
+	ff_state.slugcans = 5;
+	ff_state.collectiblesTotal = 0x21;
+	int count = ck_numObjects;
+	if (!save())
+		return "couldn't write a save";
+	ff_map.lastCheckpoint = NULL;
+	ff_map.itemsCollected = 0;
+	ff_state.slugcans = 0;
+	ff_state.collectiblesTotal = 0;
+	if (!load())
+		return "couldn't read the save";
+	FF_PlayLoopStart();
+	if (ff_state.slugcans != 5 || ff_state.collectiblesTotal != 0x21)
+		return "its progress wasn't loaded";
+	if (ck_numObjects != count)
+		return "the number of objects changed";
+	if (ff_map.itemsCollected != 7 || ff_map.music != 9)
+		return "the level's state wasn't loaded";
+	if (ff_map.lastCheckpoint != &ck_objArray[markedSlot] || ff_map.lastCheckpoint->type != markedType ||
+		ff_map.lastCheckpoint->posX != markedX)
+		return "an object isn't in the place it was saved in";
+	int n = 0;
+	for (CK_object *ob = ck_keenObj; ob; ob = ob->next)
+	{
+		if (ob->next && ob->next->prev != ob)
+			return "the object list is broken";
+		if (!ob->next && ob != ck_lastObject)
+			return "the last object is wrong";
+		++n;
+	}
+	if (n != count)
+		return "the object list has the wrong length";
+	// a new object must get a free place, not one in use
+	CK_object *fresh = CK_GetNewObj(false);
+	for (CK_object *ob = ck_keenObj; ob; ob = ob->next)
+		if (ob != fresh && ob == &ck_objArray[FF_Slot(fresh)])
+			return "a place in use was handed out again";
+	return NULL;
+}
+
+// The play loop is about to start (the engine calls this in this world).
+void FF_PlayLoopStart(void)
+{
+	if (ff_loaded.pending)
+		FF_ApplyLoadedState();
+}
+
 // ---- Dying (HandleDeath in CK_GAME.C). A touched checkpoint gives a number
 // of free restarts by difficulty; after those a restart costs a life like
 // any other. The menu itself is the engine's ("try again" or "restart from

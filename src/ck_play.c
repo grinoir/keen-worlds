@@ -2295,8 +2295,13 @@ void CK_NormalCamera(CK_object *obj)
 
 // Play a level.
 
+void FF_PlayLoopStart(void);
+
 void CK_PlayLoop()
 {
+	// KEEN WORLDS: Foray in the Forest finishes loading a saved game here
+	if (FF_IsActive())
+		FF_PlayLoopStart();
 	StartMusic(ck_gameState.currentLevel);
 	ck_pogoTimer = 0;
 	memset(&ck_keenState, 0, sizeof(ck_keenState));

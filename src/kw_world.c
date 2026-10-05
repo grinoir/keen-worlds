@@ -387,12 +387,17 @@ bool KW_IsWorldCompleted(int world)
 // 4-6 only, items shared) is still read.
 
 #define KW_SAVE_BLOCK_ID "KWLD"
-#define KW_SAVE_VERSION 4
+#define KW_SAVE_VERSION 5
 #define KW_LEVELS_EXTRA (CK_LEVELS_TRACKED - CK_LEVELS_SAVED)
 
 // Atroxian Realm's extra game state (kw_arealm.c)
 bool AR_WriteState(FS_File fp);
 bool AR_ReadState(FS_File fp, bool withStars);
+// Foray in the Forest's (kw_fitf.c)
+bool FF_WriteState(FS_File fp);
+bool FF_ReadState(FS_File fp);
+void FF_ResetState(void);
+const char *FF_TestSaveRoundTrip(bool (*save)(void), bool (*load)(void));
 #define KW_SAVE_ID_LEN 8
 
 static bool kw_introduced[KW_NUM_WORLDS]; // worlds whose arrival card has been shown
@@ -455,7 +460,8 @@ bool KW_WriteSaveBlock(FS_File fp)
 			FS_WriteInt16LE(state.levelsDone + CK_LEVELS_SAVED, KW_LEVELS_EXTRA, fp) != KW_LEVELS_EXTRA)
 			return false;
 	}
-	return AR_WriteState(fp);
+	// Version 5: Foray in the Forest's state follows Atroxian Realm's
+	return AR_WriteState(fp) && FF_WriteState(fp);
 }
 
 bool KW_ReadSaveBlock(FS_File fp, bool *deferred)
@@ -511,6 +517,11 @@ bool KW_ReadSaveBlock(FS_File fp, bool *deferred)
 		// Version 3: Atroxian Realm's extra state
 		if (version >= 3 && !AR_ReadState(fp, version >= 4))
 			return false;
+		// Version 5: Foray in the Forest's extra state
+		if (version >= 5 && !FF_ReadState(fp))
+			return false;
+		if (version < 5)
+			FF_ResetState();
 	}
 	else
 		return false;
@@ -615,6 +626,7 @@ void AR_ResetState(void); // Atroxian Realm's extra game state (kw_arealm.c)
 void KW_ResetWorlds(void)
 {
 	AR_ResetState();
+	FF_ResetState();
 	memset(kw_worlds, 0, sizeof(kw_worlds));
 	memset(kw_introduced, 0, sizeof(kw_introduced)); // a new game introduces each world again
 	kw_pendingWorld = KW_NO_WORLD;
@@ -1678,6 +1690,42 @@ void KW_Screenshot(const char *worldId, int level, const char *path)
 		(int)RF_UnitToTile(ck_keenObj->posY), ck_keenObj->gfxChunk, ck_keenObj->zLayer, path);
 }
 
+// For /KWTEST: write and read a whole saved game (header and all).
+static const char *kw_testSaveFile = "KWTEST2.SAV";
+static bool KW_TestWriteSave(void)
+{
+	FS_File fp = FS_CreateUserFile(kw_testSaveFile);
+	US_Savefile header = {KW_SAVE_TAG, KW_SAVE_MAGIC, true, "Self-test"};
+	uint8_t padding = 0;
+	bool ok = FS_IsFileValid(fp) &&
+		FS_Write(header.id, sizeof(header.id), 1, fp) == 1 &&
+		FS_WriteInt16LE(&header.printXOffset, 1, fp) == 1 &&
+		FS_WriteBoolTo16LE(&header.used, 1, fp) == 1 &&
+		FS_Write(header.name, sizeof(header.name), 1, fp) == 1 &&
+		FS_Write(&padding, 1, 1, fp) == 1 &&
+		CK_SaveGame(fp);
+	if (FS_IsFileValid(fp))
+		FS_CloseFile(fp);
+	return ok;
+}
+static bool KW_TestReadSave(void)
+{
+	FS_File fp = FS_OpenUserFile(kw_testSaveFile);
+	US_Savefile header;
+	uint8_t padding;
+	kw_loadingFileName = kw_testSaveFile;
+	bool ok = FS_IsFileValid(fp) &&
+		FS_Read(header.id, sizeof(header.id), 1, fp) == 1 &&
+		FS_ReadInt16LE(&header.printXOffset, 1, fp) == 1 &&
+		FS_ReadBoolFrom16LE(&header.used, 1, fp) == 1 &&
+		FS_Read(header.name, sizeof(header.name), 1, fp) == 1 &&
+		FS_Read(&padding, 1, 1, fp) == 1 &&
+		CK_LoadGame(fp, false);
+	if (FS_IsFileValid(fp))
+		FS_CloseFile(fp);
+	return ok && !KW_FinishDeferredLoad();
+}
+
 // Developer self-test (/KWTEST): hop between all worlds several times, loading
 // the world map and two levels each visit, and log memory use after every hop
 // so leaks show up as steady growth.
@@ -2210,6 +2258,17 @@ void KW_SelfTest(void)
 		KW_TestLevelSpritesCached("fitf", 0);
 		for (int lv = 1; lv < 27; ++lv)
 			ck_gameState.levelsDone[lv] = 0;
+		// A game saved inside one of its levels loads back with its state
+		// and every object in its place.
+		for (int lv = 2; lv <= 6; lv += 4)
+		{
+			ck_gameState.currentLevel = lv;
+			CK_LoadLevel(true, true);
+			const char *wrong = FF_TestSaveRoundTrip(KW_TestWriteSave, KW_TestReadSave);
+			if (wrong)
+				QuitF("KW_SelfTest: Foray in the Forest save in level %d: %s!", lv, wrong);
+		}
+		remove(kw_testSaveFile);
 		// Arriving by Megarocket puts Keen beside the landed ship in its BwB level.
 		const KW_Ship *ffShip = KW_ShipFor(KW_FITF);
 		kw_placeArrivalAtShip = true;
