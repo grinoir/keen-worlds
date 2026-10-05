@@ -545,6 +545,7 @@ typedef struct KW_Tally
 static KW_Tally kw_awake;        // Keen's own, while he dreams
 static KW_Tally kw_dreamTally;   // the dream's, while he is awake
 static bool kw_wakeInBed = false; // the next arrival in the ship is in the bunk
+static bool kw_shipUpUsed = false; // "up" has done its one thing in the ship's rooms and is still held
 void KD_NewGame(void);
 void KD_GetState(int16_t *out);
 void KD_SetState(const int16_t *in);
@@ -1606,6 +1607,47 @@ static void KW_ChooseJourney(void)
 
 static void KW_DumpScreen(const char *path);
 
+// "About Keen Worlds": cards from the file ABOUT.TXT in the Megarocket's
+// folder, which whoever put this galaxy together writes. A line of three
+// dashes starts a new card. Shown from the flight menu and after the ending.
+#define KW_MENU_CREDITS (-3)
+
+static void KW_ShowAboutKeenWorlds(void)
+{
+	static char text[4096];
+	char path[600];
+	const char *dir = KW_WorldPath(KW_SHIP);
+	snprintf(path, sizeof(path), "%s/ABOUT.TXT", dir ? dir : ".");
+	FILE *f = fopen(path, "rb");
+	size_t n = 0;
+	if (f)
+	{
+		char line[128];
+		while (fgets(line, sizeof(line), f) && n + sizeof(line) + 2 < sizeof(text))
+		{
+			size_t len = strcspn(line, "\r\n");
+			line[len] = 0;
+			if (!strcmp(line, "---"))
+			{
+				while (n && text[n - 1] == '\n')
+					--n; // no empty lines at the foot of a card
+				text[n++] = '\f';
+				continue;
+			}
+			if (len > 36)
+				line[len = 36] = 0; // a card is no wider
+			memcpy(text + n, line, len);
+			n += len;
+			text[n++] = '\n';
+		}
+		fclose(f);
+	}
+	while (n && (text[n - 1] == '\n' || text[n - 1] == '\f'))
+		--n;
+	text[n] = 0;
+	KW_ShowCards(n ? text : "Commander Keen: Worlds\n\nOne Megarocket.\nA galaxy that remembers.");
+}
+
 static int KW_TravelMenu(void)
 {
 	int lineY[KW_NUM_WORLDS];
@@ -1642,6 +1684,7 @@ static int KW_TravelMenu(void)
 	} groups[] = {
 		{"Goodbye, Galaxy!", 0, 3, {KW_KEEN4, KW_KEEN5, KW_KEEN6}},
 		{"The Universe Is Toast!", 0, 3, {KW_KEEN7, KW_KEEN8, KW_KEEN9}},
+		{NULL, 0, 1, {KW_MENU_CREDITS}}, // (no heading: a line of its own under the left column)
 		{"Other adventures", 1, 4, {KW_FITF, KW_AREALM, KW_OSI, KW_BOUNTY}},
 		{"More levels", 1, 3, {KW_KEEN95, KW_CK55, KW_ASYLUM}},
 	};
@@ -1651,7 +1694,7 @@ static int KW_TravelMenu(void)
 
 	SD_PlaySound(CK_SOUNDNUM(SOUND_UNKNOWN12));
 	VL_FixRefreshBuffer();
-	US_CenterWindow(38, 20);
+	US_CenterWindow(38, 21);
 	int winX = US_GetWindowX(), winW = US_GetWindowW(), colW = winW / 2 - 8;
 	int8_t oldColour = US_GetPrintColour();
 	US_SetPrintY(US_GetPrintY() + 2);
@@ -1662,19 +1705,22 @@ static int KW_TravelMenu(void)
 		int col = groups[g].column, x = winX + 8 + col * (winW / 2);
 		if (colY[col] != top)
 			colY[col] += 6;
-		US_SetPrintColour(HEADING);
-		US_SetPrintX(x);
-		US_SetPrintY(colY[col]);
-		US_Print(groups[g].title);
-		colY[col] += ROW;
+		if (groups[g].title)
+		{
+			US_SetPrintColour(HEADING);
+			US_SetPrintX(x);
+			US_SetPrintY(colY[col]);
+			US_Print(groups[g].title);
+			colY[col] += ROW;
+		}
 		for (int i = 0; i < groups[g].count; ++i)
 		{
 			int w = groups[g].worlds[i];
-			bool open = KW_IsWorldPresent(w) && KW_CourseIsOpen(w);
-			US_SetPrintColour(w == here ? HERE : !open ? GREY : KW_WorldIsSaved(w) ? SAVED : NORMAL);
+			bool open = w == KW_MENU_CREDITS || (KW_IsWorldPresent(w) && KW_CourseIsOpen(w));
+			US_SetPrintColour(w == here ? HERE : !open ? GREY : (w >= 0 && KW_WorldIsSaved(w)) ? SAVED : NORMAL);
 			US_SetPrintX(x + 8);
 			US_SetPrintY(colY[col]);
-			US_Print(kw_worldDefs[w].name);
+			US_Print(w == KW_MENU_CREDITS ? "About Keen Worlds" : kw_worldDefs[w].name);
 			entries[numEntries] = w;
 			entryX[numEntries] = x + 4;
 			entryCol[numEntries] = col;
@@ -1702,11 +1748,13 @@ static int KW_TravelMenu(void)
 			char title[80], status[80];
 			int w = entries[sel];
 			shown = sel;
-			CK_Cross_strscpy(title, kw_worldDefs[w].title, sizeof(title));
+			CK_Cross_strscpy(title, w == KW_MENU_CREDITS ? "Commander Keen: Worlds" : kw_worldDefs[w].title, sizeof(title));
 			for (char *c = title; *c; ++c)
 				if (*c == '\n')
 					*c = ' ';
-			if (w == here)
+			if (w == KW_MENU_CREDITS)
+				snprintf(status, sizeof(status), "Who put this galaxy together.");
+			else if (w == here)
 				snprintf(status, sizeof(status), "Keen is here. Choose it to read about it.");
 			else if (!KW_IsWorldPresent(w))
 				snprintf(status, sizeof(status), "Not installed. Choose it to see how to get it.");
@@ -1727,7 +1775,7 @@ static int KW_TravelMenu(void)
 			{
 				VH_UpdateScreen();
 				KW_DumpScreen(getenv("KW_AUTOMENU"));
-				printf("KW_AUTOMENU: the travel menu, on %s\n", kw_worldDefs[w].id);
+				printf("KW_AUTOMENU: the travel menu, on %s\n", w >= 0 ? kw_worldDefs[w].id : "about");
 				US_SetPrintColour(oldColour);
 				return KW_NO_WORLD;
 			}
@@ -1781,6 +1829,11 @@ static int KW_TravelMenu(void)
 	}
 
 	KW_WaitForButtonsUp();
+	if (result == KW_MENU_CREDITS)
+	{
+		KW_ShowAboutKeenWorlds();
+		return KW_NO_WORLD;
+	}
 	if (result == here)
 		result = KW_MENU_ABOUT;
 	KW_WaitForButtonsUp();
@@ -2007,6 +2060,7 @@ static void KW_WakeUp(void)
 		return;
 	printf("KW_AUTODREAM: Keen wakes up\n");
 	kw_wakeInBed = true;
+	kw_shipUpUsed = true;
 	kw_dreamEnded = 1;
 	KW_RequestWorld(KW_SHIP);
 }
@@ -2035,12 +2089,30 @@ void KW_DreamKeys(void)
 	IN_ScanCode scan = IN_GetLastScan();
 	if (kw_currentWorld != KW_DREAM || vl_screenFaded)
 		return;
-	if (!((scan >= IN_SC_F1 && scan <= IN_SC_F7) || scan == IN_SC_Escape || ck_inputFrame.button3 ||
+	// The bed on the map of Tuberia is the way back too, as the ship is on
+	// other worlds: walk up into it from its foot. (One push, one question.)
+	static bool pushed = false;
+	bool atBed = false;
+	if (ca_mapOn == 0 && ck_keenObj && ck_inputFrame.yDirection == IN_motion_Up)
+	{
+		for (int x = ck_keenObj->clipRects.tileX1; x <= ck_keenObj->clipRects.tileX2; ++x)
+		{
+			uint16_t above = CA_TileAtPos(x, ck_keenObj->clipRects.tileY1 - 1, 0);
+			uint16_t here = CA_TileAtPos(x, ck_keenObj->clipRects.tileY1, 0);
+			// (the bed's four background tiles)
+			atBed |= above == 1042 || above == 1043 || here == 1042 || here == 1043 || here == 1024 || here == 1025;
+		}
+	}
+	bool bed = atBed && !pushed;
+	pushed = atBed;
+	if (!bed && !((scan >= IN_SC_F1 && scan <= IN_SC_F7) || scan == IN_SC_Escape || ck_inputFrame.button3 ||
 		scan == in_kbdControls.quickSave || scan == in_kbdControls.quickLoad))
 		return;
 	ck_inputFrame.button3 = false;
 	static const char *const choices[] = {"Dream on", "Wake up"};
-	bool wake = KW_ChooseCard("Keen is fast asleep.", choices, 2) == 1;
+	if (bed)
+		printf("KW_AUTODREAM: Keen is at his bed in Tuberia\n");
+	bool wake = getenv("KW_AUTOSHOT") ? bed : KW_ChooseCard(bed ? "Keen's own bed. He could\nlie down and wake up." : "Keen is fast asleep.", choices, 2) == 1;
 	IN_ClearKeysDown();
 	RF_ForceRefresh();
 	SD_SetLastTimeCount(SD_GetTimeCount());
@@ -2090,12 +2162,13 @@ static void KW_ShipRoomFrame(void)
 		return;
 	}
 	// One press of "up", one use (the scripted developer runs hold it down).
-	static bool upUsed = false;
+	// (kw_shipUpUsed: also set when Keen wakes in his bunk with "up" still
+	// held from pushing at the bed in Tuberia, or he would lie down again.)
 	if (ck_inputFrame.yDirection != IN_motion_Up)
-		upUsed = false;
-	if (!marker || !ck_keenObj->topTI || ck_inputFrame.yDirection != IN_motion_Up || upUsed)
+		kw_shipUpUsed = false;
+	if (!marker || !ck_keenObj->topTI || ck_inputFrame.yDirection != IN_motion_Up || kw_shipUpUsed)
 		return;
-	upUsed = true;
+	kw_shipUpUsed = true;
 	if (marker == KW_SHIP_BED)
 	{
 		KW_Dream();
@@ -2503,6 +2576,7 @@ void KW_PlayLoopHook(void)
 				kw_chronicleEndTold = 1;
 				printf("KW_AUTOENDING: every world is saved\n");
 				KW_ShowPicture(kw_endingPicture, kw_endingColors);
+				KW_ShowAboutKeenWorlds();
 				KW_ShowCards(!kw_chronicle ? "Every world is saved.\nThe galaxy is quiet, and\nthe Megarocket knows the\nway to all of it." "\fThe ship is yours, Keen.\nFly where you like." :
 					"The Chronicle\n\nEvery world is saved.\nThe galaxy is quiet, and\nthe Megarocket knows the\nway to all of it."
 					"\fThe ship is yours, Keen.\nFly where you like.");

@@ -482,6 +482,12 @@ names the game the chosen world is and how things stand with it. The world
 the ship stands on is in the list; choosing it tells about it.
 `KW_AUTOMENU=file.ppm` saves a picture of the menu in scripted runs.
 
+**About Keen Worlds** (`KW_ShowAboutKeenWorlds`): whoever put this galaxy
+together writes their own words in `data/megarocket/ABOUT.TXT` (plain text;
+a line of three dashes starts a new card; a line up to 34 letters, a card up
+to 16 lines). The flight menu has the line "About Keen Worlds" under its
+left column, and the cards are shown once more after the ending picture.
+
 **Gnosticus Pi's arrival**: flown to for the first time from the ship's
 controls, its story plays, then the game's own fly-in over its map, and
 when the ship has landed Keen is still inside it (`KW_FitfShipLanded`): the
@@ -585,7 +591,8 @@ are (they descend from Keen Dreams'); hooks marked `KD_IsActive()` in
 
 Keen has no wrist computer in his pyjamas: in the dream the menu keys ask
 whether to wake up (`KW_DreamKeys`), and Enter shows a plain status window.
-Waking puts Keen back in his bunk with the dream kept as it is; games are
+The bed on the map of Tuberia is a way back too, as the ship is on other
+worlds: walking up into it from its foot asks the same question. Waking puts Keen back in his bunk with the dream kept as it is; games are
 saved from the ship. Out of lives, he wakes with a start and the next dream
 begins again (`KW_DreamOver`); so it does after the ending. Without the
 converted files Keen "is not sleepy".

@@ -1,0 +1,38 @@
+Commander Keen: Worlds
+
+One Megarocket.
+A galaxy that remembers.
+---
+Linked together by
+GrinNoir, the great Linker
+
+(Write your own words here.
+This file is ABOUT.TXT in the
+folder megarocket. A line with
+only three dashes starts a new
+card. Keep a line under 34
+letters and a card under 16
+lines.)
+---
+Keen Worlds did not make
+these worlds. It joins them.
+
+Commander Keen is the work of
+id Software: John Carmack,
+John Romero, Tom Hall, Adrian
+Carmack, Jason Blochowiak,
+with music by Bobby Prince.
+---
+The fan worlds belong to
+their makers. Each one names
+them when Keen first steps
+out onto it, and whenever you
+choose the world the ship
+stands on at the controls.
+---
+Built on Omnispeak, the open
+re-creation of the engine of
+Commander Keen 4 to 6.
+
+Thank you for flying
+Bean-with-Bacon.
