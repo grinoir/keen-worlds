@@ -463,11 +463,11 @@ the title shown is the game's own (Keen 4's for Keen 4), then its story.
 
 **Keen 4 speaks.** Every line of dialogue in Secret of the Oracle has a
 voice clip (`data/voice/K4_*.RAW`, made by `tools/kw_keen4_voice.py` with
-Kokoro): Keen (am_puck, his voice in every world from now on), the council
+Kokoro): Keen (bm_fable, his voice in every world from now on), the council
 members and the village elder (bm_george; the one rescued under water is
 the same clip wobbled and muffled), the Oracle (am_onyx, with an echo),
 Princess Lindsey (bf_emma), the janitor (am_eric) and the ending's
-"Meanwhile, back on Earth..." (bm_fable). `KW_SayLine` plays a line as its
+"Meanwhile, back on Earth..." (bm_lewis, the narrator). `KW_SayLine` plays a line as its
 window appears (`ck4_misc.c`; the ending page by page in `ck_text.c`,
 `K4_END_<page>.RAW`), with the music turned down under it, not stopped, and
 brought back up afterwards (`KW_LinesOver`, `KW_LinePoll`). Only in the
@@ -475,10 +475,10 @@ world `keen4`: the fan games on the same engine have other words in the
 same windows. `KW_AUTOTALK=n` runs all the dialogues at frame n of a
 scripted run and prints each clip.
 
-Keen's voice is sped up and raised a little (`STYLE` in
-`tools/kw_keen4_voice.py`: quicker and younger than the voice is by itself),
-and the narrator's "Keen", which came out near "Cain" in places, has its
-vowel held with a glide (`tools/kw_voice.mjs` can replace phonemes). In the
+Keen's voice says the word "Keen" near "Cain" by itself, so its phonemes
+are pushed towards "kyeen" (`STYLE` in `tools/kw_keen4_voice.py`;
+`tools/kw_voice.mjs` can replace phonemes). Both voices were picked by ear
+from samples. In the
 conversations with the elder and the barmaid, the line Keen picks stands on
 a card of his own and he says it (`KW_KeenSays`; clips `KEENSAY_*.RAW`,
 named after the line's text).
