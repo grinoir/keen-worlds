@@ -17,6 +17,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
+#include <stdlib.h>
+#include <string.h>
 #include "id_vh.h"
 #include "id_ca.h"
 #include "id_mm.h"
@@ -194,6 +196,36 @@ void VH_DrawShiftedSprite(int x, int y, int chunk, int shift)
 	int width = shifted->sprShiftByteWidths[shift] * 8;
 
 	VL_MaskedBlitToScreen(data, x, y, width, spr.height);
+}
+
+// KEEN WORLDS: a sprite with rows left off at the top and bottom and/or
+// upside down (see RF_AddSpriteDrawEx). The rows wanted are copied out of
+// its five planes (mask, then four colour planes) and drawn as a sprite of
+// that height.
+void VH_DrawShiftedSpriteEx(int x, int y, int chunk, int shift, int clipTop, int clipBottom, bool flipped, bool maskOnly)
+{
+	VH_SpriteTableEntry spr = VH_GetSpriteTableEntry(chunk - ca_gfxInfoE.offSprites);
+	VH_ShiftedSprite *shifted = VH_GetShiftedSprite(chunk);
+	uint8_t *data = &shifted->data[shifted->sprShiftOffset[shift]];
+	int byteWidth = shifted->sprShiftByteWidths[shift];
+	int rows = spr.height - clipTop - clipBottom;
+	if (rows <= 0)
+		return;
+	uint8_t *rowsData = (uint8_t *)malloc((size_t)byteWidth * rows * 5);
+	if (!rowsData)
+		return;
+	for (int plane = 0; plane < 5; ++plane)
+		for (int row = 0; row < rows; ++row)
+		{
+			int from = flipped ? spr.height - 1 - (clipTop + row) : clipTop + row;
+			memcpy(rowsData + ((size_t)plane * rows + row) * byteWidth,
+				data + ((size_t)plane * spr.height + from) * byteWidth, byteWidth);
+		}
+	if (maskOnly)
+		VL_1bppInvBlitToScreen(rowsData, x, y, byteWidth * 8, rows, 15);
+	else
+		VL_MaskedBlitToScreen(rowsData, x, y, byteWidth * 8, rows);
+	free(rowsData);
 }
 
 void VH_DrawShiftedSpriteMask(int x, int y, int chunk, int shift, int colour)

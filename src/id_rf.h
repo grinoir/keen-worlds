@@ -34,6 +34,10 @@ typedef struct RF_SpriteDrawEntry
 	bool maskOnly;
 	int updateCount;
 	int shift;
+	// KEEN WORLDS: rows left off at the top and bottom, and drawn upside
+	// down (RF_AddSpriteDrawEx); all 0 for an ordinary sprite.
+	int clipTop, clipBottom;
+	bool flipped;
 	struct RF_SpriteDrawEntry **prevNextPtr; // Pointer to the previous entry's 'next' pointer.
 	struct RF_SpriteDrawEntry *next;
 } RF_SpriteDrawEntry;
@@ -95,6 +99,8 @@ void RF_Reposition(int scrollXunit, int scrollYunit);
 void RF_SmoothScroll(int scrollXdelta, int scrollYdelta);
 void RF_RemoveSpriteDraw(RF_SpriteDrawEntry **drawEntry);
 void RF_AddSpriteDraw(RF_SpriteDrawEntry **drawEntry, int unitX, int unitY, int chunk, bool allWhite, int zLayer);
+void RF_AddSpriteDrawEx(RF_SpriteDrawEntry **drawEntry, int unitX, int unitY, int chunk, bool allWhite, int zLayer, int clipTop, int clipBottom, bool flipped);
+void RF_AddSpriteDrawExUsing16BitOffset(int16_t *drawEntryOffset, int unitX, int unitY, int chunk, bool allWhite, int zLayer, int clipTop, int clipBottom, bool flipped);
 void RF_RemoveSpriteDrawUsing16BitOffset(int16_t *drawEntryOffset);
 void RF_AddSpriteDrawUsing16BitOffset(int16_t *drawEntryOffset, int unitX, int unitY, int chunk, bool allWhite, int zLayer);
 void RF_Refresh();

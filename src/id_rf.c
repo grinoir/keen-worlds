@@ -1318,6 +1318,8 @@ void RF_AddSpriteDraw(RF_SpriteDrawEntry **drawEntry, int unitX, int unitY, int 
 	sde->sw = VH_GetShiftedSpriteWidth(shifted, shift);
 	sde->sh = ste.height;
 	sde->maskOnly = allWhite;
+	sde->clipTop = sde->clipBottom = 0;
+	sde->flipped = false;
 	sde->updateCount = VL_GetNumBuffers();
 
 	sde->shift = shift;
@@ -1349,6 +1351,51 @@ void RF_AddSpriteDrawUsing16BitOffset(int16_t *drawEntryOffset, int unitX, int u
 {
 	RF_SpriteDrawEntry *drawEntry = RF_ConvertSpriteArray16BitOffsetToPtr(*drawEntryOffset);
 	RF_AddSpriteDraw(&drawEntry, unitX, unitY, chunk, allWhite, zLayer);
+	*drawEntryOffset = RF_ConvertSpriteArrayPtrTo16BitOffset(drawEntry);
+}
+
+// KEEN WORLDS: a sprite with rows left off at the top and bottom and/or drawn
+// upside down (Foray in the Forest: RF_PlaceSpriteClippedEx and drawflipped
+// in its ID_RF.C). Clipping everything away removes the sprite. A flipped
+// sprite is placed without its vertical origin, as there.
+void RF_AddSpriteDrawEx(RF_SpriteDrawEntry **drawEntry, int unitX, int unitY, int chunk, bool allWhite, int zLayer, int clipTop, int clipBottom, bool flipped)
+{
+	if (chunk == 0 || chunk == -1)
+	{
+		RF_RemoveSpriteDraw(drawEntry);
+		return;
+	}
+	VH_SpriteTableEntry ste = VH_GetSpriteTableEntry(chunk - ca_gfxInfoE.offSprites);
+	if (clipTop < 0)
+		clipTop = 0;
+	if (clipBottom < 0)
+		clipBottom = 0;
+	if (clipTop + clipBottom >= ste.height)
+	{
+		RF_RemoveSpriteDraw(drawEntry);
+		return;
+	}
+	// Erase where the sprite was if how it is drawn changes (the plain call
+	// only knows about place and picture).
+	RF_SpriteDrawEntry *old = *drawEntry;
+	bool changed = old && (old->clipTop != clipTop || old->clipBottom != clipBottom || old->flipped != flipped);
+	if (changed)
+		RF_RemoveSpriteDraw(drawEntry);
+	RF_AddSpriteDraw(drawEntry, unitX, flipped ? unitY - ste.originY : unitY, chunk, allWhite, zLayer);
+	RF_SpriteDrawEntry *sde = *drawEntry;
+	if (!sde)
+		return;
+	sde->clipTop = clipTop;
+	sde->clipBottom = clipBottom;
+	sde->flipped = flipped;
+	sde->y += clipTop;
+	sde->sh = ste.height - clipTop - clipBottom;
+}
+
+void RF_AddSpriteDrawExUsing16BitOffset(int16_t *drawEntryOffset, int unitX, int unitY, int chunk, bool allWhite, int zLayer, int clipTop, int clipBottom, bool flipped)
+{
+	RF_SpriteDrawEntry *drawEntry = RF_ConvertSpriteArray16BitOffsetToPtr(*drawEntryOffset);
+	RF_AddSpriteDrawEx(&drawEntry, unitX, unitY, chunk, allWhite, zLayer, clipTop, clipBottom, flipped);
 	*drawEntryOffset = RF_ConvertSpriteArrayPtrTo16BitOffset(drawEntry);
 }
 
@@ -1394,7 +1441,12 @@ void RFL_DrawSpriteList()
 		drawSprite:
 			if (sde->updateCount)
 			{
-				if (sde->maskOnly)
+				if (sde->clipTop || sde->clipBottom || sde->flipped)
+				{
+					// KEEN WORLDS: clipped or upside down
+					VH_DrawShiftedSpriteEx(pixelX, pixelY, sde->chunk, sde->shift, sde->clipTop, sde->clipBottom, sde->flipped, sde->maskOnly);
+				}
+				else if (sde->maskOnly)
 				{
 					VH_DrawShiftedSpriteMask(pixelX, pixelY, sde->chunk, sde->shift, 15);
 				}

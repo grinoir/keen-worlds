@@ -9,7 +9,6 @@ these in this world.
 #include "kw_fitf.h"
 #include "kw_ff_keen.h"
 
-#define DEFAULT_ACTIVE_LIMIT 6
 
 // Where objects are kept active around the screen (its CalcInactivate; the
 // engine does this inline after it scrolls).

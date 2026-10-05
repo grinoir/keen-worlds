@@ -81,6 +81,7 @@ void VH_DrawBitmap(int x, int y, int chunk);
 void VH_DrawMaskedBitmap(int x, int y, int chunk);
 void VH_DrawSprite(int x, int y, int chunk);
 void VH_DrawSpriteMask(int x, int y, int chunk, int colour);
+void VH_DrawShiftedSpriteEx(int x, int y, int chunk, int shift, int clipTop, int clipBottom, bool flipped, bool maskOnly);
 void VH_DrawShiftedSprite(int x, int y, int chunk, int shift);
 void VH_DrawShiftedSpriteMask(int x, int y, int chunk, int shift, int colour);
 void VH_DrawPropChar(int x, int y, int chunk, unsigned char c, int colour);

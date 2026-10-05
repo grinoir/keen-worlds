@@ -94,12 +94,6 @@ void FF_MoveObjHoriz(CK_object *ob, int xmove)
 	ob->clipRects.tileXmid = RF_UnitToTile(ob->clipRects.unitXmid);
 }
 
-// Its sprites drawn flipped upside down. TODO: flip; drawn upright for now.
-void FF_DrawSprite(RF_SpriteDrawEntry **sde, int x, int y, int chunk, int drawtype, int zLayer)
-{
-	RF_AddSpriteDraw(sde, x, y, chunk, false, zLayer);
-}
-
 // ---- Not ported yet: parts of its CK_GAME.C, CK_PLAY.C and CK_SPEC.C that
 // Keen and the creatures call. Each does the least that keeps the game
 // going. ----

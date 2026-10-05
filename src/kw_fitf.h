@@ -185,13 +185,18 @@ static inline uint16_t FF_MapAt(int plane, unsigned off)
 #define FF_D_Expert 4 // its fourth difficulty
 #define FF_CLIP_custommid CLIP_normal // TODO: its custom clip box (CK_CustomClipRects)
 
-// Its sprite drawing beyond the engine's (kw_fitf.c). TODO: flipping,
-// clipping and ordering are not done yet; they draw as plain sprites.
+// Its sprite drawing beyond the engine's: upside down (drawflipped), rows
+// clipped off (a positive number clips at the top, a negative one at the
+// bottom). TODO: a sprite drawn in a fixed order after another
+// (RF_PlaceSpriteAfter) is placed as a plain sprite of the same layer.
 #define drawflipped 2
-void FF_DrawSprite(RF_SpriteDrawEntry **sde, int x, int y, int chunk, int drawtype, int zLayer);
+#define FF_DrawSprite(sde, x, y, chunk, drawtype, zLayer) \
+	RF_AddSpriteDrawEx(sde, x, y, chunk, ((drawtype) & 1) != 0, zLayer, 0, 0, ((drawtype) & drawflipped) != 0)
 #define RF_PlaceSpriteAfter(sde, x, y, chunk, type, z, after) RF_AddSpriteDraw((RF_SpriteDrawEntry **)(sde), x, y, chunk, type, z)
-#define RF_PlaceSpriteClipped(sde, x, y, chunk, type, z, clip) RF_AddSpriteDraw(sde, x, y, chunk, type, z)
-#define RF_PlaceSpriteAfterClipped(user, x, y, chunk, type, z, after, a, b) RF_AddSpriteDrawUsing16BitOffset(user, x, y, chunk, type, z)
+#define RF_PlaceSpriteClipped(sde, x, y, chunk, type, z, clip) \
+	RF_AddSpriteDrawEx(sde, x, y, chunk, type, z, (clip) > 0 ? (clip) : 0, (clip) < 0 ? -(clip) : 0, false)
+#define RF_PlaceSpriteAfterClipped(user, x, y, chunk, type, z, after, clipTop, clipBottom) \
+	RF_AddSpriteDrawExUsing16BitOffset(user, x, y, chunk, type, z, clipTop, clipBottom, false)
 
 // Its strings (GAMESTR.CKS, its string manager KD_SM.C): by FF_S_ number.
 const char *FF_String(int number);
