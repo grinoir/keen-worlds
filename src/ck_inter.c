@@ -1538,9 +1538,9 @@ void CK_ShowTitleScreen()
 	VL_UpdateRect(0, 0, 42 * 8, 224);
 	VL_Present();
 	KW_StartTitleMusic(); // KEEN WORLDS: the title tune (kw_music.c)
-	// (a longer look at it than the episodes' titles got: the tune's first
-	// sixteen bars)
-	IN_UserInput(34 * 70, false);
+	// (the tune's two bars of bass and drums and the first two of the tune;
+	// then the story scrolls, and the tune plays on)
+	IN_UserInput(8 * 70, false);
 	CA_ClearMarks();
 	CK_HandleDemoKeys();
 	VL_Present();

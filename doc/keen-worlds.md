@@ -449,8 +449,8 @@ the title (with `KW_AUTOENDING=1` the ending, `=story` the story's picture) and 
 OPL2, in the sounds of the Megarocket's tune played by a bigger band: a
 syncopated bass, three-note horn stabs, a lead that slides into some notes,
 and the chip's drums with tom fills and a cymbal. `KW_StartTitleMusic`
-starts it with the title picture when the program is launched and it plays
-on under Keen Worlds' story.
+starts it with the title picture when the program is launched; after eight
+seconds the story scrolls, the tune playing on, and then the demos begin.
 `tools/kw_imf2wav.c` renders a tune to a WAV file with the engine's own chip
 emulator, to hear it without the game. When a game begins from the menu,
 the title shown is the game's own (Keen 4's for Keen 4), then its story.

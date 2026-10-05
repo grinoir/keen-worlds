@@ -2318,6 +2318,7 @@ extern const char *ck_starWarsTextOverride;
 void KW_PlayOwnStory(bool handleDemoKeys)
 {
 	printf("KW_AUTOSTORY: the story of Keen Worlds\n");
+	fflush(stdout);
 	ck_starWarsTextOverride = kw_ownStory;
 	// (the keys of the opening loop are handled below, once the standard
 	// colours are back: a menu opened from here must not be in the story's)

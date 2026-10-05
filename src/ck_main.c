@@ -259,13 +259,15 @@ void CK_DemoLoop()
 #if 1					     //DEMO_LOOP_ENABLED
 			break;
 		case 1:
-			CK_PlayDemo(0);
-			break;
-		case 2:
 			// Star Wars story text
 			// KEEN WORLDS: its own story (the episode's plays when its
-			// world is chosen at the ship's controls)
+			// world is chosen at the ship's controls), straight after
+			// the title and before the first demo, the title tune
+			// playing on through both
 			KW_PlayOwnStory(true);
+			break;
+		case 2:
+			CK_PlayDemo(0);
 			break;
 		case 3:
 			CK_PlayDemo(1);
