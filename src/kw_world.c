@@ -316,6 +316,10 @@ static const KW_Ship kw_ships[] = {
 	{KW_KEEN4, 18, 3, 12, 3, 9, 19, 14},
 	{KW_KEEN6, 17, 4, 22, 3, 18, 18, 23},
 	{KW_KEEN7, 18, 3, 15, 3, 12, 19, 17}, // Keen 4's ship, three rows lower
+	// The Shikadi Station: the ship in the hangar of its own Megarocket level
+	// (18, entered from its map where the ship is docked), where that level
+	// starts Keen at its nose.
+	{KW_OSI, 18, 3, 38, 3, 33, 18, 39},
 	// Aspermontis: the ship on the palm beach of its own Megarocket level,
 	// where that level starts Keen at its nose.
 	{KW_KEEN95, 18, 3, 17, 3, 13, 15, 18},
