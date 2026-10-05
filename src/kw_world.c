@@ -138,7 +138,8 @@ static const KW_WorldDef kw_worldDefs[KW_NUM_WORLDS] = {
 		"Level design: Nisaba\nMini-games: K1n9_Duk3, Spleen"
 		"\f"
 		"Sprite art: Nisaba, Zilem,\nXky Rauh, Plasma Captain, Neorice,\nFred Strom, siskavard_, DoomJedi\n\n"
-		"Pixel art: Nisaba, ProYorp,\nBernie, Pandakeen, Mobiethian,\nZilem, Roobar and others\n\n"
+		"Pixel art: Nisaba, ProYorp,\nBernie, Pandakeen, Mobiethian,\nZilem, Roobar and others"
+		"\f"
 		"Many more are named in the\ngame's own credits (its Help)." KW_NOT_OURS,
 		"A fan game by Nisaba and\nK1n9_Duk3. Download Foray in\nthe Forest v2.0 (see its page\non keenwiki.shikadi.net) and\nput its files in mods/fitf."},
 };
@@ -1004,8 +1005,13 @@ static const char *KW_CheckCardsFit(void)
 			{
 				char page[512];
 				size_t n = strcspn(p, "\f");
-				if (n >= sizeof(page))
-					return "a card page is too long";
+				// (US_CPrint takes at most 255 characters at a time)
+				if (n >= sizeof(page) || n > 255)
+				{
+					snprintf(problem, sizeof(problem), "%s card page \"%.20s...\" has %d characters (255 at most)",
+						kw_worldDefs[world].id, p, (int)n);
+					return problem;
+				}
 				memcpy(page, p, n);
 				page[n] = 0;
 				uint16_t w, h;
