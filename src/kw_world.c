@@ -1570,7 +1570,7 @@ void KW_DebugInput(void)
 	ck_inputFrame.dir = dirs[y + 1][x + 1];
 	ck_inputFrame.jump = ck_keenState.jumpIsPressed = jump != 0;
 	ck_inputFrame.pogo = ck_keenState.pogoIsPressed = pogo != 0;
-	ck_keenState.shootIsPressed = fire != 0;
+	ck_inputFrame.button2 = ck_keenState.shootIsPressed = fire != 0;
 }
 
 // KW_AUTOWAIT="file": whenever the game waits for a key, save the screen as
@@ -1605,6 +1605,9 @@ void KW_DebugFrame(void)
 	static int killAt = -1;
 	if (killAt < 0)
 		killAt = getenv("KW_AUTOKILL") ? atoi(getenv("KW_AUTOKILL")) : 0;
+	// KW_AUTOLIVES=n: Keen has n lives from the first frame
+	if (count == 0 && getenv("KW_AUTOLIVES"))
+		ck_gameState.numLives = atoi(getenv("KW_AUTOLIVES"));
 	if (killAt && count + 1 == killAt)
 		CK_KillKeen();
 	if (!frames || ++count < frames)

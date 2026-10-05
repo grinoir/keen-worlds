@@ -105,8 +105,14 @@ void CK_NewGame()
 
 bool FF_IsActive(void);
 
+bool FF_GameOverWasShown(void);
+
 void CK_GameOver()
 {
+	// KEEN WORLDS: Foray in the Forest has shown it already, before its
+	// offer to continue
+	if (FF_IsActive() && FF_GameOverWasShown())
+		return;
 	VL_FixRefreshBuffer();
 	// KEEN WORLDS: Foray in the Forest clears the screen to black first
 	if (FF_IsActive())
@@ -715,6 +721,8 @@ void FF_BeginCacheBox(const char *title, int numChunks);
 void FF_UpdateCacheBox(void);
 bool KW_DebugWait(void);
 void FF_LevelEnded(void);
+bool FF_GameOverContinue(void);
+bool FF_GameOverWasShown(void);
 bool FF_HandleDeath(void);
 bool FF_HasCheckpoint(void);
 void FF_NewGame(void);
@@ -1199,6 +1207,10 @@ void CK_GameLoop()
 
 		if (FF_IsActive())
 			FF_AfterLevelEnded();
+
+		// KEEN WORLDS: Foray in the Forest offers to continue
+		if (ck_gameState.numLives < 0 && FF_IsActive() && FF_GameOverContinue())
+			goto loadLevel;
 
 		if (ck_gameState.numLives < 0)
 			break;

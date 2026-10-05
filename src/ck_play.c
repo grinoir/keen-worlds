@@ -1341,6 +1341,8 @@ void FF_WorldScrollScreen(CK_object *keen);
 void FF_Camera(CK_object *keen);
 void KW_DebugInput(void);
 void KW_DebugFrame(void);
+void FF_InputRead(void);
+void FF_InputRestrictions(void);
 void FF_FrameRiding(void);
 void FF_FrameInTiles(void);
 void FF_FrameEnd(void);
@@ -1349,6 +1351,11 @@ extern bool ff_keenUpHeld; // kw_fitf.c
 void CK_HandleInput()
 {
 	IN_ReadControls(0, &ck_inputFrame);
+	KW_DebugInput(); // developer tool: input from the environment (kw_world.c)
+	// KEEN WORLDS: Foray in the Forest changes what was pressed (a Nisasi on
+	// Keen's head, the Brain Fucl)
+	if (FF_IsActive())
+		FF_InputRead();
 
 	if (ck_inputFrame.yDirection != -1)
 		ck_keenState.keenSliding = false;
@@ -1434,9 +1441,8 @@ void CK_HandleInput()
 	// KEEN WORLDS: Foray in the Forest's Keen keeps "up was held" (doors,
 	// switches): cleared once up is let go (PollControls in its CK_PLAY.C).
 	// TODO: its reversed controls while stunned or under the Brain Fucl.
-	KW_DebugInput(); // developer tool: input from the environment (kw_world.c)
-	if (FF_IsActive() && ck_inputFrame.yDirection != IN_motion_Up)
-		ff_keenUpHeld = false;
+	if (FF_IsActive())
+		FF_InputRestrictions();
 }
 
 void StopMusic(void)

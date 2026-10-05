@@ -247,6 +247,143 @@ bool FF_LoadCheckpoint(void)
 	return true;
 }
 
+static void FF_ApplyDifficulty(bool newGame);
+
+// ---- Out of lives (GameOver and CK_ContinueMenu in CK_GAME.C, and what
+// its GameLoop does with the answer): the game over window, then the offer
+// to continue (with a remark that changes each time, and a bar that runs
+// out: "Quit" is chosen by itself), then the jokes it tells about
+// continuing. Continuing puts Keen back on the map with the lives and ammo
+// of his difficulty. Returns true to go on playing. ----
+
+void CK_GameOver(void);
+bool KW_DebugWait(void);
+static bool ff_gameOverShown;
+
+bool FF_GameOverWasShown(void)
+{
+	bool shown = ff_gameOverShown;
+	ff_gameOverShown = false;
+	return shown;
+}
+
+static void FF_SelectionBox(int y, int color)
+{
+	int x1 = US_GetWindowX() + 3, x2 = US_GetWindowX() + US_GetWindowW() - 4;
+	VHB_HLine(x1, x2, y, color);
+	VHB_HLine(x1, x2, y + 1, color);
+	VHB_HLine(x1, x2, y + 12, color);
+	VHB_HLine(x1, x2, y + 13, color);
+	VHB_VLine(y + 1, y + 11, x1 + 1, color);
+	VHB_VLine(y + 1, y + 11, x1, color);
+	VHB_VLine(y + 1, y + 11, x2, color);
+	VHB_VLine(y + 1, y + 11, x2 - 1, color);
+}
+
+static bool FF_ContinueMenu(void)
+{
+	const int bottomHeight = 36;
+	uint16_t w, h;
+	VHB_Bar(0, 0, 320, 200, 0);
+	int msg = ff_state.continuesUsed + FF_S_RANOUTOFLIVES;
+	if (msg > FF_S_RANOUTOFJOKES)
+		msg = FF_S_RANOUTOFJOKES;
+	else
+		ff_state.continuesUsed++;
+	CK_MeasureMultiline(FF_String(msg), &w, &h);
+	int tw = (w + 7) / 8, th = (h + bottomHeight + 7) / 8;
+	US_CenterWindow(tw > 26 ? tw : 26, th > 8 ? th : 8);
+	US_SetPrintY(US_GetPrintY() + (US_GetWindowH() - h - bottomHeight) / 2);
+	US_CPrint(FF_String(msg));
+
+	int y1 = US_GetWindowY() + US_GetWindowH() - bottomHeight;
+	US_SetPrintY(y1 + 2);
+	US_CPrint(FF_String(FF_S_CONTINUE));
+	US_SetPrintY(US_GetPrintY() + 4);
+	int y2 = US_GetPrintY() - 2;
+	US_CPrint(FF_String(FF_S_QUIT));
+	IN_ClearKeysDown();
+	VH_UpdateScreen();
+	if (KW_DebugWait())
+		return false; // (developer tool: nobody to choose)
+
+	int sel = 1, timeout = (US_GetWindowW() - 8) * 4;
+	while (IN_GetLastScan() != IN_SC_Escape)
+	{
+		IN_PumpEvents();
+		VL_DelayTics(1);
+		int y = sel ? y2 : y1;
+		FF_SelectionBox(y, ((SD_GetTimeCount() >> 4) & 1) ? 12 : 1);
+		if (timeout)
+			VHB_Bar(US_GetWindowX() + 4, US_GetWindowY() + US_GetWindowH() - 6, timeout / 4, 3, 2);
+		VH_UpdateScreen();
+		FF_SelectionBox(y, 15);
+		VHB_Bar(US_GetWindowX() + 4, US_GetWindowY() + US_GetWindowH() - 6, US_GetWindowW() - 8, 3, 15);
+
+		IN_ReadControls(0, &ck_inputFrame);
+		if (ck_inputFrame.jump || ck_inputFrame.pogo || IN_GetLastScan() == IN_SC_Enter || IN_GetLastScan() == IN_SC_Space)
+		{
+			IN_ClearKeysDown();
+			return !sel;
+		}
+		if (ck_inputFrame.yDirection == IN_motion_Up || IN_GetLastScan() == IN_SC_UpArrow)
+		{
+			sel = 0;
+			timeout = 0;
+			IN_ClearKeysDown();
+		}
+		else if (ck_inputFrame.yDirection == IN_motion_Down || IN_GetLastScan() == IN_SC_DownArrow)
+		{
+			sel = 1;
+			timeout = 0;
+			IN_ClearKeysDown();
+		}
+		if (timeout > 0 && --timeout == 0)
+			break;
+	}
+	IN_ClearKeysDown();
+	return false;
+}
+
+bool FF_GameOverContinue(void)
+{
+	CK_GameOver();
+	ff_gameOverShown = true; // the engine's own game over doesn't show it again
+	if (!FF_ContinueMenu())
+		return false;
+	ff_gameOverShown = false;
+
+	// the jokes: one or more windows, up to an empty string
+	int winW = US_GetWindowW() / 8, winH = US_GetWindowH() / 8;
+	int joke = ff_state.jokeNumber + FF_S_CONTINUEJOKE1;
+	if (joke > FF_S_FINALCONTINUEJOKE)
+		joke = FF_S_FINALCONTINUEJOKE;
+	while (joke < FF_NUMGAMESTRINGS && *FF_String(joke))
+	{
+		uint16_t strW, strH;
+		CK_MeasureMultiline(FF_String(joke), &strW, &strH);
+		if ((strW + 7) / 8 > winW)
+			winW = (strW + 7) / 8;
+		if ((strH + 7) / 8 > winH)
+			winH = (strH + 7) / 8;
+		US_CenterWindow(winW, winH);
+		US_SetPrintY(US_GetPrintY() + (US_GetWindowH() - strH) / 2);
+		US_CPrint(FF_String(joke));
+		VH_UpdateScreen();
+		IN_WaitButton();
+		joke++;
+	}
+	ff_state.jokeNumber = joke + 1 - FF_S_CONTINUEJOKE1;
+	VHB_Bar(0, 0, 320, 200, 0);
+
+	ff_state.oldscore = 0;
+	ck_gameState.nextKeenAt = 20000;
+	ck_gameState.numCentilife = 0;
+	ck_gameState.currentLevel = 0;
+	FF_ApplyDifficulty(true);
+	return true;
+}
+
 // ---- Saved games (Keen Worlds' save block, kw_world.c). Its progress
 // (FF_State) always; and, for a game saved inside one of its levels, the
 // level's state and where each object sits in the object array: its code
@@ -610,6 +747,62 @@ extern uint8_t ca_graphChunkNeeded[CA_MAX_GRAPH_CHUNKS];
 // The engine's play loop calls these in this world. ----
 
 void FF_CheckWorldInTiles(CK_object *keen); // kw_ff_map.c
+
+// What was pressed, as its PollControls changes it: with a Nisasi on his
+// head Keen's left and right are swapped and he can't look, jump or pogo;
+// under the Brain Fucl he walks on by himself.
+void FF_InputRead(void)
+{
+	IN_ControlFrame *c = &ck_inputFrame;
+	if (ff_map.nisasi)
+	{
+		c->yDirection = IN_motion_None;
+		c->y = 0;
+		c->jump = c->pogo = false;
+		c->x = -c->x;
+		c->xDirection = (IN_Motion)(-(int)c->xDirection);
+		c->dir = c->xDirection < 0 ? IN_dir_West : c->xDirection > 0 ? IN_dir_East : IN_dir_None;
+	}
+	else if (ff_map.brainfucl > 0)
+	{
+		bool onGround = ck_keenObj && ck_keenObj->currentAction && ck_keenObj->currentAction->stickToGround == 1;
+		memset(c, 0, sizeof(*c));
+		c->dir = IN_dir_None;
+		if (onGround)
+		{
+			c->x = -1;
+			c->xDirection = IN_motion_Left;
+			c->dir = IN_dir_East; // (as in the source)
+		}
+	}
+	if (c->yDirection != IN_motion_Up)
+		ff_keenUpHeld = false;
+}
+
+// And what Keen may do with it: no shooting with a Nisasi on his head, no
+// jumping in quicksand; in two levels the pogo key jumps.
+void FF_InputRestrictions(void)
+{
+	// (the engine's debug input sets the key states after the frame is read)
+	if (ff_map.nisasi)
+		ck_keenState.shootIsPressed = ck_keenState.shootWasPressed = false;
+	if (ff_map.quicksand)
+		ck_keenState.jumpIsPressed = ck_keenState.jumpWasPressed = ck_keenState.pogoIsPressed =
+			ck_keenState.pogoWasPressed = false;
+	if (ca_mapOn == MAP_MUSHROOMLEVEL1 || ca_mapOn == MAP_TARDISLEVEL)
+	{
+		if (ck_keenState.pogoIsPressed || ck_keenState.jumpIsPressed)
+		{
+			ck_keenState.jumpIsPressed = true;
+			ck_keenState.pogoIsPressed = false;
+		}
+		else
+		{
+			ck_keenState.jumpWasPressed = false;
+			ck_keenState.jumpIsPressed = false;
+		}
+	}
+}
 
 // Keen rides platforms, and quicksand counts as one.
 void FF_FrameRiding(void)
