@@ -21,11 +21,26 @@ untouched.
 #include "kw_ship_music.h"
 
 // Inside the ship its own tune plays instead of a level's song.
+// The tune waits while the ship computer speaks (a landing announcement),
+// so the words can be heard.
+static bool kw_shipMusicHeld;
+
+void KW_HoldShipMusic(void)
+{
+	kw_shipMusicHeld = true;
+}
+
 bool KW_StartShipMusic(void)
 {
 	if (KW_CurrentWorld() != KW_SHIP)
 		return false;
-	SD_StartMusicData(kw_shipMusic, sizeof(kw_shipMusic));
+	if (KW_ShipComputerSpeaking())
+	{
+		SD_MusicOff();
+		kw_shipMusicHeld = true;
+	}
+	else
+		SD_StartMusicData(kw_shipMusic, sizeof(kw_shipMusic));
 	return true;
 }
 
@@ -45,6 +60,11 @@ static bool KW_IsInTavern(void)
 
 void KW_UpdateMusicZone(void)
 {
+	if (kw_shipMusicHeld && (KW_CurrentWorld() != KW_SHIP || !KW_ShipComputerSpeaking()))
+	{
+		kw_shipMusicHeld = false;
+		KW_StartShipMusic();
+	}
 	bool inTavern = KW_IsInTavern();
 	if (inTavern == kw_tavernThemePlaying)
 		return;

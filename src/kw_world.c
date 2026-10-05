@@ -29,6 +29,7 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 #include "ck5_ep.h"
 #include "ck6_ep.h"
 #include "kw_world.h"
+#include "kw_music.h"
 #include "kw_art.h"
 #include "kw_habitat.h"
 
@@ -1338,6 +1339,13 @@ static void KW_DebugEnding(void)
 // card with the same words is up, and after.
 #include "kw_landing_text.h"
 static int kw_landingToAnnounce = KW_NO_WORLD;
+static uint32_t kw_landingVoiceEnd = 0; // time count at which the clip is over
+
+// The ship's tune waits while the computer has something to say.
+bool KW_ShipComputerSpeaking(void)
+{
+	return kw_landingToAnnounce != KW_NO_WORLD || SD_GetTimeCount() < kw_landingVoiceEnd;
+}
 
 static void KW_AnnounceLanding(int world)
 {
@@ -1354,7 +1362,13 @@ static void KW_AnnounceLanding(int world)
 			FS_File f = FS_OpenKeenFile(kw_landings[i].file);
 			size_t size = FS_IsFileValid(f) ? FS_GetFileSize(f) : 0;
 			if (size && (clip = (uint8_t *)malloc(size)) != NULL && FS_Read(clip, 1, size, f) == size)
+			{
+				// the voice alone: the music comes in when it has finished
+				SD_MusicOff();
 				SD_PlayVoice(clip, (uint32_t)size, KW_LANDING_RATE);
+				kw_landingVoiceEnd = SD_GetTimeCount() + (uint32_t)(size * 70 / KW_LANDING_RATE) + 35;
+				KW_HoldShipMusic();
+			}
 			if (FS_IsFileValid(f))
 				FS_CloseFile(f);
 		}

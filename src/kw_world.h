@@ -140,4 +140,7 @@ void KW_Screenshot(const char *worldId, int level, const char *path);
 // there), landed on the world the game starts in.
 void KW_BeginInShip(void);
 
+// Inside the ship: the computer is announcing a landing (or about to).
+bool KW_ShipComputerSpeaking(void);
+
 #endif

@@ -10,5 +10,7 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 void KW_UpdateMusicZone(void);
 // Inside the Megarocket: start its own tune (true if it did).
 bool KW_StartShipMusic(void);
+// The ship's tune is off until the ship computer has finished speaking.
+void KW_HoldShipMusic(void);
 
 #endif
