@@ -435,18 +435,22 @@ the episode's "Commander Keen" scroller, which ends on the episode's title,
 is left out unless `/KWTERMINATOR` is given), and scrolls Keen Worlds' own
 story (`kw_ownStory`, `KW_PlayOwnStory`) over the episode's star field.
 Each world's own story still plays when that world is chosen. When every installed world is saved, in either way of playing, the
-ending picture is shown once, in the cabin. Both pictures are in
-`src/kw_title_art.h`, made by `tools/kw_title_art.py` from `art/title`
-(320x200, the 16 EGA colours, no dithering). `KW_AUTOTITLE=file.ppm` saves
-the title (with `KW_AUTOENDING=1` the ending) and quits;
+ending picture is shown once, in the cabin. The story scrolls over a picture of its own (`KW_DrawStoryBackdrop`): the
+text is drawn in the fourth bit plane, as in the games, so the picture has
+eight colours, chosen for it from the EGA's 64 and shown while it scrolls.
+The pictures are in `src/kw_title_art.h`, made by `tools/kw_title_art.py`
+from `art/title` (image1 the title, image2 under the story, image3 the
+ending; 320x200). `KW_AUTOTITLE=file.ppm` saves
+the title (with `KW_AUTOENDING=1` the ending, `=story` the story's picture) and quits;
 `KW_AUTOOWNSTORY=1` plays the story in a scripted run.
 
-**The title tune** (`kw_titleMusic`, written by `tools/kw_title_music.py`):
-a minute of funk in D Dorian for the OPL2, with a slap bass (thumbed notes,
-brighter "pops", ghost notes, slides), a gliding Moog lead, a sequencer whose
-brightness sweeps like a filter, clavinet stabs, and the chip's drums with
-tom and cymbal. `KW_StartTitleMusic` starts it with the title picture when
-the program is launched and it plays on under Keen Worlds' story.
+**The title tune**, "The Greatest Adventure" (`kw_titleMusic`, written by
+`tools/kw_title_music.py`): just under a minute of funk in A Dorian for the
+OPL2, in the sounds of the Megarocket's tune played by a bigger band: a
+syncopated bass, three-note horn stabs, a lead that slides into some notes,
+and the chip's drums with tom fills and a cymbal. `KW_StartTitleMusic`
+starts it with the title picture when the program is launched and it plays
+on under Keen Worlds' story.
 `tools/kw_imf2wav.c` renders a tune to a WAV file with the engine's own chip
 emulator, to hear it without the game. When a game begins from the menu,
 the title shown is the game's own (Keen 4's for Keen 4), then its story.

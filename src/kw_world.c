@@ -2224,6 +2224,8 @@ static void KW_DrawPicture(const uint8_t *packed)
 		}
 }
 
+bool KW_DrawStoryBackdrop(void);
+
 // The title, in place of the running episode's (ck_inter.c).
 bool KW_DrawTitlePicture(void)
 {
@@ -2233,12 +2235,27 @@ bool KW_DrawTitlePicture(void)
 	// KW_AUTOENDING set, the ending picture) and quits
 	if (getenv("KW_AUTOTITLE"))
 	{
-		if (getenv("KW_AUTOENDING"))
+		if (getenv("KW_AUTOENDING") && !strcmp(getenv("KW_AUTOENDING"), "story"))
+			KW_DrawStoryBackdrop();
+		else if (getenv("KW_AUTOENDING"))
 			KW_DrawPicture(kw_endingPicture);
 		VL_SetScrollCoords(0, 0);
 		KW_DumpScreen(getenv("KW_AUTOTITLE"));
 		Quit(NULL);
 	}
+	return true;
+}
+
+// What the story scrolls over (ck_inter.c): the picture and its colours. The
+// text is drawn in the fourth bit plane, so colours 8 to 15 are all the
+// text's. The standard colours come back when the scroll is over
+// (KW_PlayOwnStory).
+bool KW_DrawStoryBackdrop(void)
+{
+	VL_ClearScreen(0);
+	KW_DrawPicture(kw_storyPicture);
+	VL_SetDefaultPalette();
+	VL_SetCustomColors(kw_storyColors);
 	return true;
 }
 
@@ -2302,8 +2319,13 @@ void KW_PlayOwnStory(bool handleDemoKeys)
 {
 	printf("KW_AUTOSTORY: the story of Keen Worlds\n");
 	ck_starWarsTextOverride = kw_ownStory;
-	CK_DrawStarWarsEx(handleDemoKeys);
+	// (the keys of the opening loop are handled below, once the standard
+	// colours are back: a menu opened from here must not be in the story's)
+	CK_DrawStarWarsEx(false);
 	ck_starWarsTextOverride = NULL;
+	VL_SetCustomColors(NULL);
+	if (handleDemoKeys)
+		CK_HandleDemoKeys();
 }
 
 // A picture on the whole screen until a key is pressed.

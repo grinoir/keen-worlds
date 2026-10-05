@@ -33,6 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 // KEEN WORLDS: its own title picture and story (kw_world.c)
 bool KW_DrawTitlePicture(void);
+bool KW_DrawStoryBackdrop(void);
 void KW_StartTitleMusic(void);
 void KW_PlayOwnStory(bool handleDemoKeys);
 
@@ -1479,12 +1480,17 @@ void CK_DrawStarWarsEx(bool handleDemoKeys)
 	// Restore the font.
 	US_SetPrintFont(0);
 
-	CA_CacheGrChunk(CK_CHUNKNUM(PIC_STARWARS)); // Story bkg image.
+	// KEEN WORLDS: its own story scrolls over its own picture, in that
+	// picture's own eight colours (kw_world.c)
+	if (!ck_starWarsTextOverride || !KW_DrawStoryBackdrop())
+	{
+		CA_CacheGrChunk(CK_CHUNKNUM(PIC_STARWARS)); // Story bkg image.
 
-	// Keen draws this to a separate surface, for fast copies.
-	VH_DrawBitmap(0, 0, CK_CHUNKNUM(PIC_STARWARS));
+		// Keen draws this to a separate surface, for fast copies.
+		VH_DrawBitmap(0, 0, CK_CHUNKNUM(PIC_STARWARS));
 
-	VL_SetPaletteFromArray(CK_INTARRAY(ck_starWarsPalette));
+		VL_SetPaletteFromArray(CK_INTARRAY(ck_starWarsPalette));
+	}
 
 	// At this point, Keen generates a set of buffers full of machine code,
 	// one per line, which scale the text (from the surface mentioned above)
