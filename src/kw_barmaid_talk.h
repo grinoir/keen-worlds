@@ -44,7 +44,7 @@ static const KW_TalkNode kw_barmaidTalk[] = {
 		{
 			{"The old ones.", NULL, NULL, 5},
 			{"Universe is Toast?", NULL, NULL, 6},
-			{"Krisle, Gnosticus Pi.", NULL, NULL, 7},
+			{"The far ones.", NULL, NULL, 7},
 			{"Something else.", NULL, NULL, 1},
 		},
 	},
@@ -67,11 +67,11 @@ static const KW_TalkNode kw_barmaidTalk[] = {
 		},
 	},
 	{ // 7: far
-		"Krisle is where the\nAtroxians live. And\nGnosticus Pi is our\nlittle sister\fplanet, the one\nwith the rings. All\nforest.", "BAR_17.RAW",
+		"Krisle is where the\nAtroxians live.\nGnosticus Pi is our\nlittle sister\fplanet, the one\nwith the rings. And\nthe Shikadi keep a\nstation over\fFribbulus Xax.", "BAR_17.RAW",
 		{
 			{"Who made Krisle?", "Gridlock. Atroxian\nRealm, he called\nit. Years of work,\nwith friends like\fLemm and Gamebird.\nMind you, your ship\nbreaks when you\nland there.", "BAR_18.RAW", 7},
 			{"And Gnosticus Pi?", "Nisaba and\nK1n9_Duk3, with a\nwhole crowd of\nfriends. Foray in\fthe Forest. They\neven drew the\ninside of your\nship, hon.", "BAR_19.RAW", 7},
-			{"Other worlds.", NULL, NULL, 4},
+			{"The Shikadi Station?", "That one hangs over\nFribbulus Xax.\nCeilick again, with\nMultimania doing\fthe wiring.\nOperation Station\nInfiltration. Mind\nthe big Ampton.", "BAR_20.RAW", 7},
 			{"Something else.", NULL, NULL, 1},
 		},
 	},
