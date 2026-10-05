@@ -408,6 +408,13 @@ font is in ASCII order: `ck_starWarsPlainText`) and `tools/kw_arealm.py`
 (from its source); before, both showed Keen 5's. `KW_AUTOSTORY=1` plays
 the stories in scripted developer runs.
 
+**Krisle's crash**: the first flight to Krisle (after the one-way warning)
+does not land. Its story plays, then the level of the crash site comes up
+under flashes and bangs (`KW_CrashLanding`), the ship computer makes its
+last announcement, and Keen is outside by the wreck, stranded until that
+world is saved. A new game started on Krisle begins the same way, without
+the cabin. Once Krisle is saved the ship lands there like anywhere else.
+
 **Foray's landed ship**: going in through its door (which the game answers
 by putting Keen in its own copy of the ship's rooms, lower in the same
 level) boards the Megarocket instead, where the controls are.

@@ -421,6 +421,7 @@ const char *FF_TestSaveRoundTrip(bool (*save)(void), bool (*load)(void));
 static bool kw_introduced[KW_NUM_WORLDS]; // worlds whose arrival card has been shown
 static bool kw_storyShown[KW_NUM_WORLDS]; // worlds whose own story has been shown (this game)
 static int kw_storyWorld = KW_NO_WORLD;   // the world whose story plays before the ship lands on it
+static bool kw_crashLanding = false;      // the ship is being shot down over Krisle (see KW_CrashLanding)
 const char *kw_loadingFileName = NULL;
 static int kw_deferredWorld = KW_NO_WORLD;
 static char kw_deferredFile[FS_MAX_FILENAME_LEN];
@@ -674,6 +675,7 @@ void KW_ResetWorlds(void)
 	memset(kw_introduced, 0, sizeof(kw_introduced)); // a new game introduces each world again
 	memset(kw_storyShown, 0, sizeof(kw_storyShown));
 	kw_storyWorld = KW_NO_WORLD;
+	kw_crashLanding = false;
 	kw_pendingWorld = KW_NO_WORLD;
 	kw_placeArrivalAtShip = false;
 }
@@ -1082,6 +1084,14 @@ void KW_StoryBeforeLanding(void)
 	kw_storyWorld = KW_NO_WORLD;
 	if (world == KW_NO_WORLD || kw_currentWorld != KW_SHIP || !KW_IsWorldPresent(world))
 		return;
+	if (world == kw_pendingWorld)
+	{
+		// Keen is not coming back to the ship (Krisle: it is shot down): the
+		// story, then straight on to the world.
+		KW_SwitchWorld(world);
+		KW_PlayWorldStory();
+		return;
+	}
 	KW_WorldState untouched = kw_worlds[world];
 	bool introduced = kw_introduced[world];
 	KW_SwitchWorld(world);
@@ -1406,6 +1416,14 @@ void KW_BeginInShip(void)
 	// the game that was chosen tells its story first
 	if (KW_StoryIsDue(from))
 		KW_PlayWorldStory();
+	if (from == KW_AREALM && !kw_worlds[KW_AREALM].completed)
+	{
+		// Krisle's story begins with the ship shot down: no cabin to stand
+		// in. Keen is thrown clear (KW_CrashLanding, once the level is up).
+		kw_boardedFrom = from;
+		kw_crashLanding = true;
+		return;
+	}
 	KW_SwitchWorld(KW_SHIP);
 	kw_worlds[from].visited = false; // Keen has not set foot in it yet
 	kw_boardedFrom = from;
@@ -1509,6 +1527,16 @@ static void KW_ShipRoomFrame(void)
 			VL_DelayTics(tics > 35 ? tics : 35);
 		}
 		KW_MusicQuiet();
+		if (destination == KW_AREALM && !kw_worlds[KW_AREALM].completed)
+		{
+			// Krisle: the ship never lands. Its story, then the crash, and
+			// Keen is outside by the wreck, stranded until that world is saved.
+			kw_boardedFrom = destination;
+			kw_storyWorld = KW_StoryIsDue(destination) ? destination : KW_NO_WORLD;
+			kw_crashLanding = true;
+			KW_RequestWorld(destination);
+			return;
+		}
 		if (KW_StoryIsDue(destination))
 		{
 			// A world Keen has not been to: its own story plays during the
@@ -1535,6 +1563,31 @@ static void KW_ShipRoomFrame(void)
 	}
 }
 
+// The Megarocket is shot down over Krisle: flashes and bangs over the first
+// sight of the crash site, then the ship computer's last announcement.
+static void KW_CrashLanding(void)
+{
+	printf("KW_AUTOCRASH: Keen is stranded on %s\n", kw_worldDefs[kw_currentWorld].name);
+	if (!kw_cardsOff)
+	{
+		SD_MusicOff();
+		static const int colours[] = {15, 12, 4, 15, 12, 4, 0};
+		for (int i = 0; i < (int)(sizeof(colours) / sizeof(colours[0])); ++i)
+		{
+			if (i % 3 == 0)
+				SD_PlaySound(CK_SOUNDNUM(SOUND_KEENDIE));
+			VL_ScreenRect(0, 0, 320, 200, colours[i]);
+			VL_Present();
+			VL_DelayTics(i % 3 == 2 ? 14 : 5);
+		}
+		RF_ForceRefresh();
+		RF_Refresh();
+	}
+	KW_AnnounceLanding(kw_currentWorld);
+	RF_ForceRefresh();
+	SD_SetLastTimeCount(SD_GetTimeCount());
+}
+
 void KW_PlayLoopHook(void)
 {
 	// Keen has just set foot in a world for the first time: its own title
@@ -1544,6 +1597,11 @@ void KW_PlayLoopHook(void)
 	if ((!kw_cardsOff || getenv("KW_AUTOSTORY")) && !kw_introduced[kw_currentWorld] && !kw_worlds[kw_currentWorld].visited &&
 		(ca_mapOn == 0 || KW_IsShipLevel()))
 		kw_arrivalCard = kw_currentWorld;
+	if (kw_crashLanding && kw_currentWorld == KW_AREALM && !vl_screenFaded && IN_DemoGetMode() == IN_Demo_Off)
+	{
+		kw_crashLanding = false;
+		KW_CrashLanding();
+	}
 	if (kw_arrivalCard == kw_currentWorld && !vl_screenFaded && IN_DemoGetMode() == IN_Demo_Off)
 	{
 		kw_arrivalCard = KW_NO_WORLD;
