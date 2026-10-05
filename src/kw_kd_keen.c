@@ -142,8 +142,13 @@ void	KD_PowerReact			(CK_object *ob);
 ===============
 */
 
-void KD_ThrowPower (uint16_t x, uint16_t y, int16_t dir)
+// What the last throw threw, or NULL: with nothing to throw, the original's
+// air throws went on to change the speed of whatever "new" last was.
+static CK_object *kd_thrown;
+
+bool KD_ThrowPower (uint16_t x, uint16_t y, int16_t dir)
 {
+	kd_thrown = NULL;
 	CK_action *startstate;
 
 	if (ca_mapOn == 15)
@@ -151,7 +156,7 @@ void KD_ThrowPower (uint16_t x, uint16_t y, int16_t dir)
 		if (!kd_state.boobusbombs)
 		{
 			SD_PlaySound (KD_NOWAYSND);
-			return;						// no bombs to throw
+			return false;					// no bombs to throw
 		}
 		SD_PlaySound (KD_THROWBOMBSND);
 		kd_state.bombsthislevel--;
@@ -162,7 +167,7 @@ void KD_ThrowPower (uint16_t x, uint16_t y, int16_t dir)
 		if (!ck_gameState.numShots)
 		{
 			SD_PlaySound (KD_NOWAYSND);
-			return;						// no flower power to throw
+			return false;					// no flower power to throw
 		}
 		SD_PlaySound (KD_THROWSND);
 		ck_gameState.numShots--;
@@ -171,6 +176,7 @@ void KD_ThrowPower (uint16_t x, uint16_t y, int16_t dir)
 
 
 	KD_GetNewObj (true);
+	kd_thrown = kd_new;
 	kd_new->type = KD_powerobj;
 	kd_new->user2 = dir;
 	kd_new->posX = x;
@@ -223,6 +229,7 @@ void KD_ThrowPower (uint16_t x, uint16_t y, int16_t dir)
 	ck_nextY = 5*kd_new->velY;
 	CK_PhysUpdateNormalObj (kd_new);
 #endif
+	return true;
 }
 
 /*
@@ -1513,8 +1520,11 @@ void	KD_KeenThrow	(CK_object *ob)
 			KD_ThrowPower (ob->posX-16*16,ob->posY+8*16,IN_dir_West);
 #endif
 
-		kd_new->velX += ob->velX/2;
-		kd_new->velY += ob->velY/2;
+		if (kd_thrown)
+		{
+			kd_thrown->velX += ob->velX/2;
+			kd_thrown->velY += ob->velY/2;
+		}
 		return;
 	}
 
@@ -1524,8 +1534,11 @@ void	KD_KeenThrow	(CK_object *ob)
 			KD_ThrowPower (ob->posX+16*16,ob->posY,IN_dir_North);
 		else
 			KD_ThrowPower (ob->posX+4*16,ob->posY,IN_dir_North);
-		kd_new->velX += ob->velX/2;
-		kd_new->velY += ob->velY/2;
+		if (kd_thrown)
+		{
+			kd_thrown->velX += ob->velX/2;
+			kd_thrown->velY += ob->velY/2;
+		}
 		return;
 	}
 
@@ -1535,8 +1548,11 @@ void	KD_KeenThrow	(CK_object *ob)
 			KD_ThrowPower (ob->posX+3*16,ob->posY+16*16,IN_dir_South);
 		else
 			KD_ThrowPower (ob->posX+12*16,ob->posY+16*16,IN_dir_South);
-		kd_new->velX += ob->velX/2;
-		kd_new->velY += ob->velY/2;
+		if (kd_thrown)
+		{
+			kd_thrown->velX += ob->velX/2;
+			kd_thrown->velY += ob->velY/2;
+		}
 		return;
 	}
 

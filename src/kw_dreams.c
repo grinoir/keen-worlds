@@ -97,6 +97,17 @@ void KD_ScrollScreen(void)
 	else
 		yscroll = 0;
 
+	// Its RF_Scroll stopped at the map's borders; the engine's smooth scroll
+	// leaves that to the caller.
+	if (rf_scrollXUnit + xscroll < rf_scrollXMinUnit)
+		xscroll = rf_scrollXMinUnit - rf_scrollXUnit;
+	else if (rf_scrollXUnit + xscroll > rf_scrollXMaxUnit)
+		xscroll = rf_scrollXMaxUnit - rf_scrollXUnit;
+	if (rf_scrollYUnit + yscroll < rf_scrollYMinUnit)
+		yscroll = rf_scrollYMinUnit - rf_scrollYUnit;
+	else if (rf_scrollYUnit + yscroll > rf_scrollYMaxUnit)
+		yscroll = rf_scrollYMaxUnit - rf_scrollYUnit;
+
 	if (xscroll || yscroll)
 	{
 		RF_SmoothScroll(xscroll, yscroll);
