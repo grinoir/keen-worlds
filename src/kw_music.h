@@ -11,6 +11,10 @@ void KW_UpdateMusicZone(void);
 // Inside the Megarocket: start its own tune (true if it did).
 bool KW_StartShipMusic(void);
 
+// The title tune of Commander Keen: Worlds; it is not started again while it
+// plays. KW_TitleMusicIsOver: other music began, or the music was stopped.
+void KW_StartTitleMusic(void);
+void KW_TitleMusicIsOver(void);
 // Voice clips (files in the game folder's "voice" folder). Music never
 // plays under a voice: KW_Speak fades it out (waiting for the fade if asked;
 // not when the music is already off), plays the clip, and the music fades

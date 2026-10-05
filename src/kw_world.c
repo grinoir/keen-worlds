@@ -1560,6 +1560,7 @@ static int KW_ChooseCard(const char *title, const char *const *lines, int count)
 // A new game: which way to play? (KW_AUTOCHRONICLE=1 answers for the
 // scripted developer runs.)
 void KW_PlayOwnStory(bool handleDemoKeys);
+void StopMusic(void);
 
 static void KW_ChooseJourney(void)
 {
@@ -1569,12 +1570,9 @@ static void KW_ChooseJourney(void)
 	if (kw_cardsOff || getenv("KW_AUTOSHOT") || getenv("KW_AUTOCHRONICLE"))
 		return;
 	static const char *const ways[] = {"Free Flight: any world, any order", "The Chronicle: the story, in order"};
-	// Keen Worlds' own story first (any key skips it).
 	KW_StopVoice();
-	SD_MusicOff();
+	StopMusic(); // (the title tune, if the menu was opened over the title)
 	SD_FadeAdLibVolume(256, 0);
-	IN_ClearKeysDown();
-	KW_PlayOwnStory(false);
 	IN_ClearKeysDown();
 	VL_ClearScreen(0);
 	VL_SetScrollCoords(0, 0);
@@ -1886,7 +1884,22 @@ void KW_BeginInShip(void)
 	}
 	int from = kw_currentWorld;
 	kw_courseTold[from] = 1;
-	// the game that was chosen tells its story first
+	// The game that begins shows its own title (Keen Worlds' own is the one
+	// seen when the program is launched)...
+	if (!kw_cardsOff && !getenv("KW_AUTOSHOT"))
+	{
+		VL_ClearScreen(0);
+		VL_SetScrollCoords(0, 0);
+		VL_SetDefaultPalette();
+		CA_CacheGrChunk(CK_CHUNKNUM(PIC_TITLESCREEN));
+		VH_DrawBitmap(0, 0, CK_CHUNKNUM(PIC_TITLESCREEN));
+		VH_UpdateScreen();
+		IN_ClearKeysDown();
+		IN_UserInput(5 * 70, false);
+		IN_ClearKeysDown();
+		VL_ClearScreen(0);
+	}
+	// ...and tells its story first
 	if (KW_StoryIsDue(from))
 		KW_PlayWorldStory();
 	if (from == KW_AREALM && !kw_worlds[KW_AREALM].completed)

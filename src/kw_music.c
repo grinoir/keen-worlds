@@ -25,6 +25,7 @@ untouched.
 
 // The Megarocket's tune: space funk, written out by tools/kw_ship_music.py.
 #include "kw_ship_music.h"
+#include "kw_title_music.h"
 
 // Inside the ship its own tune plays instead of a level's song.
 // ---- Voice clips (data/voice: signed 16-bit mono, low byte first). Music
@@ -102,6 +103,28 @@ void KW_Speak(const char *file, bool waitForFade)
 		kw_voiceEnd = SD_GetTimeCount() + (uint32_t)(size / 2 * 70 / KW_VOICE_RATE) + 35;
 	}
 	fclose(f);
+}
+
+// The title tune of Commander Keen: Worlds (tools/kw_title_music.py): with
+// the title picture when the game is launched, and under Keen Worlds' story.
+// It plays on from one into the other rather than starting again.
+static bool kw_titleTunePlaying;
+
+void KW_StartTitleMusic(void)
+{
+	if (kw_titleTunePlaying)
+		return;
+	KW_StopVoice();
+	SD_FadeAdLibVolume(256, 0);
+	SD_StartMusicData(kw_titleMusic, sizeof(kw_titleMusic));
+	kw_titleTunePlaying = true;
+}
+
+// Some other music was started, or the music was stopped (StartMusic and
+// StopMusic in ck_play.c).
+void KW_TitleMusicIsOver(void)
+{
+	kw_titleTunePlaying = false;
 }
 
 bool KW_StartShipMusic(void)

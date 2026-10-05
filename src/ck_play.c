@@ -1483,6 +1483,7 @@ void CK_HandleInput()
 
 void StopMusic(void)
 {
+	KW_TitleMusicIsOver(); // KEEN WORLDS (kw_music.c)
 	int16_t i;
 	SD_MusicOff();
 	for (i = 0; i < ca_audInfoE.numSongs; i++)
@@ -1496,6 +1497,7 @@ int FF_SongFor(int level); // KEEN WORLDS (kw_fitf.c)
 void StartMusic(int16_t level)
 {
 	int16_t song = -1;
+	KW_TitleMusicIsOver(); // KEEN WORLDS (kw_music.c)
 
 	// KEEN WORLDS: Foray in the Forest's levels name their song in the map
 	if (FF_IsActive() && level != -1)

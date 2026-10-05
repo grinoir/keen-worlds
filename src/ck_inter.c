@@ -33,6 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 // KEEN WORLDS: its own title picture and story (kw_world.c)
 bool KW_DrawTitlePicture(void);
+void KW_StartTitleMusic(void);
 void KW_PlayOwnStory(bool handleDemoKeys);
 
 /*
@@ -1495,7 +1496,12 @@ void CK_DrawStarWarsEx(bool handleDemoKeys)
 	// ...and scroll the text!
 	if (!IN_GetLastScan())
 	{
-		StartMusic(CK_INT(CK_StarWarsMusicLevel, 0));
+		// KEEN WORLDS: its own story has its own tune (which may be
+		// playing already, from the title)
+		if (ck_starWarsTextOverride)
+			KW_StartTitleMusic();
+		else
+			StartMusic(CK_INT(CK_StarWarsMusicLevel, 0));
 		CK_ScrollSWText();
 		StopMusic();
 	}
@@ -1525,7 +1531,10 @@ void CK_ShowTitleScreen()
 	VL_SetScrollCoords(0, 0);
 	VL_UpdateRect(0, 0, 42 * 8, 224);
 	VL_Present();
-	IN_UserInput(420, false);
+	KW_StartTitleMusic(); // KEEN WORLDS: the title tune (kw_music.c)
+	// (a longer look at it than the episodes' titles got: the tune's first
+	// sixteen bars)
+	IN_UserInput(34 * 70, false);
 	CA_ClearMarks();
 	CK_HandleDemoKeys();
 	VL_Present();

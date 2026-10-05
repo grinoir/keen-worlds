@@ -433,15 +433,23 @@ the stories in scripted developer runs.
 Worlds' title picture instead of the running episode's (`KW_DrawTitlePicture`;
 the episode's "Commander Keen" scroller, which ends on the episode's title,
 is left out unless `/KWTERMINATOR` is given), and scrolls Keen Worlds' own
-story (`kw_ownStory`, `KW_PlayOwnStory`) over the episode's star field. The
-story also plays when a game begins, before the choice of Free Flight or
-the Chronicle; each world's own story still plays when that world is
-chosen. When every installed world is saved, in either way of playing, the
+story (`kw_ownStory`, `KW_PlayOwnStory`) over the episode's star field.
+Each world's own story still plays when that world is chosen. When every installed world is saved, in either way of playing, the
 ending picture is shown once, in the cabin. Both pictures are in
 `src/kw_title_art.h`, made by `tools/kw_title_art.py` from `art/title`
 (320x200, the 16 EGA colours, no dithering). `KW_AUTOTITLE=file.ppm` saves
 the title (with `KW_AUTOENDING=1` the ending) and quits;
 `KW_AUTOOWNSTORY=1` plays the story in a scripted run.
+
+**The title tune** (`kw_titleMusic`, written by `tools/kw_title_music.py`):
+a minute of funk in D Dorian for the OPL2, with a slap bass (thumbed notes,
+brighter "pops", ghost notes, slides), a gliding Moog lead, a sequencer whose
+brightness sweeps like a filter, clavinet stabs, and the chip's drums with
+tom and cymbal. `KW_StartTitleMusic` starts it with the title picture when
+the program is launched and it plays on under Keen Worlds' story.
+`tools/kw_imf2wav.c` renders a tune to a WAV file with the engine's own chip
+emulator, to hear it without the game. When a game begins from the menu,
+the title shown is the game's own (Keen 4's for Keen 4), then its story.
 
 **The flight menu** (`KW_TravelMenu`): the worlds in two columns of two
 groups each (Goodbye, Galaxy!; The Universe Is Toast!; Other adventures;
