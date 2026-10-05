@@ -56,6 +56,7 @@ GLOBAL VARIABLES
 
 
 void FF_T_MapShip(CK_object *ob);
+void KW_FitfShipLanded(void); // KEEN WORLDS (kw_world.c)
 
 //===========================================================================
 //
@@ -142,6 +143,7 @@ void FF_T_MapShip(CK_object *ob)	// K1n9_Duk3 addition
 			ff_map.nextLevel = MAP_BWBMEGAROCKET;
 			ck_gameState.currentLevel = MAP_BWBMEGAROCKET; // KEEN WORLDS: the engine's "next level"
 			ck_gameState.levelState = LS_LevelComplete; // its ex_landed
+			KW_FitfShipLanded(); // KEEN WORLDS: after a flight, Keen is still inside the ship
 			SD_PlaySound(FF_ENTERLEVELSND);
 		}
 	}

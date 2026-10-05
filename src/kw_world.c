@@ -342,6 +342,12 @@ static bool kw_placeArrivalAtShip = false;
 // Foray in the Forest's own arrival: the ship flies in over its map and
 // lands, then Keen is beside it (first visit only; see KW_SwitchWorld).
 static bool kw_fitfFlyIn = false;
+// Flown to from the ship's controls: when the fly-in has landed, Keen is
+// still inside the Megarocket (the computer says where he is, the hatch is
+// the way out), as on every other world.
+static bool kw_fitfLandsInShip = false;
+static bool kw_fitfNoFlyIn = false;  // stepping out of a ship that has landed already
+static bool kw_fitfCardDue = false;  // its title and makers are still to be shown, when Keen steps out
 
 // Megarockets parked on fan games' world maps (see below).
 typedef struct KW_MapShip KW_MapShip;
@@ -385,12 +391,9 @@ static const KW_Ship kw_ships[] = {
 	// area stops short of the ship's door (x 14-17), where "up" goes inside.
 	{KW_FITF, 1, 5, 16, 4, 11, 11, 16},
 };
-// Foray's level 1: the flight deck in its own copy of the ship's rooms (the
-// row Keen's feet are in when he stands on it, in the first copy).
-#define KW_FITF_DECK_X1 12
-#define KW_FITF_DECK_X2 15
-#define KW_FITF_DECK_Y 26
-#define KW_FITF_ROOMS_APART 28
+// Foray's level 1: the forest with the landed ship is the top of the map;
+// the game's own rooms of the ship start below this row.
+#define KW_FITF_ROOMS_Y 20
 
 
 static const KW_Ship *KW_ShipFor(int world)
@@ -932,7 +935,10 @@ void KW_SwitchWorld(int world)
 	// Gnosticus Pi, the first time: the game's own arrival. Its map comes up
 	// and the ship flies in and lands (FF_SpawnWorldKeen, FF_T_MapShip), which
 	// leads into its level of the landed ship, where Keen is put beside it.
-	kw_fitfFlyIn = world == KW_FITF && !kw_worlds[world].visited;
+	kw_fitfFlyIn = world == KW_FITF && !kw_worlds[world].visited && !kw_fitfNoFlyIn;
+	if (world == KW_FITF && kw_fitfNoFlyIn && !kw_worlds[world].visited)
+		ck_gameState.levelsDone[1] = 1; // (its level of the landed ship: its map then shows the ship standing)
+	kw_fitfNoFlyIn = false;
 	if (kw_fitfFlyIn)
 	{
 		ck_gameState.currentLevel = 0;
@@ -1435,9 +1441,13 @@ static bool KW_AskCard(const char *text)
 #define KW_MENU_ABOUT (-2)
 // ---- The Chronicle ----
 // The story's order: the Mortimer line, Keen 4 to Keen 9, and the journey
-// home that follows it (The Eight Accumulators). After it the wider
-// journey (Krisle, Gnosticus Pi), open together. Worlds that are not
-// installed are passed over. A world Keen has been to stays open.
+// home that follows it (The Eight Accumulators), each opened by saving the
+// one before. Off the line, a world is bound to the time of one world of it
+// or to none: the Shikadi's other works (the Shikadi Station, the
+// Omegamatic II, Address Unknown) open with the Omegamatic saved; Krisle,
+// Gnosticus Pi and Meurglys III are stories of their own, open from the
+// start. Worlds that are not installed are passed over. A world Keen has
+// been to stays open.
 static const int kw_chronicleLine[] = {KW_KEEN4, KW_KEEN5, KW_KEEN6, KW_KEEN7, KW_KEEN8, KW_KEEN9, KW_KEEN95};
 #define KW_CHRONICLE_LINE ((int)(sizeof(kw_chronicleLine) / sizeof(kw_chronicleLine[0])))
 
@@ -1449,6 +1459,17 @@ static bool KW_WorldIsSaved(int world)
 // The world that must be saved before this one opens (KW_NO_WORLD: none).
 static int KW_ChronicleKey(int world)
 {
+	switch (world)
+	{
+	case KW_OSI:
+	case KW_CK55:
+	case KW_ASYLUM:
+		return KW_IsWorldPresent(KW_KEEN5) ? KW_KEEN5 : KW_NO_WORLD;
+	case KW_AREALM:
+	case KW_FITF:
+	case KW_BOUNTY:
+		return KW_NO_WORLD;
+	}
 	int before = KW_NO_WORLD;
 	for (int i = 0; i < KW_CHRONICLE_LINE; ++i)
 	{
@@ -1457,7 +1478,7 @@ static int KW_ChronicleKey(int world)
 		if (KW_IsWorldPresent(kw_chronicleLine[i]))
 			before = kw_chronicleLine[i];
 	}
-	return before; // the wider journey: after the last world of the line
+	return before;
 }
 
 static bool KW_CourseIsOpen(int world)
@@ -2082,7 +2103,9 @@ static void KW_ShipRoomFrame(void)
 	}
 	if (marker == KW_SHIP_HATCH)
 	{
-		// out, to the world the ship stands on
+		// out, to the world the ship stands on (it has landed: no fly-in
+		// over Gnosticus Pi now)
+		kw_fitfNoFlyIn = true;
 		KW_RequestWorld(KW_IsWorldPresent(kw_boardedFrom) ? kw_boardedFrom : KW_KEEN4);
 		return;
 	}
@@ -2105,6 +2128,17 @@ static void KW_ShipRoomFrame(void)
 			kw_boardedFrom = destination;
 			kw_storyWorld = KW_StoryIsDue(destination) ? destination : KW_NO_WORLD;
 			kw_crashLanding = true;
+			KW_RequestWorld(destination);
+			return;
+		}
+		if (destination == KW_FITF && !kw_worlds[KW_FITF].visited)
+		{
+			// Gnosticus Pi, the first time: its story, then the game's own
+			// arrival (the ship flies in over its map and lands), and then
+			// Keen is inside the landed ship (KW_FitfShipLanded).
+			kw_boardedFrom = destination;
+			kw_storyWorld = KW_StoryIsDue(destination) ? destination : KW_NO_WORLD;
+			kw_fitfLandsInShip = true;
 			KW_RequestWorld(destination);
 			return;
 		}
@@ -2132,6 +2166,22 @@ static void KW_ShipRoomFrame(void)
 		kw_landingToAnnounce = destination;
 		KW_VoiceComingUp(true);
 	}
+}
+
+// Foray in the Forest's fly-in has landed (FF_T_MapShip, kw_ff_map.c). After
+// a flight from the ship's controls Keen is still aboard: into the cabin.
+void KW_FitfShipLanded(void)
+{
+	if (!kw_fitfLandsInShip)
+		return;
+	kw_fitfLandsInShip = false;
+	if (!KW_IsWorldPresent(KW_SHIP))
+		return;
+	printf("KW_AUTOFLYIN: the ship has landed on Gnosticus Pi\n");
+	kw_fitfCardDue = true;
+	kw_landingToAnnounce = KW_FITF;
+	KW_VoiceComingUp(true);
+	KW_RequestWorld(KW_SHIP);
 }
 
 // The Megarocket is shot down over Krisle: flashes and bangs over the first
@@ -2177,7 +2227,8 @@ void KW_PlayLoopHook(void)
 	// and makers, once the screen is up.
 	if (getenv("KW_AUTOSHOT"))
 		kw_cardsOff = true; // the developer tools have nobody to press a key either
-	if ((!kw_cardsOff || getenv("KW_AUTOSTORY")) && !kw_introduced[kw_currentWorld] && !kw_worlds[kw_currentWorld].visited &&
+	if ((!kw_cardsOff || getenv("KW_AUTOSTORY")) && !kw_introduced[kw_currentWorld] &&
+		(!kw_worlds[kw_currentWorld].visited || (kw_fitfCardDue && kw_currentWorld == KW_FITF)) &&
 		(ca_mapOn == 0 || KW_IsShipLevel()) && !(kw_fitfFlyIn && ca_mapOn == 0))
 		kw_arrivalCard = kw_currentWorld;
 	if (kw_crashLanding && kw_currentWorld == KW_AREALM && !vl_screenFaded && IN_DemoGetMode() == IN_Demo_Off)
@@ -2189,6 +2240,7 @@ void KW_PlayLoopHook(void)
 	{
 		kw_arrivalCard = KW_NO_WORLD;
 		kw_introduced[kw_currentWorld] = true;
+		kw_fitfCardDue = false;
 		KW_ShowWorldStory();
 		KW_ShowArrivalCard(kw_currentWorld);
 	}
@@ -2274,6 +2326,8 @@ void KW_PlayLoopHook(void)
 				if (!KW_IsPlanet(w) || kw_courseTold[w] || !KW_IsWorldPresent(w) || !KW_CourseIsOpen(w))
 					continue;
 				kw_courseTold[w] = 1;
+				if (KW_ChronicleKey(w) == KW_NO_WORLD)
+					continue; // open from the start: nothing was learnt
 				if (kw_worlds[w].visited)
 					continue;
 				char text[160], file[32];
@@ -2300,19 +2354,14 @@ void KW_PlayLoopHook(void)
 		(ck_keenState.jumpIsPressed || ck_keenState.pogoIsPressed || ck_keenState.shootIsPressed) &&
 		KW_IsAtShipHatch())
 		kw_launchRequested = true;
-	// Foray in the Forest: its landed ship has the game's own rooms inside
-	// (its ammo station, its collected things, its transceiver). The way
-	// from there into the Megarocket's cabin, where a world is picked, is
-	// the flight deck: "up" while standing at the controls. The rooms are
-	// lower in the same level, in copies 28 rows apart.
+	// Foray in the Forest: its landed ship's door goes into the Megarocket
+	// (the same ship: there is one inside to it, Keen Worlds' own, where a
+	// world is picked), not into the game's own copy of the rooms. The game
+	// has by now put Keen in one of those rooms, which lie below the forest
+	// in the same level.
 	if (kw_currentWorld == KW_FITF && KW_IsShipLevel() && ck_keenObj && KW_IsWorldPresent(KW_SHIP) &&
-		ck_keenObj->topTI && ck_inputFrame.yDirection == IN_motion_Up)
-	{
-		int x = ck_keenObj->clipRects.tileXmid, y = ck_keenObj->clipRects.tileY2;
-		if (x >= KW_FITF_DECK_X1 && x <= KW_FITF_DECK_X2 && y >= KW_FITF_DECK_Y &&
-			(y - KW_FITF_DECK_Y) % KW_FITF_ROOMS_APART == 0)
-			kw_launchRequested = true;
-	}
+		ck_keenObj->clipRects.tileY2 >= KW_FITF_ROOMS_Y)
+		kw_launchRequested = true;
 
 
 	if (kw_launchRequested)

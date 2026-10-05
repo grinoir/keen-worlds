@@ -415,20 +415,38 @@ the stories in scripted developer runs.
 
 **Two ways to play** (asked when a game begins, kept in its saved games):
 - **Free Flight**: every installed world is open, in any order.
-- **The Chronicle**: the worlds open in the story's order
-  (`kw_chronicleLine`: Keen 4 to Keen 9, then The Eight Accumulators; then
-  Krisle, Gnosticus Pi and the Shikadi Station together). A game begins on the first world of the line whichever game
-  was launched. The flight menu shows the others as "(locked)" and says
+- **The Chronicle**: the worlds of the story open in its order
+  (`kw_chronicleLine`: Keen 4 to Keen 9, then The Eight Accumulators, each
+  opened by saving the one before). Worlds off that line are bound to one
+  world of it or to none (`KW_ChronicleKey`): the Shikadi Station, the
+  Omegamatic II and Address Unknown open when the Omegamatic is saved;
+  Krisle, Gnosticus Pi and Meurglys III are open from the start. A game
+  begins on the first world of the line whichever game was launched. The
+  flight menu shows locked worlds in grey and says
   which world must be saved first. When a world has been saved, the ship
   computer announces the new course the next time Keen is in the cabin
   (`COURSE_<ID>.RAW`). Worlds that are not installed are passed over; a
   world Keen has been to stays open. `KW_AUTOCHRONICLE=1` chooses it in
   scripted developer runs. It is kept in the save block's spare words.
 
+**The flight menu** (`KW_TravelMenu`): the worlds in two columns of two
+groups each (Goodbye, Galaxy!; The Universe Is Toast!; Other adventures;
+More levels), left and right between the columns. A line under the list
+names the game the chosen world is and how things stand with it. The world
+the ship stands on is in the list; choosing it tells about it.
+`KW_AUTOMENU=file.ppm` saves a picture of the menu in scripted runs.
+
+**Gnosticus Pi's arrival**: flown to for the first time from the ship's
+controls, its story plays, then the game's own fly-in over its map, and
+when the ship has landed Keen is still inside it (`KW_FitfShipLanded`): the
+computer announces the landing and the hatch is the way out, to beside the
+landed ship in its level. The door of that landed ship leads into the
+Megarocket's cabin, not into the game's own copy of the ship's rooms.
+
 **A world saved**: when a world's game has been won and Keen is next in the
 cabin, the ship computer says its piece about it, once (`SAVED_<ID>.RAW`,
 words in `tools/kw_landing_voice.py`), in both ways of playing. The flight
-menu marks such worlds "(saved)". In the Chronicle a landing on a new world
+menu shows such worlds in green. In the Chronicle a landing on a new world
 is headed by a chapter card (the worlds counted in the order Keen comes to
 them), and when every installed world is saved a last card says so. All
 this is kept in the save block's spare words (with what dying takes back on
