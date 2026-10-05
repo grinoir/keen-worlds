@@ -397,46 +397,6 @@ bool KW_IsWorldCompleted(int world)
 
 #define KW_SAVE_BLOCK_ID "KWLD"
 static int kw_boardedFrom = KW_KEEN4; // the world the Megarocket stands on (see KW_ShipRoomFrame)
-// What was behind Keen where he boarded (background tiles of the screen he
-// was looking at): inside the ship, it shows around the ship's two rooms.
-// Only from Keen 4 itself, whose tiles the ship's world has; otherwise the
-// ship is seen in black space.
-#define KW_BACKDROP_W 20
-#define KW_BACKDROP_H 13
-#define KW_BACKDROP_X 2  // where the rooms' screens are in the ship's level
-#define KW_BACKDROP_Y1 2
-#define KW_BACKDROP_Y2 16
-static uint16_t kw_shipBackdrop[KW_BACKDROP_W * KW_BACKDROP_H];
-static int16_t kw_shipBackdropSet = 0;
-
-static void KW_CaptureShipBackdrop(void)
-{
-	kw_shipBackdropSet = 0;
-	if (kw_currentWorld != KW_KEEN4 || CA_GetMapWidth() < KW_BACKDROP_W || CA_GetMapHeight() < KW_BACKDROP_H)
-		return;
-	int x0 = CK_Cross_min(RF_UnitToTile(rf_scrollXUnit), CA_GetMapWidth() - KW_BACKDROP_W);
-	int y0 = CK_Cross_min(RF_UnitToTile(rf_scrollYUnit), CA_GetMapHeight() - KW_BACKDROP_H);
-	for (int y = 0; y < KW_BACKDROP_H; ++y)
-		for (int x = 0; x < KW_BACKDROP_W; ++x)
-			kw_shipBackdrop[y * KW_BACKDROP_W + x] = CA_TileAtPos(x0 + x, y0 + y, 0);
-	kw_shipBackdropSet = 1;
-}
-
-// While the ship's level is being set up.
-void KW_PlaceShipBackdrop(void)
-{
-	if (kw_currentWorld != KW_SHIP || !kw_shipBackdropSet || CA_GetMapHeight() < KW_BACKDROP_Y2 + KW_BACKDROP_H)
-		return;
-	for (int y = 0; y < KW_BACKDROP_H; ++y)
-		for (int x = 0; x < KW_BACKDROP_W; ++x)
-		{
-			uint16_t tile = kw_shipBackdrop[y * KW_BACKDROP_W + x];
-			if (tile >= ca_gfxInfoE.numTiles16)
-				continue;
-			CA_SetTileAtPos(KW_BACKDROP_X + x, KW_BACKDROP_Y1 + y, 0, tile);
-			CA_SetTileAtPos(KW_BACKDROP_X + x, KW_BACKDROP_Y2 + y, 0, tile);
-		}
-}
 
 #define KW_SAVE_VERSION 7
 #define KW_LEVELS_EXTRA (CK_LEVELS_TRACKED - CK_LEVELS_SAVED)
@@ -516,10 +476,11 @@ bool KW_WriteSaveBlock(FS_File fp)
 	// Version 5: Foray in the Forest's state follows Atroxian Realm's.
 	// Version 6: then the world the Megarocket stands on (for a game saved
 	// inside the ship).
-	// Version 7: then what is seen around the ship from inside it.
+	// Version 7: then 261 words that are no longer used (for a short while
+	// the scenery around the ship was kept here).
+	static const int16_t unused[261] = {0};
 	return AR_WriteState(fp) && FF_WriteState(fp) && KW_WriteId(fp, kw_worldDefs[kw_boardedFrom].id) &&
-		FS_WriteInt16LE(&kw_shipBackdropSet, 1, fp) == 1 &&
-		FS_WriteInt16LE(kw_shipBackdrop, KW_BACKDROP_W * KW_BACKDROP_H, fp) == KW_BACKDROP_W * KW_BACKDROP_H;
+		FS_WriteInt16LE(unused, 261, fp) == 261;
 }
 
 bool KW_ReadSaveBlock(FS_File fp, bool *deferred)
@@ -591,10 +552,12 @@ bool KW_ReadSaveBlock(FS_File fp, bool *deferred)
 			if (w != KW_NO_WORLD && w != KW_SHIP)
 				kw_boardedFrom = w;
 		}
-		kw_shipBackdropSet = 0;
-		if (version >= 7 && (FS_ReadInt16LE(&kw_shipBackdropSet, 1, fp) != 1 ||
-			FS_ReadInt16LE(kw_shipBackdrop, KW_BACKDROP_W * KW_BACKDROP_H, fp) != KW_BACKDROP_W * KW_BACKDROP_H))
-			return false;
+		if (version >= 7)
+		{
+			int16_t unused[261];
+			if (FS_ReadInt16LE(unused, 261, fp) != 261)
+				return false;
+		}
 	}
 	else
 		return false;
@@ -1364,6 +1327,8 @@ static void KW_DebugEnding(void)
 #define KW_SHIP_HATCH 0x7702
 #define KW_SHIP_WAY_AFT 0x7703  // walking here takes Keen to the exit room
 #define KW_SHIP_WAY_FORE 0x7704 // ... and here, back to the flight room
+#define KW_SHIP_AMMO 0x7705     // the box of stunners: "up" tops Keen's shots up
+#define KW_SHIP_AMMO_SHOTS 5
 
 
 // The ship has two rooms, each its own screen. Walking into the open end of
@@ -1396,7 +1361,7 @@ static void KW_ShipRoomFrame(void)
 	for (int y = ck_keenObj->clipRects.tileY1; y <= ck_keenObj->clipRects.tileY2 && !marker; ++y)
 	{
 		uint16_t info = CA_TileAtPos(x, y, 2);
-		if (info >= KW_SHIP_CONSOLE && info <= KW_SHIP_WAY_FORE)
+		if (info >= KW_SHIP_CONSOLE && info <= KW_SHIP_AMMO)
 		{
 			marker = info;
 			markerY = y;
@@ -1409,6 +1374,23 @@ static void KW_ShipRoomFrame(void)
 	}
 	if (!marker || !ck_keenObj->topTI || ck_inputFrame.yDirection != IN_motion_Up)
 		return;
+	if (marker == KW_SHIP_AMMO)
+	{
+		// As in Foray in the Forest's ship: Keen never leaves without shots.
+		if (ck_gameState.numShots < KW_SHIP_AMMO_SHOTS)
+		{
+			ck_gameState.numShots = KW_SHIP_AMMO_SHOTS;
+			SD_PlaySound(CK_SOUNDNUM(SOUND_GOTSTUNNER));
+		}
+		else
+			SD_PlaySound(CK_SOUNDNUM(SOUND_NEEDKEYCARD));
+		while (!kw_cardsOff && ck_inputFrame.yDirection != 0)
+		{
+			IN_PumpEvents();
+			IN_ReadControls(0, &ck_inputFrame);
+		}
+		return;
+	}
 	int destination = KW_NO_WORLD;
 	if (marker == KW_SHIP_CONSOLE)
 	{
@@ -1494,7 +1476,6 @@ void KW_PlayLoopHook(void)
 				return;
 			}
 			kw_boardedFrom = kw_currentWorld;
-			KW_CaptureShipBackdrop();
 			KW_RequestWorld(KW_SHIP);
 			return;
 		}

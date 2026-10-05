@@ -190,6 +190,11 @@ const KW_Art kw_portraitArt = {
 	&kw_shipRoomSlots[n][0][0], &kw_shipRoomTiles[n][0][0][0], -1, 0, NULL, false, false, NULL, true, \
 }
 const KW_Art kw_shipRoomArt[KW_SHIPROOM_PIECES] = {KW_SHIPROOM_PIECE(0), KW_SHIPROOM_PIECE(1), KW_SHIPROOM_PIECE(2)};
+// A blinking "up" sign beside the navigation screen.
+const KW_Art kw_shipHintArt = {
+	KW_SHIPHINT_X, KW_SHIPHINT_Y, 1, 1, 2,
+	&kw_shipHintSlots[0][0][0], &kw_shipHintTiles[0][0][0][0], -1, 30, NULL,
+};
 
 static const struct
 {
@@ -215,6 +220,7 @@ static const struct
 	{KW_SHIP, 1, &kw_shipRoomArt[0], KW_ALWAYS},
 	{KW_SHIP, 1, &kw_shipRoomArt[1], KW_ALWAYS},
 	{KW_SHIP, 1, &kw_shipRoomArt[2], KW_ALWAYS},
+	{KW_SHIP, 1, &kw_shipHintArt, KW_ALWAYS},
 };
 
 static bool KW_IsShown(KW_When when, bool completed)
@@ -266,7 +272,6 @@ static void KW_ChangeLevel(void)
 				CA_SetTileAtPos(ed->x, ed->y, ed->plane, ed->value);
 		}
 	}
-	KW_PlaceShipBackdrop();
 	for (int i = 0; i < (int)(sizeof(kw_levelArt) / sizeof(kw_levelArt[0])); ++i)
 	{
 		if (kw_levelArt[i].episode != KW_CurrentEpisode() || kw_levelArt[i].level != ca_mapOn)
