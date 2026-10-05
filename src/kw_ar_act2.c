@@ -778,12 +778,12 @@ void AR_AxosisStunnedCollide(CK_object *obj1, CK_object *obj2)
 				// ghost's action to AR_ACT_KrileGhostTeleOut5, but matching
 				// the teleport state to the current sprite looks much better.
 				{
-					register CK_action *nextaction;
+					CK_action *nextaction;
 
 					switch (ar_state.krileGhost->gfxChunk)
 					{
 					case 0:
-					case -1:
+					case (uint16_t)-1: // (no sprite: a 16-bit -1)
 						nextaction = CK_ACTION(AR_ACT_KrileGhostTeleOut5);
 						break;
 					case SPR_KRILEGHOSTTELE4:

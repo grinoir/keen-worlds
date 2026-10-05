@@ -197,7 +197,8 @@ static void SD_PC_SoundService(void)
 
 	if (sd_pc_currentSfxData)
 	{
-		currentFrequency = sd_pc_currentSfxData[sd_pc_currentSfxIndex++];
+		currentFrequency = sd_pc_currentSfxData[sd_pc_currentSfxIndex];
+		sd_pc_currentSfxIndex = sd_pc_currentSfxIndex + 1;
 		if (currentFrequency != sd_pc_lastFrequency)
 		{
 			sd_pc_lastFrequency = currentFrequency;
@@ -346,7 +347,8 @@ static void SD_AL_SoundService()
 {
 	if (sd_al_currentSfxData)
 	{
-		uint8_t currentFrequency = sd_al_currentSfxData[sd_al_currentSfxIndex++];
+		uint8_t currentFrequency = sd_al_currentSfxData[sd_al_currentSfxIndex];
+		sd_al_currentSfxIndex = sd_al_currentSfxIndex + 1;
 		if (currentFrequency == 0)
 		{
 			sd_backend->alOut(SD_ADLIB_REG_NOTE_HI, 0);
@@ -825,7 +827,7 @@ void SDL_t0Service(void)
 		++count;
 		if (!(count & 7))
 		{
-			sd_timeCount++;
+			sd_timeCount = sd_timeCount + 1;
 		}
 		if (!(count & 3))
 		{
@@ -847,7 +849,7 @@ void SDL_t0Service(void)
 		++count;
 		if (!(count & 1))
 		{
-			sd_timeCount++;
+			sd_timeCount = sd_timeCount + 1;
 		}
 		switch (sd_soundMode)
 		{
