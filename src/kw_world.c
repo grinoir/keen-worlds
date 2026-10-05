@@ -164,6 +164,19 @@ static const KW_WorldDef kw_worldDefs[KW_NUM_WORLDS] = {
 		"After the Battle of the Brains\nA fan episode by Bubbatom, 2011",
 		"Created by Bubbatom\n\nWith help from\nCeilick, Mink and Gridlock" KW_NOT_OURS,
 		"A fan episode by Bubbatom\n(2011). Download \"The Eight\nAccumulators\" (see its page on\nkeenwiki.shikadi.net) and run\ntools/kw_accumulators.py on it."},
+	// Keen 5.5 (The CK Guy) and Keen Asylum, as converted for Omnispeak in
+	// its modding kit (data/mod/ck55, data/mod/asylum): the player copies
+	// those folders to play/mods/ck55 and play/mods/asylum.
+	{"ck55", "The Omegamatic II", 5, "mods/ck55", "ck55.ck5",
+		"The Armageddon Machine\nMark II",
+		"Keen 5.5\nA fan episode by The CK Guy",
+		"Created by The CK Guy\n\nOmnispeak version:\nDavid Gow (Multimania)" KW_NOT_OURS,
+		"A fan episode by The CK Guy.\nGet its Omnispeak version from\nthe Omnispeak modding kit\n(github.com/sulix/omnispeak)\nand put it in mods/ck55."},
+	{"asylum", "Address Unknown", 5, "mods/asylum", "ASYLUM.CK5",
+		"Keen Asylum",
+		"A level pack of tricks and traps\nby the Keen Asylum creators",
+		"Created by the\nKeen Asylum creators\n(Keendom)\n\nOmnispeak version:\nDavid Gow (Multimania)" KW_NOT_OURS,
+		"A fan level pack. Get its\nOmnispeak version from the\nOmnispeak modding kit\n(github.com/sulix/omnispeak)\nand put it in mods/asylum."},
 	// The Megarocket: Keen Worlds' own world, the inside of Keen's ship
 	// (tools/kw_shipworld.py writes its map; its folder comes with Keen
 	// Worlds). It runs on Keen 4 and is not a destination in the menu.

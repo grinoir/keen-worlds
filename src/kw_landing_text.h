@@ -10,6 +10,8 @@ static const struct { const char *id, *file, *text; } kw_landings[] = {
 	{"keen9", "LAND_KEEN9.RAW", "Ship computer:\n\nYou have now docked at the HUB\nCommand Center.\nBeware of the local Mortimer.\nHe is one IQ point smarter\nthan you, and he will mention\nit."},
 	{"arealm", "LAND_AREALM.RAW", "Ship computer:\n\nYou have now crashed on\nKrisle.\nBeware of the local Atroxians.\nAlso, the ship is broken.\nThis was not my fault."},
 	{"keen95", "LAND_KEEN95.RAW", "Ship computer:\n\nYou have now landed on\nGnosticus IV.\nAgain.\nBeware of the local explosion.\nSomething has taken the\nOracle's batteries, and it was\nnot me."},
+	{"ck55", "LAND_CK55.RAW", "Ship computer:\n\nYou have now docked at the\nOmegamatic II.\nBeware of the local robots.\nThey are the same robots, but\nsomebody has updated them."},
+	{"asylum", "LAND_ASYLUM.RAW", "Ship computer:\n\nYou have now landed at an\naddress unknown.\nBeware of the local level\ndesign.\nSomebody built this place for\nfun, and it was not your fun."},
 	{"osi", "LAND_OSI.RAW", "Ship computer:\n\nYou have now docked at the\nShikadi Station.\nBeware of the local Shikadi.\nThey are made of electricity,\nand they hold a grudge."},
 	{"fitf", "LAND_FITF.RAW", "Ship computer:\n\nYou have now landed on\nGnosticus Pi.\nBeware of the local trees.\nSome of them are not trees."},
 };
@@ -24,5 +26,7 @@ static const struct { const char *id, *file, *text; } kw_savedLines[] = {
 	{"arealm", "SAVED_AREALM.RAW", "Ship computer:\n\nKrisle is free, and the Krile\nhave mended me.\nI feel much better.\nDo not crash me again."},
 	{"fitf", "SAVED_FITF.RAW", "Ship computer:\n\nGnosticus Pi is at peace.\nThe trees say goodbye.\nI think."},
 	{"keen95", "SAVED_KEEN95.RAW", "Ship computer:\n\nAspermontis is safe.\nEight batteries, all back\nwhere they belong.\nNow can we go home for dinner?"},
+	{"ck55", "SAVED_CK55.RAW", "Ship computer:\n\nThe Omegamatic II is switched\noff.\nI suggest nobody builds a\nthird."},
+	{"asylum", "SAVED_ASYLUM.RAW", "Ship computer:\n\nThe Asylum is behind us.\nI do not want to talk about\nit."},
 	{"osi", "SAVED_OSI.RAW", "Ship computer:\n\nThe Shikadi Station is\noffline.\nThe shield is down.\nFribbulus Xax, here we come."},
 };
