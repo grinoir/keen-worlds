@@ -147,8 +147,8 @@ static const KW_WorldDef kw_worldDefs[KW_NUM_WORLDS] = {
 	// Worlds). It runs on Keen 4 and is not a destination in the menu.
 	{"megarocket", "The Megarocket", 4, "megarocket", "SHIP.CK4",
 		"The Bean-with-Bacon\nMegarocket",
-		"Keen's ship, by Keen Worlds",
-		"The inside of the Megarocket\nis Keen Worlds' own.\n\nIt is built on the tiles of\nCommander Keen 4\n(id Software, 1991).",
+		"Keen's ship, as drawn for\nForay in the Forest",
+		"The inside of the Megarocket\nis from Foray in the Forest\nby Nisaba and K1n9_Duk3,\ntidied up for Keen Worlds.\n\nIt is built on the tiles of\nCommander Keen 4\n(id Software, 1991).",
 		"It comes with Keen Worlds:\nthe folder megarocket is missing\nfrom the game folder."},
 };
 
@@ -1315,22 +1315,52 @@ static void KW_DebugEnding(void)
 
 #define KW_SHIP_CONSOLE 0x7701
 #define KW_SHIP_HATCH 0x7702
+#define KW_SHIP_WAY_AFT 0x7703  // walking here takes Keen to the exit room
+#define KW_SHIP_WAY_FORE 0x7704 // ... and here, back to the flight room
 
+
+// The ship has two rooms, each its own screen. Walking into the open end of
+// one puts Keen at the open end of the other.
+static void KW_ShipChangeRoom(uint16_t from, int fromY)
+{
+	uint16_t to = from == KW_SHIP_WAY_AFT ? KW_SHIP_WAY_FORE : KW_SHIP_WAY_AFT;
+	for (int y = 0; y < CA_GetMapHeight(); ++y)
+		for (int x = 0; x < CA_GetMapWidth(); ++x)
+			if (CA_TileAtPos(x, y, 2) == to)
+			{
+				// beside the other way through, not on it
+				ck_keenObj->posX = RF_TileToUnit(to == KW_SHIP_WAY_FORE ? x + 1 : x - 1);
+				ck_keenObj->posY += RF_TileToUnit(y - fromY);
+				CK_ResetClipRects(ck_keenObj);
+				CK_CentreCamera(ck_keenObj);
+				RF_ForceRefresh();
+				return;
+			}
+}
 
 static void KW_ShipRoomFrame(void)
 {
-	if (!ck_keenObj || !ck_keenObj->topTI || ck_inputFrame.yDirection != IN_motion_Up)
+	if (!ck_keenObj)
 		return;
 	// the marker is at Keen's feet or head, in the column he stands in
 	int x = ck_keenObj->clipRects.tileXmid;
 	uint16_t marker = 0;
+	int markerY = 0;
 	for (int y = ck_keenObj->clipRects.tileY1; y <= ck_keenObj->clipRects.tileY2 && !marker; ++y)
 	{
 		uint16_t info = CA_TileAtPos(x, y, 2);
-		if (info == KW_SHIP_CONSOLE || info == KW_SHIP_HATCH)
+		if (info >= KW_SHIP_CONSOLE && info <= KW_SHIP_WAY_FORE)
+		{
 			marker = info;
+			markerY = y;
+		}
 	}
-	if (!marker)
+	if (marker == KW_SHIP_WAY_AFT || marker == KW_SHIP_WAY_FORE)
+	{
+		KW_ShipChangeRoom(marker, markerY);
+		return;
+	}
+	if (!marker || !ck_keenObj->topTI || ck_inputFrame.yDirection != IN_motion_Up)
 		return;
 	int destination = KW_NO_WORLD;
 	if (marker == KW_SHIP_CONSOLE)
@@ -2436,15 +2466,19 @@ void KW_SelfTest(void)
 		Quit("KW_SelfTest: the Megarocket's room has no Keen!");
 	KW_TestLevelSpritesCached("megarocket", 1);
 	{
-		bool console = false, hatch = false;
+		bool console = false, hatch = false, aft = false, fore = false;
 		for (int y = 0; y < CA_GetMapHeight(); ++y)
 			for (int x = 0; x < CA_GetMapWidth(); ++x)
 			{
 				console |= CA_TileAtPos(x, y, 2) == KW_SHIP_CONSOLE;
 				hatch |= CA_TileAtPos(x, y, 2) == KW_SHIP_HATCH;
+				aft |= CA_TileAtPos(x, y, 2) == KW_SHIP_WAY_AFT;
+				fore |= CA_TileAtPos(x, y, 2) == KW_SHIP_WAY_FORE;
 			}
 		if (!console || !hatch)
 			Quit("KW_SelfTest: the Megarocket's room has no flight console or no hatch!");
+		if (!aft || !fore)
+			Quit("KW_SelfTest: the Megarocket's two rooms are not joined!");
 	}
 	KW_TestRunObjects(60);
 	KW_SwitchWorld(KW_KEEN4);

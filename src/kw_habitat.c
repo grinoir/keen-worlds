@@ -181,17 +181,15 @@ const KW_Art kw_portraitArt = {
 	&kw_portraitSlots[0][0][0], &kw_portraitTiles[0][0][0][0], -1, 0, NULL,
 };
 
-// The inside of the Megarocket (Keen Worlds' own world): the whole room is
-// one picture (tools/kw_shiproom_art.py), in two pieces.
+// The inside of the Megarocket (Keen Worlds' own world): the ship's two
+// rooms from Foray in the Forest, cleaned (tools/kw_shiproom_art.py). One
+// picture, in three pieces.
 #include "kw_shiproom_art.h"
-const KW_Art kw_shipRoomTopArt = {
-	KW_SHIPROOM_ORIGIN_X, KW_SHIPROOM_ORIGIN_Y, KW_SHIPROOM_TILES_W, KW_SHIPROOM_TOP_H, 1,
-	&kw_shipRoomTopSlots[0][0][0], &kw_shipRoomTopTiles[0][0][0][0], -1, 0, NULL,
-};
-const KW_Art kw_shipRoomBottomArt = {
-	KW_SHIPROOM_ORIGIN_X, KW_SHIPROOM_ORIGIN_Y + KW_SHIPROOM_TOP_H, KW_SHIPROOM_TILES_W, KW_SHIPROOM_BOTTOM_H, 1,
-	&kw_shipRoomBottomSlots[0][0][0], &kw_shipRoomBottomTiles[0][0][0][0], -1, 0, NULL,
-};
+#define KW_SHIPROOM_PIECE(n) { \
+	KW_SHIPROOM_ORIGIN_X, KW_SHIPROOM_ORIGIN_Y + (n) * KW_SHIPROOM_PIECE_H, KW_SHIPROOM_TILES_W, KW_SHIPROOM_PIECE_H, 1, \
+	&kw_shipRoomSlots[n][0][0], &kw_shipRoomTiles[n][0][0][0], -1, 0, NULL, \
+}
+const KW_Art kw_shipRoomArt[KW_SHIPROOM_PIECES] = {KW_SHIPROOM_PIECE(0), KW_SHIPROOM_PIECE(1), KW_SHIPROOM_PIECE(2)};
 
 static const struct
 {
@@ -214,8 +212,9 @@ static const struct
 	{KW_KEEN4, 1, &kw_tavernBarArt, KW_AFTER},
 	{KW_KEEN4, 1, &kw_tavernFurnitureArt, KW_AFTER},
 	{KW_KEEN4, 1, &kw_portraitArt, KW_AFTER},
-	{KW_SHIP, 1, &kw_shipRoomTopArt, KW_ALWAYS},
-	{KW_SHIP, 1, &kw_shipRoomBottomArt, KW_ALWAYS},
+	{KW_SHIP, 1, &kw_shipRoomArt[0], KW_ALWAYS},
+	{KW_SHIP, 1, &kw_shipRoomArt[1], KW_ALWAYS},
+	{KW_SHIP, 1, &kw_shipRoomArt[2], KW_ALWAYS},
 };
 
 static bool KW_IsShown(KW_When when, bool completed)

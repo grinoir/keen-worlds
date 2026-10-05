@@ -244,21 +244,29 @@ what joins it to the engine. The engine hands over to it at marked places
 
 ### The Megarocket (Keen Worlds' own world)
 
-World id `megarocket`: the inside of Keen's ship, one room, on Keen 4's
-engine. Its map is written by `tools/kw_shipworld.py` into
-`data/megarocket` (`play/run.sh` copies the folder to `play/megarocket`);
-its look is one screen-sized picture drawn by `tools/kw_shiproom_art.py`
-(`src/kw_shiproom_art.h`, placed like the other Keen Worlds art): the ship
-from the side with the near wall taken away, in black space, after the
-ship in Foray in the Forest (own drawing, none of that game's art). Nose
-and flight deck on the left, the hatch room on the right.
+World id `megarocket`: the inside of Keen's ship, on Keen 4's engine. Its
+map is written by `tools/kw_shipworld.py` into `data/megarocket`
+(`play/run.sh` copies the folder to `play/megarocket`).
 
-Boarding a ship in any world takes Keen into the ship, beside the hatch.
-"Up" at the navigation screen in the nose opens the list of worlds; "up" at the hatch goes back out to the
-world the ship stands on (`KW_ShipRoomFrame` in `kw_world.c`; the map marks
-both places in its info plane). Without the folder the menu opens at the
-ship as before. It is not a destination itself. The save block remembers
-which world the ship stands on.
+Its look is the ship of **Foray in the Forest** (Nisaba and K1n9_Duk3, GPL
+v2 or later): that game's flight room and exit room, with the things lying
+about in them painted out. `tools/kw_shiproom_art.py` reads the two rooms
+from the game's own files (`play/mods/fitf`, level 1), cleans them and
+writes `src/kw_shiproom_art.h`, which is placed like the other Keen Worlds
+art. So Foray's art is in this repository; the world's card and "About
+this world" name its makers. (The user is to speak to the authors about
+this use before anything is published.)
+
+The two rooms are one level, each room a screen, one above the other with
+a Keen 4 scroll stop between them. Walking into the open end of a room puts
+Keen in the other (`KW_ShipChangeRoom` in `kw_world.c`).
+
+Boarding a ship in any world takes Keen into the exit room. "Up" at the
+navigation screen in the flight room opens the list of worlds; "up" at the
+hatch goes back out to the world the ship stands on (`KW_ShipRoomFrame`;
+the map marks all these places in its info plane). Without the folder the
+menu opens at the ship as before. It is not a destination itself. The save
+block remembers which world the ship stands on.
 
 ### Adding a fan game
 
