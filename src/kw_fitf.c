@@ -671,10 +671,91 @@ void FF_ForceScoreboxUpdate(void)
 		ck_scoreBoxObj->user1 = ck_scoreBoxObj->user2 = ck_scoreBoxObj->user3 = ck_scoreBoxObj->user4 = -1;
 }
 
-// TODO: its jukebox and its two built-in games (CK_Jukebox in CK_PLAY.C,
-// SNAILAS.C, FOOBS.C)
+// Its jukebox, the Photachion Transceiver in the ship (CK_Jukebox in
+// CK_PLAY.C): pick a song from its playlist and play it; on leaving, the
+// level goes on with the song that is playing. (The game only offers songs
+// already heard in play; that record is not kept here, so all are offered.)
+static int ff_playingSong = -1;
+void CK_MeasureMultiline(const char *str, uint16_t *w, uint16_t *h);
+
+void FF_StartMusic(uint16_t song, bool repeat);
+
 void FF_Jukebox(void)
 {
+	// (its songs by number, in the order of its playlist)
+	static const int playlist[] = {0, 31, 1, 2, 3, 4, 24, 5, 6, 7, 8, 9, 10, 30, 11, 12, 13, 14, 15, 33, 34, 35,
+		16, 29, 17, 27, 18, 19, 20, 39, 22, 38, 21};
+	const int numSongs = (int)(sizeof(playlist) / sizeof(playlist[0]));
+	int song = 0;
+	for (int i = 0; i < numSongs; ++i)
+		if (playlist[i] == ff_playingSong)
+			song = i;
+
+	US_CenterWindow(26, 12);
+	CA_CacheGrChunk(FF_TRANSCEIVERPIC);
+	VHB_DrawBitmap(US_GetWindowX(), US_GetWindowY() + 8, FF_TRANSCEIVERPIC);
+	US_CPrint(FF_String(FF_S_JUKEBOXTOP));
+	int nameY = US_GetPrintY() + 2;
+	US_SetPrintY(US_GetWindowY() + US_GetWindowH() - 30);
+	int nameH = US_GetPrintY() - nameY;
+	US_CPrint(FF_String(FF_S_JUKEBOXBOTTOM));
+	int nameX = US_GetWindowX() + 65, nameW = US_GetWindowW() - 65;
+	US_SetWindowX(nameX);
+	US_SetWindowW(nameW);
+
+	IN_ClearKeysDown();
+	bool redraw = true;
+	while (true)
+	{
+		if (redraw)
+		{
+			// the song's name, with a mark when it is the one playing
+			char name[160];
+			snprintf(name, sizeof(name), "%s%s", FF_String(FF_S_MUSICNAME0 + playlist[song]),
+				playlist[song] == ff_playingSong ? "\n(playing)" : "");
+			uint16_t w, h;
+			CK_MeasureMultiline(name, &w, &h);
+			VHB_Bar(nameX, nameY, nameW, nameH, 15);
+			US_SetPrintY(nameY + (nameH - (int)h) / 2);
+			US_CPrint(name);
+			VH_UpdateScreen();
+			redraw = false;
+		}
+		IN_PumpEvents();
+		IN_ScanCode scan = IN_GetLastScan();
+		IN_ReadControls(0, &ck_inputFrame);
+		if (scan == IN_SC_Escape || ck_inputFrame.pogo)
+			break;
+		if (ck_inputFrame.jump || scan == IN_SC_Enter || scan == IN_SC_Space)
+		{
+			FF_StartMusic(playlist[song], true);
+			redraw = true;
+			while (ck_inputFrame.jump)
+			{
+				IN_PumpEvents();
+				IN_ReadControls(0, &ck_inputFrame);
+			}
+		}
+		int step = (ck_inputFrame.yDirection < 0 || ck_inputFrame.xDirection < 0 || scan == IN_SC_UpArrow || scan == IN_SC_LeftArrow) ? -1 :
+			(ck_inputFrame.yDirection > 0 || ck_inputFrame.xDirection > 0 || scan == IN_SC_DownArrow || scan == IN_SC_RightArrow) ? 1 : 0;
+		if (step && song + step >= 0 && song + step < numSongs)
+		{
+			song += step;
+			redraw = true;
+		}
+		if (scan != IN_SC_None)
+			IN_SetLastScan(IN_SC_None);
+		while (ck_inputFrame.yDirection != 0 || ck_inputFrame.xDirection != 0)
+		{
+			IN_PumpEvents();
+			IN_ReadControls(0, &ck_inputFrame);
+		}
+		VL_Present();
+	}
+	// the level goes on with the song that is playing
+	if (ff_playingSong >= 0)
+		ff_map.music = ff_playingSong;
+	IN_ClearKeysDown();
 }
 void FF_RunSnailas(void)
 {
@@ -711,9 +792,10 @@ void FF_StartMusic(uint16_t song, bool repeat)
 
 int FF_SongFor(int level)
 {
-	if (ff_songDirect)
-		return level;
-	return (ff_map.music >= 0 && ff_map.music < FF_LASTMUSIC) ? ff_map.music : 0;
+	if (!ff_songDirect)
+		level = (ff_map.music >= 0 && ff_map.music < FF_LASTMUSIC) ? ff_map.music : 0;
+	ff_playingSong = level; // (for its jukebox)
+	return level;
 }
 
 // TODO: music tempo changes and two sounds in a row (its ID_SD.C)

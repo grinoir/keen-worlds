@@ -296,9 +296,12 @@ static const KW_Ship kw_ships[] = {
 	// area stops short of the ship's door (x 14-17), where "up" goes inside.
 	{KW_FITF, 1, 5, 16, 4, 11, 11, 16},
 };
-// Foray's level 1: the forest with the landed ship is the top of the map;
-// the game's own rooms of the ship start below this row.
-#define KW_FITF_ROOMS_Y 20
+// Foray's level 1: the flight deck in its own copy of the ship's rooms (the
+// row Keen's feet are in when he stands on it, in the first copy).
+#define KW_FITF_DECK_X1 12
+#define KW_FITF_DECK_X2 15
+#define KW_FITF_DECK_Y 26
+#define KW_FITF_ROOMS_APART 28
 
 
 static const KW_Ship *KW_ShipFor(int world)
@@ -1848,13 +1851,19 @@ void KW_PlayLoopHook(void)
 		(ck_keenState.jumpIsPressed || ck_keenState.pogoIsPressed || ck_keenState.shootIsPressed) &&
 		KW_IsAtShipHatch())
 		kw_launchRequested = true;
-	// Foray in the Forest: its landed ship's door goes into the Megarocket
-	// too (the same ship: its inside is where Keen picks a world), not into
-	// the game's own copy of the rooms. The game has by now put Keen in one of
-	// those rooms, which lie below the forest in the same level.
+	// Foray in the Forest: its landed ship has the game's own rooms inside
+	// (its ammo station, its collected things, its transceiver). The way
+	// from there into the Megarocket's cabin, where a world is picked, is
+	// the flight deck: "up" while standing at the controls. The rooms are
+	// lower in the same level, in copies 28 rows apart.
 	if (kw_currentWorld == KW_FITF && KW_IsShipLevel() && ck_keenObj && KW_IsWorldPresent(KW_SHIP) &&
-		ck_keenObj->clipRects.tileY2 >= KW_FITF_ROOMS_Y)
-		kw_launchRequested = true;
+		ck_keenObj->topTI && ck_inputFrame.yDirection == IN_motion_Up)
+	{
+		int x = ck_keenObj->clipRects.tileXmid, y = ck_keenObj->clipRects.tileY2;
+		if (x >= KW_FITF_DECK_X1 && x <= KW_FITF_DECK_X2 && y >= KW_FITF_DECK_Y &&
+			(y - KW_FITF_DECK_Y) % KW_FITF_ROOMS_APART == 0)
+			kw_launchRequested = true;
+	}
 
 
 	if (kw_launchRequested)
