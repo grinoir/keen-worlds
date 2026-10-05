@@ -925,10 +925,16 @@ static void KW_ShowConversation(const KW_Resident *r)
 	else
 	{
 		// The resident greets Keen, Keen picks what to say, the resident answers.
-		KW_ResidentCard(r, r->says);
+		// (the elder of Gnosticus IV speaks: tools/kw_keen4_voice.py)
+		bool voiced = r->episode == KW_KEEN4 && r->kind == KW_ELDER;
+		KW_ResidentSays(r, r->says, voiced ? "K4_ELDER.RAW" : NULL);
 		int choice = KW_ChooseReply(r);
 		if (choice >= 0 && r->choices[choice].reply)
-			KW_ResidentCard(r, r->choices[choice].reply);
+		{
+			char clip[32];
+			snprintf(clip, sizeof(clip), "K4_ELDER_%d.RAW", choice);
+			KW_ResidentSays(r, r->choices[choice].reply, voiced ? clip : NULL);
+		}
 	}
 
 	CA_DownLevel();

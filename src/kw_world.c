@@ -2887,6 +2887,21 @@ void KW_DebugFrame(void)
 			CK_CentreCamera(ck_keenObj);
 		}
 	}
+	// KW_AUTOTALK=n: at frame n, everyone in Keen 4 says their lines (the
+	// windows of its dialogues, one after another)
+	if (getenv("KW_AUTOTALK") && count + 1 == atoi(getenv("KW_AUTOTALK")) && kw_currentWorld == KW_KEEN4)
+	{
+		void CK4_ShowCouncilMessage(void);
+		void CK4_ShowPrincessMessage(void);
+		void CK4_ShowJanitorMessage(void);
+		void CK4_ShowCantSwimMessage(void);
+		void CK4_ShowWetsuitMessage(void);
+		CK4_ShowCouncilMessage();
+		CK4_ShowPrincessMessage();
+		CK4_ShowJanitorMessage();
+		CK4_ShowCantSwimMessage();
+		CK4_ShowWetsuitMessage();
+	}
 	// KW_AUTOWAKE=n: in the dream (Keen Dreams), Keen wakes up at frame n
 	if (getenv("KW_AUTOWAKE") && count + 1 == atoi(getenv("KW_AUTOWAKE")))
 		KW_WakeUp();

@@ -461,6 +461,20 @@ seconds the story scrolls, the tune playing on, and then the demos begin.
 emulator, to hear it without the game. When a game begins from the menu,
 the title shown is the game's own (Keen 4's for Keen 4), then its story.
 
+**Keen 4 speaks.** Every line of dialogue in Secret of the Oracle has a
+voice clip (`data/voice/K4_*.RAW`, made by `tools/kw_keen4_voice.py` with
+Kokoro): Keen (am_puck, his voice in every world from now on), the council
+members and the village elder (bm_george; the one rescued under water is
+the same clip wobbled and muffled), the Oracle (am_onyx, with an echo),
+Princess Lindsey (bf_emma), the janitor (am_eric) and the ending's
+"Meanwhile, back on Earth..." (bm_fable). `KW_SayLine` plays a line as its
+window appears (`ck4_misc.c`; the ending page by page in `ck_text.c`,
+`K4_END_<page>.RAW`), with the music turned down under it, not stopped, and
+brought back up afterwards (`KW_LinesOver`, `KW_LinePoll`). Only in the
+world `keen4`: the fan games on the same engine have other words in the
+same windows. `KW_AUTOTALK=n` runs all the dialogues at frame n of a
+scripted run and prints each clip.
+
 **The flight menu** (`KW_TravelMenu`): the worlds in two columns of two
 groups each (Goodbye, Galaxy!; The Universe Is Toast!; Other adventures;
 More levels), left and right between the columns. A line under the list

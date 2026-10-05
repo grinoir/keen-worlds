@@ -30,6 +30,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ck_act.h"
 #include "ck_cross.h"
 #include "ck_def.h"
+#include "kw_music.h" // KEEN WORLDS: Keen 4's ending is spoken
+#include "kw_world.h"
 
 int help_delay, help_pic, help_y, help_x;
 char *help_ptr;
@@ -735,6 +737,13 @@ void help_endgame(void)
 
 	while (help_cur_page < help_num_pages)
 	{
+		// KEEN WORLDS: the page's lines are spoken (Keen 4: K4_END_<page>.RAW,
+		// tools/kw_keen4_voice.py; a page without a clip is silent)
+		{
+			char clip[32];
+			snprintf(clip, sizeof(clip), "K4_END_%02d.RAW", (int)help_cur_page);
+			KW_SayLine(KW_KEEN4, clip);
+		}
 		/* Draw the current page (which also advances to the next page) */
 		PageLayout(0);
 		IN_ClearKeysDown();
@@ -747,6 +756,7 @@ void help_endgame(void)
 			/* Draw the dim arrow and wait a short time */
 			VHB_DrawBitmap(0x12A & ~3, 0xB8, CK_CHUNKNUM(PIC_ARROWDIM));
 			VH_UpdateScreen();
+			KW_LinePoll(); // KEEN WORLDS: the line is over: the music comes back up
 
 			if (IN_UserInput(70, false))
 			{
@@ -766,6 +776,7 @@ void help_endgame(void)
 	}
 
 	/* Uncache our graphics and clean up */
+	KW_LinesOver(); // KEEN WORLDS
 	StopMusic();
 #ifdef WITH_KEEN5
 	if (CK_INT(CK5_SecretEndingAnyExit, 0) ? ck_gameState.levelsDone[CK_INT(CK5_SecretFuseLevel, 13)] >= 1 : ck_gameState.levelsDone[CK_INT(CK5_SecretFuseLevel, 13)] == LS_KorathFuse) // KEEN WORLDS: variable

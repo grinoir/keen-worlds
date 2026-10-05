@@ -75,34 +75,93 @@ void KW_StopVoice(void)
 	kw_voiceEnd = 0;
 }
 
-void KW_Speak(const char *file, bool waitForFade)
+// Read a clip into memory (the one clip that can play at a time).
+static int16_t *kw_clip = NULL;
+static long kw_clipSamples = 0;
+
+static bool KW_LoadClip(const char *file)
 {
-	static int16_t *clip = NULL;
 	SD_StopVoice();
-	free(clip);
-	clip = NULL;
+	free(kw_clip);
+	kw_clip = NULL;
 	kw_voiceEnd = 0;
 	if (SD_GetSoundMode() == sdm_Off || !file)
-		return;
+		return false;
 	char path[512];
 	snprintf(path, sizeof(path), "%s/voice/%s", fs_keenPath, file);
 	FILE *f = fopen(path, "rb");
 	if (!f)
-		return;
+		return false;
 	fseek(f, 0, SEEK_END);
 	long size = ftell(f);
 	fseek(f, 0, SEEK_SET);
-	if (size >= 2 && (clip = (int16_t *)malloc(size)) != NULL && fread(clip, 1, size, f) == (size_t)size)
-	{
-		for (long i = 0; i < size / 2; ++i)
-			clip[i] = (int16_t)CK_Cross_SwapLE16((uint16_t)clip[i]);
-		if (!kw_musicHeld && waitForFade)
-			VL_DelayTics(KW_FadeMusicOut());
-		KW_MusicQuiet();
-		SD_PlayVoice(clip, (uint32_t)(size / 2), KW_VOICE_RATE);
-		kw_voiceEnd = SD_GetTimeCount() + (uint32_t)(size / 2 * 70 / KW_VOICE_RATE) + 35;
-	}
+	bool ok = size >= 2 && (kw_clip = (int16_t *)malloc(size)) != NULL && fread(kw_clip, 1, size, f) == (size_t)size;
 	fclose(f);
+	if (!ok)
+	{
+		free(kw_clip);
+		kw_clip = NULL;
+		return false;
+	}
+	kw_clipSamples = size / 2;
+	for (long i = 0; i < kw_clipSamples; ++i)
+		kw_clip[i] = (int16_t)CK_Cross_SwapLE16((uint16_t)kw_clip[i]);
+	return true;
+}
+
+static void KW_StartClip(void)
+{
+	SD_PlayVoice(kw_clip, (uint32_t)kw_clipSamples, KW_VOICE_RATE);
+	kw_voiceEnd = SD_GetTimeCount() + (uint32_t)(kw_clipSamples * 70 / KW_VOICE_RATE) + 35;
+}
+
+void KW_Speak(const char *file, bool waitForFade)
+{
+	if (!KW_LoadClip(file))
+		return;
+	if (!kw_musicHeld && waitForFade)
+		VL_DelayTics(KW_FadeMusicOut());
+	KW_MusicQuiet();
+	KW_StartClip();
+}
+
+// ---- Lines of dialogue in a game's own windows (Keen 4's: clips made by
+// tools/kw_keen4_voice.py). The music is turned down, not off, while a line
+// is spoken, and comes back up where it was: KW_LinesOver when the windows
+// are put away, or KW_LinePoll while one stays up. Only in the world the
+// clips were made for (other games on the same engine have other words).
+
+static bool kw_ducked;
+
+void KW_SayLine(int world, const char *file)
+{
+	KW_StopVoice();
+	if (KW_CurrentWorld() != world || !KW_LoadClip(file))
+		return;
+	if (!kw_ducked && !kw_musicHeld)
+	{
+		SD_FadeAdLibVolume(0, 300);
+		VL_DelayTics(22);
+		kw_ducked = true;
+	}
+	if (getenv("KW_AUTOTALK"))
+		printf("KW_AUTOTALK: %s (%.1f s)\n", file, kw_clipSamples / (double)KW_VOICE_RATE);
+	KW_StartClip();
+}
+
+void KW_LinePoll(void)
+{
+	if (kw_ducked && !KW_VoiceSpeaking())
+	{
+		kw_ducked = false;
+		SD_FadeAdLibVolume(256, 900);
+	}
+}
+
+void KW_LinesOver(void)
+{
+	KW_StopVoice();
+	KW_LinePoll();
 }
 
 // The title tune of Commander Keen: Worlds (tools/kw_title_music.py): with

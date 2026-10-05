@@ -32,6 +32,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ck_phys.h"
 #include "ck_play.h"
 #include "ck4_ep.h"
+#include "kw_music.h" // KEEN WORLDS: the characters speak their lines
+#include "kw_world.h"
 
 CK_EpisodeDef ck4_episode = {
 	EP_CK4,
@@ -509,6 +511,7 @@ void CK4_ShowPrincessMessage(void)
 		US_CPrint(CK_STRING(ck4_str_lindsayMessage2));
 
 	VH_UpdateScreen();
+	KW_SayLine(KW_KEEN4, ca_mapOn == CK_INT(CK4_LindseyMessage1Level, 7) ? "K4_LINDSEY1.RAW" : "K4_LINDSEY2.RAW"); // KEEN WORLDS: she says it
 	SD_PlaySound(CK_SOUNDNUM(SOUND_FOOTAPPEAR));
 	// VW_WaitVBL(60);
 	IN_ClearKeysDown();
@@ -524,6 +527,7 @@ void CK4_ShowPrincessMessage(void)
 		US_CPrint(CK_STRING(ck4_str_lindsayThanks2));
 
 	VH_UpdateScreen();
+	KW_SayLine(KW_KEEN4, ca_mapOn == CK_INT(CK4_LindseyMessage1Level, 7) ? "K4_KEEN_LINDSEY1.RAW" : "K4_KEEN_LINDSEY2.RAW");
 	/// VW_WaitVBL(30);
 
 	IN_ClearKeysDown();
@@ -536,6 +540,7 @@ void CK4_ShowPrincessMessage(void)
 
 	IN_ClearKeysDown();
 	IN_WaitButton();
+	KW_LinesOver(); // KEEN WORLDS: no more of the clip; the music comes back up
 	CA_DownLevel();
 
 	StartMusic(ck_gameState.currentLevel);
@@ -561,6 +566,7 @@ void CK4_ShowJanitorMessage(void)
 	US_SetWindowX(US_GetWindowX() + 0x30);
 	US_CPrint(CK_STRING(ck4_str_janitor1));
 	VH_UpdateScreen();
+	KW_SayLine(KW_KEEN4, "K4_JANITOR1.RAW"); // KEEN WORLDS
 	// VW_WaitVBL(60);
 	IN_ClearKeysDown();
 	IN_WaitButton();
@@ -572,6 +578,7 @@ void CK4_ShowJanitorMessage(void)
 	US_SetWindowX(US_GetWindowX() + 0x30);
 	US_CPrint(CK_STRING(ck4_str_janitor2));
 	VH_UpdateScreen();
+	KW_SayLine(KW_KEEN4, "K4_JANITOR2.RAW");
 	// VW_WaitVBL(60);
 	IN_ClearKeysDown();
 	IN_WaitButton();
@@ -582,6 +589,7 @@ void CK4_ShowJanitorMessage(void)
 	US_SetPrintY(US_GetPrintY() + 12);
 	US_CPrint(CK_STRING(ck4_str_janitor3));
 	VH_UpdateScreen();
+	KW_SayLine(KW_KEEN4, "K4_KEEN_JANITOR.RAW");
 	// VW_WaitVBL(60);
 	IN_ClearKeysDown();
 	IN_WaitButton();
@@ -593,6 +601,7 @@ void CK4_ShowJanitorMessage(void)
 	US_SetWindowX(US_GetWindowX() + 0x30);
 	US_CPrint(CK_STRING(ck4_str_janitor4));
 	VH_UpdateScreen();
+	KW_SayLine(KW_KEEN4, "K4_JANITOR4.RAW");
 	// VW_WaitVBL(60);
 	IN_ClearKeysDown();
 	IN_WaitButton();
@@ -607,6 +616,7 @@ void CK4_ShowJanitorMessage(void)
 	IN_WaitButton();
 
 	StopMusic();
+	KW_LinesOver(); // KEEN WORLDS: no more of the clip; the music comes back up
 	CA_DownLevel();
 	StartMusic(ck_gameState.currentLevel);
 }
@@ -622,9 +632,11 @@ void CK4_ShowCantSwimMessage(void)
 	US_SetPrintY(US_GetPrintY() + 6);
 	US_CPrint(CK_STRING(ck4_str_cantSwim));
 	VH_UpdateScreen();
+	KW_SayLine(KW_KEEN4, "K4_KEEN_CANTSWIM.RAW"); // KEEN WORLDS
 	// VL_WaitVBL(30);
 	IN_ClearKeysDown();
 	IN_WaitButton();
+	KW_LinesOver(); // KEEN WORLDS: no more of the clip; the music comes back up
 	CA_DownLevel();
 }
 
@@ -641,6 +653,7 @@ void CK4_ShowWetsuitMessage(void)
 	US_SetPrintY(US_GetPrintY() + 12);
 	US_CPrint(CK_STRING(ck4_str_gotWetsuit));
 	VH_UpdateScreen();
+	KW_SayLine(KW_KEEN4, "K4_KEEN_WETSUIT.RAW"); // KEEN WORLDS
 	// VL_WaitVBL(30);
 	IN_ClearKeysDown();
 	IN_WaitButton();
@@ -652,6 +665,7 @@ void CK4_ShowWetsuitMessage(void)
 	IN_ClearKeysDown();
 	IN_WaitButton();
 
+	KW_LinesOver(); // KEEN WORLDS: no more of the clip; the music comes back up
 	CA_DownLevel();
 }
 
@@ -685,6 +699,7 @@ void CK4_ShowCouncilMessage(void)
 	}
 
 	VH_UpdateScreen();
+	KW_SayLine(KW_KEEN4, ca_mapOn == CK_INT(CK4_CouncilMessageUnderwaterLevel, 17) ? "K4_COUNCIL_WET.RAW" : "K4_COUNCIL.RAW"); // KEEN WORLDS
 	// VL_WaitVBL(60);
 	IN_ClearKeysDown();
 	IN_WaitButton();
@@ -694,6 +709,12 @@ void CK4_ShowCouncilMessage(void)
 	US_SetPrintY(US_GetPrintY() + 12);
 	US_CPrint(CK_STRINGELEMENT(ck4_str_councilMessage,ck_gameState.ep.ck4.membersRescued));
 	VH_UpdateScreen();
+	{
+		// KEEN WORLDS: Keen's answer, one for each member rescued
+		char clip[32];
+		snprintf(clip, sizeof(clip), "K4_KEEN_COUNCIL%d.RAW", (int)ck_gameState.ep.ck4.membersRescued);
+		KW_SayLine(KW_KEEN4, clip);
+	}
 	// VW_WaitVBL(30);
 	IN_ClearKeysDown();
 	IN_WaitButton();
@@ -702,6 +723,7 @@ void CK4_ShowCouncilMessage(void)
 	// VW_WaitVBL(30);
 	IN_WaitButton();
 	ck_gameState.ep.ck4.membersRescued++;
+	KW_LinesOver(); // KEEN WORLDS: no more of the clip; the music comes back up
 	CA_DownLevel();
 	StopMusic();
 }
