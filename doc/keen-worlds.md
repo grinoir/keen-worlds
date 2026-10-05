@@ -466,6 +466,16 @@ the map marks all these places in its info plane). Without the folder the
 menu opens at the ship as before. It is not a destination itself. The save
 block remembers which world the ship stands on.
 
+### Foray in the Forest's arcade screens and jukebox
+
+Its two arcade machines' waiting screens are written again for this engine
+in `kw_fitf.c`: `FF_RunFoobsInSpace` (a starfield, FOOBS spelled in bobbing
+Foobs, a flashing INSERT COIN) and `FF_RunSnailas` (its 80 x 25 text screen
+drawn as 4 x 8 pixel cells: forty snails crawling round a box). The jukebox
+(`FF_Jukebox`) plays only songs already heard in play; that list is kept in
+the save block's spare words. `KW_AUTOFOOBS=1` or `=snailas` shows a screen
+in scripted developer runs.
+
 ### Keen Dreams (the bed)
 
 Keen Dreams is not a world: it is another game on another engine, reached
