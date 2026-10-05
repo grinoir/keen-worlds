@@ -142,6 +142,14 @@ static const KW_WorldDef kw_worldDefs[KW_NUM_WORLDS] = {
 		"\f"
 		"Many more are named in the\ngame's own credits (its Help)." KW_NOT_OURS,
 		"A fan game by Nisaba and\nK1n9_Duk3. Download Foray in\nthe Forest v2.0 (see its page\non keenwiki.shikadi.net) and\nput its files in mods/fitf."},
+	// The Megarocket: Keen Worlds' own world, the inside of Keen's ship
+	// (tools/kw_shipworld.py writes its map; its folder comes with Keen
+	// Worlds). It runs on Keen 4 and is not a destination in the menu.
+	{"megarocket", "The Megarocket", 4, "megarocket", "SHIP.CK4",
+		"The Bean-with-Bacon\nMegarocket",
+		"Keen's ship, by Keen Worlds",
+		"The inside of the Megarocket\nis Keen Worlds' own.\n\nIt is built on the tiles of\nCommander Keen 4\n(id Software, 1991).",
+		"It comes with Keen Worlds:\nthe folder megarocket is missing\nfrom the game folder."},
 };
 
 static CK_EpisodeDef *KW_EpisodeDef(int episode)
@@ -1097,7 +1105,7 @@ static int KW_TravelMenu(void)
 	}
 
 	for (int w = 0; w < KW_NUM_WORLDS; ++w)
-		if (w != kw_currentWorld)
+		if (w != kw_currentWorld && w != KW_SHIP) // (the ship is where one travels from, not to)
 			entries[numEntries++] = w;
 	entries[numEntries++] = KW_MENU_ABOUT;
 
@@ -2314,6 +2322,18 @@ void KW_SelfTest(void)
 		KW_TestLevelSpritesCached("fitf", ffShip->level);
 		KW_SwitchWorld(KW_KEEN4);
 	}
+
+	// The Megarocket, Keen Worlds' own world: its room loads with Keen in it.
+	if (!KW_IsWorldPresent(KW_SHIP))
+		Quit("KW_SelfTest: the Megarocket world (folder megarocket) is missing!");
+	KW_SwitchWorld(KW_SHIP);
+	ck_gameState.currentLevel = 1;
+	CK_LoadLevel(true, true);
+	if (!ck_keenObj || !ck_keenObj->currentAction || ca_mapOn != 1)
+		Quit("KW_SelfTest: the Megarocket's room has no Keen!");
+	KW_TestLevelSpritesCached("megarocket", 1);
+	KW_TestRunObjects(60);
+	KW_SwitchWorld(KW_KEEN4);
 
 	// Keen 8 and 9 (when installed): every level loads, and every level when
 	// completed is peaceful.

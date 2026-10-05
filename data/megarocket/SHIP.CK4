@@ -1,0 +1,16 @@
+# The Megarocket: Keen Worlds' own world, the inside of Keen's ship.
+# Written by tools/kw_shipworld.py. It runs on Keen 4 (tiles, sprites,
+# sounds); only the map is its own.
+
+%string ca_mapFile "SHIPMAPS.CK4"
+%string ca_mapHead "SHIPHEAD.CK4"
+
+%stringarray ck_str_levelNames
+	"",
+	"The Megarocket"
+
+%stringarray ck_str_levelEntryText
+	"Keen boards the\nBean-with-Bacon\nMegarocket",
+	"Keen boards the\nBean-with-Bacon\nMegarocket"
+
+%override "EPISODE.CK4"
