@@ -52,6 +52,7 @@ game built on one of them. `kw_worldDefs[]` in `src/kw_world.c` lists them:
 | `keen8` | Calidune | 6 | `mods/keen8` | `MOD.CK6` (ours) |
 | `keen9` | HUB Command Center | 5 | `mods/keen9` | `MOD.CK5` (ours) |
 | `osi` | The Shikadi Station | 5 (its own code) | `mods/osi` | its own `EPISODE.CK5` |
+| `keen95` | Aspermontis | 4 | `mods/keen95` | `MOD.CK4` (written by `tools/kw_accumulators.py`) |
 
 - **Installed or not**: a fan game is installed when its folder holds its
   variable file (`KW_IsWorldPresent`). The Megarocket menu lists only
@@ -412,8 +413,8 @@ the stories in scripted developer runs.
 **Two ways to play** (asked when a game begins, kept in its saved games):
 - **Free Flight**: every installed world is open, in any order.
 - **The Chronicle**: the worlds open in the story's order
-  (`kw_chronicleLine`: Keen 4 to Keen 9; then Krisle and Gnosticus Pi
-  together). A game begins on the first world of the line whichever game
+  (`kw_chronicleLine`: Keen 4 to Keen 9, then The Eight Accumulators; then
+  Krisle, Gnosticus Pi and the Shikadi Station together). A game begins on the first world of the line whichever game
   was launched. The flight menu shows the others as "(locked)" and says
   which world must be saved first. When a world has been saved, the ship
   computer announces the new course the next time Keen is in the cabin

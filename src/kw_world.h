@@ -35,6 +35,7 @@ typedef enum KW_World
 	KW_AREALM,  // Krisle: "Atroxian Realm" (its own game, on the Keen 5 code)
 	KW_FITF,    // Gnosticus Pi: "Foray in the Forest" (its own game, on the Keen 5 code)
 	KW_OSI,     // The Shikadi Station: "Operation Station Infiltration" (its own code, on Keen 5's)
+	KW_KEEN95,  // Aspermontis: "The Eight Accumulators" (fan level pack on Keen 4)
 	KW_SHIP,    // The Megarocket: Keen Worlds' own world, the inside of Keen's ship (on Keen 4)
 	KW_NUM_WORLDS,
 	KW_NO_WORLD = -1,

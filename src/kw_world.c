@@ -156,6 +156,14 @@ static const KW_WorldDef kw_worldDefs[KW_NUM_WORLDS] = {
 		"A Commander Keen fan game\nby Ceilick, 2022",
 		"Created by Ceilick\n\nProgramming:\nMultimania (David Gow)\n\nBuilt on Omnispeak, by\nDavid Gow, NY00123,\nAndy Durdin, Lemm and others" KW_NOT_OURS,
 		"A fan game by Ceilick (2022).\nDownload Operation Station\nInfiltration v1.4 (see its page\non keenwiki.shikadi.net) and\nput its files in mods/osi."},
+	// The Eight Accumulators ("Keen 9.5", Bubbatom, 2011): a Keen 4 level
+	// pack. tools/kw_accumulators.py copies the player's files of it to
+	// play/mods/keen95 and writes MOD.CK4 from its patch file.
+	{"keen95", "Aspermontis", 4, "mods/keen95", "MOD.CK4",
+		"The Eight Accumulators",
+		"After the Battle of the Brains\nA fan episode by Bubbatom, 2011",
+		"Created by Bubbatom\n\nWith help from\nCeilick, Mink and Gridlock" KW_NOT_OURS,
+		"A fan episode by Bubbatom\n(2011). Download \"The Eight\nAccumulators\" (see its page on\nkeenwiki.shikadi.net) and run\ntools/kw_accumulators.py on it."},
 	// The Megarocket: Keen Worlds' own world, the inside of Keen's ship
 	// (tools/kw_shipworld.py writes its map; its folder comes with Keen
 	// Worlds). It runs on Keen 4 and is not a destination in the menu.
@@ -308,6 +316,9 @@ static const KW_Ship kw_ships[] = {
 	{KW_KEEN4, 18, 3, 12, 3, 9, 19, 14},
 	{KW_KEEN6, 17, 4, 22, 3, 18, 18, 23},
 	{KW_KEEN7, 18, 3, 15, 3, 12, 19, 17}, // Keen 4's ship, three rows lower
+	// Aspermontis: the ship on the palm beach of its own Megarocket level,
+	// where that level starts Keen at its nose.
+	{KW_KEEN95, 18, 3, 17, 3, 13, 15, 18},
 	// Keen 9's ship stands on its platform in level 1, the HUB Command
 	// Center, where the level itself starts Keen at its nose.
 	{KW_KEEN9, 1, 93, 30, 93, 26, 108, 31},
@@ -1293,10 +1304,11 @@ static bool KW_AskCard(const char *text)
 // saying where to get it. The last line is "About this world".
 #define KW_MENU_ABOUT (-2)
 // ---- The Chronicle ----
-// The story's order: the Mortimer line, Keen 4 to Keen 9. After it the wider
+// The story's order: the Mortimer line, Keen 4 to Keen 9, and the journey
+// home that follows it (The Eight Accumulators). After it the wider
 // journey (Krisle, Gnosticus Pi), open together. Worlds that are not
 // installed are passed over. A world Keen has been to stays open.
-static const int kw_chronicleLine[] = {KW_KEEN4, KW_KEEN5, KW_KEEN6, KW_KEEN7, KW_KEEN8, KW_KEEN9};
+static const int kw_chronicleLine[] = {KW_KEEN4, KW_KEEN5, KW_KEEN6, KW_KEEN7, KW_KEEN8, KW_KEEN9, KW_KEEN95};
 #define KW_CHRONICLE_LINE ((int)(sizeof(kw_chronicleLine) / sizeof(kw_chronicleLine[0])))
 
 static bool KW_WorldIsSaved(int world)

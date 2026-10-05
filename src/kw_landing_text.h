@@ -9,6 +9,7 @@ static const struct { const char *id, *file, *text; } kw_landings[] = {
 	{"keen8", "LAND_KEEN8.RAW", "Ship computer:\n\nYou have now landed on\nCalidune.\nBeware of the local desert.\nAll of it.\nPlease drink some water."},
 	{"keen9", "LAND_KEEN9.RAW", "Ship computer:\n\nYou have now docked at the HUB\nCommand Center.\nBeware of the local Mortimer.\nHe is one IQ point smarter\nthan you, and he will mention\nit."},
 	{"arealm", "LAND_AREALM.RAW", "Ship computer:\n\nYou have now crashed on\nKrisle.\nBeware of the local Atroxians.\nAlso, the ship is broken.\nThis was not my fault."},
+	{"keen95", "LAND_KEEN95.RAW", "Ship computer:\n\nYou have now landed on\nGnosticus IV.\nAgain.\nBeware of the local explosion.\nSomething has taken the\nOracle's batteries, and it was\nnot me."},
 	{"osi", "LAND_OSI.RAW", "Ship computer:\n\nYou have now docked at the\nShikadi Station.\nBeware of the local Shikadi.\nThey are made of electricity,\nand they hold a grudge."},
 	{"fitf", "LAND_FITF.RAW", "Ship computer:\n\nYou have now landed on\nGnosticus Pi.\nBeware of the local trees.\nSome of them are not trees."},
 };
@@ -22,5 +23,6 @@ static const struct { const char *id, *file, *text; } kw_savedLines[] = {
 	{"keen9", "SAVED_KEEN9.RAW", "Ship computer:\n\nThe Universe is not toast.\nI would like that noted in my\nlog."},
 	{"arealm", "SAVED_AREALM.RAW", "Ship computer:\n\nKrisle is free, and the Krile\nhave mended me.\nI feel much better.\nDo not crash me again."},
 	{"fitf", "SAVED_FITF.RAW", "Ship computer:\n\nGnosticus Pi is at peace.\nThe trees say goodbye.\nI think."},
+	{"keen95", "SAVED_KEEN95.RAW", "Ship computer:\n\nAspermontis is safe.\nEight batteries, all back\nwhere they belong.\nNow can we go home for dinner?"},
 	{"osi", "SAVED_OSI.RAW", "Ship computer:\n\nThe Shikadi Station is\noffline.\nThe shield is down.\nFribbulus Xax, here we come."},
 };
