@@ -1610,6 +1610,18 @@ void KW_DebugFrame(void)
 	static int killAt = -1;
 	if (killAt < 0)
 		killAt = getenv("KW_AUTOKILL") ? atoi(getenv("KW_AUTOKILL")) : 0;
+	// KW_AUTOPLACE="x,y": Keen is put at that tile on the first frame
+	if (count == 0 && getenv("KW_AUTOPLACE"))
+	{
+		int px, py;
+		if (sscanf(getenv("KW_AUTOPLACE"), "%d,%d", &px, &py) == 2)
+		{
+			ck_keenObj->posX = RF_TileToUnit(px);
+			ck_keenObj->posY = RF_TileToUnit(py);
+			CK_SetAction(ck_keenObj, ck_keenObj->currentAction);
+			CK_CentreCamera(ck_keenObj);
+		}
+	}
 	// KW_AUTOLIVES=n: Keen has n lives from the first frame
 	if (count == 0 && getenv("KW_AUTOLIVES"))
 		ck_gameState.numLives = atoi(getenv("KW_AUTOLIVES"));

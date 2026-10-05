@@ -7451,7 +7451,6 @@ void FF_R_Nisasi(CK_object *ob)
 				break;
 			}
 			break;
-#ifdef CLASSICEXT		/* for the "classic" Keen sprites: */
 //
 //	NOTE: The ";" lines below are used to add some padding and thus ensure
 // that the compiled code for the "classic" version has the same size as the
@@ -7459,7 +7458,10 @@ void FF_R_Nisasi(CK_object *ob)
 // keep the differences between the two executables minimal, so that we could
 // squeeze both versions onto a single floppy disk.
 //	
-		case CT_Player: 			// compatible with the Vanilla-Keen sprites
+		case CT_Player:
+			if (CK_INT(ff_classicKeen, 0))
+			{
+			// compatible with the Vanilla-Keen sprites
 			switch (ob->gfxChunk)
 			{
 			case FF_KEENSTANDRSPR:
@@ -7533,9 +7535,10 @@ void FF_R_Nisasi(CK_object *ob)
 				;
 				break;
 			}
-		break;
-#else		/* for the Xky-Keen sprites: */
-		case CT_Player:				// compatible with the XkyKeen sprites
+			}
+			else
+			{
+			// compatible with the XkyKeen sprites
 			switch (ob->gfxChunk)
 			{
 			case FF_KEENSTANDRSPR:
@@ -7613,8 +7616,8 @@ void FF_R_Nisasi(CK_object *ob)
 				;
 				break;
 			}
+			}
 			break;
-#endif
 		case FF_CT_Warble:
 			g = FF_NISASIGRABLSPR;
 			switch (ob->gfxChunk)

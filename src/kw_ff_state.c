@@ -1268,7 +1268,7 @@ void FF_ClipToSpriteTop(CK_object *push, CK_object *solid)
 		// When pushing the player, set ck_mapState.riding to solid
 		// (I'm not sure I like this)
 		if (push == ck_keenObj)
-			ff_map.riding = solid;
+			ck_keenState.platform = solid;
 
 		ck_nextY = -deltaClipY - 16;	// K1n9_Duk3 mod: - 16 for consistency with HandleRiding()
 		oldpushtofloor = push->currentAction->stickToGround;
@@ -1365,7 +1365,7 @@ _right:
 _bottom:
 		if (push == ck_keenObj)
 		{
-			ff_map.riding = solid;
+			ck_keenState.platform = solid;
 		}
 		ck_nextY = -bottominto - 16;	// K1n9_Duk3 mod: - 16 for consistency with HandleRiding()
 		FF_PushObj(push);

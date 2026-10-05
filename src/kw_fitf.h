@@ -135,7 +135,7 @@ typedef struct FF_MapState
 	uint16_t doneFlags;
 	uint16_t dreamMsg, warpInfo;
 	bool checkpointSaved;
-	CK_object *riding;
+	// (its "riding" is the engine's ck_keenState.platform)
 	CK_object *checkpointTouched, *lastCheckpoint;
 	CK_object *nisasi, *mindcontrolled, *quicksand, *mummy;
 	bool playerkludgeclipcancel;

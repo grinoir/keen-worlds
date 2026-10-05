@@ -378,7 +378,7 @@ static CK_object *FF_AtSlot(int16_t slot)
 static void FF_PackMap(const FF_MapState *m, int16_t *v)
 {
 	int16_t w[FF_SAVE_MAP_WORDS] = {(int16_t)m->collectiblesNew, (int16_t)m->slugcans, m->nextLevel, (int16_t)m->doneFlags,
-		(int16_t)m->dreamMsg, (int16_t)m->warpInfo, FF_Slot(m->riding), FF_Slot(m->checkpointTouched),
+		(int16_t)m->dreamMsg, (int16_t)m->warpInfo, -1 /* was: riding */, FF_Slot(m->checkpointTouched),
 		FF_Slot(m->lastCheckpoint), FF_Slot(m->nisasi), FF_Slot(m->mindcontrolled), FF_Slot(m->quicksand),
 		FF_Slot(m->mummy), m->playerkludgeclipcancel, m->invincibilityTimer, m->stunCounter, m->stunCooldown,
 		m->moontile, m->inwater, m->brainfucl, m->machinesActive, m->music, m->shaketics, m->shakecount,
@@ -391,7 +391,7 @@ static void FF_UnpackMap(const int16_t *v, FF_MapState *m)
 	memset(m, 0, sizeof(*m));
 	m->collectiblesNew = v[0]; m->slugcans = v[1]; m->nextLevel = v[2]; m->doneFlags = v[3];
 	m->dreamMsg = v[4]; m->warpInfo = v[5];
-	m->riding = FF_AtSlot(v[6]); m->checkpointTouched = NULL; m->lastCheckpoint = FF_AtSlot(v[8]);
+	m->checkpointTouched = NULL; m->lastCheckpoint = FF_AtSlot(v[8]);
 	m->nisasi = FF_AtSlot(v[9]); m->mindcontrolled = FF_AtSlot(v[10]); m->quicksand = FF_AtSlot(v[11]);
 	m->mummy = FF_AtSlot(v[12]);
 	m->playerkludgeclipcancel = v[13] != 0; m->invincibilityTimer = v[14]; m->stunCounter = v[15];
@@ -799,8 +799,9 @@ void FF_FrameInTiles(void)
 		for (int y = k->clipRects.tileY1; y <= k->clipRects.tileY2; ++y)
 			for (int x = k->clipRects.tileX1; x <= k->clipRects.tileX2; ++x)
 				fprintf(stderr, " %d/%x", TI_ForeMisc(CA_TileAtPos(x, y, 1)) & 0x7F, CA_TileAtPos(x, y, 2));
-		fprintf(stderr, " warp %d,%d info %x checkpoint %d lives %d\n", ff_map.warpDeltaX, ff_map.warpDeltaY, ff_map.warpInfo,
-			(int)ff_map.checkpointSaved, ck_gameState.numLives);
+		fprintf(stderr, " warp %d,%d info %x checkpoint %d lives %d | pos %u,%u sprite %d riding %d\n", ff_map.warpDeltaX,
+			ff_map.warpDeltaY, ff_map.warpInfo, (int)ff_map.checkpointSaved, ck_gameState.numLives, k->posX, k->posY,
+			k->gfxChunk, ck_keenState.platform ? ck_keenState.platform->type : 0);
 	}
 }
 
