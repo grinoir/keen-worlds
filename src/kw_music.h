@@ -28,6 +28,9 @@ bool KW_VoiceSpeaking(void);
 // too, when play goes on). KW_LinePoll: bring the
 // music back up once the line is over, while a window stays up.
 bool KW_SayLine(int world, const char *file); // (true: it is being spoken)
+// The same, by the window's name: the clip <prefix>_<name>.RAW of the world
+// Keen is in (K4_... to K9_...).
+bool KW_SayWorldLine(const char *name);
 void KW_LinePoll(void);
 void KW_LinesOver(void);
 // Cut the clip short (its card was put away).

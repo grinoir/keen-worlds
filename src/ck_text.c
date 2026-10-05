@@ -739,21 +739,17 @@ void help_endgame(void)
 
 	while (help_cur_page < help_num_pages)
 	{
-		// KEEN WORLDS: the page's lines are spoken (K4_END_<page>.RAW and so on:
-		// tools/kw_keen4_voice.py, kw_keen56_voice.py; a page without a clip
-		// is silent)
+		// KEEN WORLDS: the page's lines are spoken (K4_END_<page>.RAW and so on,
+		// by world: tools/kw_keen4_voice.py, kw_keen56_voice.py,
+		// kw_keen789_voice.py; a page without a clip is silent)
 		{
-			static const struct { int world; const char *prefix; } spoken[] = {
-				{KW_KEEN4, "K4"}, {KW_KEEN5, "K5"}, {KW_KEEN6, "K6"}};
-			for (size_t w = 0; w < sizeof(spoken) / sizeof(spoken[0]); ++w)
+			char clip[32];
+			// (a secret ending's own pages: <prefix>_ENDS_<page>.RAW)
+			snprintf(clip, sizeof(clip), "ENDS_%02d", (int)help_cur_page);
+			if (!(secretEnding && KW_SayWorldLine(clip)))
 			{
-				char clip[32];
-				// (Keen 5's secret ending has two pages of its own words)
-				snprintf(clip, sizeof(clip), "%sS_END_%02d.RAW", spoken[w].prefix, (int)help_cur_page);
-				if (secretEnding && KW_SayLine(spoken[w].world, clip))
-					continue;
-				snprintf(clip, sizeof(clip), "%s_END_%02d.RAW", spoken[w].prefix, (int)help_cur_page);
-				KW_SayLine(spoken[w].world, clip);
+				snprintf(clip, sizeof(clip), "END_%02d", (int)help_cur_page);
+				KW_SayWorldLine(clip);
 			}
 		}
 		/* Draw the current page (which also advances to the next page) */

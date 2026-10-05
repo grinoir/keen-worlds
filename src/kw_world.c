@@ -2970,7 +2970,7 @@ void KW_DebugFrame(void)
 	}
 	// KW_AUTOTALK=n: at frame n, everyone in Keen 4 says their lines (the
 	// windows of its dialogues, one after another)
-	if (getenv("KW_AUTOTALK") && count + 1 == atoi(getenv("KW_AUTOTALK")) && kw_currentWorld == KW_KEEN4)
+	if (getenv("KW_AUTOTALK") && count + 1 == atoi(getenv("KW_AUTOTALK")) && (kw_currentWorld == KW_KEEN4 || kw_currentWorld == KW_KEEN7))
 	{
 		void CK4_ShowCouncilMessage(void);
 		void CK4_ShowPrincessMessage(void);
@@ -2988,7 +2988,20 @@ void KW_DebugFrame(void)
 		void CK5_FuseMessage(void);
 		CK5_FuseMessage();
 	}
-	if (getenv("KW_AUTOTALK") && count + 1 == atoi(getenv("KW_AUTOTALK")) && kw_currentWorld == KW_KEEN6)
+	if (getenv("KW_AUTOTALK") && count + 1 == atoi(getenv("KW_AUTOTALK")) && kw_currentWorld == KW_KEEN9)
+	{
+		// (its friends' hints: who speaks depends on the level)
+		void KW9_FriendMessage(void);
+		int level = ck_gameState.currentLevel;
+		static const int levels[] = {5, 11, 2, 1};
+		for (int i = 0; i < 4; ++i)
+		{
+			ck_gameState.currentLevel = levels[i];
+			KW9_FriendMessage();
+		}
+		ck_gameState.currentLevel = level;
+	}
+	if (getenv("KW_AUTOTALK") && count + 1 == atoi(getenv("KW_AUTOTALK")) && (kw_currentWorld == KW_KEEN6 || kw_currentWorld == KW_KEEN8))
 	{
 		void CK6_GrabbiterCol(CK_object *a, CK_object *b);
 		void CK6_RocketCol(CK_object *a, CK_object *b);

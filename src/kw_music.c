@@ -150,6 +150,25 @@ bool KW_SayLine(int world, const char *file)
 	return true;
 }
 
+// The line of the window called `name` in the world Keen is in: the clip
+// <prefix>_<name>.RAW. Worlds on one engine share their windows but not
+// their words (Keen 7 says other things in Keen 4's windows), so each has
+// clips of its own, or none.
+bool KW_SayWorldLine(const char *name)
+{
+	static const struct { int world; const char *prefix; } spoken[] = {
+		{KW_KEEN4, "K4"}, {KW_KEEN5, "K5"}, {KW_KEEN6, "K6"}, {KW_KEEN7, "K7"}, {KW_KEEN8, "K8"}, {KW_KEEN9, "K9"}};
+	for (size_t i = 0; i < sizeof(spoken) / sizeof(spoken[0]); ++i)
+		if (spoken[i].world == KW_CurrentWorld())
+		{
+			char file[48];
+			snprintf(file, sizeof(file), "%s_%s.RAW", spoken[i].prefix, name);
+			return KW_SayLine(spoken[i].world, file);
+		}
+	KW_StopVoice();
+	return false;
+}
+
 void KW_LinePoll(void)
 {
 	if (kw_ducked && !KW_VoiceSpeaking())

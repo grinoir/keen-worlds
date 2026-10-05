@@ -890,7 +890,7 @@ void CK5_FuseMessage()
 
 	VH_UpdateScreen();
 	VL_DelayTics(30);
-	KW_SayLine(KW_KEEN5, ck_gameState.currentLevel == 0xD ? "K5_KEEN_FUSE_KORATH.RAW" : "K5_KEEN_FUSE.RAW"); // KEEN WORLDS: Keen says it
+	KW_SayWorldLine(ck_gameState.currentLevel == 0xD ? "KEEN_FUSE_KORATH" : "KEEN_FUSE"); // KEEN WORLDS: Keen says it
 
 	IN_ClearKeysDown();
 	IN_WaitButton();

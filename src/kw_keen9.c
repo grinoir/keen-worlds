@@ -18,13 +18,14 @@ was converted from. Licensed under the GNU GPL v2 or later, like Omnispeak.
 #include "ck_phys.h"
 #include "ck_play.h"
 #include "ck5_ep.h"
+#include "kw_music.h"
 
 extern uint8_t ca_levelbit;
 extern uint8_t ca_graphChunkNeeded[CA_MAX_GRAPH_CHUNKS];
 
 // $6D1B: a friend's message where Keen 5 has its fuse message. Who speaks
 // depends on the level; the window is Keen 5's (CK5_FuseMessage).
-static void KW9_FriendMessage(void)
+void KW9_FriendMessage(void) // (not static: the scripted dialogue test calls it)
 {
 	int level = ck_gameState.currentLevel;
 	int pic = level == 5 ? 0x2E : level == 11 ? 0x2C : level == 2 ? 0x2F : 0x2D;
@@ -46,6 +47,8 @@ static void KW9_FriendMessage(void)
 	US_CPrint(text);
 	VH_UpdateScreen();
 	VL_DelayTics(30);
+	// the friend says it (tools/kw_keen789_voice.py)
+	KW_SayWorldLine(level == 5 ? "HINT_LINDSEY" : level == 11 ? "HINT_BARKER" : level == 2 ? "HINT_SPOT" : "HINT_JANITOR");
 	IN_ClearKeysDown();
 	IN_WaitButton();
 

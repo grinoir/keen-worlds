@@ -485,12 +485,22 @@ named after the line's text).
 
 **Keen 5 and Keen 6 speak** too (`K5_*.RAW`, `K6_*.RAW`, made by
 `tools/kw_keen56_voice.py`). Keen 5 is Keen at a broken fuse and a narrated
-ending (its secret ending has two pages of its own, `K5S_END_*`). Keen 6
+ending (its secret ending has two pages of its own, `K5_ENDS_*`). Keen 6
 writes like a storybook, so a clip is spoken in turns and joined: Keen, the
 narrator, the Grabbiter (am_fenrir), the Bloogstar's door (am_adam, made a
 machine's) and Molly McMire (af_jessica). The endings' last, selling pages
 are silent. A line still being spoken when play goes on is cut
 (`KW_UpdateMusicZone`).
+
+**Keen 7, 8 and 9 speak** (`K7_*`, `K8_*`, `K9_*.RAW`, made by
+`tools/kw_keen789_voice.py`). They run on the engines of Keen 4, 6 and 5
+and say other things in the same windows, so a line is asked for by its
+window's name and played from the world's own clips (`KW_SayWorldLine`:
+`COUNCIL` is `K4_COUNCIL.RAW` in Keen 4 and `K7_COUNCIL.RAW`, Keen finding a
+key, in Keen 7). New voices: Mortimer McMire (bm_daniel), Lt. Barker
+(am_michael), the Dude (am_puck) and Spot (af_nova); Princess Lindsey and
+the janitor return with theirs. A secret ending's own pages are
+`<prefix>_ENDS_<page>.RAW`.
 
 **The flight menu** (`KW_TravelMenu`): the worlds in two columns of two
 groups each (Goodbye, Galaxy!; The Universe Is Toast!; Other adventures;

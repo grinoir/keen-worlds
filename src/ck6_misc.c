@@ -543,7 +543,7 @@ void CK6_ShowGetSandwich()
 	VH_UpdateScreen();
 
 	VL_DelayTics(30); // VW_WaitVBL(30);
-	KW_SayLine(KW_KEEN6, "K6_KEEN_SANDWICH.RAW"); // KEEN WORLDS: Keen says it
+	KW_SayWorldLine("KEEN_SANDWICH"); // KEEN WORLDS: Keen says it
 	IN_ClearKeysDown();
 	IN_WaitButton();
 	CA_DownLevel();
@@ -565,7 +565,7 @@ void CK6_ShowGetRope()
 	VH_UpdateScreen();
 
 	VL_DelayTics(30); // VW_WaitVBL(30);
-	KW_SayLine(KW_KEEN6, "K6_KEEN_ROPE.RAW"); // KEEN WORLDS
+	KW_SayWorldLine("KEEN_ROPE"); // KEEN WORLDS
 	IN_ClearKeysDown();
 	IN_WaitButton();
 	CA_DownLevel();
@@ -587,7 +587,7 @@ void CK6_ShowGetPasscard()
 	VH_UpdateScreen();
 
 	VL_DelayTics(30); // VW_WaitVBL(30);
-	KW_SayLine(KW_KEEN6, "K6_KEEN_PASSCARD.RAW"); // KEEN WORLDS
+	KW_SayWorldLine("KEEN_PASSCARD"); // KEEN WORLDS
 	IN_ClearKeysDown();
 	IN_WaitButton();
 	CA_DownLevel();

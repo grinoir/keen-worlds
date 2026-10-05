@@ -511,7 +511,7 @@ void CK4_ShowPrincessMessage(void)
 		US_CPrint(CK_STRING(ck4_str_lindsayMessage2));
 
 	VH_UpdateScreen();
-	KW_SayLine(KW_KEEN4, ca_mapOn == CK_INT(CK4_LindseyMessage1Level, 7) ? "K4_LINDSEY1.RAW" : "K4_LINDSEY2.RAW"); // KEEN WORLDS: she says it
+	KW_SayWorldLine(ca_mapOn == CK_INT(CK4_LindseyMessage1Level, 7) ? "LINDSEY1" : "LINDSEY2"); // KEEN WORLDS: she says it
 	SD_PlaySound(CK_SOUNDNUM(SOUND_FOOTAPPEAR));
 	// VW_WaitVBL(60);
 	IN_ClearKeysDown();
@@ -527,7 +527,7 @@ void CK4_ShowPrincessMessage(void)
 		US_CPrint(CK_STRING(ck4_str_lindsayThanks2));
 
 	VH_UpdateScreen();
-	KW_SayLine(KW_KEEN4, ca_mapOn == CK_INT(CK4_LindseyMessage1Level, 7) ? "K4_KEEN_LINDSEY1.RAW" : "K4_KEEN_LINDSEY2.RAW");
+	KW_SayWorldLine(ca_mapOn == CK_INT(CK4_LindseyMessage1Level, 7) ? "KEEN_LINDSEY1" : "KEEN_LINDSEY2");
 	/// VW_WaitVBL(30);
 
 	IN_ClearKeysDown();
@@ -566,7 +566,7 @@ void CK4_ShowJanitorMessage(void)
 	US_SetWindowX(US_GetWindowX() + 0x30);
 	US_CPrint(CK_STRING(ck4_str_janitor1));
 	VH_UpdateScreen();
-	KW_SayLine(KW_KEEN4, "K4_JANITOR1.RAW"); // KEEN WORLDS
+	KW_SayWorldLine("JANITOR1"); // KEEN WORLDS
 	// VW_WaitVBL(60);
 	IN_ClearKeysDown();
 	IN_WaitButton();
@@ -578,7 +578,7 @@ void CK4_ShowJanitorMessage(void)
 	US_SetWindowX(US_GetWindowX() + 0x30);
 	US_CPrint(CK_STRING(ck4_str_janitor2));
 	VH_UpdateScreen();
-	KW_SayLine(KW_KEEN4, "K4_JANITOR2.RAW");
+	KW_SayWorldLine("JANITOR2");
 	// VW_WaitVBL(60);
 	IN_ClearKeysDown();
 	IN_WaitButton();
@@ -589,7 +589,7 @@ void CK4_ShowJanitorMessage(void)
 	US_SetPrintY(US_GetPrintY() + 12);
 	US_CPrint(CK_STRING(ck4_str_janitor3));
 	VH_UpdateScreen();
-	KW_SayLine(KW_KEEN4, "K4_KEEN_JANITOR.RAW");
+	KW_SayWorldLine("KEEN_JANITOR");
 	// VW_WaitVBL(60);
 	IN_ClearKeysDown();
 	IN_WaitButton();
@@ -601,7 +601,7 @@ void CK4_ShowJanitorMessage(void)
 	US_SetWindowX(US_GetWindowX() + 0x30);
 	US_CPrint(CK_STRING(ck4_str_janitor4));
 	VH_UpdateScreen();
-	KW_SayLine(KW_KEEN4, "K4_JANITOR4.RAW");
+	KW_SayWorldLine("JANITOR4");
 	// VW_WaitVBL(60);
 	IN_ClearKeysDown();
 	IN_WaitButton();
@@ -632,7 +632,7 @@ void CK4_ShowCantSwimMessage(void)
 	US_SetPrintY(US_GetPrintY() + 6);
 	US_CPrint(CK_STRING(ck4_str_cantSwim));
 	VH_UpdateScreen();
-	KW_SayLine(KW_KEEN4, "K4_KEEN_CANTSWIM.RAW"); // KEEN WORLDS
+	KW_SayWorldLine("KEEN_CANTSWIM"); // KEEN WORLDS
 	// VL_WaitVBL(30);
 	IN_ClearKeysDown();
 	IN_WaitButton();
@@ -653,7 +653,7 @@ void CK4_ShowWetsuitMessage(void)
 	US_SetPrintY(US_GetPrintY() + 12);
 	US_CPrint(CK_STRING(ck4_str_gotWetsuit));
 	VH_UpdateScreen();
-	KW_SayLine(KW_KEEN4, "K4_KEEN_WETSUIT.RAW"); // KEEN WORLDS
+	KW_SayWorldLine("KEEN_WETSUIT"); // KEEN WORLDS
 	// VL_WaitVBL(30);
 	IN_ClearKeysDown();
 	IN_WaitButton();
@@ -699,7 +699,9 @@ void CK4_ShowCouncilMessage(void)
 	}
 
 	VH_UpdateScreen();
-	KW_SayLine(KW_KEEN4, ca_mapOn == CK_INT(CK4_CouncilMessageUnderwaterLevel, 17) ? "K4_COUNCIL_WET.RAW" : "K4_COUNCIL.RAW"); // KEEN WORLDS
+	// KEEN WORLDS: he says it (through the water, where the world has that clip)
+	if (!(ca_mapOn == CK_INT(CK4_CouncilMessageUnderwaterLevel, 17) && KW_SayWorldLine("COUNCIL_WET")))
+		KW_SayWorldLine("COUNCIL");
 	// VL_WaitVBL(60);
 	IN_ClearKeysDown();
 	IN_WaitButton();
@@ -712,8 +714,8 @@ void CK4_ShowCouncilMessage(void)
 	{
 		// KEEN WORLDS: Keen's answer, one for each member rescued
 		char clip[32];
-		snprintf(clip, sizeof(clip), "K4_KEEN_COUNCIL%d.RAW", (int)ck_gameState.ep.ck4.membersRescued);
-		KW_SayLine(KW_KEEN4, clip);
+		snprintf(clip, sizeof(clip), "KEEN_COUNCIL%d", (int)ck_gameState.ep.ck4.membersRescued);
+		KW_SayWorldLine(clip);
 	}
 	// VW_WaitVBL(30);
 	IN_ClearKeysDown();
