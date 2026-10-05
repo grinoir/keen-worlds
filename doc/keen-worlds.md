@@ -247,11 +247,14 @@ what joins it to the engine. The engine hands over to it at marked places
 World id `megarocket`: the inside of Keen's ship, one room, on Keen 4's
 engine. Its map is written by `tools/kw_shipworld.py` into
 `data/megarocket` (`play/run.sh` copies the folder to `play/megarocket`);
-the room's look is one picture drawn by `tools/kw_shiproom_art.py`
-(`src/kw_shiproom_art.h`, placed like the other Keen Worlds art).
+its look is one screen-sized picture drawn by `tools/kw_shiproom_art.py`
+(`src/kw_shiproom_art.h`, placed like the other Keen Worlds art): the ship
+from the side with the near wall taken away, in black space, after the
+ship in Foray in the Forest (own drawing, none of that game's art). Nose
+and flight deck on the left, the hatch room on the right.
 
-Boarding a ship in any world takes Keen into the room. "Up" at the flight
-console opens the list of worlds; "up" at the hatch goes back out to the
+Boarding a ship in any world takes Keen into the ship, beside the hatch.
+"Up" at the navigation screen in the nose opens the list of worlds; "up" at the hatch goes back out to the
 world the ship stands on (`KW_ShipRoomFrame` in `kw_world.c`; the map marks
 both places in its info plane). Without the folder the menu opens at the
 ship as before. It is not a destination itself. The save block remembers
