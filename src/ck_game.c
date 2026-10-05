@@ -564,8 +564,16 @@ void CK_ExitMenu(void)
 	ca_levelnum++;
 }
 
+void FF_PatchWorldMap(void); // KEEN WORLDS (kw_fitf.c)
+
 void CK_MapLevelMarkAsDone(void)
 {
+	// KEEN WORLDS: Foray in the Forest marks its map its own way
+	if (FF_IsActive())
+	{
+		FF_PatchWorldMap();
+		return;
+	}
 	int y, x, level, i, w, flags;
 	uint16_t *pw;
 

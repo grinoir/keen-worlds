@@ -72,7 +72,7 @@ void FF_SpawnWorldKeen(int16_t tileX, int16_t tileY)
 	uint16_t info = INFOSPOT(tileX+1, tileY);
 
 	ck_keenObj->active = OBJ_ALWAYS_ACTIVE;
-	if (ck_gameState.mapPosX == 0 && info != 0)
+	if (ck_gameState.mapPosX == 0 && info != 0 && !ck_gameState.levelsDone[MAP_BWBMEGAROCKET])
 	{
 		int16_t px, py;
 
@@ -95,7 +95,13 @@ void FF_SpawnWorldKeen(int16_t tileX, int16_t tileY)
 	else
 	{
 		ck_keenObj->type = CT_Player;
-		if (ck_gameState.mapPosX == 0)
+		if (ck_gameState.mapPosX == 0 && info != 0)
+		{
+			// KEEN WORLDS: no fly-in was played: beside the landed ship
+			ck_keenObj->posX = RF_TileToUnit(info >> 8);
+			ck_keenObj->posY = RF_TileToUnit((info & 0xFF) + 1);
+		}
+		else if (ck_gameState.mapPosX == 0)
 		{
 			ck_keenObj->posX = RF_TileToUnit(tileX);
 			ck_keenObj->posY = RF_TileToUnit(tileY);

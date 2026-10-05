@@ -125,11 +125,21 @@ static const KW_WorldDef kw_worldDefs[KW_NUM_WORLDS] = {
 	// Foray in the Forest (Nisaba and K1n9_Duk3, v2.0 2025): a game of its
 	// own with GPL source. play/mods/fitf holds the player's copy of its data
 	// files and the variable files tools/kw_fitf.py writes from its source.
-	// TODO: the full credits from its own credits screens.
+	// The credits are from its own credits screens (the main team and the
+	// leads of each craft; the game's help screens name everyone).
 	{"fitf", "The Ancient Forest", KW_EPISODE_FITF, "mods/fitf", "FITF.CKS",
 		"Foray in the Forest",
 		"A Commander Keen fan game\nby Nisaba and K1n9_Duk3",
-		"Created by Nisaba\nProgramming: K1n9_Duk3" KW_NOT_OURS,
+		"Creative director: Nisaba\nLead programmer: K1n9_Duk3\nTool smith: Fleexy\n"
+		"Music: kvee, eggs_box,\nKohntarkosz_, Mr_M\n\nStarted by Mr. M in 2009"
+		"\f"
+		"Co-programmers: Nisaba, Lemm,\nNY00123, Spleen\n\n"
+		"Story: Nisaba, nanomekia,\nobsidian29, Rolly, Lotte\n\n"
+		"Level design: Nisaba\nMini-games: K1n9_Duk3, Spleen"
+		"\f"
+		"Sprite art: Nisaba, Zilem,\nXky Rauh, Plasma Captain, Neorice,\nFred Strom, siskavard_, DoomJedi\n\n"
+		"Pixel art: Nisaba, ProYorp,\nBernie, Pandakeen, Mobiethian,\nZilem, Roobar and others\n\n"
+		"Many more are named in the\ngame's own credits (its Help)." KW_NOT_OURS,
 		"A fan game by Nisaba and\nK1n9_Duk3. Download Foray in\nthe Forest v2.0 (see its page\non keenwiki.shikadi.net) and\nput its files in mods/fitf."},
 };
 
@@ -267,6 +277,10 @@ static const KW_Ship kw_ships[] = {
 	// Atroxian Realm: the wreck of the Megarocket in its "BWB Crash Site"
 	// level (25), where that level starts Keen beside it.
 	{KW_AREALM, 25, 5, 16, 3, 13, 14, 17},
+	// Foray in the Forest: the landed Megarocket outside, in its own BwB
+	// level (1). Keen arrives and boards at the ship's nose; the boarding
+	// area stops short of the ship's door (x 14-17), where "up" goes inside.
+	{KW_FITF, 1, 5, 16, 4, 11, 11, 16},
 };
 
 static const KW_Ship *KW_ShipFor(int world)
@@ -1304,6 +1318,10 @@ void KW_PlayLoopHook(void)
 		KW_RequestWorld(KW_KEEN8);
 	else if (IN_GetKeyState(IN_SC_Nine))
 		KW_RequestWorld(KW_KEEN9);
+	else if (IN_GetKeyState(IN_SC_K))
+		KW_RequestWorld(KW_AREALM); // Krisle
+	else if (IN_GetKeyState(IN_SC_F))
+		KW_RequestWorld(KW_FITF); // the Ancient Forest
 }
 
 // For /KWTEST: Keen 8's converted behaviour (its PAT.PAT, see MOD.CK6) is in
@@ -2169,6 +2187,40 @@ void KW_SelfTest(void)
 		}
 		if (loaded < 20)
 			Quit("KW_SelfTest: Foray in the Forest is missing levels!");
+		// Its completed levels are peaceful, by its own lists.
+		for (int lv = 2; lv < 27; ++lv)
+		{
+			if (!CA_MapExists(lv) || lv == 21 /* the high scores */)
+				continue;
+			ck_gameState.currentLevel = lv;
+			ck_gameState.levelsDone[lv] = 1;
+			CK_LoadLevel(true, true);
+			int hostiles, residents;
+			CK_object *first;
+			KW_CountLevelPeople(&hostiles, &residents, &first);
+			if (!KW_IsLevelPeaceful() || hostiles)
+				QuitF("KW_SelfTest: completed Foray in the Forest level %d isn't peaceful (%d hostile)!", lv, hostiles);
+			ck_gameState.levelsDone[lv] = 0;
+		}
+		// The map with every level done: flags stand, nothing breaks.
+		for (int lv = 1; lv < 27; ++lv)
+			ck_gameState.levelsDone[lv] = 3; // done and perfect
+		ck_gameState.currentLevel = 0;
+		CK_LoadLevel(true, true);
+		KW_TestLevelSpritesCached("fitf", 0);
+		for (int lv = 1; lv < 27; ++lv)
+			ck_gameState.levelsDone[lv] = 0;
+		// Arriving by Megarocket puts Keen beside the landed ship in its BwB level.
+		const KW_Ship *ffShip = KW_ShipFor(KW_FITF);
+		kw_placeArrivalAtShip = true;
+		ck_gameState.currentLevel = ffShip->level;
+		CK_LoadLevel(true, true);
+		if (!KW_IsAtShipHatch() || RF_UnitToTile(ck_keenObj->posX) != ffShip->arrivalX)
+			Quit("KW_SelfTest: Foray in the Forest's ship arrival is wrong!");
+		int ffPlaqueX, ffPlaqueY;
+		if (!KW_PlaquePixel(&ffPlaqueX, &ffPlaqueY))
+			Quit("KW_SelfTest: Foray in the Forest's registry plaque is missing!");
+		KW_TestLevelSpritesCached("fitf", ffShip->level);
 		KW_SwitchWorld(KW_KEEN4);
 	}
 

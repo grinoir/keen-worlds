@@ -724,6 +724,77 @@ void FF_DrawStatusWindow(void)
 	US_SetPrintColour(oldcolor);
 }
 
+// ---- The map's finished levels (PatchWorldMap in CK_GAME.C): entrances
+// and fences go, flags stand (another flag for a perfect level, rising for
+// the level just finished). Keen Worlds keeps the entrances: finished levels
+// can be visited again. ----
+
+extern int ck_lastLevelFinished;
+bool KW_IsHabitableLevel(int level);
+void FF_SpawnFlag(uint16_t tileX, uint16_t tileY, uint16_t spriteoff);
+void FF_SpawnRisingFlag(uint16_t tileX, uint16_t tileY, uint16_t spriteoff);
+
+void FF_PatchWorldMap(void)
+{
+	for (int y = 0; y < CA_GetMapHeight(); y++)
+		for (int x = 0; x < CA_GetMapWidth(); x++)
+		{
+			uint16_t w = CA_TileAtPos(x, y, 2);
+			int level = w & 0xFF, flags = w >> 8;
+			if (w == (0xC000 | MAP_TEMPLELEVEL) && ck_gameState.levelsDone[MAP_TEMPLELEVEL])
+			{
+				// the temple's entrance becomes the laboratory's
+				CA_SetTileAtPos(x, y, 2, 0xC000 | MAP_ACMELABLEVEL);
+				continue;
+			}
+			if (level < 1 || level >= FF_GAMELEVELS || !ck_gameState.levelsDone[level] || level == MAP_BWBMEGAROCKET)
+				continue;
+			if (flags == 0xC0 && KW_IsHabitableLevel(level))
+				continue;
+			CA_SetTileAtPos(x, y, 2, 0);
+			if (flags == 0xD0)
+				CA_SetTileAtPos(x, y, 1, 0); // the fences go
+			else if (flags == 0xD1)
+				CA_SetTileAtPos(x, y, 1, 35); // an invisible blocking tile
+			else if (flags == 0xF0)
+			{
+				int flagoff = (ck_gameState.levelsDone[level] & DF_PERFECT) ? FF_FLAG2FLIP1SPR - FF_FLAGFLIP1SPR : 0;
+				if (ck_lastLevelFinished == level)
+					FF_SpawnRisingFlag(x, y, flagoff);
+				else
+					FF_SpawnFlag(x, y, flagoff);
+			}
+		}
+}
+
+// ---- Keen Worlds' peaceful levels: what leaves a level once it is
+// completed, and what would replay the story. ----
+
+bool FF_IsHostileType(int type)
+{
+	switch (type)
+	{
+	case CT5_EnemyShot: case CT5_StunnedCreature:
+	case FF_CT_Slug: case FF_CT_Smirky: case FF_CT_Skypest: case FF_CT_Mimrock: case FF_CT_PatPat:
+	case FF_CT_XkyLick: case FF_CT_FungusAmongus: case FF_CT_DungBeetle: case FF_CT_Chemolain:
+	case FF_CT_Salamander: case FF_CT_Wormouth: case FF_CT_Shrubbery: case FF_CT_Tentacle:
+	case FF_CT_Poleknawel: case FF_CT_Kitten: case FF_CT_GellyGhost: case FF_CT_Roots: case FF_CT_Yeti:
+	case FF_CT_TinyYeti: case FF_CT_TinyYetiMaster: case FF_CT_YetiCloud: case FF_CT_Bird: case FF_CT_BirdEgg:
+	case FF_CT_Egg: case FF_CT_SneakyTree: case FF_CT_Crocodent: case FF_CT_TentacleNest: case FF_CT_Warble:
+	case FF_CT_Efree: case FF_CT_Nisasi: case FF_CT_NisasiCooldown: case FF_CT_CloneAnimation: case FF_CT_Clone:
+	case FF_CT_CloneRising: case FF_CT_CoronaPlant: case FF_CT_CoronaBall: case FF_CT_Nipnap: case FF_CT_Crab:
+	case FF_CT_BrainFucl: case FF_CT_Fungus: case FF_CT_Mummy1: case FF_CT_Mummy2:
+		return true;
+	}
+	return false;
+}
+
+// The clone machine ends the game.
+bool FF_IsStoryTrigger(const CK_object *obj)
+{
+	return obj->type == FF_CT_CloneMachineOff || obj->type == FF_CT_CloneMachineOn;
+}
+
 // ---- What a difficulty sets (ApplyDifficulty in CK_GAME.C) ----
 
 // The limits always; lives and ammo only for a game begun in this world

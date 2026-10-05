@@ -28,6 +28,9 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 bool AR_IsActive(void);
 bool AR_IsHostileType(int type);
 bool AR_IsStoryTrigger(const CK_object *obj);
+bool FF_IsActive(void);
+bool FF_IsHostileType(int type);
+bool FF_IsStoryTrigger(const CK_object *obj);
 
 
 #include "kw_world.h"
@@ -561,6 +564,8 @@ static bool KW_IsHostile(CK_object *obj)
 {
 	if (AR_IsActive())
 		return AR_IsHostileType(obj->type);
+	if (FF_IsActive())
+		return FF_IsHostileType(obj->type);
 	switch (ck_currentEpisode->ep)
 	{
 #ifdef WITH_KEEN4
@@ -620,6 +625,8 @@ static bool KW_IsStoryTrigger(CK_object *obj)
 {
 	if (AR_IsActive())
 		return AR_IsStoryTrigger(obj);
+	if (FF_IsActive())
+		return FF_IsStoryTrigger(obj);
 #ifdef WITH_KEEN5
 	if (ck_currentEpisode->ep == EP_CK5 && obj->type == CT5_QED)
 		return true;

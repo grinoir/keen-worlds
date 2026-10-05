@@ -228,6 +228,20 @@ In a level, **F8** lists the items still to be found (its own key for this,
 F2, is the menu here). `%int AR_EndStats 1` in a variable file shows that
 list after every finished level, as its option does.
 
+### Foray in the Forest (in progress)
+
+A game of its own (Nisaba and K1n9_Duk3, v2.0; GPL source that descends
+from Atroxian Realm's), world id `fitf`, "The Ancient Forest". It runs as
+`EP_CK5` with extension `CKS`. Its variable files are written from its
+source by `tools/kw_fitf.py`; its code is converted from its source by
+`tools/kw_fitf_port.py` and the `kw_fitf_*_fixes.py` scripts
+(`tools/kw_fitf_regen.sh` redoes it) into `src/kw_ff_act.c` (creatures),
+`kw_ff_keen.c`, `kw_ff_map.c`, `kw_ff_cam.c`, `kw_ff_dialog.c`;
+`kw_ff_scan.c` and `kw_ff_phys.c` were converted once; `src/kw_fitf.c` has
+what joins it to the engine. The engine hands over to it at marked places
+(`FF_IsActive()`). What is done and what is left:
+`../research/foray-in-the-forest.md`.
+
 ### Adding a fan game
 
 1. Get it converted for Omnispeak (the Omnispeak modding kit includes Keen
@@ -262,7 +276,8 @@ Keen 4–6.
   stand at the ship's nose rather than under it: the hull at Keen's height is
   drawn in front of sprites (tile misc bit `0x80`), which would hide him.
 - Debug shortcuts, on a world map or at the ship: hold **W** and press
-  **4** to **9** to fly to that world (this also leaves Krisle), or **E** to
+  **4** to **9**, **K** (Krisle) or **F** (the Ancient Forest) to fly to that
+  world (this also leaves Krisle), or **E** to
   play the ending of the world Keen is in (`KW_DebugEnding`: the world then
   counts as completed, every level of it is marked completed, and Keen is put
   at his ship).
