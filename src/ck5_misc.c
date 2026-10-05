@@ -30,6 +30,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ck_phys.h"
 #include "ck_play.h"
 #include "ck5_ep.h"
+#include "kw_music.h" // KEEN WORLDS: Keen speaks his lines
+#include "kw_world.h"
 
 CK_EpisodeDef ck5_episode = {
 	EP_CK5,
@@ -888,6 +890,7 @@ void CK5_FuseMessage()
 
 	VH_UpdateScreen();
 	VL_DelayTics(30);
+	KW_SayLine(KW_KEEN5, ck_gameState.currentLevel == 0xD ? "K5_KEEN_FUSE_KORATH.RAW" : "K5_KEEN_FUSE.RAW"); // KEEN WORLDS: Keen says it
 
 	IN_ClearKeysDown();
 	IN_WaitButton();

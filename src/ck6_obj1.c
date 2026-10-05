@@ -29,6 +29,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ck6_ep.h"
 
 #include <stdio.h>
+#include "kw_music.h" // KEEN WORLDS: the characters speak their lines
+#include "kw_world.h"
 
 extern int ck_infoplaneArrowsX[];
 extern int ck_infoplaneArrowsY[];
@@ -76,6 +78,7 @@ void CK6_GrabbiterCol(CK_object *a, CK_object *b)
 		VH_UpdateScreen();
 		SD_PlaySound(CK_SOUNDNUM(SOUND_NEEDKEYCARD));
 		VL_DelayTics(30); // VW_WaitVBL(30);
+		KW_SayLine(KW_KEEN6, "K6_GRABBITER_HUNGRY.RAW"); // KEEN WORLDS: Keen, the narrator and the Grabbiter
 		IN_ClearKeysDown();
 		IN_WaitButton();
 		RF_ForceRefresh();
@@ -96,6 +99,7 @@ void CK6_GrabbiterCol(CK_object *a, CK_object *b)
 		US_CPrint(CK_STRING(ck6_str_grabbiterFed));
 		VH_UpdateScreen();
 		VL_DelayTics(30); // VW_WaitVBL(30);
+		KW_SayLine(KW_KEEN6, "K6_GRABBITER_FED.RAW"); // KEEN WORLDS
 		IN_ClearKeysDown();
 		IN_WaitButton();
 		CK_SetAction2(a, CK_ACTION(CK6_ACT_GrabbiterNapping0));
@@ -139,6 +143,7 @@ void CK6_RocketCol(CK_object *a, CK_object *b)
 		VH_UpdateScreen();
 		SD_PlaySound(CK_SOUNDNUM(SOUND_NEEDKEYCARD));
 		VL_DelayTics(30); // VW_WaitVBL(30);
+		KW_SayLine(KW_KEEN6, "K6_DOOR.RAW"); // KEEN WORLDS: the narrator and the door
 		IN_ClearKeysDown();
 		IN_WaitButton();
 		RF_ForceRefresh();
@@ -373,6 +378,7 @@ void CK6_MapCliffCol(CK_object *a, CK_object *b)
 			VH_UpdateScreen();
 			SD_PlaySound(CK_SOUNDNUM(SOUND_NEEDKEYCARD));
 			VL_DelayTics(30); // VW_WaitVBL(30);
+			KW_SayLine(KW_KEEN6, "K6_KEEN_CLIFF.RAW"); // KEEN WORLDS
 			IN_ClearKeysDown();
 			IN_WaitButton();
 			RF_ForceRefresh();

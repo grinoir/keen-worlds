@@ -2983,6 +2983,27 @@ void KW_DebugFrame(void)
 		CK4_ShowCantSwimMessage();
 		CK4_ShowWetsuitMessage();
 	}
+	if (getenv("KW_AUTOTALK") && count + 1 == atoi(getenv("KW_AUTOTALK")) && kw_currentWorld == KW_KEEN5)
+	{
+		void CK5_FuseMessage(void);
+		CK5_FuseMessage();
+	}
+	if (getenv("KW_AUTOTALK") && count + 1 == atoi(getenv("KW_AUTOTALK")) && kw_currentWorld == KW_KEEN6)
+	{
+		void CK6_GrabbiterCol(CK_object *a, CK_object *b);
+		void CK6_RocketCol(CK_object *a, CK_object *b);
+		void CK6_MapCliffCol(CK_object *a, CK_object *b);
+		void CK6_ShowGetSandwich(void);
+		void CK6_ShowGetRope(void);
+		void CK6_ShowGetPasscard(void);
+		CK6_GrabbiterCol(ck_keenObj, ck_keenObj);
+		CK6_RocketCol(ck_keenObj, ck_keenObj);
+		CK6_MapCliffCol(ck_keenObj, ck_keenObj);
+		CK6_ShowGetSandwich();
+		CK6_ShowGetRope();
+		CK6_ShowGetPasscard();
+		CK6_GrabbiterCol(ck_keenObj, ck_keenObj);
+	}
 	// KW_AUTOWAKE=n: in the dream (Keen Dreams), Keen wakes up at frame n
 	if (getenv("KW_AUTOWAKE") && count + 1 == atoi(getenv("KW_AUTOWAKE")))
 		KW_WakeUp();

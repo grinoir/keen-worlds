@@ -133,11 +133,11 @@ void KW_Speak(const char *file, bool waitForFade)
 
 static bool kw_ducked;
 
-void KW_SayLine(int world, const char *file)
+bool KW_SayLine(int world, const char *file)
 {
 	KW_StopVoice();
 	if (KW_CurrentWorld() != world || !KW_LoadClip(file))
-		return;
+		return false;
 	if (!kw_ducked && !kw_musicHeld)
 	{
 		SD_FadeAdLibVolume(0, 300);
@@ -147,6 +147,7 @@ void KW_SayLine(int world, const char *file)
 	if (getenv("KW_AUTOTALK"))
 		printf("KW_AUTOTALK: %s (%.1f s)\n", file, kw_clipSamples / (double)KW_VOICE_RATE);
 	KW_StartClip();
+	return true;
 }
 
 void KW_LinePoll(void)
@@ -213,6 +214,10 @@ static bool KW_IsInTavern(void)
 
 void KW_UpdateMusicZone(void)
 {
+	// Play goes on: a line of dialogue still being spoken is cut (its window
+	// has been put away), and the music comes back up.
+	if (kw_ducked)
+		KW_LinesOver();
 	bool inTavern = KW_IsInTavern();
 	if (kw_musicHeld)
 	{

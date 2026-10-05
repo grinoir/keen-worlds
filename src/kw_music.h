@@ -5,6 +5,7 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 
 #ifndef KW_MUSIC_H
 #define KW_MUSIC_H
+#include <stdbool.h>
 
 // Called once per play-loop frame after the map and Keen have updated.
 void KW_UpdateMusicZone(void);
@@ -23,9 +24,10 @@ void KW_Speak(const char *file, bool waitForFade);
 bool KW_VoiceSpeaking(void);
 // A line of dialogue in a game's own window: its clip, with the music turned
 // down under it (only in the world the clip was made for; no clip, no
-// change). KW_LinesOver: the windows are put away. KW_LinePoll: bring the
+// change). KW_LinesOver: the windows are put away (the play loop does this
+// too, when play goes on). KW_LinePoll: bring the
 // music back up once the line is over, while a window stays up.
-void KW_SayLine(int world, const char *file);
+bool KW_SayLine(int world, const char *file); // (true: it is being spoken)
 void KW_LinePoll(void);
 void KW_LinesOver(void);
 // Cut the clip short (its card was put away).

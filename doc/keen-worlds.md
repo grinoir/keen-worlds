@@ -475,6 +475,15 @@ world `keen4`: the fan games on the same engine have other words in the
 same windows. `KW_AUTOTALK=n` runs all the dialogues at frame n of a
 scripted run and prints each clip.
 
+**Keen 5 and Keen 6 speak** too (`K5_*.RAW`, `K6_*.RAW`, made by
+`tools/kw_keen56_voice.py`). Keen 5 is Keen at a broken fuse and a narrated
+ending (its secret ending has two pages of its own, `K5S_END_*`). Keen 6
+writes like a storybook, so a clip is spoken in turns and joined: Keen, the
+narrator, the Grabbiter (am_fenrir), the Bloogstar's door (am_adam, made a
+machine's) and Molly McMire (af_jessica). The endings' last, selling pages
+are silent. A line still being spoken when play goes on is cut
+(`KW_UpdateMusicZone`).
+
 **The flight menu** (`KW_TravelMenu`): the worlds in two columns of two
 groups each (Goodbye, Galaxy!; The Universe Is Toast!; Other adventures;
 More levels), left and right between the columns. A line under the list

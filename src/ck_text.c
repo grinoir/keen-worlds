@@ -702,6 +702,7 @@ void CK_ShowTextPages(int textChunk, int song, bool blackBackground)
 void help_endgame(void)
 {
 	char *ptext;
+	bool secretEnding = false; // KEEN WORLDS: for the spoken pages
 
 	/* Set up */
 	VL_ClearScreen(4);
@@ -720,6 +721,7 @@ void help_endgame(void)
 	{
 		CA_CacheGrChunk(CK_CHUNKNUM(TEXT_SECRETEND));
 		ptext = (char *)ca_graphChunks[CK_CHUNKNUM(TEXT_SECRETEND)];
+		secretEnding = true;
 	}
 	else
 #endif
@@ -737,12 +739,22 @@ void help_endgame(void)
 
 	while (help_cur_page < help_num_pages)
 	{
-		// KEEN WORLDS: the page's lines are spoken (Keen 4: K4_END_<page>.RAW,
-		// tools/kw_keen4_voice.py; a page without a clip is silent)
+		// KEEN WORLDS: the page's lines are spoken (K4_END_<page>.RAW and so on:
+		// tools/kw_keen4_voice.py, kw_keen56_voice.py; a page without a clip
+		// is silent)
 		{
-			char clip[32];
-			snprintf(clip, sizeof(clip), "K4_END_%02d.RAW", (int)help_cur_page);
-			KW_SayLine(KW_KEEN4, clip);
+			static const struct { int world; const char *prefix; } spoken[] = {
+				{KW_KEEN4, "K4"}, {KW_KEEN5, "K5"}, {KW_KEEN6, "K6"}};
+			for (size_t w = 0; w < sizeof(spoken) / sizeof(spoken[0]); ++w)
+			{
+				char clip[32];
+				// (Keen 5's secret ending has two pages of its own words)
+				snprintf(clip, sizeof(clip), "%sS_END_%02d.RAW", spoken[w].prefix, (int)help_cur_page);
+				if (secretEnding && KW_SayLine(spoken[w].world, clip))
+					continue;
+				snprintf(clip, sizeof(clip), "%s_END_%02d.RAW", spoken[w].prefix, (int)help_cur_page);
+				KW_SayLine(spoken[w].world, clip);
+			}
 		}
 		/* Draw the current page (which also advances to the next page) */
 		PageLayout(0);

@@ -30,6 +30,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ck_phys.h"
 #include "ck_play.h"
 #include "ck6_ep.h"
+#include "kw_music.h" // KEEN WORLDS: Keen speaks his lines
+#include "kw_world.h"
 
 CK_EpisodeDef ck6_episode = {
 	EP_CK6,
@@ -541,6 +543,7 @@ void CK6_ShowGetSandwich()
 	VH_UpdateScreen();
 
 	VL_DelayTics(30); // VW_WaitVBL(30);
+	KW_SayLine(KW_KEEN6, "K6_KEEN_SANDWICH.RAW"); // KEEN WORLDS: Keen says it
 	IN_ClearKeysDown();
 	IN_WaitButton();
 	CA_DownLevel();
@@ -562,6 +565,7 @@ void CK6_ShowGetRope()
 	VH_UpdateScreen();
 
 	VL_DelayTics(30); // VW_WaitVBL(30);
+	KW_SayLine(KW_KEEN6, "K6_KEEN_ROPE.RAW"); // KEEN WORLDS
 	IN_ClearKeysDown();
 	IN_WaitButton();
 	CA_DownLevel();
@@ -583,6 +587,7 @@ void CK6_ShowGetPasscard()
 	VH_UpdateScreen();
 
 	VL_DelayTics(30); // VW_WaitVBL(30);
+	KW_SayLine(KW_KEEN6, "K6_KEEN_PASSCARD.RAW"); // KEEN WORLDS
 	IN_ClearKeysDown();
 	IN_WaitButton();
 	CA_DownLevel();
