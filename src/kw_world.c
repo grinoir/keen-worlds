@@ -260,6 +260,9 @@ static KW_WorldState kw_worlds[KW_NUM_WORLDS];
 
 int kw_pendingWorld = KW_NO_WORLD;
 static bool kw_placeArrivalAtShip = false;
+// Foray in the Forest's own arrival: the ship flies in over its map and
+// lands, then Keen is beside it (first visit only; see KW_SwitchWorld).
+static bool kw_fitfFlyIn = false;
 
 // Megarockets parked on fan games' world maps (see below).
 typedef struct KW_MapShip KW_MapShip;
@@ -762,6 +765,15 @@ void KW_SwitchWorld(int world)
 	const KW_Ship *ship = KW_ShipFor(world);
 	ck_gameState.currentLevel = ship ? ship->level : 0;
 	kw_placeArrivalAtShip = ship != NULL || KW_MapShipFor(world) != NULL;
+	// Gnosticus Pi, the first time: the game's own arrival. Its map comes up
+	// and the ship flies in and lands (FF_SpawnWorldKeen, FF_T_MapShip), which
+	// leads into its level of the landed ship, where Keen is put beside it.
+	kw_fitfFlyIn = world == KW_FITF && !kw_worlds[world].visited;
+	if (kw_fitfFlyIn)
+	{
+		ck_gameState.currentLevel = 0;
+		kw_placeArrivalAtShip = false;
+	}
 	// The inside of the Megarocket is one room, entered where its map says.
 	if (world == KW_SHIP)
 	{
@@ -1758,12 +1770,24 @@ static void KW_CrashLanding(void)
 
 void KW_PlayLoopHook(void)
 {
+	// Foray's fly-in is under way on its map: when it has landed, Keen
+	// arrives beside the ship in the next level.
+	if (kw_fitfFlyIn && kw_currentWorld == KW_FITF)
+	{
+		if (ca_mapOn == 0)
+			kw_placeArrivalAtShip = true;
+		else
+			kw_fitfFlyIn = false;
+	}
+	else
+		kw_fitfFlyIn = false;
+
 	// Keen has just set foot in a world for the first time: its own title
 	// and makers, once the screen is up.
 	if (getenv("KW_AUTOSHOT"))
 		kw_cardsOff = true; // the developer tools have nobody to press a key either
 	if ((!kw_cardsOff || getenv("KW_AUTOSTORY")) && !kw_introduced[kw_currentWorld] && !kw_worlds[kw_currentWorld].visited &&
-		(ca_mapOn == 0 || KW_IsShipLevel()))
+		(ca_mapOn == 0 || KW_IsShipLevel()) && !(kw_fitfFlyIn && ca_mapOn == 0))
 		kw_arrivalCard = kw_currentWorld;
 	if (kw_crashLanding && kw_currentWorld == KW_AREALM && !vl_screenFaded && IN_DemoGetMode() == IN_Demo_Off)
 	{
