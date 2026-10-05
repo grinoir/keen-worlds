@@ -1240,6 +1240,25 @@ void FF_NewGame(void)
 	FF_ApplyDifficulty(true);
 }
 
+// ---- Keen's look. The game comes with two graphics sets: its own Keen
+// (EGAGRAPH.CKS) and a "classic" one with the Keen of Keen 4-6
+// (EGAGRAPH.CKC). Keen Worlds uses the classic one, so that Keen looks the
+// same in every world, unless the player chooses the game's own (Options
+// menu; setting kw_fitfOwnKeen) or the classic files aren't there. Called
+// when the world's variables have been loaded, before its graphics are. ----
+
+void FF_ChooseGraphics(void)
+{
+	if (CK_INT(ff_classicKeen, -1) == -1)
+		return; // not this world's variables
+	bool classic = !CFG_GetConfigBool("kw_fitfOwnKeen", false) && FS_IsKeenFilePresent("EGAGRAPH.CKC") &&
+		FS_IsKeenFilePresent("EGAHEAD.CKC") && FS_IsKeenFilePresent("EGADICT.CKC");
+	CK_VAR_SetString("ca_graphFile", classic ? "EGAGRAPH.CKC" : "EGAGRAPH.CKS");
+	CK_VAR_SetString("ca_graphHead", classic ? "EGAHEAD.CKC" : "EGAHEAD.CKS");
+	CK_VAR_SetString("ca_graphDict", classic ? "EGADICT.CKC" : "EGADICT.CKS");
+	CK_VAR_SetInt("ff_classicKeen", classic);
+}
+
 // ---- Its colours (CK_LevelPalette, CK_DefaultPalette in CK_GAME.C): each
 // level has its own sixteen. They are VGA colours; the fades between
 // screens still step through the standard ones. ----

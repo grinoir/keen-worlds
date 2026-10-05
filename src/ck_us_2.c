@@ -603,6 +603,24 @@ US_Card ck_us_joyMotionModeMenu = {0, 0, 0, 0, 0, &CK_US_JoyMotionModeMenuProc, 
 #ifdef QUICKSAVE_ENABLED
 US_Card ck_us_quickSaveMenu = {0, 0, 0, 0, 0, &CK_US_QuickSaveConfirmMenuProc, 0, 0, 0};
 #endif
+// KEEN WORLDS: which Keen is drawn in the Ancient Forest (Foray in the
+// Forest has its own Keen sprites and a set with the Keen of Keen 4-6).
+bool KW_IsForestInstalled(void);
+bool KW_IsInForest(void);
+void CK_US_UpdateOptionsMenus(void);
+bool CK_US_ForestKeenMenuProc(US_CardMsg msg, US_CardItem *item)
+{
+	if (msg != US_MSG_CardEntered)
+		return false;
+	bool own = !CFG_GetConfigBool("kw_fitfOwnKeen", false);
+	CFG_SetConfigBool("kw_fitfOwnKeen", own);
+	USL_CtlDialog(own ? "The forest game's own Keen" : "Classic Keen in the forest",
+		KW_IsInForest() ? "From the next time you land there" : "Press any key", NULL);
+	CK_US_UpdateOptionsMenus();
+	return true;
+}
+US_Card ck_us_forestKeenMenu = {0, 0, 0, 0, 0, &CK_US_ForestKeenMenuProc, 0, 0, 0};
+
 // Options menu
 US_CardItem ck_us_optionsMenuItems[] = {
 	{US_ITEM_Submenu, 0, IN_SC_S, "", US_Comm_None, &ck_us_scoreBoxMenu, 0, 0},
@@ -619,6 +637,9 @@ US_CardItem ck_us_optionsMenuItems[] = {
 #ifdef QUICKSAVE_ENABLED
 	{US_ITEM_Submenu, 0, IN_SC_Q, "", US_Comm_None, &ck_us_quickSaveMenu, 0, 0},
 #endif
+	// KEEN WORLDS: Keen's look in the Ancient Forest (the last item; only
+	// there when that world is installed, see CK_US_UpdateOptionsMenus)
+	{US_ITEM_Submenu, 0, IN_SC_K, "", US_Comm_None, &ck_us_forestKeenMenu, 0, 0},
 	{US_ITEM_None, 0, IN_SC_None, 0, US_Comm_None, 0, 0, 0}};
 
 US_Card ck_us_optionsMenu = {8, 0, CK_CHUNKID(PIC_OPTIONSCARD), 0, ck_us_optionsMenuItems, 0, 0, 0, 0};
@@ -1403,6 +1424,17 @@ void CK_US_UpdateOptionsMenus(void)
 #endif
 	ck_us_optionsMenuItems[QUICKSAVE_OPTION_NUMBER].caption = CFG_GetConfigBool("ck_quickSaveConfirm", true) ? "CONFIRM QUICKSAVE (ON)" : "CONFIRM QUICKSAVE (OFF)";
 #endif
+
+	// KEEN WORLDS: the item for Keen's look in the Ancient Forest is the
+	// last one, and is there only if that world is installed. (Hidden, it
+	// keeps its submenu, which is how it is found.)
+	for (int i = 0;; ++i)
+		if (ck_us_optionsMenuItems[i].subMenu == &ck_us_forestKeenMenu)
+		{
+			ck_us_optionsMenuItems[i].type = KW_IsForestInstalled() ? US_ITEM_Submenu : US_ITEM_None;
+			ck_us_optionsMenuItems[i].caption = CFG_GetConfigBool("kw_fitfOwnKeen", false) ? "FOREST KEEN (ITS OWN)" : "FOREST KEEN (CLASSIC)";
+			break;
+		}
 
 	// Disable Two button firing selection if required
 	ck_us_buttonsMenuItems[2].state &= ~US_IS_Disabled;

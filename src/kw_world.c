@@ -399,6 +399,7 @@ bool FF_WriteState(FS_File fp);
 bool FF_ReadState(FS_File fp);
 void FF_ResetState(void);
 void FF_LeaveWorld(void);
+void FF_ChooseGraphics(void);
 const char *FF_TestSaveRoundTrip(bool (*save)(void), bool (*load)(void));
 #define KW_SAVE_ID_LEN 8
 
@@ -673,6 +674,7 @@ void KW_SwitchWorld(int world)
 	ck_episodeFile = def->episodeFile ? def->episodeFile : target->episodeFile;
 	kw_currentWorld = world;
 	CK_VAR_LoadVars(ck_episodeFile);
+	FF_ChooseGraphics(); // Foray in the Forest: which Keen (kw_fitf.c)
 	CA_Startup();
 	CA_InitLumps();
 	CK_CacheCoreChunks();
@@ -1634,6 +1636,16 @@ void KW_DebugFrame(void)
 		(int)RF_UnitToTile(ck_keenObj->posX), (int)RF_UnitToTile(ck_keenObj->posY), ck_keenObj->gfxChunk,
 		(int)ck_gameState.levelState, path);
 	Quit(0);
+}
+
+// For the Options menu (ck_us_2.c): Keen's look in the Ancient Forest
+bool KW_IsForestInstalled(void)
+{
+	return KW_IsWorldPresent(KW_FITF);
+}
+bool KW_IsInForest(void)
+{
+	return kw_currentWorld == KW_FITF;
 }
 
 // Developer tool (/KWSHOT world level file.ppm): load a level of a world, draw

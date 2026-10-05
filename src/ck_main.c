@@ -30,6 +30,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ck_game.h"
 #include "ck_play.h"
 #include "kw_world.h"
+
+void FF_ChooseGraphics(void); // KEEN WORLDS (kw_fitf.c)
 #ifdef WITH_KEEN4
 #include "ck4_ep.h"
 #endif
@@ -673,6 +675,7 @@ int main(int argc, char *argv[])
 	if (!ck_episodeFile)
 		Quit("No episode found! Make sure the game files are present, and run with /EPISODE <EPISODE.CKx>");
 	CK_VAR_LoadVars(ck_episodeFile);
+	FF_ChooseGraphics(); // KEEN WORLDS: Foray in the Forest's two Keens (kw_fitf.c)
 
 	// Determine the base episode number
 	int episodeNumber = CK_INT(ck_episodeNumber, -1);
