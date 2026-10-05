@@ -44,7 +44,7 @@ static const KW_TalkNode kw_barmaidTalk[] = {
 		{
 			{"The old ones.", NULL, NULL, 5},
 			{"Universe is Toast?", NULL, NULL, 6},
-			{"Krisle, the Forest.", NULL, NULL, 7},
+			{"Krisle, Gnosticus Pi.", NULL, NULL, 7},
 			{"Something else.", NULL, NULL, 1},
 		},
 	},
@@ -58,7 +58,7 @@ static const KW_TalkNode kw_barmaidTalk[] = {
 		},
 	},
 	{ // 6: toast
-		"Krodacia, Calidune,\nand the Battle of\nthe Brains. Three\nworlds, one long\fstory.", "BAR_14.RAW",
+		"Krodacia, Calidune,\nand the HUB Command\nCenter. Three\nplaces, one long\fstory.", "BAR_14.RAW",
 		{
 			{"Who made them?", "A fan called\nCeilick began it,\nall in his own\ntime. By the third\fhe had Mink and\nTulip beside him,\nand half the fans\nof the galaxy\fhelping.", "BAR_15.RAW", 6},
 			{"Are they dangerous?", "One of them is a\ndesert that wants\nyou dead, hon. Pack\na hat.", "BAR_16.RAW", 6},
@@ -67,10 +67,10 @@ static const KW_TalkNode kw_barmaidTalk[] = {
 		},
 	},
 	{ // 7: far
-		"Krisle is where the\nAtroxians live. And\nthe Ancient Forest\nis just past our\fown hills, older\nthan the Oracle.", "BAR_17.RAW",
+		"Krisle is where the\nAtroxians live. And\nGnosticus Pi is our\nlittle sister\fplanet, the one\nwith the rings. All\nforest.", "BAR_17.RAW",
 		{
 			{"Who made Krisle?", "Gridlock. Atroxian\nRealm, he called\nit. Years of work,\nwith friends like\fLemm and Gamebird.\nMind you, your ship\nbreaks when you\nland there.", "BAR_18.RAW", 7},
-			{"And the Forest?", "Nisaba and\nK1n9_Duk3, with a\nwhole crowd of\nfriends. Foray in\fthe Forest. They\neven drew the\ninside of your\nship, hon.", "BAR_19.RAW", 7},
+			{"And Gnosticus Pi?", "Nisaba and\nK1n9_Duk3, with a\nwhole crowd of\nfriends. Foray in\fthe Forest. They\neven drew the\ninside of your\nship, hon.", "BAR_19.RAW", 7},
 			{"Other worlds.", NULL, NULL, 4},
 			{"Something else.", NULL, NULL, 1},
 		},

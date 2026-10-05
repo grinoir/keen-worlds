@@ -603,7 +603,7 @@ US_Card ck_us_joyMotionModeMenu = {0, 0, 0, 0, 0, &CK_US_JoyMotionModeMenuProc, 
 #ifdef QUICKSAVE_ENABLED
 US_Card ck_us_quickSaveMenu = {0, 0, 0, 0, 0, &CK_US_QuickSaveConfirmMenuProc, 0, 0, 0};
 #endif
-// KEEN WORLDS: which Keen is drawn in the Ancient Forest (Foray in the
+// KEEN WORLDS: which Keen is drawn on Gnosticus Pi (Foray in the
 // Forest has its own Keen sprites and a set with the Keen of Keen 4-6).
 bool KW_IsForestInstalled(void);
 bool KW_IsInForest(void);
@@ -637,7 +637,7 @@ US_CardItem ck_us_optionsMenuItems[] = {
 #ifdef QUICKSAVE_ENABLED
 	{US_ITEM_Submenu, 0, IN_SC_Q, "", US_Comm_None, &ck_us_quickSaveMenu, 0, 0},
 #endif
-	// KEEN WORLDS: Keen's look in the Ancient Forest (the last item; only
+	// KEEN WORLDS: Keen's look on Gnosticus Pi (the last item; only
 	// there when that world is installed, see CK_US_UpdateOptionsMenus)
 	{US_ITEM_Submenu, 0, IN_SC_K, "", US_Comm_None, &ck_us_forestKeenMenu, 0, 0},
 	{US_ITEM_None, 0, IN_SC_None, 0, US_Comm_None, 0, 0, 0}};
@@ -1425,7 +1425,7 @@ void CK_US_UpdateOptionsMenus(void)
 	ck_us_optionsMenuItems[QUICKSAVE_OPTION_NUMBER].caption = CFG_GetConfigBool("ck_quickSaveConfirm", true) ? "CONFIRM QUICKSAVE (ON)" : "CONFIRM QUICKSAVE (OFF)";
 #endif
 
-	// KEEN WORLDS: the item for Keen's look in the Ancient Forest is the
+	// KEEN WORLDS: the item for Keen's look on Gnosticus Pi is the
 	// last one, and is there only if that world is installed. (Hidden, it
 	// keeps its submenu, which is how it is found.)
 	for (int i = 0;; ++i)

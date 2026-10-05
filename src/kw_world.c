@@ -102,7 +102,7 @@ static const KW_WorldDef kw_worldDefs[KW_NUM_WORLDS] = {
 		"A fan episode by Ceilick (2009).\nDownload \"Commander Keen 8 -\nDead in the Desert\", for\ninstance from archive.org, and\nput its files in mods/keen8."},
 	// Battle of the Brains ("Keen 9", Ceilick and Levellass): play/mods/keen9
 	// with our MOD.CK5.
-	{"keen9", "The Universe", 5, "mods/keen9", "MOD.CK5",
+	{"keen9", "HUB Command Center", 5, "mods/keen9", "MOD.CK5",
 		"Battle of the Brains",
 		"The Universe is Toast, part three\nA fan episode by\nCeilick, Mink and Tulip, 2011",
 		"Mod by Ceilick, Mink and Tulip\nPatching by Levellass and Lemm\n\n"
@@ -128,7 +128,7 @@ static const KW_WorldDef kw_worldDefs[KW_NUM_WORLDS] = {
 	// files and the variable files tools/kw_fitf.py writes from its source.
 	// The credits are from its own credits screens (the main team and the
 	// leads of each craft; the game's help screens name everyone).
-	{"fitf", "The Ancient Forest", KW_EPISODE_FITF, "mods/fitf", "FITF.CKS",
+	{"fitf", "Gnosticus Pi", KW_EPISODE_FITF, "mods/fitf", "FITF.CKS",
 		"Foray in the Forest",
 		"A Commander Keen fan game\nby Nisaba and K1n9_Duk3",
 		"Creative director: Nisaba\nLead programmer: K1n9_Duk3\nTool smith: Fleexy\n"
@@ -1091,11 +1091,13 @@ void KW_StoryBeforeLanding(void)
 	kw_introduced[world] = introduced;
 }
 
-// The game's own title and makers, the first time Keen sets foot in a world.
+// The game's own title, its makers and its full credits, the first time Keen
+// steps out of the ship onto a world.
 static void KW_ShowArrivalCard(int world)
 {
-	char text[512];
-	KW_WorldCardText(world, false, text, sizeof(text));
+	// with everyone who made it: Keen Worlds only links the worlds
+	char text[1024];
+	KW_WorldCardText(world, true, text, sizeof(text));
 	KW_ShowCards(text);
 }
 
@@ -1321,54 +1323,11 @@ static int KW_TravelMenu(void)
 	return result;
 }
 
-// ---- The registry plaque ----
-// A small plaque stands beside the Megarocket in every world that has a
-// ship level. Pressing up at the ship reads it: the game's title, its
-// makers and the full credits. It is drawn over the level each frame (no
-// tile or sprite of the world's own graphics is used or changed).
-
-static bool KW_PlaquePixel(int *px, int *py)
-{
-	const KW_Ship *ship = KW_ShipFor(kw_currentWorld);
-	if (ship)
-	{
-		if (ca_mapOn != ship->level)
-			return false;
-		// One tile to the side of where Keen arrives (away from the ship),
-		// standing on the ground he stands on.
-		*px = (ship->arrivalX - 1) * 16;
-		*py = (ship->arrivalY + 1) * 16;
-		return true;
-	}
-	// A ship on the world map: beside the boarding spot, away from the ship
-	// (Keen 5: on the dock, a step before the map's own start).
-	if (ca_mapOn != 0 || kw_launchSpotX < 0)
-		return false;
-	*px = (kw_launchSpotX - (kw_currentWorld == KW_KEEN5 ? 4 : 1)) * 16;
-	*py = (kw_launchSpotY + 1) * 16;
-	return true;
-}
-
+// (A small plaque used to stand beside the ship in every world, to be read
+// for the game's makers. The makers are now named when Keen first steps out
+// onto a world, and under "About this world" at the ship's controls.)
 void KW_DrawOverlay(void)
 {
-	int wx, wy;
-	if (kw_cardsOff || !KW_PlaquePixel(&wx, &wy))
-		return;
-	// The screen buffer starts at the tile the view is scrolled to.
-	int x = wx - (RF_UnitToTile(rf_scrollXUnit) << 4);
-	int y = wy - (RF_UnitToTile(rf_scrollYUnit) << 4);
-	if (x < 0 || y < 26 || x + 16 > RF_BUFFER_WIDTH_PIXELS || y > RF_BUFFER_HEIGHT_PIXELS)
-		return;
-	// A post and a board, in the EGA palette: brown post, grey board with a
-	// dark frame, a blue "i" and two lines of writing.
-	VL_ScreenRect(x + 7, y - 12, 2, 12, 6);
-	VL_ScreenRect(x + 1, y - 26, 14, 14, 0);
-	VL_ScreenRect(x + 2, y - 25, 12, 12, 7);
-	VL_ScreenRect(x + 3, y - 24, 10, 10, 15);
-	VL_ScreenRect(x + 7, y - 23, 2, 2, 1);
-	VL_ScreenRect(x + 7, y - 20, 2, 1, 1);
-	VL_ScreenRect(x + 4, y - 18, 8, 1, 8);
-	VL_ScreenRect(x + 4, y - 16, 8, 1, 8);
 }
 
 // Debug (W + E): end the level the way this world's game is won, so its
@@ -1625,19 +1584,6 @@ void KW_PlayLoopHook(void)
 		ck_keenObj->clipRects.tileY2 >= KW_FITF_ROOMS_Y)
 		kw_launchRequested = true;
 
-	// Reading the plaque: up, standing at the ship.
-	if (KW_IsShipLevel() && !kw_cardsOff && ck_keenObj && ck_keenObj->topTI &&
-		ck_inputFrame.yDirection == IN_motion_Up && KW_IsAtShipHatch())
-	{
-		KW_ShowAboutWorld(kw_currentWorld);
-		// Don't open it again until the key has been let go.
-		while (ck_inputFrame.yDirection != 0)
-		{
-			IN_PumpEvents();
-			IN_ReadControls(0, &ck_inputFrame);
-		}
-		return;
-	}
 
 	if (kw_launchRequested)
 	{
@@ -1690,7 +1636,7 @@ void KW_PlayLoopHook(void)
 	else if (IN_GetKeyState(IN_SC_K))
 		KW_RequestWorld(KW_AREALM); // Krisle
 	else if (IN_GetKeyState(IN_SC_F))
-		KW_RequestWorld(KW_FITF); // the Ancient Forest
+		KW_RequestWorld(KW_FITF); // Gnosticus Pi
 }
 
 // For /KWTEST: Keen 8's converted behaviour (its PAT.PAT, see MOD.CK6) is in
@@ -1986,7 +1932,7 @@ void KW_DebugFrame(void)
 	Quit(0);
 }
 
-// For the Options menu (ck_us_2.c): Keen's look in the Ancient Forest
+// For the Options menu (ck_us_2.c): Keen's look on Gnosticus Pi
 bool KW_IsForestInstalled(void)
 {
 	return KW_IsWorldPresent(KW_FITF);
@@ -2574,9 +2520,6 @@ void KW_SelfTest(void)
 		CK_LoadLevel(true, true);
 		if (!KW_IsAtShipHatch() || RF_UnitToTile(ck_keenObj->posX) != arShip->arrivalX)
 			Quit("KW_SelfTest: Atroxian Realm's ship arrival is wrong!");
-		int plaqueX, plaqueY;
-		if (!KW_PlaquePixel(&plaqueX, &plaqueY) || plaqueX != (arShip->arrivalX - 1) * 16)
-			Quit("KW_SelfTest: Atroxian Realm's registry plaque is missing!");
 		// Keen is stranded there until the world is completed; then the
 		// Megarocket stands repaired where the wreck was.
 		if (!KW_IsStranded() || KW_KrisleShipIsPlaced())
@@ -2656,9 +2599,6 @@ void KW_SelfTest(void)
 		CK_LoadLevel(true, true);
 		if (!KW_IsAtShipHatch() || RF_UnitToTile(ck_keenObj->posX) != ffShip->arrivalX)
 			Quit("KW_SelfTest: Foray in the Forest's ship arrival is wrong!");
-		int ffPlaqueX, ffPlaqueY;
-		if (!KW_PlaquePixel(&ffPlaqueX, &ffPlaqueY))
-			Quit("KW_SelfTest: Foray in the Forest's registry plaque is missing!");
 		KW_TestLevelSpritesCached("fitf", ffShip->level);
 		KW_SwitchWorld(KW_KEEN4);
 	}

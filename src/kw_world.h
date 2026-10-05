@@ -31,9 +31,9 @@ typedef enum KW_World
 	KW_KEEN6,   // Fribbulus Xax
 	KW_KEEN7,   // Krodacia: "The Keys of Krodacia" (fan game on Keen 4)
 	KW_KEEN8,   // Calidune: "Dead in the Desert" (fan game on Keen 6)
-	KW_KEEN9,   // The Universe: "Battle of the Brains" (fan game on Keen 5)
+	KW_KEEN9,   // HUB Command Center: "Battle of the Brains" (fan game on Keen 5)
 	KW_AREALM,  // Krisle: "Atroxian Realm" (its own game, on the Keen 5 code)
-	KW_FITF,    // The Ancient Forest: "Foray in the Forest" (its own game, on the Keen 5 code)
+	KW_FITF,    // Gnosticus Pi: "Foray in the Forest" (its own game, on the Keen 5 code)
 	KW_SHIP,    // The Megarocket: Keen Worlds' own world, the inside of Keen's ship (on Keen 4)
 	KW_NUM_WORLDS,
 	KW_NO_WORLD = -1,

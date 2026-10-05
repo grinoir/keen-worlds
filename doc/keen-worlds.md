@@ -50,7 +50,7 @@ game built on one of them. `kw_worldDefs[]` in `src/kw_world.c` lists them:
 | `keen6` | Fribbulus Xax | 6 | (game path) | `EPISODE.CK6` |
 | `keen7` | Krodacia | 4 | `mods/keen7` | `MOD.CK4` |
 | `keen8` | Calidune | 6 | `mods/keen8` | `MOD.CK6` (ours) |
-| `keen9` | The Universe | 5 | `mods/keen9` | `MOD.CK5` (ours) |
+| `keen9` | HUB Command Center | 5 | `mods/keen9` | `MOD.CK5` (ours) |
 
 - **Installed or not**: a fan game is installed when its folder holds its
   variable file (`KW_IsWorldPresent`). The Megarocket menu lists only
@@ -102,14 +102,17 @@ Me files) and a "how to get it" text.
 - `/KWTEST` checks every card fits the screen (`KW_CheckCardsFit`) and
   switches the cards off for itself.
 
-- **Registry plaque**: a small plaque is drawn beside the Megarocket
-  (`KW_DrawOverlay`, called at the end of `RF_Refresh`: a few rectangles
-  over the level, no tile or sprite of the world is used). In a ship level
-  it stands one tile from where Keen arrives, and pressing up at the ship
-  shows the About cards; on a map with a ship it stands by the boarding
-  spot (the menu's "About this world" reads it there).
+- **Credits on arrival**: the first time Keen steps out of the ship onto
+  a world, the arrival card goes on through the game's full credits (the
+  same cards as "About this world" at the ship's controls). The small
+  plaque that stood by the ship in every world is gone.
 
-Still to do here: playing a fan game's own story scroll on first arrival.
+**Names**: a world is called by the name of the place in its own story,
+never by its game's title: Gnosticus IV, the Omegamatic, Fribbulus Xax,
+Krodacia, Calidune, the HUB Command Center (the space station Keen 9's
+story lands him on; that game spans several planets from there), Krisle,
+and Gnosticus Pi (Foray in the Forest writes it with the Greek letter, a
+character of its own font).
 
 ### Keen 8: Dead in the Desert (converted)
 
@@ -231,7 +234,7 @@ list after every finished level, as its option does.
 ### Foray in the Forest (in progress)
 
 A game of its own (Nisaba and K1n9_Duk3, v2.0; GPL source that descends
-from Atroxian Realm's), world id `fitf`, "The Ancient Forest". It runs as
+from Atroxian Realm's), world id `fitf`, "Gnosticus Pi". It runs as
 `EP_CK5` with extension `CKS`. Its variable files are written from its
 source by `tools/kw_fitf.py`; its code is converted from its source by
 `tools/kw_fitf_port.py` and the `kw_fitf_*_fixes.py` scripts
@@ -319,7 +322,7 @@ list after every finished level, as its option does.
 ### Foray in the Forest (in progress)
 
 A game of its own (Nisaba and K1n9_Duk3, v2.0; GPL source that descends
-from Atroxian Realm's), world id `fitf`, "The Ancient Forest". It runs as
+from Atroxian Realm's), world id `fitf`, "Gnosticus Pi". It runs as
 `EP_CK5` with extension `CKS`. Its variable files are written from its
 source by `tools/kw_fitf.py`; its code is converted from its source by
 `tools/kw_fitf_port.py` and the `kw_fitf_*_fixes.py` scripts
@@ -462,7 +465,7 @@ Keen 4–6.
   stand at the ship's nose rather than under it: the hull at Keen's height is
   drawn in front of sprites (tile misc bit `0x80`), which would hide him.
 - Debug shortcuts, on a world map or at the ship: hold **W** and press
-  **4** to **9**, **K** (Krisle) or **F** (the Ancient Forest) to fly to that
+  **4** to **9**, **K** (Krisle) or **F** (Gnosticus Pi) to fly to that
   world (this also leaves Krisle), or **E** to
   play the ending of the world Keen is in (`KW_DebugEnding`: the world then
   counts as completed, every level of it is marked completed, and Keen is put

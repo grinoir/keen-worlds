@@ -7,7 +7,7 @@ static const struct { const char *id, *file, *text; } kw_landings[] = {
 	{"keen6", "LAND_KEEN6.RAW", "Ship computer:\n\nYou have now landed on\nFribbulus Xax.\nBeware of the local Bloogs.\nThey are big, they are green,\nand it is always lunch time."},
 	{"keen7", "LAND_KEEN7.RAW", "Ship computer:\n\nYou have now landed on\nKrodacia.\nBeware of the local\nKrodacians.\nThey collect keys.\nAnd visitors."},
 	{"keen8", "LAND_KEEN8.RAW", "Ship computer:\n\nYou have now landed on\nCalidune.\nBeware of the local desert.\nAll of it.\nPlease drink some water."},
-	{"keen9", "LAND_KEEN9.RAW", "Ship computer:\n\nYou have now landed, somewhere\nin the Universe.\nBeware of the local Mortimer.\nHe is one IQ point smarter\nthan you, and he will mention\nit."},
+	{"keen9", "LAND_KEEN9.RAW", "Ship computer:\n\nYou have now docked at the HUB\nCommand Center.\nBeware of the local Mortimer.\nHe is one IQ point smarter\nthan you, and he will mention\nit."},
 	{"arealm", "LAND_AREALM.RAW", "Ship computer:\n\nYou have now crashed on\nKrisle.\nBeware of the local Atroxians.\nAlso, the ship is broken.\nThis was not my fault."},
-	{"fitf", "LAND_FITF.RAW", "Ship computer:\n\nYou have now landed in the\nAncient Forest.\nBeware of the local trees.\nSome of them are not trees."},
+	{"fitf", "LAND_FITF.RAW", "Ship computer:\n\nYou have now landed on\nGnosticus Pi.\nBeware of the local trees.\nSome of them are not trees."},
 };
