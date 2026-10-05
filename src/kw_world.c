@@ -1339,39 +1339,14 @@ static void KW_DebugEnding(void)
 // card with the same words is up, and after.
 #include "kw_landing_text.h"
 static int kw_landingToAnnounce = KW_NO_WORLD;
-static uint32_t kw_landingVoiceEnd = 0; // time count at which the clip is over
-
-// The ship's tune waits while the computer has something to say.
-bool KW_ShipComputerSpeaking(void)
-{
-	return kw_landingToAnnounce != KW_NO_WORLD || SD_GetTimeCount() < kw_landingVoiceEnd;
-}
 
 static void KW_AnnounceLanding(int world)
 {
-	static int16_t *clip = NULL;
 	for (int i = 0; i < (int)(sizeof(kw_landings) / sizeof(kw_landings[0])); ++i)
 	{
 		if (strcmp(kw_landings[i].id, kw_worldDefs[world].id))
 			continue;
-		SD_StopVoice();
-		free(clip);
-		clip = NULL;
-		if (SD_GetSoundMode() != sdm_Off && FS_IsKeenFilePresent(kw_landings[i].file))
-		{
-			FS_File f = FS_OpenKeenFile(kw_landings[i].file);
-			size_t size = FS_IsFileValid(f) ? FS_GetFileSize(f) : 0;
-			if (size && (clip = (int16_t *)malloc(size)) != NULL && FS_ReadInt16LE(clip, size / 2, f) == size / 2)
-			{
-				// the voice alone: the music comes in when it has finished
-				SD_MusicOff();
-				SD_PlayVoice(clip, (uint32_t)(size / 2), KW_LANDING_RATE);
-				kw_landingVoiceEnd = SD_GetTimeCount() + (uint32_t)(size / 2 * 70 / KW_LANDING_RATE) + 35;
-				KW_HoldShipMusic();
-			}
-			if (FS_IsFileValid(f))
-				FS_CloseFile(f);
-		}
+		KW_Speak(kw_landings[i].file, !kw_cardsOff);
 		if (!kw_cardsOff)
 			KW_ShowCards(kw_landings[i].text);
 		return;
@@ -1390,6 +1365,7 @@ void KW_BeginInShip(void)
 	kw_worlds[from].visited = false; // Keen has not set foot in it yet
 	kw_boardedFrom = from;
 	kw_landingToAnnounce = from;
+	KW_VoiceComingUp(true);
 }
 
 // The ship has two rooms, each its own screen. Walking into the open end of
@@ -1483,11 +1459,11 @@ static void KW_ShipRoomFrame(void)
 		// says where he is, and the hatch is the way out.
 		if (!kw_cardsOff)
 		{
-			int tics = KW_FadeShipMusicOut(); // the music goes down with the lights
+			int tics = KW_FadeMusicOut(); // the music goes down with the lights
 			VL_FadeToBlack();
 			VL_DelayTics(tics > 35 ? tics : 35);
 		}
-		KW_ShipMusicQuiet();
+		KW_MusicQuiet();
 		kw_boardedFrom = destination;
 		RF_ForceRefresh();
 		if (!kw_cardsOff)
@@ -1497,6 +1473,7 @@ static void KW_ShipRoomFrame(void)
 		}
 		SD_SetLastTimeCount(SD_GetTimeCount());
 		kw_landingToAnnounce = destination;
+		KW_VoiceComingUp(true);
 	}
 }
 
@@ -1523,6 +1500,7 @@ void KW_PlayLoopHook(void)
 		{
 			int world = kw_landingToAnnounce;
 			kw_landingToAnnounce = KW_NO_WORLD;
+			KW_VoiceComingUp(false);
 			printf("KW_AnnounceLanding: %s\n", kw_worldDefs[world].id);
 			KW_AnnounceLanding(world);
 		}

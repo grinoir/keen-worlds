@@ -6,7 +6,13 @@ games' own music) kept in the engine, so players' AUDIO.CK4 files are
 untouched.
 */
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "id_ca.h"
+#include "id_fs.h"
+#include "id_vl.h"
+#include "ck_cross.h"
 #include "id_sd.h"
 #include "ck_def.h"
 #include "ck_play.h"
@@ -21,45 +27,84 @@ untouched.
 #include "kw_ship_music.h"
 
 // Inside the ship its own tune plays instead of a level's song.
-// The tune waits while the ship computer speaks (a landing announcement),
-// so the words can be heard.
-static bool kw_shipMusicHeld;
+// ---- Voice clips (data/voice: signed 16-bit mono, low byte first). Music
+// never plays under a voice: it fades out, stays off while the clip plays,
+// and fades back in when the clip is over (KW_UpdateMusicZone). ----
 
-void KW_HoldShipMusic(void)
+#define KW_VOICE_RATE 22050
+#define KW_MUSIC_FADE_OUT 500  // milliseconds
+#define KW_MUSIC_FADE_IN 2500
+
+static bool kw_musicHeld;          // off for a voice; comes back when it has finished
+static uint32_t kw_voiceEnd = 0;   // time count at which the clip is over
+static bool kw_voicePending;       // something is about to be said (see KW_VoiceComingUp)
+
+bool KW_VoiceSpeaking(void)
 {
-	kw_shipMusicHeld = true;
+	return kw_voicePending || SD_GetTimeCount() < kw_voiceEnd;
+}
+
+void KW_VoiceComingUp(bool pending)
+{
+	kw_voicePending = pending;
+}
+
+// Fade the music down; returns how many tics that takes. The caller waits,
+// then calls KW_MusicQuiet() (or KW_Speak, which does).
+int KW_FadeMusicOut(void)
+{
+	if (kw_musicHeld)
+		return 0;
+	SD_FadeAdLibVolume(0, KW_MUSIC_FADE_OUT);
+	return KW_MUSIC_FADE_OUT * 70 / 1000 + 1;
+}
+
+void KW_MusicQuiet(void)
+{
+	SD_MusicOff();
+	SD_FadeAdLibVolume(256, 0); // the games' sound effects stay at full volume
+	kw_musicHeld = true;
+}
+
+void KW_Speak(const char *file, bool waitForFade)
+{
+	static int16_t *clip = NULL;
+	SD_StopVoice();
+	free(clip);
+	clip = NULL;
+	kw_voiceEnd = 0;
+	if (SD_GetSoundMode() == sdm_Off || !file)
+		return;
+	char path[512];
+	snprintf(path, sizeof(path), "%s/voice/%s", fs_keenPath, file);
+	FILE *f = fopen(path, "rb");
+	if (!f)
+		return;
+	fseek(f, 0, SEEK_END);
+	long size = ftell(f);
+	fseek(f, 0, SEEK_SET);
+	if (size >= 2 && (clip = (int16_t *)malloc(size)) != NULL && fread(clip, 1, size, f) == (size_t)size)
+	{
+		for (long i = 0; i < size / 2; ++i)
+			clip[i] = (int16_t)CK_Cross_SwapLE16((uint16_t)clip[i]);
+		if (!kw_musicHeld && waitForFade)
+			VL_DelayTics(KW_FadeMusicOut());
+		KW_MusicQuiet();
+		SD_PlayVoice(clip, (uint32_t)(size / 2), KW_VOICE_RATE);
+		kw_voiceEnd = SD_GetTimeCount() + (uint32_t)(size / 2 * 70 / KW_VOICE_RATE) + 35;
+	}
+	fclose(f);
 }
 
 bool KW_StartShipMusic(void)
 {
 	if (KW_CurrentWorld() != KW_SHIP)
 		return false;
-	if (KW_ShipComputerSpeaking())
-	{
-		SD_MusicOff();
-		kw_shipMusicHeld = true;
-	}
+	if (KW_VoiceSpeaking())
+		KW_MusicQuiet();
 	else
 		SD_StartMusicData(kw_shipMusic, sizeof(kw_shipMusic));
 	return true;
-}
-
-#define KW_SHIP_MUSIC_FADE_IN 2500  // milliseconds
-#define KW_SHIP_MUSIC_FADE_OUT 700
-
-// The tune goes quiet (for the ship computer): it fades down, the caller
-// waits that long, then KW_ShipMusicQuiet() turns it off.
-int KW_FadeShipMusicOut(void)
-{
-	SD_FadeAdLibVolume(0, KW_SHIP_MUSIC_FADE_OUT);
-	return KW_SHIP_MUSIC_FADE_OUT * 70 / 1000 + 1; // in tics
-}
-
-void KW_ShipMusicQuiet(void)
-{
-	SD_MusicOff();
-	SD_FadeAdLibVolume(256, 0); // the games' sound effects stay at full volume
-	kw_shipMusicHeld = true;
 }
 
 static bool kw_tavernThemePlaying;
@@ -78,17 +123,24 @@ static bool KW_IsInTavern(void)
 
 void KW_UpdateMusicZone(void)
 {
-	if (kw_shipMusicHeld && (KW_CurrentWorld() != KW_SHIP || !KW_ShipComputerSpeaking()))
-	{
-		kw_shipMusicHeld = false;
-		// ... and comes back in gently
-		if (KW_StartShipMusic())
-		{
-			SD_FadeAdLibVolume(0, 0);
-			SD_FadeAdLibVolume(256, KW_SHIP_MUSIC_FADE_IN);
-		}
-	}
 	bool inTavern = KW_IsInTavern();
+	if (kw_musicHeld)
+	{
+		// The voice has finished: the music of where Keen is comes back in gently.
+		kw_tavernThemePlaying = inTavern;
+		if (KW_VoiceSpeaking())
+			return;
+		kw_musicHeld = false;
+		SD_FadeAdLibVolume(0, 0);
+		if (KW_CurrentWorld() == KW_SHIP)
+			KW_StartShipMusic();
+		else if (inTavern)
+			SD_StartMusicData(kw_tavernMusic, sizeof(kw_tavernMusic));
+		else if (ca_mapOn >= 0)
+			StartMusic(ca_mapOn);
+		SD_FadeAdLibVolume(256, KW_MUSIC_FADE_IN);
+		return;
+	}
 	if (inTavern == kw_tavernThemePlaying)
 		return;
 

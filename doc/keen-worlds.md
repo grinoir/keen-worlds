@@ -277,8 +277,7 @@ until that game is finished).
 **Landing announcements**: when the ship has landed (new game, or after a
 flight) the ship computer says where, with a warning about the locals: the
 same woman's voice for every world. `tools/kw_landing_voice.py` holds the
-words; it writes the clips (`data/megarocket/LAND_<ID>.RAW`, 16-bit, 22050
-Hz) and `src/kw_landing_text.h` for the card shown with them. The voice is
+words; it writes the clips (`data/voice/LAND_<ID>.RAW`) and `src/kw_landing_text.h` for the card shown with them. The voice is
 Kokoro's "Heart" (a free neural voice run locally through the kokoro-js
 copy and model in the user's ArcadiumCMS project, `tools/kw_landing_voice.mjs`).
 The engine plays one voice clip at a time, mixed into the SDL sound output
@@ -370,6 +369,20 @@ words; it writes the clips (`data/megarocket/LAND_<ID>.RAW`, made with
 espeak-ng and ffmpeg) and `src/kw_landing_text.h` for the card shown with
 them. The engine plays one voice clip at a time, mixed into the SDL sound
 output (`SD_PlayVoice` in `id_sd.c`).
+
+**Voices** (`data/voice`, copied to `play/voice`; 16-bit mono, 22050 Hz):
+`KW_Speak` in `kw_music.c` plays a clip. Music never plays under a voice:
+it fades out, stays off while the clip plays, and fades back in when the
+clip is over (the ship's tune, the tavern's, or the level's song). Use it
+for every voice that is added.
+
+**The barmaid's talk** (`tools/kw_barmaid_voice.py` ->
+`src/kw_barmaid_talk.h` and the clips `BAR_nn.RAW`): a conversation of
+several places, written once in the tool. At each she says something and
+Keen picks one of up to four lines; she answers and the talk goes on or
+ends. She knows the worlds and who made each, and GriNoir the great Linker
+on her wall. All her lines are spoken (Kokoro's "Bella"). `/KWTEST` checks
+that every card fits and every clip is there.
 
 **Music**: inside the ship an original space-funk tune plays
 (`tools/kw_ship_music.py` -> `src/kw_ship_music.h`, started by

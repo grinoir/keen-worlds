@@ -23,6 +23,9 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 #include "ck_play.h"
 #include "kw_art.h"
 #include "kw_habitat.h"
+#include "kw_music.h"
+#include "id_fs.h"
+#include <string.h>
 
 // Atroxian Realm has its own lists (kw_arealm.c).
 bool AR_IsActive(void);
@@ -72,6 +75,27 @@ typedef struct KW_Choice
 
 #define KW_MAX_CHOICES 3
 
+// A longer talk (the barmaid's): at each place the resident says something
+// and Keen picks one of up to four lines; the resident answers (or not) and
+// the talk goes on at another place, or ends (-1). Text may run over several
+// cards (pages parted by \f). Every line of the resident's has a voice clip.
+#define KW_MAX_TALK_CHOICES 4
+typedef struct KW_TalkChoice
+{
+	const char *keen;
+	const char *reply, *replyVoice;
+	int next;
+} KW_TalkChoice;
+
+typedef struct KW_TalkNode
+{
+	const char *says, *voice;
+	KW_TalkChoice choices[KW_MAX_TALK_CHOICES];
+} KW_TalkNode;
+
+// The barmaid's talk, written by tools/kw_barmaid_voice.py.
+#include "kw_barmaid_talk.h"
+
 typedef struct KW_Resident
 {
 	int episode; // the world (KW_World)
@@ -80,6 +104,7 @@ typedef struct KW_Resident
 	const char *says;                     // The resident's greeting.
 	KW_Choice choices[KW_MAX_CHOICES];    // Keen picks one (unused: NULL).
 	KW_ResidentKind kind;
+	const KW_TalkNode *talk;              // A longer talk instead (says and choices unused).
 } KW_Resident;
 
 static const KW_Resident kw_residents[] = {
@@ -96,13 +121,7 @@ static const KW_Resident kw_residents[] = {
 	// Keen 4, Border Village: the barmaid behind the bar in the tavern
 	// (drawn and animated by tools/kw_barhouse.py).
 	{KW_KEEN4, 1, KW_TAVERN_BARMAID_X + 1, KW_TAVERN_BARMAID_Y,
-		"Well, if it isn't the\nhero of the\nShadowlands! What\ncan I get you?",
-		{
-			{"A root beer, please.", "Coming right up!\nThe first one's on\nthe house, hon."},
-			{"Who's in the picture?", "That's Hacker\nGriNoir. They say he\nbuilt this world!"},
-			{"Just looking around.", "Make yourself at\nhome, Keen. Stay as\nlong as you like."},
-		},
-		KW_PAINTED},
+		NULL, {{NULL, NULL}}, KW_PAINTED, kw_barmaidTalk},
 };
 #define KW_NUM_RESIDENTS ((int)(sizeof(kw_residents) / sizeof(kw_residents[0])))
 
@@ -762,6 +781,25 @@ static void KW_ResidentCard(const KW_Resident *r, const char *text)
 	KW_WaitForButtonsUp();
 }
 
+// The resident's words over as many cards as they need (pages parted by \f),
+// spoken if there is a clip.
+static void KW_ResidentSays(const KW_Resident *r, const char *pages, const char *voice)
+{
+	if (voice)
+		KW_Speak(voice, true);
+	char page[256];
+	while (*pages)
+	{
+		size_t n = strcspn(pages, "\f");
+		if (n >= sizeof(page))
+			n = sizeof(page) - 1;
+		memcpy(page, pages, n);
+		page[n] = 0;
+		KW_ResidentCard(r, page);
+		pages += n + (pages[n] == '\f');
+	}
+}
+
 static int KW_NumChoices(const KW_Resident *r)
 {
 	int n = 0;
@@ -773,21 +811,20 @@ static int KW_NumChoices(const KW_Resident *r)
 // Keen's card: his picture on the right and what he can say, chosen with the
 // same blinking box as the Megarocket's destination menu. Returns the chosen
 // line, or -1 if the player backs out with Esc.
-static int KW_ChooseReply(const KW_Resident *r)
+static int KW_ChooseLine(const char *const *lines, int n)
 {
-	int n = KW_NumChoices(r);
 	if (!n)
 		return -1;
-	int lineY[KW_MAX_CHOICES];
+	int lineY[KW_MAX_TALK_CHOICES];
 
-	US_CenterWindow(26, 8);
+	US_CenterWindow(26, n > 3 ? 10 : 8);
 	VHB_DrawBitmap(US_GetWindowX() + US_GetWindowW() - 0x30, US_GetWindowY(), CK_CHUNKNUM(PIC_KEENTALK1));
 	US_SetWindowW(US_GetWindowW() - 0x30);
 	US_SetPrintY(US_GetPrintY() + 4);
 	for (int i = 0; i < n; ++i)
 	{
 		lineY[i] = US_GetPrintY() - 2;
-		US_CPrint(r->choices[i].keen);
+		US_CPrint(lines[i]);
 		US_SetPrintY(US_GetPrintY() + 4);
 	}
 
@@ -834,6 +871,39 @@ static int KW_ChooseReply(const KW_Resident *r)
 	}
 }
 
+static int KW_ChooseReply(const KW_Resident *r)
+{
+	const char *lines[KW_MAX_CHOICES];
+	int n = KW_NumChoices(r);
+	for (int i = 0; i < n; ++i)
+		lines[i] = r->choices[i].keen;
+	return KW_ChooseLine(lines, n);
+}
+
+// A longer talk: round and round until it ends or the player backs out.
+static void KW_ShowTalk(const KW_Resident *r)
+{
+	int at = 0;
+	while (at >= 0)
+	{
+		const KW_TalkNode *node = &r->talk[at];
+		KW_ResidentSays(r, node->says, node->voice);
+		const char *lines[KW_MAX_TALK_CHOICES];
+		int n = 0;
+		while (n < KW_MAX_TALK_CHOICES && node->choices[n].keen)
+		{
+			lines[n] = node->choices[n].keen;
+			++n;
+		}
+		int choice = KW_ChooseLine(lines, n);
+		if (choice < 0)
+			return;
+		if (node->choices[choice].reply)
+			KW_ResidentSays(r, node->choices[choice].reply, node->choices[choice].replyVoice);
+		at = node->choices[choice].next;
+	}
+}
+
 static void KW_ShowConversation(const KW_Resident *r)
 {
 	SD_WaitSoundDone();
@@ -847,24 +917,93 @@ static void KW_ShowConversation(const KW_Resident *r)
 	VL_FixRefreshBuffer();
 	KW_WaitForButtonsUp();
 
-	// The resident greets Keen, Keen picks what to say, the resident answers.
-	KW_ResidentCard(r, r->says);
-	int choice = KW_ChooseReply(r);
-	if (choice >= 0 && r->choices[choice].reply)
-		KW_ResidentCard(r, r->choices[choice].reply);
+	if (r->talk)
+		KW_ShowTalk(r);
+	else
+	{
+		// The resident greets Keen, Keen picks what to say, the resident answers.
+		KW_ResidentCard(r, r->says);
+		int choice = KW_ChooseReply(r);
+		if (choice >= 0 && r->choices[choice].reply)
+			KW_ResidentCard(r, r->choices[choice].reply);
+	}
 
 	CA_DownLevel();
 	RF_ForceRefresh();
 	SD_SetLastTimeCount(SD_GetTimeCount());
 }
 
+// One card's text (a page) against the card: 26x8 characters minus the
+// 48-pixel picture.
+static bool KW_PageFits(const char *text, uint16_t *w, uint16_t *h)
+{
+	CK_MeasureMultiline(text, w, h);
+	return *w <= 26 * 8 - 0x30 - 8 && *h <= 8 * 8 - 12;
+}
+
 // For /KWTEST: every dialogue line must fit its card.
 const char *KW_CheckDialogueFits(void)
 {
 	static char problem[96];
+	// the barmaid's talk: her pages, Keen's lines, where it goes on, her clips
+	int places = (int)(sizeof(kw_barmaidTalk) / sizeof(kw_barmaidTalk[0]));
+	for (int at = 0; at < places; ++at)
+	{
+		const KW_TalkNode *node = &kw_barmaidTalk[at];
+		const char *texts[1 + 2 * KW_MAX_TALK_CHOICES];
+		const char *voices[1 + 2 * KW_MAX_TALK_CHOICES];
+		int n = 0;
+		voices[n] = node->voice;
+		texts[n++] = node->says;
+		for (int c = 0; c < KW_MAX_TALK_CHOICES && node->choices[c].keen; ++c)
+		{
+			if (node->choices[c].next >= places)
+				return "the barmaid's talk goes on at a place that does not exist";
+			voices[n] = NULL;
+			texts[n++] = node->choices[c].keen;
+			if (node->choices[c].reply)
+			{
+				voices[n] = node->choices[c].replyVoice;
+				texts[n++] = node->choices[c].reply;
+			}
+		}
+		for (int t = 0; t < n; ++t)
+		{
+			char page[256];
+			for (const char *p = texts[t]; *p;)
+			{
+				size_t len = strcspn(p, "\f");
+				if (len >= sizeof(page))
+					return "a page of the barmaid's talk is too long";
+				memcpy(page, p, len);
+				page[len] = 0;
+				uint16_t w, h;
+				if (!KW_PageFits(page, &w, &h))
+				{
+					snprintf(problem, sizeof(problem), "barmaid place %d line \"%.24s\" is %dx%d", at, page, w, h);
+					return problem;
+				}
+				p += len + (p[len] == '\f');
+			}
+			if (voices[t])
+			{
+				char path[512];
+				snprintf(path, sizeof(path), "%s/voice/%s", fs_keenPath, voices[t]);
+				FILE *f = fopen(path, "rb");
+				if (!f)
+				{
+					snprintf(problem, sizeof(problem), "the barmaid's clip %s is missing", voices[t]);
+					return problem;
+				}
+				fclose(f);
+			}
+		}
+	}
 	for (int i = 0; i < KW_NUM_RESIDENTS; ++i)
 	{
 		const KW_Resident *r = &kw_residents[i];
+		if (r->talk)
+			continue;
 		const char *texts[1 + 2 * KW_MAX_CHOICES];
 		int n = 0;
 		texts[n++] = r->says;
