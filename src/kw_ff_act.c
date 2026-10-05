@@ -1172,7 +1172,7 @@ void FF_R_SlugWalk(CK_object *ob)
 #if 1
 		// draw donut behind slug sprite:
 		RF_AddSpriteDrawUsing16BitOffset(&ob->user3, ob->posX+xoff, ob->posY+yoff, FF_POINTS5000ITEM1SPR, false, ob->zLayer);
-		RF_PlaceSpriteAfter(&ob->sde, ob->posX, ob->posY, ob->gfxChunk, false, ob->zLayer, &ob->user3);
+		FF_PlaceSpriteAfterOffset(&ob->sde, ob->posX, ob->posY, ob->gfxChunk, false, ob->zLayer, &ob->user3);
 #else
 		// draw donut on top of slug sprite:
 		RF_PlaceSpriteAfter(&ob->user3, ob->posX+xoff, ob->posY+yoff, FF_POINTS5000ITEM1SPR, false, ob->zLayer, &ob->sde);
@@ -1825,7 +1825,7 @@ void FF_SpawnCouncilMember(int16_t tileX, int16_t tileY, int16_t number)
 	new_object->posY = RF_TileToUnit(tileY) - 369;
 	new_object->xDirection = US_RndT() < 0x80 ? IN_motion_Right : IN_motion_Left;
 	new_object->yDirection = IN_motion_Down;
-	addr = 0; // KEEN WORLDS: its bucket is drawn after the janitor's sprite (RF_PlaceSpriteAfter); not ordered here yet
+	addr = FF_ObjToUser(new_object); // KEEN WORLDS: the janitor, whose sprite the bucket is drawn after
 	CK_SetAction(new_object, CK_ACTION(FF_ACT_councilwalk1));
 
 	// also spawn the bucket along with the council janitor:
@@ -1903,7 +1903,7 @@ void FF_R_Council(CK_object *ob)
 
 void FF_R_Bucket(CK_object *ob)
 {
-	RF_PlaceSpriteAfter(&(ob->sde), ob->posX, ob->posY, ob->gfxChunk, false, ob->zLayer, ob->user1);
+	RF_PlaceSpriteAfter(&(ob->sde), ob->posX, ob->posY, ob->gfxChunk, false, ob->zLayer, ob->user1 ? &FF_ObjFromUser(ob->user1)->sde : NULL); // KEEN WORLDS: the janitor, by its place among the objects
 }
 
 //statetype s_councilstand = {COUNCILSTANDLSPR, COUNCILSTANDRSPR, step, false, push_down, 120, 0, 0, NULL, NULL, R_Draw, CK_ACTION(FF_ACT_councilwalk1)};

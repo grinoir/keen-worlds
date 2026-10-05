@@ -106,6 +106,8 @@ void RF_RemoveSpriteDrawUsing16BitOffset(int16_t *drawEntryOffset);
 void RF_AddSpriteDrawUsing16BitOffset(int16_t *drawEntryOffset, int unitX, int unitY, int chunk, bool allWhite, int zLayer);
 void RF_Refresh();
 /*** Used for dumper (and, partially, for saved games compatibility) ***/
+// KEEN WORLDS: draw a sprite straight after another of its layer
+void RF_PlaceSpriteDrawAfter(RF_SpriteDrawEntry *entry, RF_SpriteDrawEntry *after);
 RF_SpriteDrawEntry *RF_ConvertSpriteArray16BitOffsetToPtr(uint16_t drawEntryoffset);
 uint16_t RF_ConvertSpriteArrayPtrTo16BitOffset(RF_SpriteDrawEntry *drawEntry);
 

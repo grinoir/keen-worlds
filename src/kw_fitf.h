@@ -189,16 +189,31 @@ enum { push_none, push_down, push_up, push_left, push_right, push_side };
 
 // Its sprite drawing beyond the engine's: upside down (drawflipped), rows
 // clipped off (a positive number clips at the top, a negative one at the
-// bottom). TODO: a sprite drawn in a fixed order after another
-// (RF_PlaceSpriteAfter) is placed as a plain sprite of the same layer.
+// bottom), and drawn straight after another sprite, on top of it
+// (RF_PlaceSpriteAfter; the other sprite is given as a pointer to where it
+// is kept: a sprite pointer, or a 16-bit user field in the ...Offset forms).
 #define drawflipped 2
 #define FF_DrawSprite(sde, x, y, chunk, drawtype, zLayer) \
 	RF_AddSpriteDrawEx(sde, x, y, chunk, ((drawtype) & 1) != 0, zLayer, 0, 0, ((drawtype) & drawflipped) != 0)
-#define RF_PlaceSpriteAfter(sde, x, y, chunk, type, z, after) RF_AddSpriteDraw((RF_SpriteDrawEntry **)(sde), x, y, chunk, type, z)
+#define RF_PlaceSpriteAfter(sde, x, y, chunk, type, z, after) \
+	do { \
+		RF_SpriteDrawEntry **ff_sde = (RF_SpriteDrawEntry **)(sde), **ff_after = (RF_SpriteDrawEntry **)(after); \
+		RF_AddSpriteDraw(ff_sde, x, y, chunk, type, z); \
+		if (ff_after) \
+			RF_PlaceSpriteDrawAfter(*ff_sde, *ff_after); \
+	} while (0)
+#define FF_PlaceSpriteAfterOffset(sde, x, y, chunk, type, z, afterUser) \
+	do { \
+		RF_AddSpriteDraw(sde, x, y, chunk, type, z); \
+		RF_PlaceSpriteDrawAfter(*(sde), RF_ConvertSpriteArray16BitOffsetToPtr(*(afterUser))); \
+	} while (0)
 #define RF_PlaceSpriteClipped(sde, x, y, chunk, type, z, clip) \
 	RF_AddSpriteDrawEx(sde, x, y, chunk, type, z, (clip) > 0 ? (clip) : 0, (clip) < 0 ? -(clip) : 0, false)
 #define RF_PlaceSpriteAfterClipped(user, x, y, chunk, type, z, after, clipTop, clipBottom) \
-	RF_AddSpriteDrawExUsing16BitOffset(user, x, y, chunk, type, z, clipTop, clipBottom, false)
+	do { \
+		RF_AddSpriteDrawExUsing16BitOffset(user, x, y, chunk, type, z, clipTop, clipBottom, false); \
+		RF_PlaceSpriteDrawAfter(RF_ConvertSpriteArray16BitOffsetToPtr(*(user)), *(after)); \
+	} while (0)
 
 // Its strings (GAMESTR.CKS, its string manager KD_SM.C): by FF_S_ number.
 const char *FF_String(int number);

@@ -1361,6 +1361,26 @@ void RF_AddSpriteDrawUsing16BitOffset(int16_t *drawEntryOffset, int unitX, int u
 	*drawEntryOffset = RF_ConvertSpriteArrayPtrTo16BitOffset(drawEntry);
 }
 
+// KEEN WORLDS: put a sprite right after another in its layer's list, so it
+// is drawn straight after it, on top of it (Foray in the Forest:
+// RF_PlaceSpriteAfter in its ID_RF.C). Nothing happens if they are in
+// different layers.
+void RF_PlaceSpriteDrawAfter(RF_SpriteDrawEntry *entry, RF_SpriteDrawEntry *after)
+{
+	if (!entry || !after || entry == after || entry->zLayer != after->zLayer || after->next == entry)
+		return;
+	// take it out of the list...
+	if (entry->next)
+		entry->next->prevNextPtr = entry->prevNextPtr;
+	*(entry->prevNextPtr) = entry->next;
+	// ...and put it back in behind the other
+	entry->next = after->next;
+	if (entry->next)
+		entry->next->prevNextPtr = &entry->next;
+	after->next = entry;
+	entry->prevNextPtr = &after->next;
+}
+
 // KEEN WORLDS: a sprite with rows left off at the top and bottom and/or drawn
 // upside down (Foray in the Forest: RF_PlaceSpriteClippedEx and drawflipped
 // in its ID_RF.C). Clipping everything away removes the sprite. A flipped
