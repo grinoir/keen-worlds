@@ -327,9 +327,13 @@ found_cloud_end:
 					// maps with this scrolling type don't need the invisible 2-tile border
 					if (!ff_map.wrapScroll)
 					{
-						// TODO KEEN WORLDS: its wrap-around scrolling (the map's
-						// border is opened up and the scroll blocks cleared)
+						// the map's two-tile border is opened up for the camera
 						ff_map.wrapScroll = true;
+						rf_scrollXMinUnit -= 2 * 256;
+						rf_scrollYMinUnit -= 2 * 256;
+						rf_scrollXMaxUnit += 2 * 256;
+						rf_scrollYMaxUnit += 2 * 256;
+						RF_ClearScrollBlocks();
 					}
 					break;
 

@@ -99,6 +99,7 @@ void RF_Reposition(int scrollXunit, int scrollYunit);
 void RF_SmoothScroll(int scrollXdelta, int scrollYdelta);
 void RF_RemoveSpriteDraw(RF_SpriteDrawEntry **drawEntry);
 void RF_AddSpriteDraw(RF_SpriteDrawEntry **drawEntry, int unitX, int unitY, int chunk, bool allWhite, int zLayer);
+void RF_ClearScrollBlocks(void);
 void RF_AddSpriteDrawEx(RF_SpriteDrawEntry **drawEntry, int unitX, int unitY, int chunk, bool allWhite, int zLayer, int clipTop, int clipBottom, bool flipped);
 void RF_AddSpriteDrawExUsing16BitOffset(int16_t *drawEntryOffset, int unitX, int unitY, int chunk, bool allWhite, int zLayer, int clipTop, int clipBottom, bool flipped);
 void RF_RemoveSpriteDrawUsing16BitOffset(int16_t *drawEntryOffset);

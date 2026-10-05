@@ -840,11 +840,13 @@ void FF_Camera(CK_object *keen)
 	FF_ScrollScreen(ff_map.mindcontrolled ? ff_map.mindcontrolled : keen);
 }
 
-// After the frame is drawn: warps, timers.
-// TODO: its Nisasi music tempo, the bonus level's Lindsey, wrap-around
-// scrolling (CK_WrapScroll).
+// After the frame is drawn: wrap-around scrolling, warps, timers.
+// TODO: its Nisasi music tempo, the bonus level's Lindsey.
+void FF_WrapScroll(void); // kw_ff_cam.c
+
 void FF_FrameEnd(void)
 {
+	FF_WrapScroll();
 	if (ff_map.warpInfo)
 	{
 		if (!FF_KeenIsDead())

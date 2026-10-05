@@ -190,6 +190,13 @@ uint8_t RFL_IsBlockDirty(int x, int y, int page)
 	return rf_dirtyBlocks[page][offset];
 }
 
+// KEEN WORLDS: forget every scroll block (Foray in the Forest's wrap-around
+// levels scroll right up to the map's edge).
+void RF_ClearScrollBlocks(void)
+{
+	rf_numVertScrollBlocks = rf_numHorzScrollBlocks = 0;
+}
+
 void RF_SetScrollBlock(int tileX, int tileY, bool vertical)
 {
 	if (!vertical)
