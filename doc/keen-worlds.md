@@ -242,6 +242,21 @@ what joins it to the engine. The engine hands over to it at marked places
 (`FF_IsActive()`). What is done and what is left:
 `../research/foray-in-the-forest.md`.
 
+### The Megarocket (Keen Worlds' own world)
+
+World id `megarocket`: the inside of Keen's ship, one room, on Keen 4's
+engine. Its map is written by `tools/kw_shipworld.py` into
+`data/megarocket` (`play/run.sh` copies the folder to `play/megarocket`);
+the room's look is one picture drawn by `tools/kw_shiproom_art.py`
+(`src/kw_shiproom_art.h`, placed like the other Keen Worlds art).
+
+Boarding a ship in any world takes Keen into the room. "Up" at the flight
+console opens the list of worlds; "up" at the hatch goes back out to the
+world the ship stands on (`KW_ShipRoomFrame` in `kw_world.c`; the map marks
+both places in its info plane). Without the folder the menu opens at the
+ship as before. It is not a destination itself. The save block remembers
+which world the ship stands on.
+
 ### Adding a fan game
 
 1. Get it converted for Omnispeak (the Omnispeak modding kit includes Keen
