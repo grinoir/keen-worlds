@@ -596,7 +596,19 @@ const char *FF_TestSaveRoundTrip(bool (*save)(void), bool (*load)(void))
 void FF_PlayLoopStart(void)
 {
 	if (ff_loaded.pending)
+	{
 		FF_ApplyLoadedState();
+		// A game saved after a checkpoint was touched: the checkpoint itself
+		// (a copy of the whole level, kept in memory) is not in the saved
+		// game, so the moment of the save stands in for it. Dying then goes
+		// back to where the game was saved, not to the start of the level.
+		// (A checkpoint still in memory is from the game that was being
+		// played before the load.)
+		if (ff_map.checkpointSaved)
+			FF_SaveCheckpoint();
+		else
+			FF_ClearCheckpoint();
+	}
 }
 
 // ---- Dying (HandleDeath in CK_GAME.C). A touched checkpoint gives a number
