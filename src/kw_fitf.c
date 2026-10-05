@@ -1266,6 +1266,25 @@ void FF_NewGame(void)
 	FF_ApplyDifficulty(true);
 }
 
+// ---- Its colours (CK_LevelPalette, CK_DefaultPalette in CK_GAME.C): each
+// level has its own sixteen. They are VGA colours; the fades between
+// screens still step through the standard ones. ----
+
+#include "kw_fitf_pal.h"
+
+void FF_LevelPalette(void)
+{
+	int level = ca_mapOn;
+	int n = (level >= 0 && level < (int)sizeof(ff_levelPalette)) ? ff_levelPalette[level] : 0;
+	VL_SetCustomColors(ff_palettes[n]);
+}
+
+// Leaving this world: the standard colours again.
+void FF_LeaveWorld(void)
+{
+	VL_SetCustomColors(NULL);
+}
+
 // Its level setup: kw_ff_scan.c (ScanInfoPlane in CK_SPEC.C).
 void FF_ScanInfoPlane(void);
 void FF_ScanInfoLayer(void)
@@ -1276,6 +1295,7 @@ void FF_ScanInfoLayer(void)
 	if (!ff_state.maxammo)
 		FF_ApplyDifficulty(false); // arrived from another world
 	FF_ScanInfoPlane();
+	FF_LevelPalette();
 }
 
 void kw_ff_map_SetupFunctions(void);

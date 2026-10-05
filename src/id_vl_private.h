@@ -64,7 +64,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define VL_WINDOW_TITLE "Omnispeak"
 
 // EGA color table in RGB format (technically more can be chosen with the VGA)
-extern const uint8_t VL_EGARGBColorTable[16][3];
+extern uint8_t VL_EGARGBColorTable[16][3]; // KEEN WORLDS: not const, see VL_SetCustomColors
 
 // TODO: Consider adding more fields (like panning) and having multiple
 // structs (emulated EGA/VGA adapter struct, SDL-specific struct, etc).

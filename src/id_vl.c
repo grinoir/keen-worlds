@@ -29,7 +29,29 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <stdlib.h>
 
 // EGA color palette in RGB format (technically more can be chosen with the VGA)
-const uint8_t VL_EGARGBColorTable[16][3] = {
+static const uint8_t vl_standardColors[16][3] = {
+	0x00, 0x00, 0x00, // Black
+	0x00, 0x00, 0xaa, // Blue
+	0x00, 0xaa, 0x00, // Green
+	0x00, 0xaa, 0xaa, // Cyan
+	0xaa, 0x00, 0x00, // Red
+	0xaa, 0x00, 0xaa, // Magenta
+	0xaa, 0x55, 0x00, // Brown
+	0xaa, 0xaa, 0xaa, // Light Grey
+	0x55, 0x55, 0x55, // Dark Grey
+	0x55, 0x55, 0xff, // Light Blue
+	0x55, 0xff, 0x55, // Light Green
+	0x55, 0xff, 0xff, // Light Cyan
+	0xff, 0x55, 0x55, // Light Red
+	0xff, 0x55, 0xff, // Light Magenta
+	0xff, 0xff, 0x55, // Yellow
+	0xff, 0xff, 0xff, // White
+};
+
+// KEEN WORLDS: the sixteen colours shown; the standard EGA ones unless a
+// game sets its own (VL_SetCustomColors: Foray in the Forest's per-level
+// VGA palettes).
+uint8_t VL_EGARGBColorTable[16][3] = {
 	0x00, 0x00, 0x00, // Black
 	0x00, 0x00, 0xaa, // Blue
 	0x00, 0xaa, 0x00, // Green
@@ -110,6 +132,15 @@ void VL_SetPaletteFromArray(intptr_t *palArray)
 	for (int i = 0; i < 16; i++)
 		vl_emuegavgaadapter.palette[i] = VL_ConvertEGASignalToEGAEntry(palArray[i]);
 	vl_currentBackend->refreshPaletteAndBorderColor(vl_emuegavgaadapter.screen);
+}
+
+// KEEN WORLDS: show these sixteen colours (red, green, blue each) in place of
+// the standard EGA ones, or the standard ones again with NULL.
+void VL_SetCustomColors(const uint8_t colors[16][3])
+{
+	memcpy(VL_EGARGBColorTable, colors ? colors : vl_standardColors, sizeof(VL_EGARGBColorTable));
+	if (vl_currentBackend && vl_emuegavgaadapter.screen)
+		vl_currentBackend->refreshPaletteAndBorderColor(vl_emuegavgaadapter.screen);
 }
 
 void VL_ColorBorder(uint16_t color)

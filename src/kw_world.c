@@ -397,6 +397,7 @@ bool AR_ReadState(FS_File fp, bool withStars);
 bool FF_WriteState(FS_File fp);
 bool FF_ReadState(FS_File fp);
 void FF_ResetState(void);
+void FF_LeaveWorld(void);
 const char *FF_TestSaveRoundTrip(bool (*save)(void), bool (*load)(void));
 #define KW_SAVE_ID_LEN 8
 
@@ -654,6 +655,7 @@ void KW_SwitchWorld(int world)
 
 	// Remember the world Keen is leaving.
 	kw_worlds[kw_currentWorld] = KW_LiveState();
+	FF_LeaveWorld(); // the standard colours again (Foray in the Forest sets its own)
 
 	// Nothing may keep playing from the old world's audio data.
 	SD_MusicOff();
@@ -1512,9 +1514,6 @@ void CK_UpdateScoreBox(CK_object *scorebox);
 // Save what is on the screen as a PPM picture.
 static void KW_DumpScreen(const char *path)
 {
-	static const uint8_t ega[16][3] = {{0, 0, 0}, {0, 0, 170}, {0, 170, 0}, {0, 170, 170}, {170, 0, 0}, {170, 0, 170},
-		{170, 85, 0}, {170, 170, 170}, {85, 85, 85}, {85, 85, 255}, {85, 255, 85}, {85, 255, 255}, {255, 85, 85},
-		{255, 85, 255}, {255, 255, 85}, {255, 255, 255}};
 	void *screen = vl_emuegavgaadapter.screen;
 	int sx = VL_GetScrollX() & 15, sy = VL_GetScrollY() & 15;
 	FILE *f = fopen(path, "wb");
@@ -1523,7 +1522,7 @@ static void KW_DumpScreen(const char *path)
 	fprintf(f, "P6\n320 200\n255\n");
 	for (int y = 0; y < 200; ++y)
 		for (int x = 0; x < 320; ++x)
-			fwrite(ega[VL_SurfacePGet(screen, x + sx, y + sy) & 15], 1, 3, f);
+			fwrite(VL_EGARGBColorTable[VL_SurfacePGet(screen, x + sx, y + sy) & 15], 1, 3, f); // the colours shown now
 	fclose(f);
 }
 
@@ -1661,7 +1660,7 @@ void KW_Screenshot(const char *worldId, int level, const char *path)
 			obj = next;
 		}
 		for (CK_object *obj = ck_keenObj; obj; obj = obj->next)
-			if (obj->visible && obj->currentAction && obj->currentAction->draw)
+			if (obj->visible && obj->currentAction && obj->currentAction->draw && CK_ObjectVisible(obj))
 			{
 				obj->visible = false;
 				obj->currentAction->draw(obj);

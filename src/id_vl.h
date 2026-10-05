@@ -50,6 +50,7 @@ void VL_SetPaletteFromArray(intptr_t *palArray);
 void VL_SetPaletteAndBorderColor(uint8_t *palette);
 void VL_ColorBorder(uint16_t color);
 void VL_SetDefaultPalette(void);
+void VL_SetCustomColors(const uint8_t colors[16][3]);
 void VL_FadeToBlack(void);
 void VL_FadeFromBlack(void);
 //void VL_FadeToWhite(void); // Unused in vanilla Keen 5
