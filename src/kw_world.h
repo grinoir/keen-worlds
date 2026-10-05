@@ -140,4 +140,8 @@ void KW_Screenshot(const char *worldId, int level, const char *path);
 // there), landed on the world the game starts in.
 void KW_BeginInShip(void);
 
+// The game loop, before the ship lands on a world Keen has not been to:
+// that world's own story.
+void KW_StoryBeforeLanding(void);
+
 #endif

@@ -292,6 +292,10 @@ static const KW_Ship kw_ships[] = {
 	// area stops short of the ship's door (x 14-17), where "up" goes inside.
 	{KW_FITF, 1, 5, 16, 4, 11, 11, 16},
 };
+// Foray's level 1: the forest with the landed ship is the top of the map;
+// the game's own rooms of the ship start below this row.
+#define KW_FITF_ROOMS_Y 20
+
 
 static const KW_Ship *KW_ShipFor(int world)
 {
@@ -415,6 +419,8 @@ const char *FF_TestSaveRoundTrip(bool (*save)(void), bool (*load)(void));
 #define KW_SAVE_ID_LEN 8
 
 static bool kw_introduced[KW_NUM_WORLDS]; // worlds whose arrival card has been shown
+static bool kw_storyShown[KW_NUM_WORLDS]; // worlds whose own story has been shown (this game)
+static int kw_storyWorld = KW_NO_WORLD;   // the world whose story plays before the ship lands on it
 const char *kw_loadingFileName = NULL;
 static int kw_deferredWorld = KW_NO_WORLD;
 static char kw_deferredFile[FS_MAX_FILENAME_LEN];
@@ -666,6 +672,8 @@ void KW_ResetWorlds(void)
 	FF_ResetState();
 	memset(kw_worlds, 0, sizeof(kw_worlds));
 	memset(kw_introduced, 0, sizeof(kw_introduced)); // a new game introduces each world again
+	memset(kw_storyShown, 0, sizeof(kw_storyShown));
+	kw_storyWorld = KW_NO_WORLD;
 	kw_pendingWorld = KW_NO_WORLD;
 	kw_placeArrivalAtShip = false;
 }
@@ -1020,19 +1028,39 @@ bool FF_IsActive(void);
 void FF_LevelPalette(void);
 void StartMusic(int16_t level);
 
-static void KW_ShowWorldStory(void)
+// Should the current world's story be shown now? (Once a game for a world
+// Keen has not been to; not in the scripted developer runs unless asked.)
+static bool KW_StoryIsDue(int world)
 {
-	if (kw_currentWorld == KW_SHIP || !*CK_STRING(ck_str_storyText))
+	if (world == KW_SHIP || kw_storyShown[world] || kw_worlds[world].visited)
+		return false;
+	return !kw_cardsOff || getenv("KW_AUTOSTORY");
+}
+
+// The scroll itself, for the current world (whose graphics must be loaded).
+static void KW_PlayWorldStory(void)
+{
+	kw_storyShown[kw_currentWorld] = true;
+	if (!*CK_STRING(ck_str_storyText))
 		return;
 	printf("KW_AUTOSTORY: the story of %s\n", kw_worldDefs[kw_currentWorld].id);
-	if (kw_cardsOff && !getenv("KW_AUTOSTORY"))
-		return;
 	KW_StopVoice();
-	VL_FadeToBlack();
-	CA_UpLevel();
+	SD_MusicOff();
+	SD_FadeAdLibVolume(256, 0);
 	IN_ClearKeysDown();
 	CK_DrawStarWarsEx(false);
 	IN_ClearKeysDown();
+}
+
+// In a level (Keen came to a world some other way than by choosing it at
+// the ship's controls): the story, then back to the level.
+static void KW_ShowWorldStory(void)
+{
+	if (!KW_StoryIsDue(kw_currentWorld))
+		return;
+	VL_FadeToBlack();
+	CA_UpLevel();
+	KW_PlayWorldStory();
 	CA_DownLevel();
 	// back to the level: its colours, its picture, its music
 	VL_FadeToBlack();
@@ -1043,6 +1071,24 @@ static void KW_ShowWorldStory(void)
 	VL_FadeFromBlack();
 	StartMusic(ca_mapOn);
 	SD_SetLastTimeCount(SD_GetTimeCount());
+}
+
+// Between levels (the game loop, when the ship is about to land): the story
+// of the world chosen at the controls plays first, with that world's own
+// pictures and letters loaded for it; then the ship's world again.
+void KW_StoryBeforeLanding(void)
+{
+	int world = kw_storyWorld;
+	kw_storyWorld = KW_NO_WORLD;
+	if (world == KW_NO_WORLD || kw_currentWorld != KW_SHIP || !KW_IsWorldPresent(world))
+		return;
+	KW_WorldState untouched = kw_worlds[world];
+	bool introduced = kw_introduced[world];
+	KW_SwitchWorld(world);
+	KW_PlayWorldStory();
+	KW_SwitchWorld(KW_SHIP);
+	kw_worlds[world] = untouched;   // Keen has not set foot in it yet
+	kw_introduced[world] = introduced;
 }
 
 // The game's own title and makers, the first time Keen sets foot in a world.
@@ -1398,6 +1444,9 @@ void KW_BeginInShip(void)
 	if (tool || kw_currentWorld == KW_SHIP || !KW_IsWorldPresent(KW_SHIP))
 		return;
 	int from = kw_currentWorld;
+	// the game that was chosen tells its story first
+	if (KW_StoryIsDue(from))
+		KW_PlayWorldStory();
 	KW_SwitchWorld(KW_SHIP);
 	kw_worlds[from].visited = false; // Keen has not set foot in it yet
 	kw_boardedFrom = from;
@@ -1501,6 +1550,19 @@ static void KW_ShipRoomFrame(void)
 			VL_DelayTics(tics > 35 ? tics : 35);
 		}
 		KW_MusicQuiet();
+		if (KW_StoryIsDue(destination))
+		{
+			// A world Keen has not been to: its own story plays during the
+			// flight (KW_StoryBeforeLanding, from the game loop, which then
+			// loads the ship again: Keen is by the hatch when it has landed).
+			kw_boardedFrom = destination;
+			kw_storyWorld = destination;
+			kw_landingToAnnounce = destination;
+			KW_VoiceComingUp(true);
+			kw_pendingWorld = KW_SHIP;
+			ck_gameState.levelState = LS_SwitchWorld;
+			return;
+		}
 		kw_boardedFrom = destination;
 		RF_ForceRefresh();
 		if (!kw_cardsOff)
@@ -1554,6 +1616,13 @@ void KW_PlayLoopHook(void)
 	if (KW_IsShipLevel() &&
 		(ck_keenState.jumpIsPressed || ck_keenState.pogoIsPressed || ck_keenState.shootIsPressed) &&
 		KW_IsAtShipHatch())
+		kw_launchRequested = true;
+	// Foray in the Forest: its landed ship's door goes into the Megarocket
+	// too (the same ship: its inside is where Keen picks a world), not into
+	// the game's own copy of the rooms. The game has by now put Keen in one of
+	// those rooms, which lie below the forest in the same level.
+	if (kw_currentWorld == KW_FITF && KW_IsShipLevel() && ck_keenObj && KW_IsWorldPresent(KW_SHIP) &&
+		ck_keenObj->clipRects.tileY2 >= KW_FITF_ROOMS_Y)
 		kw_launchRequested = true;
 
 	// Reading the plaque: up, standing at the ship.

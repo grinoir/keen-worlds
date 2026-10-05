@@ -1092,6 +1092,7 @@ void CK_GameLoop()
 
 		case LS_SwitchWorld:
 			// KEEN WORLDS: Travel, then load the new world's map below.
+			KW_StoryBeforeLanding();
 			KW_SwitchWorld(kw_pendingWorld);
 			break;
 
