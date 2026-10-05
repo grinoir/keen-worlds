@@ -392,6 +392,8 @@ void CK_ItemCheat()
 	ck_gameState.numShots = 99;
 	ck_gameState.numLives++;
 	ck_gameState.ep.ck5.securityCard = 1;
+	if (CK_INT(CK_ItemCheatNoKeys, 0)) // KEEN WORLDS: variable (Bounty Hunting Brouhaha)
+		return;
 	ck_gameState.keyGems[0] =
 		ck_gameState.keyGems[1] =
 			ck_gameState.keyGems[2] =
@@ -1671,6 +1673,9 @@ void CK_DrawStatusWindow(void)
 	{
 #ifdef WITH_KEEN4
 	case EP_CK4:
+		// KEEN WORLDS: CK4_StatusNoCouncil leaves the Council's box out (Bounty Hunting Brouhaha)
+		if (CK_INT(CK4_StatusNoCouncil, 0))
+			break;
 		US_SetPrintY(85);
 		US_SetWindowX(80);
 		US_SetWindowW(64);
@@ -1791,6 +1796,10 @@ void CK_DrawStatusWindow(void)
 #ifdef WITH_KEEN4
 	case EP_CK4:
 
+		// KEEN WORLDS: CK4_StatusNoWetsuit leaves the wetsuit's box out, with
+		// the drops' box in the middle (Bounty Hunting Brouhaha)
+		if (!CK_INT(CK4_StatusNoWetsuit, 0))
+		{
 		// Wetsuit
 		VHB_Bar(79, 143, 66, 10, 15);
 
@@ -1801,6 +1810,7 @@ void CK_DrawStatusWindow(void)
 		US_CPrint(ck_gameState.ep.ck4.wetsuit ? CK_STRING(ck4_str_statusWetsuit) : CK_STRING(ck4_str_statusNoWetsuit));
 
 		addX = 5;
+		}
 #endif
 #ifdef WITH_KEEN5
 	case EP_CK5:

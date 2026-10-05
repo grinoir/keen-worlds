@@ -311,19 +311,20 @@ void CK_SpawnMapKeen(int tileX, int tileY)
 		ck_keenObj->zLayer = PRIORITIES - 1;
 		ck_keenObj->xDirection = ck_keenObj->yDirection = IN_motion_None;
 
-		if (ck_gameState.mapPosX < 0x1400)
+		// KEEN WORLDS: where the foot flies from and to are variables
+		if (ck_gameState.mapPosX < CK_INT(CK4_FootThresholdX, 0x1400))
 		{
 			// Going to pyramid of forbidden at 1E, 37
 			ck_keenObj->user1 = 280;
-			ck_keenObj->velX = (0x1E00 - ck_keenObj->posX) / 280 + 1;
-			ck_keenObj->velY = (0x3700 - ck_keenObj->posY) / 280 + 1;
+			ck_keenObj->velX = (CK_INT(CK4_FootThereX, 0x1E00) - ck_keenObj->posX) / 280 + 1;
+			ck_keenObj->velY = (CK_INT(CK4_FootThereY, 0x3700) - ck_keenObj->posY) / 280 + 1;
 		}
 		else
 		{
 			// Return flight to 0x10, 0x2F
 			ck_keenObj->user1 = 140;
-			ck_keenObj->velX = (0x1000 - ck_keenObj->posX) / 140 + 1;
-			ck_keenObj->velY = (0x2F00 - ck_keenObj->posY) / 140 + 1;
+			ck_keenObj->velX = (CK_INT(CK4_FootBackX, 0x1000) - ck_keenObj->posX) / 140 + 1;
+			ck_keenObj->velY = (CK_INT(CK4_FootBackY, 0x2F00) - ck_keenObj->posY) / 140 + 1;
 		}
 
 		CK_SetAction(ck_keenObj, CK_ACTION(CK4_ACT_MapKeenFoot0));

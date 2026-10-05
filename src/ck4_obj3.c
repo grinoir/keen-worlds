@@ -481,7 +481,7 @@ void CK4_DopefishCol(CK_object *a, CK_object *b)
 	{
 		CK_SetAction2(b, CK_ACTION(CK4_ACT_SchoolfishEaten0));
 	}
-	else if (b->type == CT_Player && !ck_godMode)
+	else if (b->type == CT_Player && !ck_godMode && !CK_INT(CK4_DopefishIgnoresKeen, 0)) // KEEN WORLDS: variable
 	{
 		b->type = CT_Friendly;
 		b->clipped = CLIP_not;
@@ -775,6 +775,13 @@ void CK4_WetsuitCol(CK_object *a, CK_object *b)
 		CK4_ShowWetsuitMessage();
 		//RF_ForceRefresh();
 		ck_gameState.levelState = LS_LevelComplete;
+		// KEEN WORLDS: CK4_WetsuitWinsGame (Bounty Hunting Brouhaha: what
+		// is found here ends the game, as rescuing the last of the Council does)
+		if (CK_INT(CK4_WetsuitWinsGame, 0))
+		{
+			ck_gameState.ep.ck4.membersRescued = CK_INT(CK4_NumCouncilsToRescue, 8);
+			ck_gameState.levelState = LS_CouncilRescued;
+		}
 	}
 }
 

@@ -654,6 +654,10 @@ void CK4_PlatformDraw(CK_object *obj)
 {
 	RF_AddSpriteDraw(&(obj->sde), obj->posX, obj->posY, obj->gfxChunk, false, obj->zLayer);
 
+	// KEEN WORLDS: CK4_PlatformNoFlames (Bounty Hunting Brouhaha)
+	if (CK_INT(CK4_PlatformNoFlames, 0))
+		return;
+
 	// Draw the flames
 
 	int16_t di = (SD_GetLastTimeCount() / 4) & 1;

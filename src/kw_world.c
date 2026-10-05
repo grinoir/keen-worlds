@@ -177,6 +177,15 @@ static const KW_WorldDef kw_worldDefs[KW_NUM_WORLDS] = {
 		"A level pack of tricks and traps\nby the Keen Asylum creators",
 		"Created by the\nKeen Asylum creators\n(Keendom)\n\nOmnispeak version:\nDavid Gow (Multimania)" KW_NOT_OURS,
 		"A fan level pack. Get its\nOmnispeak version from the\nOmnispeak modding kit\n(github.com/sulix/omnispeak)\nand put it in mods/asylum."},
+	// Bounty Hunting Brouhaha (Kohntarkosz_, 2019): a Keen 4 mod with its own
+	// levels, graphics, music and rules. tools/kw_bounty.py copies the
+	// player's files of it to play/mods/bounty and writes MOD.CK4 from its
+	// patch file.
+	{"bounty", "Meurglys III", 4, "mods/bounty", "MOD.CK4",
+		"Bounty Hunting Brouhaha",
+		"A Commander Keen fan game\nby Kohntarkosz_, 2019",
+		"Created by Kohntarkosz_\n\nLevels, graphics and music\nare its own" KW_NOT_OURS,
+		"A fan game by Kohntarkosz_\n(2019). Download \"Bounty\nHunting Brouhaha\" v1.0 (see\nits page on keenwiki.shikadi.net)\nand run tools/kw_bounty.py on it."},
 	// The Megarocket: Keen Worlds' own world, the inside of Keen's ship
 	// (tools/kw_shipworld.py writes its map; its folder comes with Keen
 	// Worlds). It runs on Keen 4 and is not a destination in the menu.
@@ -333,6 +342,9 @@ static const KW_Ship kw_ships[] = {
 	// (18, entered from its map where the ship is docked), where that level
 	// starts Keen at its nose.
 	{KW_OSI, 18, 3, 38, 3, 33, 18, 39},
+	// Meurglys III: the ship (WASH ME on its side) in the woods of its own
+	// Megarocket level, where that level starts Keen at its nose.
+	{KW_BOUNTY, 18, 3, 13, 3, 9, 18, 14},
 	// Aspermontis: the ship on the palm beach of its own Megarocket level,
 	// where that level starts Keen at its nose.
 	{KW_KEEN95, 18, 3, 17, 3, 13, 15, 18},

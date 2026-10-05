@@ -358,6 +358,10 @@ void CK_KeenCheckSpecialTileInfo(CK_object *obj)
 						return;
 					break;
 				}
+				// KEEN WORLDS: CK4_MoonTileEndsLevel (Bounty Hunting Brouhaha)
+				if (ck_keenMoon == 0 && CK_INT(CK4_MoonTileEndsLevel, 0))
+					ck_gameState.levelState = LS_LevelComplete;
+				else
 				if (ck_keenMoon == 0)
 					ck_keenMoon = 1; // Yes, also set in Keen 5
 				break;
@@ -1773,7 +1777,7 @@ void CK_KillKeen()
 	obj->clipped = CLIP_not;
 	obj->zLayer = 3;
 #ifdef WITH_KEEN4
-	if ((ck_currentEpisode->ep == EP_CK4) && ca_mapOn == 17)
+	if ((ck_currentEpisode->ep == EP_CK4) && ca_mapOn == CK_INT(CK4_UnderwaterDeathLevel, 17)) // KEEN WORLDS: variable
 	{
 		if (US_RndT() < 0x80)
 		{

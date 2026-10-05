@@ -38,6 +38,7 @@ typedef enum KW_World
 	KW_KEEN95,  // Aspermontis: "The Eight Accumulators" (fan level pack on Keen 4)
 	KW_CK55,    // The Omegamatic II: "Keen 5.5" (fan level pack on Keen 5)
 	KW_ASYLUM,  // Address Unknown: "Keen Asylum" (fan level pack on Keen 5)
+	KW_BOUNTY,  // Meurglys III: "Bounty Hunting Brouhaha" (fan game on Keen 4)
 	KW_SHIP,    // The Megarocket: Keen Worlds' own world, the inside of Keen's ship (on Keen 4)
 	KW_NUM_WORLDS,
 	KW_NO_WORLD = -1,

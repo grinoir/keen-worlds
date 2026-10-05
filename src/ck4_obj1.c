@@ -53,17 +53,17 @@ void CK4_Miragia0(CK_object *obj)
 	}
 	else
 	{
-		RF_ReplaceTileBlock(8, 60, obj->posX, obj->posY, 6, 4);
+		RF_ReplaceTileBlock(8, CK_INT(CK4_MiragiaSourceY, 60), obj->posX, obj->posY, 6, 4);
 	}
 }
 
-void CK4_Miragia1(CK_object *obj) { RF_ReplaceTileBlock(14, 60, obj->posX, obj->posY, 6, 4); }
-void CK4_Miragia2(CK_object *obj) { RF_ReplaceTileBlock(20, 60, obj->posX, obj->posY, 6, 4); }
-void CK4_Miragia3(CK_object *obj) { RF_ReplaceTileBlock(26, 60, obj->posX, obj->posY, 6, 4); }
-void CK4_Miragia4(CK_object *obj) { RF_ReplaceTileBlock(20, 60, obj->posX, obj->posY, 6, 4); }
-void CK4_Miragia5(CK_object *obj) { RF_ReplaceTileBlock(14, 60, obj->posX, obj->posY, 6, 4); }
-void CK4_Miragia6(CK_object *obj) { RF_ReplaceTileBlock(8, 60, obj->posX, obj->posY, 6, 4); }
-void CK4_Miragia7(CK_object *obj) { RF_ReplaceTileBlock(2, 60, obj->posX, obj->posY, 6, 4); }
+void CK4_Miragia1(CK_object *obj) { RF_ReplaceTileBlock(14, CK_INT(CK4_MiragiaSourceY, 60), obj->posX, obj->posY, 6, 4); }
+void CK4_Miragia2(CK_object *obj) { RF_ReplaceTileBlock(20, CK_INT(CK4_MiragiaSourceY, 60), obj->posX, obj->posY, 6, 4); }
+void CK4_Miragia3(CK_object *obj) { RF_ReplaceTileBlock(26, CK_INT(CK4_MiragiaSourceY, 60), obj->posX, obj->posY, 6, 4); }
+void CK4_Miragia4(CK_object *obj) { RF_ReplaceTileBlock(20, CK_INT(CK4_MiragiaSourceY, 60), obj->posX, obj->posY, 6, 4); }
+void CK4_Miragia5(CK_object *obj) { RF_ReplaceTileBlock(14, CK_INT(CK4_MiragiaSourceY, 60), obj->posX, obj->posY, 6, 4); }
+void CK4_Miragia6(CK_object *obj) { RF_ReplaceTileBlock(8, CK_INT(CK4_MiragiaSourceY, 60), obj->posX, obj->posY, 6, 4); }
+void CK4_Miragia7(CK_object *obj) { RF_ReplaceTileBlock(2, CK_INT(CK4_MiragiaSourceY, 60), obj->posX, obj->posY, 6, 4); }
 
 void CK4_SpawnCouncilMember(int tileX, int tileY)
 {
@@ -80,7 +80,8 @@ void CK4_SpawnCouncilMember(int tileX, int tileY)
 
 void CK4_CouncilWalk(CK_object *obj)
 {
-	if (SD_GetSpriteSync() << CK_INT(CK4_CouncilPauseProbability, 3) > US_RndT())
+	// KEEN WORLDS: CK4_CouncilNeverPauses (Bounty Hunting Brouhaha's witch doctor)
+	if (!CK_INT(CK4_CouncilNeverPauses, 0) && SD_GetSpriteSync() << CK_INT(CK4_CouncilPauseProbability, 3) > US_RndT())
 		obj->currentAction = CK_ACTION(CK4_ACT_CouncilPause);
 }
 
@@ -434,7 +435,7 @@ void CK4_ArachnutCol(CK_object *a, CK_object *b)
 	{
 		CK_StunCreature(a, b, CK_ACTION(CK4_ACT_ArachnutStunned0));
 	}
-	else if (b->type == CT_Player)
+	else if (b->type == CT_Player && !CK_INT(CK4_ArachnutHarmless, 0)) // KEEN WORLDS: variable
 	{
 		CK_KillKeen();
 	}

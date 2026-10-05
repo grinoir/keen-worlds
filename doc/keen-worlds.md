@@ -53,6 +53,7 @@ game built on one of them. `kw_worldDefs[]` in `src/kw_world.c` lists them:
 | `keen9` | HUB Command Center | 5 | `mods/keen9` | `MOD.CK5` (ours) |
 | `osi` | The Shikadi Station | 5 (its own code) | `mods/osi` | its own `EPISODE.CK5` |
 | `keen95` | Aspermontis | 4 | `mods/keen95` | `MOD.CK4` (written by `tools/kw_accumulators.py`) |
+| `bounty` | Meurglys III | 4 | `mods/bounty` | `MOD.CK4` (written by `tools/kw_bounty.py`) |
 | `ck55` | The Omegamatic II | 5 | `mods/ck55` | `ck55.ck5` (from the modding kit) |
 | `asylum` | Address Unknown | 5 | `mods/asylum` | `ASYLUM.CK5` (from the modding kit) |
 
