@@ -1718,6 +1718,13 @@ static int KW_TravelMenu(void)
 			int w = groups[g].worlds[i];
 			bool open = w == KW_MENU_CREDITS || (KW_IsWorldPresent(w) && KW_CourseIsOpen(w));
 			US_SetPrintColour(w == here ? HERE : !open ? GREY : (w >= 0 && KW_WorldIsSaved(w)) ? SAVED : NORMAL);
+			if (w == KW_MENU_CREDITS)
+			{
+				// its own bar of colour, inside where the selection box goes,
+				// so that it is not taken for one more world
+				VHB_Bar(x + 6, colY[col] - 1, winW / 2 - 12, 10, 14);
+				US_SetPrintColour(NORMAL); // (on the bar's yellow these letters come out blue)
+			}
 			US_SetPrintX(x + 8);
 			US_SetPrintY(colY[col]);
 			US_Print(w == KW_MENU_CREDITS ? "About Keen Worlds" : kw_worldDefs[w].name);

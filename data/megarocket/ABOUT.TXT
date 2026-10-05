@@ -1,38 +1,54 @@
-Commander Keen: Worlds
+### Commander Keen: Worlds ###
 
-One Megarocket.
-A galaxy that remembers.
+Connected by love, sweat and 
+rocket fuel.
+Never again silent, always now
+ remembers.
 ---
 Linked together by
-GrinNoir, the great Linker
-
-(Write your own words here.
-This file is ABOUT.TXT in the
-folder megarocket. A line with
-only three dashes starts a new
-card. Keep a line under 34
-letters and a card under 16
-lines.)
+GriNoir, the great Linker
 ---
-Keen Worlds did not make
-these worlds. It joins them.
+Hi everyone! This is my first 
+attempt at a Keen 
+mod so please be gentle.
 
-Commander Keen is the work of
-id Software: John Carmack,
-John Romero, Tom Hall, Adrian
-Carmack, Jason Blochowiak,
-with music by Bobby Prince.
+"Mod" is not really the 
+correct word. 
+And "my" is really wrong!
 ---
-The fan worlds belong to
-their makers. Each one names
-them when Keen first steps
-out onto it, and whenever you
-choose the world the ship
-stands on at the controls.
+I did not make these amazing
+worlds - You did! 
+I took them and joined them 
+- for convenience and fun.
 ---
-Built on Omnispeak, the open
-re-creation of the engine of
-Commander Keen 4 to 6.
+If You, the creator of worlds,
+do not wish to be included in 
+this planetary pantheon then 
+please know that I included 
+your work because it is great.
 
-Thank you for flying
-Bean-with-Bacon.
+I will of cause remove it from 
+files, if you insist!
+---
+I did do someting though: 
+Voices, new music, game modes, 
+return to levels - try it, 
+new people, a bar! And more.
+
+This is not set in stone and
+ especially  "return to levels" 
+ aka liberation-state still has 
+a lot work to be done - it is 
+only a concept really.
+---
+With all that said please enjoy 
+Commander Keen: Worlds.
+
+Comments, request, hate and so 
+on can be mailed to me at
+grinoir@gmail.com
+
+All the best 
+Anders Christensen aka Grinoir
+Denmark.
+October 2026
