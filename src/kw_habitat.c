@@ -798,6 +798,9 @@ static void KW_ResidentSays(const KW_Resident *r, const char *pages, const char 
 		KW_ResidentCard(r, page);
 		pages += n + (pages[n] == '\f');
 	}
+	// the cards are put away: no more of the clip
+	if (voice)
+		KW_StopVoice();
 }
 
 static int KW_NumChoices(const KW_Resident *r)

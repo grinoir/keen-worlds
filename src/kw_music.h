@@ -17,6 +17,8 @@ bool KW_StartShipMusic(void);
 // back in once the clip is over.
 void KW_Speak(const char *file, bool waitForFade);
 bool KW_VoiceSpeaking(void);
+// Cut the clip short (its card was put away).
+void KW_StopVoice(void);
 // Something is about to be said: music that would start now stays off.
 void KW_VoiceComingUp(bool pending);
 // Fade the music down (returns the tics that takes), then turn it off.

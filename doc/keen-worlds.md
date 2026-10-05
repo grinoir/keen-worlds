@@ -384,6 +384,21 @@ ends. She knows the worlds and who made each, and GriNoir the great Linker
 on her wall. All her lines are spoken (Kokoro's "Bella"). `/KWTEST` checks
 that every card fits and every clip is there.
 
+A voice stops when its card is put away. At the tavern's door the music
+outside fades down and the tavern's tune comes up, and the other way round
+(`KW_UpdateMusicZone`).
+
+**Each world's own story**: the first time Keen sets foot in a world (out
+of the hatch), that game's story scrolls away into the distance as in its
+title sequence (`KW_ShowWorldStory` -> `CK_DrawStarWarsEx`), then the
+arrival card. Any key skips it. Foray in the Forest shows its story at the
+start of every new game; the other games only in their title sequence,
+which a traveller never sees. Foray's and Atroxian Realm's story texts are
+written into their variable files by `tools/kw_fitf.py` (from the game's
+text chunk; its font is in ASCII order: `ck_starWarsPlainText`) and
+`tools/kw_arealm.py` (from its source); before, both showed Keen 5's.
+`KW_AUTOSTORY=1` plays the story in scripted developer runs.
+
 **Music**: inside the ship an original space-funk tune plays
 (`tools/kw_ship_music.py` -> `src/kw_ship_music.h`, started by
 `KW_StartShipMusic`). It uses the OPL2's drum mode, which the sound

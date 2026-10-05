@@ -1011,6 +1011,40 @@ static void KW_WorldCardText(int world, bool withCredits, char *out, size_t size
 		snprintf(out, size, "%s\n\n%s", def->title, def->byline);
 }
 
+// The world's own story, scrolling away into the distance as in the game's
+// title sequence, the first time Keen sets foot in it. (Foray in the Forest
+// shows its story at the start of every new game; the others only in their
+// title sequence, which a traveller never sees.) Any key skips it.
+void CK_DrawStarWarsEx(bool handleDemoKeys);
+bool FF_IsActive(void);
+void FF_LevelPalette(void);
+void StartMusic(int16_t level);
+
+static void KW_ShowWorldStory(void)
+{
+	if (kw_currentWorld == KW_SHIP || !*CK_STRING(ck_str_storyText))
+		return;
+	printf("KW_AUTOSTORY: the story of %s\n", kw_worldDefs[kw_currentWorld].id);
+	if (kw_cardsOff && !getenv("KW_AUTOSTORY"))
+		return;
+	KW_StopVoice();
+	VL_FadeToBlack();
+	CA_UpLevel();
+	IN_ClearKeysDown();
+	CK_DrawStarWarsEx(false);
+	IN_ClearKeysDown();
+	CA_DownLevel();
+	// back to the level: its colours, its picture, its music
+	VL_FadeToBlack();
+	if (FF_IsActive())
+		FF_LevelPalette();
+	RF_ForceRefresh();
+	RF_Refresh();
+	VL_FadeFromBlack();
+	StartMusic(ca_mapOn);
+	SD_SetLastTimeCount(SD_GetTimeCount());
+}
+
 // The game's own title and makers, the first time Keen sets foot in a world.
 static void KW_ShowArrivalCard(int world)
 {
@@ -1348,7 +1382,10 @@ static void KW_AnnounceLanding(int world)
 			continue;
 		KW_Speak(kw_landings[i].file, !kw_cardsOff);
 		if (!kw_cardsOff)
+		{
 			KW_ShowCards(kw_landings[i].text);
+			KW_StopVoice(); // the card is put away: no more of the clip
+		}
 		return;
 	}
 }
@@ -1483,13 +1520,14 @@ void KW_PlayLoopHook(void)
 	// and makers, once the screen is up.
 	if (getenv("KW_AUTOSHOT"))
 		kw_cardsOff = true; // the developer tools have nobody to press a key either
-	if (!kw_cardsOff && !kw_introduced[kw_currentWorld] && !kw_worlds[kw_currentWorld].visited &&
+	if ((!kw_cardsOff || getenv("KW_AUTOSTORY")) && !kw_introduced[kw_currentWorld] && !kw_worlds[kw_currentWorld].visited &&
 		(ca_mapOn == 0 || KW_IsShipLevel()))
 		kw_arrivalCard = kw_currentWorld;
 	if (kw_arrivalCard == kw_currentWorld && !vl_screenFaded && IN_DemoGetMode() == IN_Demo_Off)
 	{
 		kw_arrivalCard = KW_NO_WORLD;
 		kw_introduced[kw_currentWorld] = true;
+		KW_ShowWorldStory();
 		KW_ShowArrivalCard(kw_currentWorld);
 	}
 

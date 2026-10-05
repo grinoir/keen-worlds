@@ -1311,7 +1311,13 @@ void CK_DrawSWText()
 	// video memory as is required, but here we guess that 1024 px will be
 	// sufficient. (It is for the original games). Eventually, we'll measure
 	// the number of newlines to calculate this.
-	ck_starWarsTextSurface = VL_CreateSurface(336, 1024);
+	// KEEN WORLDS: longer stories (Foray in the Forest's) need more: room
+	// for every line, at 32 pixels a line.
+	int storyHeight = 64;
+	for (const char *c = storyTextIndex; *c; ++c)
+		if (*c == '\n')
+			storyHeight += 32;
+	ck_starWarsTextSurface = VL_CreateSurface(336, storyHeight > 1024 ? storyHeight : 1024);
 
 	// We want to render to this offscreen buffer.
 	void *oldScreen = VL_SetScreen(ck_starWarsTextSurface);
@@ -1343,7 +1349,9 @@ void CK_DrawSWText()
 		*lineIndex = '\0';
 
 		// Translate from ASCII to SW font indices.
-		CK_TranslateString(currentTextLine, currentTextLine);
+		// KEEN WORLDS: not where the font is in ASCII order (Foray in the Forest)
+		if (!CK_INT(ck_starWarsPlainText, 0))
+			CK_TranslateString(currentTextLine, currentTextLine);
 
 		// And print it centered in its line.
 		US_CPrint(currentTextLine);
@@ -1433,7 +1441,17 @@ void CK_ScrollSWText()
 	}
 }
 
+// KEEN WORLDS: the story can also be shown in the middle of a game (the
+// first time Keen sets foot in a world); then the title loop's keys (menu,
+// demos) are not handled afterwards.
+void CK_DrawStarWarsEx(bool handleDemoKeys);
+
 void CK_DrawStarWars()
+{
+	CK_DrawStarWarsEx(true);
+}
+
+void CK_DrawStarWarsEx(bool handleDemoKeys)
 {
 	// Keen5 sets the palette to the default one here.
 	VL_ClearScreen(0);
@@ -1477,7 +1495,8 @@ void CK_DrawStarWars()
 	VL_SetDefaultPalette();
 	CA_ClearMarks();
 
-	CK_HandleDemoKeys();
+	if (handleDemoKeys)
+		CK_HandleDemoKeys();
 }
 
 void CK_ShowTitleScreen()

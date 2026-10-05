@@ -183,9 +183,17 @@ void US_PrintCentered(const char *str)
 
 void US_CPrintLine(const char *str)
 {
-	uint16_t w, h;
+	uint16_t w = 0, h = 0;
 	CA_CacheGrChunk(3); // TODO: What is this function call doing here?
 	USL_MeasureString(str, &w, &h, us_printFont);
+	// KEEN WORLDS: an empty line has no character to take the font's height
+	// from, and h was left as it happened to be (a story that begins with an
+	// empty line jumped far down the page).
+	if (!*str)
+	{
+		USL_MeasureString(" ", &w, &h, us_printFont);
+		w = 0;
+	}
 	if (w <= us_windowW)
 	{
 		int x = us_windowX + ((us_windowW - w) / 2);

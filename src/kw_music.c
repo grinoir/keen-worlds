@@ -34,6 +34,7 @@ untouched.
 #define KW_VOICE_RATE 22050
 #define KW_MUSIC_FADE_OUT 500  // milliseconds
 #define KW_MUSIC_FADE_IN 2500
+#define KW_ZONE_FADE_IN 900    // through a door
 
 static bool kw_musicHeld;          // off for a voice; comes back when it has finished
 static uint32_t kw_voiceEnd = 0;   // time count at which the clip is over
@@ -64,6 +65,13 @@ void KW_MusicQuiet(void)
 	SD_MusicOff();
 	SD_FadeAdLibVolume(256, 0); // the games' sound effects stay at full volume
 	kw_musicHeld = true;
+}
+
+// The clip is cut short (its card was put away); the music comes back.
+void KW_StopVoice(void)
+{
+	SD_StopVoice();
+	kw_voiceEnd = 0;
 }
 
 void KW_Speak(const char *file, bool waitForFade)
@@ -141,12 +149,32 @@ void KW_UpdateMusicZone(void)
 		SD_FadeAdLibVolume(256, KW_MUSIC_FADE_IN);
 		return;
 	}
+	// Through the tavern's door: the music outside fades down and the
+	// tavern's tune comes up, and the other way round.
+	static uint32_t changeAt = 0; // time count at which the old music has faded out (0: no change under way)
 	if (inTavern == kw_tavernThemePlaying)
+	{
+		if (changeAt)
+		{
+			// Keen turned round in the doorway: the music that was fading comes back up
+			changeAt = 0;
+			SD_FadeAdLibVolume(256, KW_MUSIC_FADE_OUT);
+		}
 		return;
-
+	}
+	if (!changeAt)
+	{
+		changeAt = SD_GetTimeCount() + KW_FadeMusicOut();
+		return;
+	}
+	if (SD_GetTimeCount() < changeAt)
+		return;
+	changeAt = 0;
 	kw_tavernThemePlaying = inTavern;
+	SD_FadeAdLibVolume(0, 0);
 	if (inTavern)
 		SD_StartMusicData(kw_tavernMusic, sizeof(kw_tavernMusic));
 	else if (ca_mapOn >= 0)
 		StartMusic(ca_mapOn);
+	SD_FadeAdLibVolume(256, KW_ZONE_FADE_IN);
 }
