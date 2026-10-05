@@ -506,6 +506,9 @@ static bool KW_ReadWorld(FS_File fp, KW_WorldState *w)
 	return true;
 }
 
+void FF_GetSongsHeard(int16_t *out, int count);
+void FF_SetSongsHeard(const int16_t *in, int count);
+
 static bool KW_WriteId(FS_File fp, const char *id)
 {
 	char buf[KW_SAVE_ID_LEN] = {0};
@@ -544,6 +547,7 @@ bool KW_WriteSaveBlock(FS_File fp)
 	}
 	extra[80] = kw_chronicleEndTold;
 	OSI_GetState(&extra[90]); // (from word 90: what dying takes back on the Shikadi Station)
+	FF_GetSongsHeard(&extra[100], 64); // (from word 100: Foray in the Forest's songs heard, for its jukebox)
 	return AR_WriteState(fp) && FF_WriteState(fp) && KW_WriteId(fp, kw_worldDefs[kw_boardedFrom].id) &&
 		FS_WriteInt16LE(extra, 261, fp) == 261;
 }
@@ -634,6 +638,7 @@ bool KW_ReadSaveBlock(FS_File fp, bool *deferred)
 			}
 			kw_chronicleEndTold = extra[80] == 1;
 			OSI_SetState(&extra[90]);
+			FF_SetSongsHeard(&extra[100], 64);
 		}
 	}
 	else

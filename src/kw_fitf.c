@@ -524,8 +524,11 @@ static void FF_ApplyLoadedState(void)
 
 void FF_PlayLoopStart(void);
 
+static int16_t ff_songsHeard[FF_LASTMUSIC];
+
 void FF_ResetState(void)
 {
+	memset(ff_songsHeard, 0, sizeof(ff_songsHeard));
 	memset(&ff_state, 0, sizeof(ff_state));
 	ff_loaded.pending = false;
 }
@@ -596,11 +599,15 @@ const char *FF_TestSaveRoundTrip(bool (*save)(void), bool (*load)(void))
 void FF_PlayLoopStart(void)
 {
 	// Developer tool: KW_AUTOFOOBS=1 shows its "Foobs in Space!" screen once
+	// (KW_AUTOFOOBS=snailas: its "Snailas" screen)
 	static bool foobsShown = false;
 	if (getenv("KW_AUTOFOOBS") && !foobsShown)
 	{
 		foobsShown = true;
-		FF_RunFoobsInSpace();
+		if (!strcmp(getenv("KW_AUTOFOOBS"), "snailas"))
+			FF_RunSnailas();
+		else
+			FF_RunFoobsInSpace();
 		RF_ForceRefresh();
 	}
 	if (ff_loaded.pending)
@@ -681,9 +688,23 @@ void FF_ForceScoreboxUpdate(void)
 
 // Its jukebox, the Photachion Transceiver in the ship (CK_Jukebox in
 // CK_PLAY.C): pick a song from its playlist and play it; on leaving, the
-// level goes on with the song that is playing. (The game only offers songs
-// already heard in play; that record is not kept here, so all are offered.)
+// level goes on with the song that is playing. Only songs already heard in
+// play can be chosen, as in the game.
 static int ff_playingSong = -1;
+// The songs heard in play so far (its gamestate.musicplayed): the jukebox
+// plays only these. Kept in saved games (FF_GetSongsHeard).
+
+void FF_GetSongsHeard(int16_t *out, int count)
+{
+	for (int i = 0; i < count; ++i)
+		out[i] = i < FF_LASTMUSIC ? ff_songsHeard[i] : 0;
+}
+
+void FF_SetSongsHeard(const int16_t *in, int count)
+{
+	for (int i = 0; i < FF_LASTMUSIC; ++i)
+		ff_songsHeard[i] = (i < count && in[i] == 1) ? 1 : 0;
+}
 void CK_MeasureMultiline(const char *str, uint16_t *w, uint16_t *h);
 
 void FF_StartMusic(uint16_t song, bool repeat);
@@ -720,7 +741,7 @@ void FF_Jukebox(void)
 			// the song's name, with a mark when it is the one playing
 			char name[160];
 			snprintf(name, sizeof(name), "%s%s", FF_String(FF_S_MUSICNAME0 + playlist[song]),
-				playlist[song] == ff_playingSong ? "\n(playing)" : "");
+				playlist[song] == ff_playingSong ? "\n(playing)" : !ff_songsHeard[playlist[song]] ? "\n(not heard yet)" : "");
 			uint16_t w, h;
 			CK_MeasureMultiline(name, &w, &h);
 			VHB_Bar(nameX, nameY, nameW, nameH, 15);
@@ -736,7 +757,10 @@ void FF_Jukebox(void)
 			break;
 		if (ck_inputFrame.jump || scan == IN_SC_Enter || scan == IN_SC_Space)
 		{
-			FF_StartMusic(playlist[song], true);
+			if (ff_songsHeard[playlist[song]])
+				FF_StartMusic(playlist[song], true);
+			else
+				SD_PlaySound(FF_OLDNOWAYSND); // only songs already heard in play
 			redraw = true;
 			while (ck_inputFrame.jump)
 			{
@@ -765,8 +789,177 @@ void FF_Jukebox(void)
 		ff_map.music = ff_playingSong;
 	IN_ClearKeysDown();
 }
+// "Snailas" (SNAILAS.C, from a BASIC program by Commander Spleen, made C by
+// K1n9_Duk3): another arcade machine's waiting screen. Forty snails, each
+// three letters of a DOS text screen ( _@" ), crawl about a green screen
+// round a box that says INSERT COIN, turning at each other and now and then
+// falling asleep. Any key leaves. The original switches the PC to its
+// 80-column text screen; here the same 80 x 25 cells are drawn on the
+// game's own screen, 4 x 8 pixels each, the snails' letters as small shapes
+// and the words in the box in the game's own letters. The snails and the
+// box start as the game's data has them (its SNAILAS_DATA chunk).
+#define FF_SNAIL_COLS 80
+#define FF_SNAIL_ROWS 25
+#define FF_NUM_SNAILS 40
+
 void FF_RunSnailas(void)
 {
+	enum { CELLS = FF_SNAIL_COLS * FF_SNAIL_ROWS, MAXX = FF_SNAIL_COLS - 3, MAXY = FF_SNAIL_ROWS - 1 };
+	static uint8_t glyph[CELLS], colour[CELLS], blocked[CELLS];
+	static struct { int8_t x, y, dir, sleep; uint8_t col; } snails[FF_NUM_SNAILS];
+	const uint8_t defaultColours = 8 | (2 << 4); // dark grey on green
+
+	CA_CacheGrChunk(FF_SNAILAS_DATA);
+	const uint8_t *data = (const uint8_t *)ca_graphChunks[FF_SNAILAS_DATA];
+	if (!data)
+		return;
+	// its data: the screen (a letter and its colours for every cell), which
+	// cells are taken, the snails (five bytes each)
+	for (int i = 0; i < CELLS; ++i)
+	{
+		glyph[i] = data[i * 2];
+		colour[i] = data[i * 2 + 1];
+		blocked[i] = data[CELLS * 2 + i];
+	}
+	for (int i = 0; i < FF_NUM_SNAILS; ++i)
+	{
+		const uint8_t *sn = data + CELLS * 3 + i * 5;
+		snails[i].x = (int8_t)sn[0];
+		snails[i].y = (int8_t)sn[1];
+		snails[i].dir = (int8_t)sn[2];
+		snails[i].sleep = (int8_t)sn[3];
+		snails[i].col = sn[4];
+	}
+
+	// the snails' letters, three pixels wide in a cell of 4 x 8
+	static const struct { char c; uint8_t rows[8]; } shapes[] = {
+		{'_', {0, 0, 0, 0, 0, 0, 7, 0}},
+		{'@', {0, 0, 2, 7, 7, 7, 2, 0}},
+		{'"', {0, 0, 5, 5, 0, 0, 0, 0}},
+		{'z', {0, 0, 0, 0, 7, 2, 7, 0}},
+		{'Z', {0, 0, 7, 1, 2, 4, 7, 0}},
+	};
+
+	VL_SetScrollCoords(0, 0);
+	VL_SetDefaultPalette();
+	US_SetPrintRoutines(NULL, VH_DrawPropString);
+	IN_ClearKeysDown();
+	for (int frame = 0;; ++frame)
+	{
+		if (frame % 6 == 0)
+		{
+			for (int i = 0; i < FF_NUM_SNAILS; ++i)
+			{
+				int xmove = 0, ymove = 0;
+				bool move = false;
+				int pos = snails[i].x + snails[i].y * FF_SNAIL_COLS;
+				if (snails[i].sleep > 0)
+				{
+					if (--snails[i].sleep != 0)
+						glyph[pos + 1 + snails[i].dir] = (snails[i].sleep & 1) ? 'Z' : 'z';
+					else
+						move = true; // (it wakes: drawn again where it is)
+				}
+				else
+				{
+					if (rand() % 70 > 55)
+						snails[i].dir = -snails[i].dir;
+					else if (rand() % 65 > 50)
+					{
+						move = true;
+						xmove = snails[i].dir;
+						ymove = (rand() % 2) * 2 - 1;
+					}
+					else
+					{
+						move = true;
+						xmove = snails[i].dir;
+					}
+				}
+				if (move)
+				{
+					int newx = snails[i].x + xmove, newy = snails[i].y + ymove;
+					newx = newx > MAXX ? 0 : newx < 0 ? MAXX : newx;
+					newy = newy > MAXY ? 0 : newy < 0 ? MAXY : newy;
+					int newpos = newy * FF_SNAIL_COLS + newx;
+					for (int k = 0; k < 3; ++k)
+						blocked[pos + k] = 0;
+					if (blocked[newpos] || blocked[newpos + 1] || blocked[newpos + 2])
+						snails[i].dir = -snails[i].dir; // something in the way: turn round
+					else
+					{
+						for (int k = 0; k < 3; ++k)
+							glyph[pos + k] = 0;
+						colour[pos + 1] = defaultColours;
+						glyph[newpos + 1] = '@';
+						colour[newpos + 1] = snails[i].col;
+						glyph[newpos + 1 + snails[i].dir] = '"';
+						glyph[newpos + 1 - snails[i].dir] = '_';
+						snails[i].x = (int8_t)newx;
+						snails[i].y = (int8_t)newy;
+						pos = newpos;
+					}
+					for (int k = 0; k < 3; ++k)
+						blocked[pos + k] = 1;
+				}
+				if (snails[i].sleep == 0 && move && rand() % 50 == 45)
+				{
+					snails[i].sleep = 10;
+					glyph[pos + 1 + snails[i].dir] = 'z';
+					glyph[pos + 1 - snails[i].dir] = ' ';
+				}
+			}
+		}
+		// the screen
+		for (int i = 0; i < CELLS; ++i)
+		{
+			int x = (i % FF_SNAIL_COLS) * 4, y = (i / FF_SNAIL_COLS) * 8;
+			VL_ScreenRect(x, y, 4, 8, (colour[i] >> 4) & 7);
+			for (int k = 0; k < (int)(sizeof(shapes) / sizeof(shapes[0])); ++k)
+			{
+				if (shapes[k].c != glyph[i])
+					continue;
+				for (int row = 0; row < 8; ++row)
+					for (int bit = 0; bit < 3; ++bit)
+						if (shapes[k].rows[row] & (4 >> bit))
+							VL_ScreenRect(x + bit, y + row, 1, 1, colour[i] & 15);
+			}
+		}
+		// the words in the box (cells 32-48 across, 8-16 down)
+		US_SetWindowX(30 * 4 - 8);
+		US_SetWindowW(21 * 4 + 16);
+		US_SetPrintFont(0);
+		US_SetPrintColour(14);
+		US_SetPrintY(9 * 8 - 1);
+		US_CPrint("SNAILAS");
+		US_SetPrintColour(4);
+		US_SetPrintY(11 * 8 - 1);
+		US_CPrint("0 CREDIT");
+		if ((frame / 24) % 2 == 0) // (the text screen's blinking letters)
+		{
+			US_SetPrintColour(12);
+			US_SetPrintY(13 * 8 - 1);
+			US_CPrint("INSERT COIN");
+			US_SetPrintY(14 * 8 + 2);
+			US_CPrint("TO PLAY!");
+		}
+		VL_Present();
+		VL_DelayTics(1);
+
+		IN_PumpEvents();
+		IN_ReadControls(0, &ck_inputFrame);
+		if (IN_GetLastScan() != IN_SC_None || ck_inputFrame.jump || ck_inputFrame.pogo || ck_inputFrame.button2)
+			break;
+		// (developer runs: a picture of the 60th frame, and on)
+		if (frame == 60 && KW_DebugWait())
+			break;
+		if (frame > 60 && getenv("KW_AUTOSHOT"))
+			break;
+	}
+	US_SetPrintColour(15);
+	US_SetPrintRoutines(NULL, NULL);
+	VL_ClearScreen(0);
+	IN_ClearKeysDown();
 }
 // "Foobs in Space!" (FOOBS.C, by K1n9_Duk3): an arcade machine's waiting
 // screen. Stars fly out of the middle, the word FOOBS is spelled with Foobs
@@ -934,6 +1127,8 @@ int FF_SongFor(int level)
 	if (!ff_songDirect)
 		level = (ff_map.music >= 0 && ff_map.music < FF_LASTMUSIC) ? ff_map.music : 0;
 	ff_playingSong = level; // (for its jukebox)
+	if (level >= 0 && level < FF_LASTMUSIC)
+		ff_songsHeard[level] = 1;
 	return level;
 }
 
