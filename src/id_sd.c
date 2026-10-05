@@ -751,11 +751,11 @@ void SD_StartMusicData(const uint8_t *data, uint16_t length)
 
 // KEEN WORLDS: a digitized voice clip, mixed into the output by the backend
 // (SD_MixVoice is called from its audio callback).
-static const uint8_t *volatile sd_voiceData;
+static const int16_t *volatile sd_voiceData;
 static uint32_t sd_voiceLength, sd_voiceRate;
 static uint64_t sd_voicePos; // 32.32 fixed point
 
-void SD_PlayVoice(const uint8_t *data, uint32_t length, uint32_t rate)
+void SD_PlayVoice(const int16_t *data, uint32_t length, uint32_t rate)
 {
 	if (!sd_backend || !data || !length || !rate)
 		return;
@@ -794,7 +794,7 @@ void SD_MixVoice(int16_t *out, int frames, int channels, int outRate)
 			sd_voiceData = NULL;
 			return;
 		}
-		int sample = ((int)sd_voiceData[index] - 128) * 180;
+		int sample = sd_voiceData[index] * 3 / 4;
 		for (int c = 0; c < channels; ++c)
 		{
 			int mixed = out[i * channels + c] + sample;
@@ -802,6 +802,45 @@ void SD_MixVoice(int16_t *out, int frames, int channels, int outRate)
 		}
 		sd_voicePos += step;
 	}
+}
+
+// KEEN WORLDS: a volume on the AdLib output, moved a little every sample
+// until it reaches its target (SD_ApplyAdLibVolume is called from the
+// backend's audio callback). 16.16 fixed point, 1.0 = full volume.
+static volatile int32_t sd_adlibVolume = 1 << 16, sd_adlibVolumeTarget = 1 << 16;
+static volatile int32_t sd_adlibVolumeTime = 0; // milliseconds for a whole 0-1 sweep; 0 = at once
+
+void SD_FadeAdLibVolume(int volume, int milliseconds)
+{
+	if (!sd_backend)
+		return;
+	volume = volume < 0 ? 0 : volume > 256 ? 256 : volume;
+	sd_backend->lock();
+	sd_adlibVolumeTarget = volume << 8;
+	sd_adlibVolumeTime = milliseconds;
+	if (milliseconds <= 0)
+		sd_adlibVolume = sd_adlibVolumeTarget;
+	sd_backend->unlock();
+}
+
+void SD_ApplyAdLibVolume(int16_t *out, int frames, int channels, int outRate)
+{
+	int32_t volume = sd_adlibVolume, target = sd_adlibVolumeTarget;
+	if (volume == target && volume == 1 << 16)
+		return;
+	int32_t step = (sd_adlibVolumeTime > 0 && outRate > 0) ? (int32_t)(65536000LL / ((int64_t)sd_adlibVolumeTime * outRate)) : 65536;
+	if (step < 1)
+		step = 1;
+	for (int i = 0; i < frames; ++i)
+	{
+		if (volume < target)
+			volume = (target - volume < step) ? target : volume + step;
+		else if (volume > target)
+			volume = (volume - target < step) ? target : volume - step;
+		for (int c = 0; c < channels; ++c)
+			out[i * channels + c] = (int16_t)(((int32_t)out[i * channels + c] * (volume >> 4)) >> 12);
+	}
+	sd_adlibVolume = volume;
 }
 
 // Stop the current music track (identical to SD_MusicOff() -- doesn't actually fade)

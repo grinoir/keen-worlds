@@ -44,6 +44,24 @@ bool KW_StartShipMusic(void)
 	return true;
 }
 
+#define KW_SHIP_MUSIC_FADE_IN 2500  // milliseconds
+#define KW_SHIP_MUSIC_FADE_OUT 700
+
+// The tune goes quiet (for the ship computer): it fades down, the caller
+// waits that long, then KW_ShipMusicQuiet() turns it off.
+int KW_FadeShipMusicOut(void)
+{
+	SD_FadeAdLibVolume(0, KW_SHIP_MUSIC_FADE_OUT);
+	return KW_SHIP_MUSIC_FADE_OUT * 70 / 1000 + 1; // in tics
+}
+
+void KW_ShipMusicQuiet(void)
+{
+	SD_MusicOff();
+	SD_FadeAdLibVolume(256, 0); // the games' sound effects stay at full volume
+	kw_shipMusicHeld = true;
+}
+
 static bool kw_tavernThemePlaying;
 
 static bool KW_IsInTavern(void)
@@ -63,7 +81,12 @@ void KW_UpdateMusicZone(void)
 	if (kw_shipMusicHeld && (KW_CurrentWorld() != KW_SHIP || !KW_ShipComputerSpeaking()))
 	{
 		kw_shipMusicHeld = false;
-		KW_StartShipMusic();
+		// ... and comes back in gently
+		if (KW_StartShipMusic())
+		{
+			SD_FadeAdLibVolume(0, 0);
+			SD_FadeAdLibVolume(256, KW_SHIP_MUSIC_FADE_IN);
+		}
 	}
 	bool inTavern = KW_IsInTavern();
 	if (inTavern == kw_tavernThemePlaying)

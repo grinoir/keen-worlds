@@ -275,6 +275,95 @@ is still inside. On Krisle the controls then refuse (the ship is wrecked
 until that game is finished).
 
 **Landing announcements**: when the ship has landed (new game, or after a
+flight) the ship computer says where, with a warning about the locals: the
+same woman's voice for every world. `tools/kw_landing_voice.py` holds the
+words; it writes the clips (`data/megarocket/LAND_<ID>.RAW`, 16-bit, 22050
+Hz) and `src/kw_landing_text.h` for the card shown with them. The voice is
+Kokoro's "Heart" (a free neural voice run locally through the kokoro-js
+copy and model in the user's ArcadiumCMS project, `tools/kw_landing_voice.mjs`).
+The engine plays one voice clip at a time, mixed into the SDL sound output
+(`SD_PlayVoice` in `id_sd.c`). The ship's tune is silent while she speaks:
+it fades out with the lights before a landing and fades back in afterwards
+(`SD_FadeAdLibVolume`).
+
+**Music**: Keen 9 has 19 songs starting at audio chunk 187; `MOD.CK5`
+  sets `ca_audStartMusic` and `ca_audNumSongs` (new), so the level music is
+  right now (it was five songs off before).
+- **Sprite caches**: the mod moves every creature's frames; `lumpStarts` and
+  `lumpEnds` in `MOD.CK5` follow. Omnispeak keeps that table sorted by
+  sprite number, the program doesn't, so they are matched by start value.
+
+Not converted: the DOS start-up banner, the galaxy-explosion palette and
+star colours (Omnispeak's explosion is hard-wired), the removed F10 cheats.
+Found on the way: Omnispeak's Keen 5 action file names two different
+program functions `CK_DeadlyCol`; one only kills (`CK_LethalCol`). Keen 9's
+file uses the right one; Keen 5's own data is left as upstream has it.
+
+`/KWTEST` checks Keen 9's settings, redirects and new functions are wired
+up, that Keen 5 has none of them, and, for every level of Keen 8 and 9,
+that each creature's sprites are in memory. Not yet play-tested by eye.
+
+### Atroxian Realm (in progress)
+
+A game of its own (Gridlock, 2016, GPL source written from Omnispeak's Keen
+5 code), world id `arealm`. `src/kw_arealm.c` has its episode definition
+(`EP_CK5` with extension `CKD`) and its level setup; its variable files are
+written from its source by `tools/kw_arealm.py`; its creatures are
+`src/kw_ar_act1-3.c`. It is ported and passes `/KWTEST`; play has found
+and fixed a few things since. What is done and what was left out on
+purpose: `../research/atroxian-realm.md`.
+
+In a level, **F8** lists the items still to be found (its own key for this,
+F2, is the menu here). `%int AR_EndStats 1` in a variable file shows that
+list after every finished level, as its option does.
+
+### Foray in the Forest (in progress)
+
+A game of its own (Nisaba and K1n9_Duk3, v2.0; GPL source that descends
+from Atroxian Realm's), world id `fitf`, "The Ancient Forest". It runs as
+`EP_CK5` with extension `CKS`. Its variable files are written from its
+source by `tools/kw_fitf.py`; its code is converted from its source by
+`tools/kw_fitf_port.py` and the `kw_fitf_*_fixes.py` scripts
+(`tools/kw_fitf_regen.sh` redoes it) into `src/kw_ff_act.c` (creatures),
+`kw_ff_keen.c`, `kw_ff_map.c`, `kw_ff_cam.c`, `kw_ff_dialog.c`;
+`kw_ff_scan.c` and `kw_ff_phys.c` were converted once; `src/kw_fitf.c` has
+what joins it to the engine. The engine hands over to it at marked places
+(`FF_IsActive()`). What is done and what is left:
+`../research/foray-in-the-forest.md`.
+
+### The Megarocket (Keen Worlds' own world)
+
+World id `megarocket`: the inside of Keen's ship, on Keen 4's engine. Its
+map is written by `tools/kw_shipworld.py` into `data/megarocket`
+(`play/run.sh` copies the folder to `play/megarocket`).
+
+Its look is the ship of **Foray in the Forest** (Nisaba and K1n9_Duk3, GPL
+v2 or later): that game's flight room and exit room, with the things lying
+about in them painted out. `tools/kw_shiproom_art.py` reads the two rooms
+from the game's own files (`play/mods/fitf`, level 1), cleans them and
+writes `src/kw_shiproom_art.h`, which is placed like the other Keen Worlds
+art. So Foray's art is in this repository; the world's card and "About
+this world" name its makers. (The user is to speak to the authors about
+this use before anything is published.)
+
+Keen Worlds adds three things of Keen's to the exit room (own drawing):
+his pogo stick, his bag and a bed (for a later way into Keen Dreams).
+
+The flight room follows Foray's own layout (read from its level and tile
+properties): Keen can jump up onto the flight deck, which is as wide as
+Foray's so he stays under the glass, and the box of stunners under the deck
+is the ammo station. "Up" opens the
+list of worlds at the navigation screen in the nose, where a small sign
+with an arrow blinks, and also on the flight deck at the controls.
+
+**Every game begins inside the ship** (`KW_BeginInShip`, called for a new
+game): the ship has landed on the world the game starts in, and Keen steps
+out through the hatch. Choosing a world at the controls no longer puts Keen
+outside: the screen goes dark, the ship now stands on that world, and Keen
+is still inside. On Krisle the controls then refuse (the ship is wrecked
+until that game is finished).
+
+**Landing announcements**: when the ship has landed (new game, or after a
 flight) the ship computer says where, with a warning about the locals, in a
 different voice for every world. `tools/kw_landing_voice.py` holds the
 words; it writes the clips (`data/megarocket/LAND_<ID>.RAW`, made with

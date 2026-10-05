@@ -12,5 +12,9 @@ void KW_UpdateMusicZone(void);
 bool KW_StartShipMusic(void);
 // The ship's tune is off until the ship computer has finished speaking.
 void KW_HoldShipMusic(void);
+// Fade the ship's tune down (returns how many tics that takes), then, after
+// waiting, turn it off until the computer has spoken; it fades back in.
+int KW_FadeShipMusicOut(void);
+void KW_ShipMusicQuiet(void);
 
 #endif

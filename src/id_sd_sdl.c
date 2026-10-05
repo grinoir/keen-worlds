@@ -383,6 +383,8 @@ void SD_SDL_CallBack(void *unused, Uint8 *stream, int len)
 			memcpy(currSamplePtr, &SD_ALOut_Samples[SD_ALOut_SamplesStart], 2 * numChannels * currNumOfSamples);
 			SD_ALOut_SamplesStart += currNumOfSamples;
 		}
+		// KEEN WORLDS: music fades
+		SD_ApplyAdLibVolume(currSamplePtr, currNumOfSamples, numChannels, SD_SDL_AudioSpec.freq);
 		// PC Speaker
 		if (SD_PC_Speaker_On)
 			PCSpeakerUpdateOne(currSamplePtr, currNumOfSamples);

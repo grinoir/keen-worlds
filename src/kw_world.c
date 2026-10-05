@@ -1349,7 +1349,7 @@ bool KW_ShipComputerSpeaking(void)
 
 static void KW_AnnounceLanding(int world)
 {
-	static uint8_t *clip = NULL;
+	static int16_t *clip = NULL;
 	for (int i = 0; i < (int)(sizeof(kw_landings) / sizeof(kw_landings[0])); ++i)
 	{
 		if (strcmp(kw_landings[i].id, kw_worldDefs[world].id))
@@ -1361,12 +1361,12 @@ static void KW_AnnounceLanding(int world)
 		{
 			FS_File f = FS_OpenKeenFile(kw_landings[i].file);
 			size_t size = FS_IsFileValid(f) ? FS_GetFileSize(f) : 0;
-			if (size && (clip = (uint8_t *)malloc(size)) != NULL && FS_Read(clip, 1, size, f) == size)
+			if (size && (clip = (int16_t *)malloc(size)) != NULL && FS_ReadInt16LE(clip, size / 2, f) == size / 2)
 			{
 				// the voice alone: the music comes in when it has finished
 				SD_MusicOff();
-				SD_PlayVoice(clip, (uint32_t)size, KW_LANDING_RATE);
-				kw_landingVoiceEnd = SD_GetTimeCount() + (uint32_t)(size * 70 / KW_LANDING_RATE) + 35;
+				SD_PlayVoice(clip, (uint32_t)(size / 2), KW_LANDING_RATE);
+				kw_landingVoiceEnd = SD_GetTimeCount() + (uint32_t)(size / 2 * 70 / KW_LANDING_RATE) + 35;
 				KW_HoldShipMusic();
 			}
 			if (FS_IsFileValid(f))
@@ -1483,9 +1483,11 @@ static void KW_ShipRoomFrame(void)
 		// says where he is, and the hatch is the way out.
 		if (!kw_cardsOff)
 		{
+			int tics = KW_FadeShipMusicOut(); // the music goes down with the lights
 			VL_FadeToBlack();
-			VL_DelayTics(35);
+			VL_DelayTics(tics > 35 ? tics : 35);
 		}
+		KW_ShipMusicQuiet();
 		kw_boardedFrom = destination;
 		RF_ForceRefresh();
 		if (!kw_cardsOff)
