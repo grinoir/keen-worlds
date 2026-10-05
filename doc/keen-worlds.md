@@ -408,6 +408,18 @@ font is in ASCII order: `ck_starWarsPlainText`) and `tools/kw_arealm.py`
 (from its source); before, both showed Keen 5's. `KW_AUTOSTORY=1` plays
 the stories in scripted developer runs.
 
+**Two ways to play** (asked when a game begins, kept in its saved games):
+- **Free Flight**: every installed world is open, in any order.
+- **The Chronicle**: the worlds open in the story's order
+  (`kw_chronicleLine`: Keen 4 to Keen 9; then Krisle and Gnosticus Pi
+  together). A game begins on the first world of the line whichever game
+  was launched. The flight menu shows the others as "(locked)" and says
+  which world must be saved first. When a world has been saved, the ship
+  computer announces the new course the next time Keen is in the cabin
+  (`COURSE_<ID>.RAW`). Worlds that are not installed are passed over; a
+  world Keen has been to stays open. `KW_AUTOCHRONICLE=1` chooses it in
+  scripted developer runs. It is kept in the save block's spare words.
+
 **After dying**: the engine's menu has a third choice in every world when
 there is a saved game to go back to: "Load last save" (the slot last saved
 to or loaded from; `US_LoadQuickSave`). Foray in the Forest has this in its

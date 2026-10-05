@@ -12,6 +12,7 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 #include "id_in.h"
 #include "id_mm.h"
 #include "id_rf.h"
+#include <ctype.h>
 #include "id_us.h"
 #include "id_vh.h"
 #include "id_vl.h"
@@ -421,6 +422,11 @@ const char *FF_TestSaveRoundTrip(bool (*save)(void), bool (*load)(void));
 static bool kw_introduced[KW_NUM_WORLDS]; // worlds whose arrival card has been shown
 static bool kw_storyShown[KW_NUM_WORLDS]; // worlds whose own story has been shown (this game)
 static int kw_storyWorld = KW_NO_WORLD;   // the world whose story plays before the ship lands on it
+// The Chronicle: a way to play in which the worlds open in the order of the
+// story (Free Flight, the other way, opens them all). Chosen when a game
+// begins and kept in its saved games.
+static int16_t kw_chronicle = 0;
+static int16_t kw_courseTold[KW_NUM_WORLDS]; // the ship computer has announced this world's course
 static bool kw_crashLanding = false;      // the ship is being shot down over Krisle (see KW_CrashLanding)
 const char *kw_loadingFileName = NULL;
 static int kw_deferredWorld = KW_NO_WORLD;
@@ -484,11 +490,15 @@ bool KW_WriteSaveBlock(FS_File fp)
 	// Version 5: Foray in the Forest's state follows Atroxian Realm's.
 	// Version 6: then the world the Megarocket stands on (for a game saved
 	// inside the ship).
-	// Version 7: then 261 words that are no longer used (for a short while
-	// the scenery around the ship was kept here).
-	static const int16_t unused[261] = {0};
+	// Version 7: then 261 words. (For a short while the scenery around the
+	// ship was kept here.) The first is now whether the game is a Chronicle,
+	// the next ones which worlds' courses the ship computer has announced.
+	int16_t extra[261] = {0};
+	extra[0] = kw_chronicle;
+	for (int w = 0; w < KW_NUM_WORLDS; ++w)
+		extra[1 + w] = kw_courseTold[w];
 	return AR_WriteState(fp) && FF_WriteState(fp) && KW_WriteId(fp, kw_worldDefs[kw_boardedFrom].id) &&
-		FS_WriteInt16LE(unused, 261, fp) == 261;
+		FS_WriteInt16LE(extra, 261, fp) == 261;
 }
 
 bool KW_ReadSaveBlock(FS_File fp, bool *deferred)
@@ -549,6 +559,8 @@ bool KW_ReadSaveBlock(FS_File fp, bool *deferred)
 			return false;
 		if (version < 5)
 			FF_ResetState();
+		kw_chronicle = 0;
+		memset(kw_courseTold, 0, sizeof(kw_courseTold));
 		kw_boardedFrom = KW_KEEN4;
 		if (version >= 6)
 		{
@@ -562,9 +574,14 @@ bool KW_ReadSaveBlock(FS_File fp, bool *deferred)
 		}
 		if (version >= 7)
 		{
-			int16_t unused[261];
-			if (FS_ReadInt16LE(unused, 261, fp) != 261)
+			int16_t extra[261];
+			if (FS_ReadInt16LE(extra, 261, fp) != 261)
 				return false;
+			// (a game saved while the scenery was kept here has other numbers:
+			// only 0 and 1 mean anything)
+			kw_chronicle = extra[0] == 1;
+			for (int w = 0; w < KW_NUM_WORLDS; ++w)
+				kw_courseTold[w] = kw_chronicle && extra[1 + w] == 1;
 		}
 	}
 	else
@@ -676,6 +693,8 @@ void KW_ResetWorlds(void)
 	memset(kw_storyShown, 0, sizeof(kw_storyShown));
 	kw_storyWorld = KW_NO_WORLD;
 	kw_crashLanding = false;
+	kw_chronicle = 0;
+	memset(kw_courseTold, 0, sizeof(kw_courseTold));
 	kw_pendingWorld = KW_NO_WORLD;
 	kw_placeArrivalAtShip = false;
 }
@@ -1220,6 +1239,126 @@ static bool KW_AskCard(const char *text)
 // stay. Every other world is listed: one that isn't installed opens a card
 // saying where to get it. The last line is "About this world".
 #define KW_MENU_ABOUT (-2)
+// ---- The Chronicle ----
+// The story's order: the Mortimer line, Keen 4 to Keen 9. After it the wider
+// journey (Krisle, Gnosticus Pi), open together. Worlds that are not
+// installed are passed over. A world Keen has been to stays open.
+static const int kw_chronicleLine[] = {KW_KEEN4, KW_KEEN5, KW_KEEN6, KW_KEEN7, KW_KEEN8, KW_KEEN9};
+#define KW_CHRONICLE_LINE ((int)(sizeof(kw_chronicleLine) / sizeof(kw_chronicleLine[0])))
+
+static bool KW_WorldIsSaved(int world)
+{
+	return kw_worlds[world].completed;
+}
+
+// The world that must be saved before this one opens (KW_NO_WORLD: none).
+static int KW_ChronicleKey(int world)
+{
+	int before = KW_NO_WORLD;
+	for (int i = 0; i < KW_CHRONICLE_LINE; ++i)
+	{
+		if (kw_chronicleLine[i] == world)
+			return before;
+		if (KW_IsWorldPresent(kw_chronicleLine[i]))
+			before = kw_chronicleLine[i];
+	}
+	return before; // the wider journey: after the last world of the line
+}
+
+static bool KW_CourseIsOpen(int world)
+{
+	if (!kw_chronicle || world == KW_SHIP || kw_worlds[world].visited || world == kw_boardedFrom)
+		return true;
+	int key = KW_ChronicleKey(world);
+	return key == KW_NO_WORLD || KW_WorldIsSaved(key);
+}
+
+// Where a Chronicle begins: the first world of the line that is installed.
+static int KW_ChronicleStart(void)
+{
+	for (int i = 0; i < KW_CHRONICLE_LINE; ++i)
+		if (KW_IsWorldPresent(kw_chronicleLine[i]))
+			return kw_chronicleLine[i];
+	return kw_currentWorld;
+}
+
+// A card with a few lines to choose from (the blinking box of the flight
+// menu); returns the line chosen, or -1 for Esc.
+static int KW_ChooseCard(const char *title, const char *const *lines, int count)
+{
+	int lineY[8];
+	VL_FixRefreshBuffer();
+	US_CenterWindow(30, 4 + 2 * count);
+	US_SetPrintY(US_GetPrintY() + 3);
+	US_CPrint(title);
+	US_SetPrintY(US_GetPrintY() + 4);
+	for (int i = 0; i < count; ++i)
+	{
+		lineY[i] = US_GetPrintY() - 2;
+		US_CPrint(lines[i]);
+		US_SetPrintY(US_GetPrintY() + 4);
+	}
+	KW_WaitForButtonsUp();
+	int sel = 0, result = -1;
+	int x1 = US_GetWindowX() + 4, x2 = US_GetWindowX() + US_GetWindowW() - 4;
+	while (true)
+	{
+		IN_PumpEvents();
+		int y = lineY[sel];
+		int clr = ((SD_GetTimeCount() >> 4) & 1) ? 12 : 1;
+		for (int pass = 0; pass < 2; ++pass)
+		{
+			VHB_HLine(x1, x2, y, clr);
+			VHB_HLine(x1, x2, y + 13, clr);
+			VHB_VLine(y, y + 13, x1, clr);
+			VHB_VLine(y, y + 13, x2, clr);
+			if (pass == 0)
+				VH_UpdateScreen();
+			clr = 15; // Erase it again for the next frame.
+		}
+		IN_ScanCode scan = IN_GetLastScan();
+		IN_ReadControls(0, &ck_inputFrame);
+		if (scan == IN_SC_Escape)
+			break;
+		if (ck_inputFrame.jump || ck_inputFrame.pogo || scan == IN_SC_Enter || scan == IN_SC_Space)
+		{
+			result = sel;
+			break;
+		}
+		if ((ck_inputFrame.yDirection == -1 || scan == IN_SC_UpArrow) && sel > 0)
+			sel--;
+		else if ((ck_inputFrame.yDirection == 1 || scan == IN_SC_DownArrow) && sel < count - 1)
+			sel++;
+		if (scan != IN_SC_None)
+			IN_SetLastScan(IN_SC_None);
+		while (ck_inputFrame.yDirection != 0)
+		{
+			IN_PumpEvents();
+			IN_ReadControls(0, &ck_inputFrame);
+		}
+	}
+	KW_WaitForButtonsUp();
+	return result;
+}
+
+// A new game: which way to play? (KW_AUTOCHRONICLE=1 answers for the
+// scripted developer runs.)
+static void KW_ChooseJourney(void)
+{
+	kw_chronicle = getenv("KW_AUTOCHRONICLE") != NULL;
+	if (kw_cardsOff || getenv("KW_AUTOSHOT") || getenv("KW_AUTOCHRONICLE"))
+		return;
+	static const char *const ways[] = {"Free Flight: any world, any order", "The Chronicle: the story, in order"};
+	VL_ClearScreen(0);
+	VL_SetScrollCoords(0, 0);
+	VL_SetDefaultPalette();
+	IN_ClearKeysDown();
+	kw_chronicle = KW_ChooseCard("How will Keen travel?", ways, 2) == 1;
+	if (kw_chronicle)
+		KW_ShowCards("The Chronicle\n\nThe worlds open one after\nanother, as their story goes.\nSave a world and the ship\nlearns the course to the next.");
+	VL_ClearScreen(0);
+}
+
 static int KW_TravelMenu(void)
 {
 	int lineY[KW_NUM_WORLDS];
@@ -1239,6 +1378,11 @@ static int KW_TravelMenu(void)
 		int w = KW_WorldById(getenv("KW_AUTODEST"));
 		printf("KW_AUTODEST: the travel menu was opened in world %s; choosing %s\n",
 			kw_worldDefs[kw_currentWorld].id, getenv("KW_AUTODEST"));
+		if (w >= 0 && KW_IsWorldPresent(w) && !KW_CourseIsOpen(w))
+		{
+			printf("KW_AUTODEST: the Chronicle has no course to %s yet\n", kw_worldDefs[w].id);
+			return KW_NO_WORLD;
+		}
 		return (w >= 0 && KW_IsWorldPresent(w)) ? w : KW_NO_WORLD;
 	}
 
@@ -1260,6 +1404,8 @@ static int KW_TravelMenu(void)
 		lineY[i] = US_GetPrintY() - 2;
 		if (entries[i] == KW_MENU_ABOUT)
 			snprintf(line, sizeof(line), "About this world");
+		else if (KW_IsWorldPresent(entries[i]) && !KW_CourseIsOpen(entries[i]))
+			snprintf(line, sizeof(line), "%s (locked)", kw_worldDefs[entries[i]].name);
 		else if (KW_IsWorldPresent(entries[i]))
 			snprintf(line, sizeof(line), "%s", kw_worldDefs[entries[i]].name);
 		else
@@ -1319,7 +1465,19 @@ static int KW_TravelMenu(void)
 	KW_WaitForButtonsUp();
 	if (result == KW_MENU_ABOUT)
 	{
-		KW_ShowAboutWorld(kw_currentWorld);
+		// (inside the ship: the world it stands on)
+		KW_ShowAboutWorld(kw_currentWorld == KW_SHIP ? kw_boardedFrom : kw_currentWorld);
+		return KW_NO_WORLD;
+	}
+	if (result != KW_NO_WORLD && KW_IsWorldPresent(result) && !KW_CourseIsOpen(result))
+	{
+		// The Chronicle: not yet.
+		char text[160];
+		int key = KW_ChronicleKey(result);
+		snprintf(text, sizeof(text), "The Chronicle\n\nThe ship has no course to\n%s yet.\nSave %s first.",
+			kw_worldDefs[result].name, kw_worldDefs[key].name);
+		SD_PlaySound(CK_SOUNDNUM(SOUND_NEEDKEYCARD));
+		KW_ShowCards(text);
 		return KW_NO_WORLD;
 	}
 	if (result != KW_NO_WORLD && !KW_IsWorldPresent(result))
@@ -1412,7 +1570,17 @@ void KW_BeginInShip(void)
 	bool tool = (us_tedLevel || getenv("KW_AUTOLEVEL")) && !getenv("KW_AUTOSHIP");
 	if (tool || kw_currentWorld == KW_SHIP || !KW_IsWorldPresent(KW_SHIP))
 		return;
+	// Free Flight or the Chronicle? A Chronicle begins where the story does.
+	KW_ChooseJourney();
+	if (kw_chronicle && KW_ChronicleStart() != kw_currentWorld)
+	{
+		KW_SwitchWorld(KW_ChronicleStart());
+		ck_gameState.currentLevel = 0;
+		kw_placeArrivalAtShip = false;
+		kw_worlds[kw_currentWorld].visited = false;
+	}
 	int from = kw_currentWorld;
+	kw_courseTold[from] = 1;
 	// the game that was chosen tells its story first
 	if (KW_StoryIsDue(from))
 		KW_PlayWorldStory();
@@ -1620,6 +1788,28 @@ void KW_PlayLoopHook(void)
 			KW_VoiceComingUp(false);
 			printf("KW_AnnounceLanding: %s\n", kw_worldDefs[world].id);
 			KW_AnnounceLanding(world);
+		}
+		// The Chronicle: a world has been saved, and the ship has learned
+		// the course to the next.
+		if (kw_chronicle && !kw_cardsOff && !vl_screenFaded && !KW_VoiceSpeaking())
+		{
+			for (int w = 0; w < KW_NUM_WORLDS; ++w)
+			{
+				if (w == KW_SHIP || kw_courseTold[w] || !KW_IsWorldPresent(w) || !KW_CourseIsOpen(w))
+					continue;
+				kw_courseTold[w] = 1;
+				if (kw_worlds[w].visited)
+					continue;
+				char text[160], file[32];
+				snprintf(text, sizeof(text), "Ship computer:\n\nA new course is open:\n%s.", kw_worldDefs[w].name);
+				snprintf(file, sizeof(file), "COURSE_%s.RAW", kw_worldDefs[w].id);
+				for (char *c = file; *c && *c != '.'; ++c)
+					*c = (char)toupper((unsigned char)*c);
+				KW_Speak(file, true);
+				KW_ShowCards(text);
+				KW_StopVoice();
+				break; // one at a time
+			}
 		}
 		KW_ShipRoomFrame();
 		return;
