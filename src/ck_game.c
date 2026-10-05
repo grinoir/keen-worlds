@@ -574,6 +574,13 @@ void CK_ExitMenu(void)
 }
 
 void FF_PatchWorldMap(void); // KEEN WORLDS (kw_fitf.c)
+// KEEN WORLDS: Keen Dreams (kw_dreams.c)
+bool KD_IsActive(void);
+void KD_KeenDied(void);
+void KD_GameFinale(void);
+bool KW_DreamOver(bool won);
+#define KD_LS_VICTORIOUS 30 // (KD_LS_Victorious in kw_dreams.h)
+void KD_BeginCacheBox(const char *title, int numChunks);
 
 void CK_MapLevelMarkAsDone(void)
 {
@@ -583,6 +590,8 @@ void CK_MapLevelMarkAsDone(void)
 		FF_PatchWorldMap();
 		return;
 	}
+	if (KD_IsActive())
+		return; // KEEN WORLDS: Keen Dreams has patched its map already (KD_ScanInfoLayer)
 	int y, x, level, i, w, flags;
 	uint16_t *pw;
 
@@ -740,6 +749,11 @@ void CK_BeginCacheBox(const char *title, int numChunks)
 		FF_BeginCacheBox(title, numChunks);
 		return;
 	}
+	if (KD_IsActive())
+	{
+		KD_BeginCacheBox(title, numChunks);
+		return;
+	}
 
 	// Vanilla keen checks if > 2kb free here
 	// If not, it doesn't cache all of the keen counting down graphics
@@ -816,6 +830,8 @@ void CK_UpdateCacheBox(void)
 		FF_UpdateCacheBox();
 		return;
 	}
+	if (KD_IsActive())
+		return; // KEEN WORLDS: Keen Dreams' box has no countdown
 	ck_cacheBoxChunkCounter--;
 
 	if (ck_cacheBoxChunkCounter == 0 && ck_cacheCountdownNum <= 4)
@@ -1058,10 +1074,20 @@ void CK_GameLoop()
 		// (kw_fitf.c); it may change the level state for the cases below.
 		if (FF_IsActive())
 			FF_LevelEnded();
+		// KEEN WORLDS (Keen Dreams): Boobus Tuber is gone and the Dream
+		// Machine is off. Its ending, then Keen wakes up in his bunk.
+		if (KD_IsActive() && (int)ck_gameState.levelState == KD_LS_VICTORIOUS)
+		{
+			KD_GameFinale();
+			KW_DreamOver(true);
+			goto loadLevel;
+		}
 		switch (ck_gameState.levelState)
 		{
 		case LS_Died:
 			OSI_TakeBackOnDeath(); // KEEN WORLDS (Operation Station Infiltration)
+			if (KD_IsActive())
+				KD_KeenDied(); // KEEN WORLDS (Keen Dreams): keys and this level's bombs go
 			// KEEN WORLDS: Foray in the Forest's checkpoints and free restarts
 			if (FF_IsActive())
 			{
@@ -1243,6 +1269,11 @@ void CK_GameLoop()
 
 		// KEEN WORLDS: Foray in the Forest offers to continue
 		if (ck_gameState.numLives < 0 && FF_IsActive() && FF_GameOverContinue())
+			goto loadLevel;
+
+		// KEEN WORLDS: out of lives in the dream (Keen Dreams) is no game
+		// over. Keen wakes up, and the dream starts again another night.
+		if (ck_gameState.numLives < 0 && KW_DreamOver(false))
 			goto loadLevel;
 
 		if (ck_gameState.numLives < 0)

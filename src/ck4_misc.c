@@ -44,6 +44,8 @@ CK_EpisodeDef ck4_episode = {
 // Contains some keen-4 specific functions.
 
 // Level Ending Object Spawn
+void KD_SetupFunctions(void);
+
 void CK4_SetupFunctions()
 {
 	CK4_Obj1_SetupFunctions();
@@ -51,6 +53,7 @@ void CK4_SetupFunctions()
 	CK4_Obj3_SetupFunctions();
 	CK4_Map_SetupFunctions();
 	CK4_Misc_SetupFunctions();
+	KD_SetupFunctions(); // KEEN WORLDS: Keen Dreams' Keen and creatures (kw_kd_*.c)
 }
 
 // Check if all the game files are present.

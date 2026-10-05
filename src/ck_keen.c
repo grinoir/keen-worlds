@@ -1755,6 +1755,8 @@ void CK_KeenDeathThink(CK_object *obj)
 }
 
 bool FF_IsActive(void);
+bool KD_IsActive(void);
+void KD_KillKeen(void);
 void FF_KillKeen(void);
 
 void CK_KillKeen()
@@ -1763,6 +1765,11 @@ void CK_KillKeen()
 	if (FF_IsActive())
 	{
 		FF_KillKeen();
+		return;
+	}
+	if (KD_IsActive())
+	{
+		KD_KillKeen(); // KEEN WORLDS: Keen Dreams (kw_kd_keen.c)
 		return;
 	}
 	CK_object *obj = ck_keenObj;

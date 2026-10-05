@@ -266,7 +266,7 @@ this world" name its makers. (The user is to speak to the authors about
 this use before anything is published.)
 
 Keen Worlds adds three things of Keen's to the exit room (own drawing):
-his pogo stick, his bag and a bed (for a later way into Keen Dreams).
+his pogo stick, his bag and a bed (the way into Keen Dreams).
 
 The flight room follows Foray's own layout (read from its level and tile
 properties): Keen can jump up onto the flight deck, which is as wide as
@@ -354,7 +354,7 @@ this world" name its makers. (The user is to speak to the authors about
 this use before anything is published.)
 
 Keen Worlds adds three things of Keen's to the exit room (own drawing):
-his pogo stick, his bag and a bed (for a later way into Keen Dreams).
+his pogo stick, his bag and a bed (the way into Keen Dreams).
 
 The flight room follows Foray's own layout (read from its level and tile
 properties): Keen can jump up onto the flight deck, which is as wide as
@@ -481,17 +481,50 @@ in scripted developer runs.
 
 ### Keen Dreams (the bed)
 
-Keen Dreams is not a world: it is another game on another engine, reached
-through the bed in the Megarocket's exit room (`KW_Dream` in `kw_world.c`;
-the map marks the bed in its info plane). "Up" at the bed runs the program
-in the folder `dreams` beside the game as a process of its own and waits
-for it, keeping Keen Worlds' own window alive and dark; when the dream is
-left, Keen wakes in the cabin. Nothing is carried in or out. The folder
-holds the player's copy of Keen Dreams and an engine for it (ReflectionHLE,
-"Reflection Keen"); `dreams/dream.sh`, if there, is run instead of the
-default command. Without the folder Keen "is not sleepy". See
-`play/dreams/README.txt`. `KW_DREAMCMD` runs another command (scripted
-developer runs).
+World id `dreams`, "Tuberia": Keen Dreams (id Software, 1991; GPL source
+since 2014), running in this engine. It is not a planet. It is the dream
+Keen has in the bed of the Megarocket's exit room (`KW_Dream` in
+`kw_world.c`; the map marks the bed in its info plane): the flight console
+doesn't list it, the ship computer says nothing about it, the Chronicle
+leaves it out (`KW_IsPlanet`), and nothing is carried in or out. Keen's
+score, lives and shots wait in the ship while he dreams (`KW_Tally`,
+`KW_DreamLeaving`, `KW_DreamArriving`); the dream keeps its own score,
+lives, flower power, bombs and keys, in the save block's spare words from
+170.
+
+Keen Dreams is the engine Keen 4 to 6 grew out of, so it runs as Keen 4
+with its own code on top:
+
+- `tools/kw_dreams.py` converts the player's copy of the game (shareware
+  1.13: the tables inside `KDREAMS.EXE`, the Huffman-packed maps) into the
+  engine's file layout, in `play/mods/dreams/*.KDR`.
+- `tools/kw_dreams_port.py` writes its sprite states as an action file
+  (`KDACTION.KDR`), the world's variable file (`DREAMS.KDR`, on Keen 4's)
+  and `src/kw_dreams_defs.h` from the Keen Dreams source, and makes the
+  first pass over `KD_KEEN.C`, `KD_ACT1.C` and `KD_ACT2.C`: the old names
+  to Omnispeak's (`objtype` to `CK_object`, `ob->xmove` while thinking to
+  `ck_nextX`, `tinf[NORTHWALL+tile]` to `TI_ForeTop`, ...). The results,
+  finished by hand, are `src/kw_kd_keen.c` (Keen, flower power, the map
+  Keen), `kw_kd_act1.c` and `kw_kd_act2.c` (the vegetables and Boobus
+  Tuber).
+- `src/kw_dreams.c` is what its `KD_PLAY.C` did around them: the info plane
+  (`KD_ScanInfoLayer`), its scrolling, which is also how a level ends, by
+  walking off the map's edge (`KD_ScrollScreen`), the map of Tuberia
+  (`KD_PatchWorldMap`), the two-button input (`KD_FrameStart`: both of the
+  engine's other buttons throw), dying (keys and the level's bombs go) and
+  the ending in its own words (`KD_GameFinale`).
+
+The engine's wall clipping, state machine and score box are used as they
+are (they descend from Keen Dreams'); hooks marked `KD_IsActive()` in
+`ck_play.c`, `ck_game.c` and `ck_keen.c` switch off what Keen 4 added
+(tile checks, platforms carrying Keen, the countdown box, music).
+
+Keen has no wrist computer in his pyjamas: in the dream the menu keys ask
+whether to wake up (`KW_DreamKeys`), and Enter shows a plain status window.
+Waking puts Keen back in his bunk with the dream kept as it is; games are
+saved from the ship. Out of lives, he wakes with a start and the next dream
+begins again (`KW_DreamOver`); so it does after the ending. Without the
+converted files Keen "is not sleepy".
 
 ### Operation Station Infiltration
 

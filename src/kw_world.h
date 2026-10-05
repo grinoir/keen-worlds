@@ -40,6 +40,7 @@ typedef enum KW_World
 	KW_ASYLUM,  // Address Unknown: "Keen Asylum" (fan level pack on Keen 5)
 	KW_BOUNTY,  // Meurglys III: "Bounty Hunting Brouhaha" (fan game on Keen 4)
 	KW_SHIP,    // The Megarocket: Keen Worlds' own world, the inside of Keen's ship (on Keen 4)
+	KW_DREAM,   // Tuberia: "Keen Dreams", the dream Keen has in the ship's bed (its own code, on Keen 4's)
 	KW_NUM_WORLDS,
 	KW_NO_WORLD = -1,
 } KW_World;

@@ -117,6 +117,11 @@ void CK_ScoreBoxDrawTile8(int tilenum, uint8_t *dest, int destWidth, int planeSi
 // minus the offset), for games that number them differently; and
 // ck_scoreBoxScoreDigits, ck_scoreBoxShotsColumn, ck_scoreBoxLivesColumn -
 // how many places the score has and where the two small numbers start.
+// KEEN WORLDS: Keen Dreams (kw_dreams.c)
+bool KD_IsActive(void);
+int KD_ScoreBoxShots(void);
+int KD_ScoreBoxIcon(void);
+
 void CK_UpdateScoreBox(CK_object *scorebox)
 {
 
@@ -174,7 +179,10 @@ void CK_UpdateScoreBox(CK_object *scorebox)
 	}
 
 	// Draw the number of shots if it's changed
-	if (scorebox->user3 != ck_gameState.numShots)
+	// KEEN WORLDS: in Keen Dreams it is flower power, or Boobus bombs in
+	// Boobus Tuber's castle, with a picture of which (kw_dreams.c)
+	int shots = KD_IsActive() ? KD_ScoreBoxShots() : ck_gameState.numShots;
+	if (scorebox->user3 != shots)
 	{
 		int place, len, planeSize;
 		char buf[16];
@@ -184,12 +192,21 @@ void CK_UpdateScoreBox(CK_object *scorebox)
 		// and 12 rows from the top
 		dest = spr->data;
 		dest += (planeSize = box.width * box.height);
+		if (KD_IsActive())
+		{
+			uint8_t *icon = dest + box.width * 16 + 4;
+			int tile = KD_ScoreBoxIcon();
+			CK_ScoreBoxDrawTile8(tile, icon, box.width, planeSize);
+			CK_ScoreBoxDrawTile8(tile + 1, icon + 1, box.width, planeSize);
+			CK_ScoreBoxDrawTile8(tile + 2, icon + box.width * 8, box.width, planeSize);
+			CK_ScoreBoxDrawTile8(tile + 3, icon + box.width * 8 + 1, box.width, planeSize);
+		}
 		dest += box.width * 20 + CK_INT(ck_scoreBoxShotsColumn, 8);
 
-		if (ck_gameState.numShots >= 99)
+		if (shots >= 99)
 			snprintf(buf, sizeof(buf), "99");
 		else
-			snprintf(buf, sizeof(buf), "%d", ck_gameState.numShots);
+			snprintf(buf, sizeof(buf), "%d", shots);
 
 		len = strlen(buf);
 
@@ -205,7 +222,7 @@ void CK_UpdateScoreBox(CK_object *scorebox)
 			CK_ScoreBoxDrawTile8(*c - CK_INT(ck_scoreBoxDigitOffset, 6), dest++, box.width, planeSize);
 		}
 
-		scorebox->user3 = ck_gameState.numShots;
+		scorebox->user3 = shots;
 
 		updated = true;
 	}

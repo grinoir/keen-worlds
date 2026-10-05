@@ -47,6 +47,8 @@ extern const char *ck_episodeFile;
 extern CK_EpisodeDef ar_episode;
 // Foray in the Forest's (kw_fitf.c), the same way with extension CKS.
 #define KW_EPISODE_FITF 11
+#define KW_EPISODE_DREAMS 13 // Keen Dreams (kw_dreams.c, kw_kd_*.c)
+extern CK_EpisodeDef kd_episode;
 extern CK_EpisodeDef ff_episode;
 
 
@@ -194,6 +196,18 @@ static const KW_WorldDef kw_worldDefs[KW_NUM_WORLDS] = {
 		"Keen's ship, as drawn for\nForay in the Forest",
 		"The inside of the Megarocket\nis from Foray in the Forest\nby Nisaba and K1n9_Duk3,\ntidied up for Keen Worlds.\n\nIt is built on the tiles of\nCommander Keen 4\n(id Software, 1991).",
 		"It comes with Keen Worlds:\nthe folder megarocket is missing\nfrom the game folder."},
+	// Tuberia: Keen Dreams, id Software's "lost episode" (1991, published
+	// by Softdisk; its source is GPL since 2014). It is the dream Keen has
+	// in the Megarocket's bed: not a planet, so not a destination in the
+	// menu, and nothing is carried in or out of it. Its code is ported from
+	// its source (kw_dreams.c, kw_kd_*.c); tools/kw_dreams.py converts the
+	// player's copy of the game's data.
+	{"dreams", "Tuberia", KW_EPISODE_DREAMS, "mods/dreams", "DREAMS.KDR",
+		"Commander Keen in\nKeen Dreams",
+		"The lost episode\nid Software, 1991",
+		"Programming:\nJohn Carmack, John Romero\n\nCreative director: Tom Hall\nArt: Adrian Carmack\n\n"
+		"Published by Softdisk.\nIts source code was released\nunder the GPL in 2014." KW_NOT_OURS,
+		"Keen Dreams' shareware release\nis free to pass on. Put it in\nthe folder dreams and run\ntools/kw_dreams.py and\ntools/kw_dreams_port.py."},
 };
 
 static CK_EpisodeDef *KW_EpisodeDef(int episode)
@@ -218,6 +232,8 @@ static CK_EpisodeDef *KW_EpisodeDef(int episode)
 		return &ff_episode;
 	case KW_EPISODE_OSI:
 		return &osi_episode;
+	case KW_EPISODE_DREAMS:
+		return &kd_episode;
 	default:
 		return NULL;
 	}
@@ -278,6 +294,16 @@ bool KW_IsWorldPresent(int world)
 			return false;
 		FS_CloseFile(f);
 		return FS_IsOmniFilePresent("EPISODE.CK5");
+	}
+	if (def->episode == KW_EPISODE_DREAMS)
+	{
+		// its converted data is in its own folder; Keen 4's variables
+		// (Omnispeak's own files) are its base
+		f = FSL_OpenFileInDirCaseInsensitive(KW_WorldPath(world), "GAMEMAPS.KDR", false);
+		if (!FS_IsFileValid(f))
+			return false;
+		FS_CloseFile(f);
+		return FS_IsOmniFilePresent("EPISODE.CK4");
 	}
 	if (def->episode == KW_EPISODE_OSI)
 	{
@@ -499,6 +525,49 @@ static int16_t kw_courseTold[KW_NUM_WORLDS]; // the ship computer has announced 
 static int16_t kw_savedTold[KW_NUM_WORLDS];  // ... has said its piece about this world being saved
 static int16_t kw_chronicleEndTold = 0;      // the Chronicle's last card has been shown
 static bool kw_crashLanding = false;      // the ship is being shot down over Krisle (see KW_CrashLanding)
+static int kw_dreamEnded = 0;             // Keen has just woken: 1 as usual, 2 the dream was lost, 3 it was won
+// Tuberia is a dream and the ship is the ship: the rest are places to fly to.
+static bool KW_IsPlanet(int world)
+{
+	return world != KW_SHIP && world != KW_DREAM;
+}
+static void KW_DreamLeaving(int from);
+
+// (The dream: see "The bed" below.)
+typedef struct KW_Tally
+{
+	int32_t score, nextKeenAt;
+	int16_t lives, shots;
+} KW_Tally;
+static KW_Tally kw_awake;        // Keen's own, while he dreams
+static KW_Tally kw_dreamTally;   // the dream's, while he is awake
+static bool kw_wakeInBed = false; // the next arrival in the ship is in the bunk
+void KD_NewGame(void);
+void KD_GetState(int16_t *out);
+void KD_SetState(const int16_t *in);
+bool KD_IsVegetable(const CK_object *ob);
+void KD_ChangeToFlower(CK_object *ob);
+bool KD_IsActive(void);
+
+static void KW_PackTally(const KW_Tally *t, int16_t *out)
+{
+	out[0] = t->score & 0xFFFF;
+	out[1] = (t->score >> 16) & 0xFFFF;
+	out[2] = t->nextKeenAt & 0xFFFF;
+	out[3] = (t->nextKeenAt >> 16) & 0xFFFF;
+	out[4] = t->lives;
+	out[5] = t->shots;
+}
+
+static void KW_UnpackTally(KW_Tally *t, const int16_t *in)
+{
+	t->score = (uint16_t)in[0] | ((int32_t)in[1] << 16);
+	t->nextKeenAt = (uint16_t)in[2] | ((int32_t)in[3] << 16);
+	t->lives = in[4];
+	t->shots = in[5];
+}
+
+static void KW_DreamArriving(int to);
 const char *kw_loadingFileName = NULL;
 static int kw_deferredWorld = KW_NO_WORLD;
 static char kw_deferredFile[FS_MAX_FILENAME_LEN];
@@ -577,6 +646,11 @@ bool KW_WriteSaveBlock(FS_File fp)
 	extra[80] = kw_chronicleEndTold;
 	OSI_GetState(&extra[90]); // (from word 90: what dying takes back on the Shikadi Station)
 	FF_GetSongsHeard(&extra[100], 64); // (from word 100: Foray in the Forest's songs heard, for its jukebox)
+	// (from word 170: the dream - Keen's own tally while he dreams, the
+	// dream's while he is awake, and Keen Dreams' bombs and keys)
+	KW_PackTally(&kw_awake, &extra[170]);
+	KW_PackTally(&kw_dreamTally, &extra[176]);
+	KD_GetState(&extra[182]);
 	return AR_WriteState(fp) && FF_WriteState(fp) && KW_WriteId(fp, kw_worldDefs[kw_boardedFrom].id) &&
 		FS_WriteInt16LE(extra, 261, fp) == 261;
 }
@@ -649,7 +723,7 @@ bool KW_ReadSaveBlock(FS_File fp, bool *deferred)
 				return false;
 			from[KW_SAVE_ID_LEN - 1] = 0;
 			int w = KW_WorldById(from);
-			if (w != KW_NO_WORLD && w != KW_SHIP)
+			if (w != KW_NO_WORLD && KW_IsPlanet(w))
 				kw_boardedFrom = w;
 		}
 		if (version >= 7)
@@ -668,6 +742,9 @@ bool KW_ReadSaveBlock(FS_File fp, bool *deferred)
 			kw_chronicleEndTold = extra[80] == 1;
 			OSI_SetState(&extra[90]);
 			FF_SetSongsHeard(&extra[100], 64);
+			KW_UnpackTally(&kw_awake, &extra[170]);
+			KW_UnpackTally(&kw_dreamTally, &extra[176]);
+			KD_SetState(&extra[182]);
 		}
 	}
 	else
@@ -810,6 +887,7 @@ void KW_SwitchWorld(int world)
 
 	// Remember the world Keen is leaving.
 	kw_worlds[kw_currentWorld] = KW_LiveState();
+	KW_DreamLeaving(kw_currentWorld); // out of the dream: Keen's own score, lives and shots again
 	FF_LeaveWorld(); // the standard colours again (Foray in the Forest sets its own)
 
 	// Nothing may keep playing from the old world's audio data.
@@ -867,6 +945,7 @@ void KW_SwitchWorld(int world)
 		kw_placeArrivalAtShip = false;
 		kw_introduced[KW_SHIP] = true; // no arrival card for Keen's own ship
 	}
+	KW_DreamArriving(world); // into the dream: its own score, lives and flower power
 }
 
 // ---- The Megarocket ----
@@ -1011,6 +1090,23 @@ void KW_PlaceMapKeenAtShip(CK_object *mapKeen)
 
 void KW_PlaceArrivalAtShip(void)
 {
+	// Waking from the dream: in the bunk, not at the hatch.
+	if (kw_wakeInBed && kw_currentWorld == KW_SHIP && ck_keenObj)
+	{
+		kw_wakeInBed = false;
+		for (int y = 0; y < CA_GetMapHeight(); ++y)
+			for (int x = CA_GetMapWidth() - 1; x >= 0; --x)
+				if (CA_TileAtPos(x, y, 2) == 0x7706 /* KW_SHIP_BED */)
+				{
+					ck_keenObj->posX = RF_TileToUnit(x - 1); // the middle of the bunk
+					ck_keenObj->posY = RF_TileToUnit(y) - 241;
+					ck_keenObj->xDirection = IN_motion_Left;
+					CK_SetAction(ck_keenObj, CK_ACTION(CK_ACT_keenStanding));
+					CK_ResetClipRects(ck_keenObj);
+					return;
+				}
+		return;
+	}
 	if (!kw_placeArrivalAtShip || !ck_keenObj)
 		return;
 
@@ -1151,7 +1247,7 @@ void StartMusic(int16_t level);
 // Keen has not been to; not in the scripted developer runs unless asked.)
 static bool KW_StoryIsDue(int world)
 {
-	if (world == KW_SHIP || kw_storyShown[world] || kw_worlds[world].visited)
+	if (!KW_IsPlanet(world) || kw_storyShown[world] || kw_worlds[world].visited)
 		return false;
 	return !kw_cardsOff || getenv("KW_AUTOSTORY");
 }
@@ -1366,7 +1462,7 @@ static int KW_ChronicleKey(int world)
 
 static bool KW_CourseIsOpen(int world)
 {
-	if (!kw_chronicle || world == KW_SHIP || kw_worlds[world].visited || world == kw_boardedFrom)
+	if (!kw_chronicle || !KW_IsPlanet(world) || kw_worlds[world].visited || world == kw_boardedFrom)
 		return true;
 	int key = KW_ChronicleKey(world);
 	return key == KW_NO_WORLD || KW_WorldIsSaved(key);
@@ -1486,7 +1582,7 @@ static int KW_TravelMenu(void)
 	}
 
 	for (int w = 0; w < KW_NUM_WORLDS; ++w)
-		if (w != kw_currentWorld && w != KW_SHIP) // (the ship is where one travels from, not to)
+		if (w != kw_currentWorld && KW_IsPlanet(w)) // (the ship is where one travels from, not to; Tuberia is a dream)
 			entries[numEntries++] = w;
 	entries[numEntries++] = KW_MENU_ABOUT;
 
@@ -1701,99 +1797,129 @@ void KW_BeginInShip(void)
 	KW_VoiceComingUp(true);
 }
 
-// ---- Keen Dreams: the bed, not the flight console. It is another game on
-// another engine (the dream is not a place the ship can fly to), so it is
-// run as a program of its own: the player's copy of Keen Dreams and an
-// engine for it (Reflection Keen) in the folder "dreams" beside the game.
-// Keen lies down, the dream runs in its own window, and when it is left
-// Keen wakes in his cabin. Nothing of his travels goes into the dream or
-// comes out of it.
-//   dreams/dream.sh        if there: run this instead of the line below
-//   dreams/reflectionhle   the engine; run with -gamever kdreamse113
-//                          (the shareware version 1.13) -datadir . -cfgdir cfg
-//   KW_DREAMCMD            (developer) a command to run instead
 
-#ifndef _WIN32
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <unistd.h>
-#endif
+// ---- The bed: Keen Dreams ----
+// "Up" at the bunk and Keen falls asleep: the dream is Keen Dreams, running
+// in this engine as a world of its own (kw_dreams.c). It is not a planet: the
+// flight console doesn't list it, the ship computer says nothing about it,
+// and nothing is carried in or out. Keen's score, lives and shots wait in
+// the ship while he dreams, and the dream keeps its own (flower power for
+// shots) until he sleeps again. Waking puts him back in his bunk.
 
-static bool KW_FileIsThere(const char *dir, const char *name)
+static KW_Tally KW_LiveTally(void)
 {
-	char path[600];
-	snprintf(path, sizeof(path), "%s/%s", dir, name);
-	FILE *f = fopen(path, "rb");
-	if (f)
-		fclose(f);
-	return f != NULL;
+	KW_Tally t = {ck_gameState.keenScore, ck_gameState.nextKeenAt, ck_gameState.numLives, ck_gameState.numShots};
+	return t;
+}
+
+static void KW_SetTally(const KW_Tally *t)
+{
+	ck_gameState.keenScore = t->score;
+	ck_gameState.nextKeenAt = t->nextKeenAt;
+	ck_gameState.numLives = t->lives;
+	ck_gameState.numShots = t->shots;
+}
+
+// A dream from its beginning (Keen Dreams' NewGame).
+static void KW_NewDream(void)
+{
+	KW_Tally fresh = {0, 20000, 3, 0};
+	kw_dreamTally = fresh;
+	memset(&kw_worlds[KW_DREAM], 0, sizeof(kw_worlds[KW_DREAM]));
+	KD_NewGame();
+}
+
+// KW_SwitchWorld, leaving a world: out of the dream, Keen's own tally again.
+static void KW_DreamLeaving(int from)
+{
+	if (from != KW_DREAM)
+		return;
+	kw_dreamTally = KW_LiveTally();
+	KW_SetTally(&kw_awake);
+}
+
+// ...and arriving in one: into the dream, the dream's tally.
+static void KW_DreamArriving(int to)
+{
+	if (to != KW_DREAM)
+		return;
+	if (!kw_worlds[KW_DREAM].visited)
+		KW_NewDream();
+	kw_awake = KW_LiveTally();
+	KW_SetTally(&kw_dreamTally);
+	ck_gameState.currentLevel = 0; // the map of Tuberia
+	kw_launchSpotX = kw_launchSpotY = -1; // no Megarocket stands in a dream
+	kw_placeArrivalAtShip = false;
 }
 
 static void KW_Dream(void)
 {
-	char dir[512], command[1400];
-	snprintf(dir, sizeof(dir), "%s/dreams", fs_keenPath);
-	const char *forced = getenv("KW_DREAMCMD");
-	bool script = KW_FileIsThere(dir, "dream.sh");
-	bool engine = KW_FileIsThere(dir, "reflectionhle");
-	bool game = KW_FileIsThere(dir, "KDREAMS.EGA") || KW_FileIsThere(dir, "kdreams.ega");
-	if (!forced && !script && !(engine && game))
+	if (!KW_IsWorldPresent(KW_DREAM))
 	{
 		SD_PlaySound(CK_SOUNDNUM(SOUND_NEEDKEYCARD));
 		if (!kw_cardsOff)
-			KW_ShowCards("Keen lies down, but he\nis not sleepy.\n\n(Keen Dreams is not here:\nits files and an engine for\nit go in the folder dreams.)");
+			KW_ShowCards("Keen lies down, but he\nis not sleepy.\n\n(Keen Dreams is not here:\nsee \"Keen Dreams\" in\ndoc/keen-worlds.md.)");
 		return;
 	}
-	if (forced)
-		snprintf(command, sizeof(command), "%s", forced);
-	else if (script)
-		snprintf(command, sizeof(command), "cd '%s' && sh ./dream.sh", dir);
-	else
-		snprintf(command, sizeof(command), "cd '%s' && mkdir -p cfg && ./reflectionhle -gamever kdreamse113 -datadir . -cfgdir cfg", dir);
-	printf("KW_AUTODREAM: Keen falls asleep (%s)\n", forced ? forced : "Keen Dreams");
-
+	printf("KW_AUTODREAM: Keen falls asleep\n");
 	if (!kw_cardsOff)
 	{
-		KW_ShowCards("Keen lies down on his bunk.\nJust for a minute...");
+		KW_ShowCards(kw_worlds[KW_DREAM].visited ? "Keen lies down on his bunk.\nJust for a minute..." :
+			"Keen lies down on his bunk.\nJust for a minute...\n\n\"Billy! No dessert until you\neat your vegetables!\"");
 		int tics = KW_FadeMusicOut();
 		VL_FadeToBlack();
 		VL_DelayTics(tics);
 	}
 	KW_MusicQuiet();
-	SD_StopSound();
+	KW_RequestWorld(KW_DREAM);
+}
 
-#ifndef _WIN32
-	// The dream runs beside us; our window stays alive (and dark) meanwhile.
-	pid_t child = fork();
-	if (child == 0)
-	{
-		execl("/bin/sh", "sh", "-c", command, (char *)NULL);
-		_exit(127);
-	}
-	if (child > 0)
-	{
-		int status;
-		while (waitpid(child, &status, WNOHANG) == 0)
-		{
-			IN_PumpEvents();
-			VL_Present();
-			VL_DelayTics(7);
-		}
-	}
-#else
-	system(command);
-#endif
+// Keen wakes: back to the ship, in his bunk. The dream is kept as it is.
+static void KW_WakeUp(void)
+{
+	if (kw_currentWorld != KW_DREAM)
+		return;
+	printf("KW_AUTODREAM: Keen wakes up\n");
+	kw_wakeInBed = true;
+	kw_dreamEnded = 1;
+	KW_RequestWorld(KW_SHIP);
+}
 
+// The dream is over (the game loop): Keen ran out of lives in it, or he
+// switched off the Dream Machine. He wakes, and the next dream starts from
+// the beginning. Returns true: the ship's room is to be loaded.
+bool KW_DreamOver(bool won)
+{
+	if (kw_currentWorld != KW_DREAM)
+		return false;
+	printf("KW_AUTODREAM: the dream is over (%s)\n", won ? "won" : "lost");
+	kw_wakeInBed = true;
+	KW_SwitchWorld(KW_SHIP);
+	bool completed = won || kw_worlds[KW_DREAM].completed;
+	KW_NewDream();
+	kw_worlds[KW_DREAM].completed = completed;
+	kw_dreamEnded = won ? 3 : 2;
+	return true;
+}
+
+// Keen has no wrist computer in his pyjamas: in the dream, the keys that
+// open its menus ask whether to wake up. (Games are saved from the ship.)
+void KW_DreamKeys(void)
+{
+	IN_ScanCode scan = IN_GetLastScan();
+	if (kw_currentWorld != KW_DREAM || vl_screenFaded)
+		return;
+	if (!((scan >= IN_SC_F1 && scan <= IN_SC_F7) || scan == IN_SC_Escape || ck_inputFrame.button3 ||
+		scan == in_kbdControls.quickSave || scan == in_kbdControls.quickLoad))
+		return;
+	ck_inputFrame.button3 = false;
+	static const char *const choices[] = {"Dream on", "Wake up"};
+	bool wake = KW_ChooseCard("Keen is fast asleep.", choices, 2) == 1;
 	IN_ClearKeysDown();
 	RF_ForceRefresh();
-	if (!kw_cardsOff)
-	{
-		RF_Refresh();
-		VL_FadeFromBlack();
-		KW_ShowCards("Keen wakes up in his bunk.\n\nWhat a dream!");
-	}
 	SD_SetLastTimeCount(SD_GetTimeCount());
-	printf("KW_AUTODREAM: Keen wakes up\n");
+	if (wake)
+		KW_WakeUp();
 }
 
 // The ship has two rooms, each its own screen. Walking into the open end of
@@ -1995,6 +2121,17 @@ void KW_PlayLoopHook(void)
 	// Inside the Megarocket: the flight console and the hatch.
 	if (kw_currentWorld == KW_SHIP)
 	{
+		// Keen has just woken from the dream (Keen Dreams).
+		if (kw_dreamEnded && !vl_screenFaded && IN_DemoGetMode() == IN_Demo_Off)
+		{
+			int how = kw_dreamEnded;
+			kw_dreamEnded = 0;
+			if (!kw_cardsOff)
+				KW_ShowCards(how == 3 ? "Keen wakes up in his bunk,\nwell rested.\n\nNo vegetables to be seen.\nWas it all just a dream?" :
+					how == 2 ? "Keen wakes with a start.\n\nOnly a dream! And it is\ngone: next time it will\nbegin all over again." :
+					"Keen wakes up in his bunk.\n\nWhat a dream! It will be\nthere when he sleeps again.");
+			SD_SetLastTimeCount(SD_GetTimeCount());
+		}
 		if (kw_landingToAnnounce != KW_NO_WORLD && !vl_screenFaded && IN_DemoGetMode() == IN_Demo_Off)
 		{
 			int world = kw_landingToAnnounce;
@@ -2008,7 +2145,7 @@ void KW_PlayLoopHook(void)
 				static const char *const numbers[] = {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"};
 				int chapter = 0;
 				for (int w = 0; w < KW_NUM_WORLDS; ++w)
-					if (w != KW_SHIP && w != world && (kw_worlds[w].visited || KW_WorldIsSaved(w)))
+					if (KW_IsPlanet(w) && w != world && (kw_worlds[w].visited || KW_WorldIsSaved(w)))
 						++chapter;
 				char text[160];
 				snprintf(text, sizeof(text), "The Chronicle\n\nChapter %s:\n%s", numbers[chapter < 12 ? chapter : 11], kw_worldDefs[world].name);
@@ -2022,7 +2159,7 @@ void KW_PlayLoopHook(void)
 		{
 			for (int w = 0; w < KW_NUM_WORLDS; ++w)
 			{
-				if (w == KW_SHIP || kw_savedTold[w] || !KW_WorldIsSaved(w))
+				if (!KW_IsPlanet(w) || kw_savedTold[w] || !KW_WorldIsSaved(w))
 					continue;
 				kw_savedTold[w] = 1;
 				for (int i = 0; i < (int)(sizeof(kw_savedLines) / sizeof(kw_savedLines[0])); ++i)
@@ -2041,7 +2178,7 @@ void KW_PlayLoopHook(void)
 		{
 			bool all = true, any = false;
 			for (int w = 0; w < KW_NUM_WORLDS; ++w)
-				if (w != KW_SHIP && KW_IsWorldPresent(w))
+				if (KW_IsPlanet(w) && KW_IsWorldPresent(w))
 				{
 					any = true;
 					all = all && KW_WorldIsSaved(w) && kw_savedTold[w];
@@ -2059,7 +2196,7 @@ void KW_PlayLoopHook(void)
 		{
 			for (int w = 0; w < KW_NUM_WORLDS; ++w)
 			{
-				if (w == KW_SHIP || kw_courseTold[w] || !KW_IsWorldPresent(w) || !KW_CourseIsOpen(w))
+				if (!KW_IsPlanet(w) || kw_courseTold[w] || !KW_IsWorldPresent(w) || !KW_CourseIsOpen(w))
 					continue;
 				kw_courseTold[w] = 1;
 				if (kw_worlds[w].visited)
@@ -2435,6 +2572,9 @@ void KW_DebugFrame(void)
 			CK_CentreCamera(ck_keenObj);
 		}
 	}
+	// KW_AUTOWAKE=n: in the dream (Keen Dreams), Keen wakes up at frame n
+	if (getenv("KW_AUTOWAKE") && count + 1 == atoi(getenv("KW_AUTOWAKE")))
+		KW_WakeUp();
 	// KW_AUTOLIVES=n: Keen has n lives from the first frame
 	if (count == 0 && getenv("KW_AUTOLIVES"))
 		ck_gameState.numLives = atoi(getenv("KW_AUTOLIVES"));
@@ -3147,6 +3287,66 @@ void KW_SelfTest(void)
 	}
 	KW_TestRunObjects(60);
 	KW_SwitchWorld(KW_KEEN4);
+
+	// Tuberia, the dream (Keen Dreams, when its converted files are there):
+	// Keen's score, lives and shots stay behind and come back; every level
+	// loads with its sprites in memory and its creatures run, as vegetables
+	// and as the flowers that flower power makes of them; and a lost dream
+	// begins again.
+	if (KW_IsWorldPresent(KW_DREAM))
+	{
+		KW_Tally mine = KW_LiveTally(), test = {4321, 60000, 5, 7};
+		KW_WorldState dream = kw_worlds[KW_DREAM];
+		KW_Tally dreamWas = kw_dreamTally;
+		KW_SetTally(&test);
+		kw_worlds[KW_DREAM].visited = false;
+		KW_SwitchWorld(KW_DREAM);
+		if (ck_gameState.keenScore != 0 || ck_gameState.numLives != 3 || ck_gameState.numShots != 0 ||
+			ck_gameState.currentLevel != 0)
+			Quit("KW_SelfTest: a new dream doesn't begin as Keen Dreams does!");
+		int loaded = 0;
+		for (int lv = 0; lv <= 16; ++lv)
+		{
+			if (!CA_MapExists(lv))
+				continue;
+			ck_gameState.currentLevel = lv;
+			CK_LoadLevel(true, true);
+			if (!ck_keenObj || !ck_keenObj->currentAction || ca_mapOn != lv)
+				QuitF("KW_SelfTest: Keen Dreams' map %d has no Keen!", lv);
+			KW_TestLevelSpritesCached("dreams", lv);
+			bool god = ck_godMode;
+			ck_godMode = true;
+			KW_TestRunObjects(150);
+			for (CK_object *obj = ck_keenObj->next; obj; obj = obj->next)
+				if (obj->currentAction && KD_IsVegetable(obj))
+					KD_ChangeToFlower(obj);
+			KW_TestRunObjects(150);
+			KW_TestLevelSpritesCached("dreams", lv);
+			ck_godMode = god;
+			ck_gameState.levelState = LS_Playing;
+			++loaded;
+		}
+		if (loaded < 12)
+			Quit("KW_SelfTest: Keen Dreams' levels are missing!");
+		ck_gameState.keenScore = 100;
+		ck_gameState.numShots = 9;
+		KW_SwitchWorld(KW_SHIP);
+		if (ck_gameState.keenScore != 4321 || ck_gameState.numLives != 5 || ck_gameState.numShots != 7)
+			Quit("KW_SelfTest: Keen's own score, lives and shots didn't wait for him while he dreamt!");
+		KW_SwitchWorld(KW_DREAM);
+		if (ck_gameState.keenScore != 100 || ck_gameState.numShots != 9)
+			Quit("KW_SelfTest: the dream forgot its score!");
+		ck_gameState.numLives = -1;
+		if (!KW_DreamOver(false) || kw_currentWorld != KW_SHIP || ck_gameState.numLives != 5 ||
+			kw_worlds[KW_DREAM].visited || kw_dreamTally.lives != 3 || kw_dreamTally.score != 0)
+			Quit("KW_SelfTest: a lost dream doesn't end with Keen awake in the ship and a new dream to come!");
+		kw_dreamEnded = 0;
+		kw_wakeInBed = false;
+		KW_SwitchWorld(KW_KEEN4);
+		kw_worlds[KW_DREAM] = dream;
+		kw_dreamTally = dreamWas;
+		KW_SetTally(&mine);
+	}
 
 	// Keen 8 and 9 (when installed): every level loads, and every level when
 	// completed is peaceful.

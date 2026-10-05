@@ -626,6 +626,13 @@ int16_t CK_ActionThink(CK_object *obj, int16_t time)
 }
 
 void FF_StateMachine(CK_object *ob); // KEEN WORLDS (kw_ff_state.c)
+// KEEN WORLDS: Keen Dreams (kw_dreams.c)
+bool KD_IsActive(void);
+void KD_FrameStart(void);
+void KD_ScrollScreen(void);
+void KD_CentreCamera(CK_object *ob);
+void KD_StatusWindow(void);
+void KW_DreamKeys(void);
 bool FF_IsActive(void);
 
 void CK_RunAction(CK_object *obj)
@@ -1129,6 +1136,19 @@ void CK_CheckKeys()
 		return;
 	}
 
+	// KEEN WORLDS: the dream (Keen Dreams) has no wrist computer: its own
+	// status window, and the menu keys ask whether to wake up (kw_world.c)
+	if (KD_IsActive())
+	{
+		if (IN_GetKeyState(IN_SC_Enter) || IN_IsJoyButtonDown(IN_joy_status))
+		{
+			KD_StatusWindow();
+			RF_ForceRefresh();
+			SD_SetLastTimeCount(SD_GetTimeCount());
+		}
+		KW_DreamKeys();
+	}
+
 	// Drop down status
 #ifdef EXTRA_KEYBOARD_OPTIONS
 	if (IN_GetKeyState(in_kbdControls.status) || IN_IsJoyButtonDown(IN_joy_status))
@@ -1484,6 +1504,13 @@ void StartMusic(int16_t level)
 	// KEEN WORLDS: the inside of the Megarocket has its own tune
 	if (level != -1 && KW_StartShipMusic())
 		return;
+
+	// KEEN WORLDS: Keen Dreams has no music: the dream is quiet
+	if (KD_IsActive())
+	{
+		SD_MusicOff();
+		return;
+	}
 
 	// KEEN WORLDS: the limit is a variable (Atroxian Realm has 26 levels and
 	// songs past them); 20 as in the original otherwise.
@@ -2035,6 +2062,12 @@ static uint16_t screenYpx;
 
 void CK_CentreCamera(CK_object *obj)
 {
+	// KEEN WORLDS: Keen Dreams scrolls its own way (kw_dreams.c)
+	if (KD_IsActive())
+	{
+		KD_CentreCamera(obj);
+		return;
+	}
 	// KEEN WORLDS: Foray in the Forest has its own camera (kw_ff_cam.c)
 	if (FF_IsActive())
 	{
@@ -2378,6 +2411,8 @@ void CK_PlayLoop()
 
 		IN_PumpEvents();
 		CK_HandleInput();
+		if (KD_IsActive())
+			KD_FrameStart(); // KEEN WORLDS: Keen Dreams' input and gravity (kw_dreams.c)
 
 		// Set, unset active objects.
 		for (CK_object *currentObj = ck_keenObj; currentObj; currentObj = currentObj->next)
@@ -2441,7 +2476,7 @@ void CK_PlayLoop()
 		if (FF_IsActive())
 			FF_FrameRiding();
 		else
-		if (ck_keenState.platform)
+		if (ck_keenState.platform && !KD_IsActive())
 			CK_KeenRidePlatform(ck_keenObj);
 
 		for (CK_object *currentObj = ck_keenObj; currentObj; currentObj = currentObj->next)
@@ -2468,6 +2503,11 @@ void CK_PlayLoop()
 			}
 		}
 
+		// KEEN WORLDS: Keen Dreams' tiles do nothing by themselves (its
+		// poles and deadly floors are in Keen's own code, kw_kd_keen.c)
+		if (KD_IsActive())
+			;
+		else
 		if (ca_mapOn == CK_INT(ck_worldMapNumber, 0))
 		{
 			CK_ACT_Function ck_mapMiscFlagsCheck = CK_FUNCTION(ck_mapMiscFlagsCheck);
@@ -2529,6 +2569,9 @@ void CK_PlayLoop()
 		}
 
 		// Follow the player with the camera.
+		if (KD_IsActive())
+			KD_ScrollScreen(); // KEEN WORLDS (kw_dreams.c): also how its levels end
+		else
 		if (ca_mapOn == 0 || (ck_currentEpisode->ep == EP_CK4 && ca_mapOn == CK_INT(CK4_UnderwaterCameraLevel, 17)))
 			CK_MapCamera(ck_keenObj);
 		else
