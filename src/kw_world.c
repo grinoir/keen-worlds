@@ -1549,10 +1549,13 @@ static void KW_ChooseJourney(void)
 	VL_SetDefaultPalette();
 	IN_ClearKeysDown();
 	kw_chronicle = KW_ChooseCard("How will Keen travel?", ways, 2) == 1;
+	// (one card, not KW_ShowCards: that redraws the level, and none is loaded yet)
 	if (kw_chronicle)
-		KW_ShowCards("The Chronicle\n\nThe worlds open one after\nanother, as their story goes.\nSave a world and the ship\nlearns the course to the next.");
+		KW_ShowCard("The Chronicle\n\nThe worlds open one after\nanother, as their story goes.\nSave a world and the ship\nlearns the course to the next.");
 	VL_ClearScreen(0);
 }
+
+static void KW_DumpScreen(const char *path);
 
 static int KW_TravelMenu(void)
 {
@@ -1581,56 +1584,113 @@ static int KW_TravelMenu(void)
 		return (w >= 0 && KW_IsWorldPresent(w)) ? w : KW_NO_WORLD;
 	}
 
-	for (int w = 0; w < KW_NUM_WORLDS; ++w)
-		if (w != kw_currentWorld && KW_IsPlanet(w)) // (the ship is where one travels from, not to; Tuberia is a dream)
-			entries[numEntries++] = w;
-	entries[numEntries++] = KW_MENU_ABOUT;
+	// The worlds, in two columns of two groups each. The world the ship
+	// stands on is in the list too: choosing it tells about it.
+	static const struct
+	{
+		const char *title;
+		int column, count, worlds[4];
+	} groups[] = {
+		{"Goodbye, Galaxy!", 0, 3, {KW_KEEN4, KW_KEEN5, KW_KEEN6}},
+		{"The Universe Is Toast!", 0, 3, {KW_KEEN7, KW_KEEN8, KW_KEEN9}},
+		{"Other adventures", 1, 4, {KW_FITF, KW_AREALM, KW_OSI, KW_BOUNTY}},
+		{"More levels", 1, 3, {KW_KEEN95, KW_CK55, KW_ASYLUM}},
+	};
+	enum { ROW = 12, NORMAL = 15 /* print colours: the screen's is 15 minus these */, HEADING = 11, GREY = 8, SAVED = 13, HERE = 14 };
+	int here = kw_currentWorld == KW_SHIP ? kw_boardedFrom : kw_currentWorld;
+	int entryX[KW_NUM_WORLDS], entryCol[KW_NUM_WORLDS];
 
 	SD_PlaySound(CK_SOUNDNUM(SOUND_UNKNOWN12));
 	VL_FixRefreshBuffer();
-	US_CenterWindow(30, 4 + 2 * numEntries);
-	US_SetPrintY(US_GetPrintY() + 3);
-	US_CPrint("Bean-with-Bacon Megarocket");
-	US_CPrint("Fly to:");
-	US_SetPrintY(US_GetPrintY() + 4);
-	for (int i = 0; i < numEntries; ++i)
+	US_CenterWindow(38, 20);
+	int winX = US_GetWindowX(), winW = US_GetWindowW(), colW = winW / 2 - 8;
+	int8_t oldColour = US_GetPrintColour();
+	US_SetPrintY(US_GetPrintY() + 2);
+	US_CPrint("Bean-with-Bacon Megarocket: fly to");
+	int top = US_GetPrintY() + 4, colY[2] = {top, top};
+	for (size_t g = 0; g < sizeof(groups) / sizeof(groups[0]); ++g)
 	{
-		char line[64];
-		lineY[i] = US_GetPrintY() - 2;
-		if (entries[i] == KW_MENU_ABOUT)
-			snprintf(line, sizeof(line), "About this world");
-		else if (KW_IsWorldPresent(entries[i]) && !KW_CourseIsOpen(entries[i]))
-			snprintf(line, sizeof(line), "%s (locked)", kw_worldDefs[entries[i]].name);
-		else if (KW_IsWorldPresent(entries[i]) && KW_WorldIsSaved(entries[i]))
-			snprintf(line, sizeof(line), "%s (saved)", kw_worldDefs[entries[i]].name);
-		else if (KW_IsWorldPresent(entries[i]))
-			snprintf(line, sizeof(line), "%s", kw_worldDefs[entries[i]].name);
-		else
-			snprintf(line, sizeof(line), "%s (not installed)", kw_worldDefs[entries[i]].name);
-		US_CPrint(line);
-		US_SetPrintY(US_GetPrintY() + 4);
+		int col = groups[g].column, x = winX + 8 + col * (winW / 2);
+		if (colY[col] != top)
+			colY[col] += 6;
+		US_SetPrintColour(HEADING);
+		US_SetPrintX(x);
+		US_SetPrintY(colY[col]);
+		US_Print(groups[g].title);
+		colY[col] += ROW;
+		for (int i = 0; i < groups[g].count; ++i)
+		{
+			int w = groups[g].worlds[i];
+			bool open = KW_IsWorldPresent(w) && KW_CourseIsOpen(w);
+			US_SetPrintColour(w == here ? HERE : !open ? GREY : KW_WorldIsSaved(w) ? SAVED : NORMAL);
+			US_SetPrintX(x + 8);
+			US_SetPrintY(colY[col]);
+			US_Print(kw_worldDefs[w].name);
+			entries[numEntries] = w;
+			entryX[numEntries] = x + 4;
+			entryCol[numEntries] = col;
+			lineY[numEntries++] = colY[col] - 2;
+			colY[col] += ROW;
+		}
 	}
+	US_SetPrintColour(oldColour);
+	int footY = (colY[0] > colY[1] ? colY[0] : colY[1]) + 4;
+	VHB_HLine(winX + 4, winX + winW - 4, footY - 3, 8);
 
 	KW_WaitForButtonsUp();
 
-	// Same blinking selection box as the "Try Again" menu.
-	int sel = 0, result = KW_NO_WORLD;
-	int x1 = US_GetWindowX() + 4, x2 = US_GetWindowX() + US_GetWindowW() - 4;
+	// Same blinking selection box as the "Try Again" menu; under the list,
+	// the game the chosen world is, and how things stand with it.
+	int sel = 0, shown = -1, result = KW_NO_WORLD;
+	for (int i = 0; i < numEntries; ++i)
+		if (entries[i] == here)
+			sel = i;
 	while (true)
 	{
 		IN_PumpEvents();
-		int y = lineY[sel];
+		if (shown != sel)
+		{
+			char title[80], status[80];
+			int w = entries[sel];
+			shown = sel;
+			CK_Cross_strscpy(title, kw_worldDefs[w].title, sizeof(title));
+			for (char *c = title; *c; ++c)
+				if (*c == '\n')
+					*c = ' ';
+			if (w == here)
+				snprintf(status, sizeof(status), "Keen is here. Choose it to read about it.");
+			else if (!KW_IsWorldPresent(w))
+				snprintf(status, sizeof(status), "Not installed. Choose it to see how to get it.");
+			else if (!KW_CourseIsOpen(w))
+				snprintf(status, sizeof(status), "The Chronicle: save %s first.", kw_worldDefs[KW_ChronicleKey(w)].name);
+			else if (KW_WorldIsSaved(w))
+				snprintf(status, sizeof(status), "Saved.");
+			else if (kw_worlds[w].visited)
+				snprintf(status, sizeof(status), "Keen has been here.");
+			else
+				snprintf(status, sizeof(status), "Keen has not been here yet.");
+			VHB_Bar(winX, footY, winW, 22, 15);
+			US_SetPrintY(footY);
+			US_CPrint(title);
+			US_CPrint(status);
+			// Developer tool: KW_AUTOMENU=file.ppm saves a picture of the menu and leaves it
+			if (getenv("KW_AUTOMENU"))
+			{
+				VH_UpdateScreen();
+				KW_DumpScreen(getenv("KW_AUTOMENU"));
+				printf("KW_AUTOMENU: the travel menu, on %s\n", kw_worldDefs[w].id);
+				US_SetPrintColour(oldColour);
+				return KW_NO_WORLD;
+			}
+		}
+		int y = lineY[sel], x1 = entryX[sel], x2 = entryX[sel] + colW;
 		int clr = ((SD_GetTimeCount() >> 4) & 1) ? 12 : 1;
 		for (int pass = 0; pass < 2; ++pass)
 		{
 			VHB_HLine(x1, x2, y, clr);
-			VHB_HLine(x1, x2, y + 1, clr);
-			VHB_HLine(x1, x2, y + 12, clr);
-			VHB_HLine(x1, x2, y + 13, clr);
-			VHB_VLine(y + 1, y + 11, x1, clr);
-			VHB_VLine(y + 1, y + 11, x1 + 1, clr);
-			VHB_VLine(y + 1, y + 11, x2, clr);
-			VHB_VLine(y + 1, y + 11, x2 - 1, clr);
+			VHB_HLine(x1, x2, y + 11, clr);
+			VHB_VLine(y, y + 11, x1, clr);
+			VHB_VLine(y, y + 11, x2, clr);
 			if (pass == 0)
 				VH_UpdateScreen();
 			clr = 15; // Erase it again for the next frame.
@@ -1645,20 +1705,35 @@ static int KW_TravelMenu(void)
 			result = entries[sel];
 			break;
 		}
-		if ((ck_inputFrame.yDirection == -1 || scan == IN_SC_UpArrow) && sel > 0)
-			sel--;
-		else if ((ck_inputFrame.yDirection == 1 || scan == IN_SC_DownArrow) && sel < numEntries - 1)
-			sel++;
+		int dy = (ck_inputFrame.yDirection == -1 || scan == IN_SC_UpArrow) ? -1 :
+			(ck_inputFrame.yDirection == 1 || scan == IN_SC_DownArrow) ? 1 : 0;
+		int dx = (ck_inputFrame.xDirection == -1 || scan == IN_SC_LeftArrow) ? -1 :
+			(ck_inputFrame.xDirection == 1 || scan == IN_SC_RightArrow) ? 1 : 0;
+		if (dy && sel + dy >= 0 && sel + dy < numEntries && entryCol[sel + dy] == entryCol[sel])
+			sel += dy;
+		else if (dx && entryCol[sel] != (dx > 0))
+		{
+			// across to the other column: the line nearest in height
+			int best = -1;
+			for (int i = 0; i < numEntries; ++i)
+				if (entryCol[i] != entryCol[sel] && (best < 0 || abs(lineY[i] - lineY[sel]) < abs(lineY[best] - lineY[sel])))
+					best = i;
+			if (best >= 0)
+				sel = best;
+		}
 		if (scan != IN_SC_None)
 			IN_SetLastScan(IN_SC_None);
 		// Don't race through the list while a direction is held.
-		while (ck_inputFrame.yDirection != 0)
+		while (ck_inputFrame.yDirection != 0 || ck_inputFrame.xDirection != 0)
 		{
 			IN_PumpEvents();
 			IN_ReadControls(0, &ck_inputFrame);
 		}
 	}
 
+	KW_WaitForButtonsUp();
+	if (result == here)
+		result = KW_MENU_ABOUT;
 	KW_WaitForButtonsUp();
 	if (result == KW_MENU_ABOUT)
 	{
