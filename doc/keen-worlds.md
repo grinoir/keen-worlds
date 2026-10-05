@@ -408,6 +408,11 @@ font is in ASCII order: `ck_starWarsPlainText`) and `tools/kw_arealm.py`
 (from its source); before, both showed Keen 5's. `KW_AUTOSTORY=1` plays
 the stories in scripted developer runs.
 
+**After dying**: the engine's menu has a third choice in every world when
+there is a saved game to go back to: "Load last save" (the slot last saved
+to or loaded from; `US_LoadQuickSave`). Foray in the Forest has this in its
+own menu.
+
 **Krisle's crash**: the first flight to Krisle (after the one-way warning)
 does not land. Its story plays, then the level of the crash site comes up
 under flashes and bangs (`KW_CrashLanding`), the ship computer makes its

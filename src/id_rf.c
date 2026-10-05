@@ -70,7 +70,9 @@ int rf_scrollXMaxUnit;
 int rf_scrollYMaxUnit;
 
 #define RF_MAX_SPRITETABLEENTRIES 60
-#define RF_NUM_SPRITE_Z_LAYERS 4
+// KEEN WORLDS: a fifth layer, above the one drawn over the foreground tiles
+// (Foray in the Forest has it; the games themselves use 0-3).
+#define RF_NUM_SPRITE_Z_LAYERS 5
 
 // Rectangle of previous sprite position.
 typedef struct RF_SpriteEraser

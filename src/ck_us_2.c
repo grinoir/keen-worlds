@@ -367,6 +367,21 @@ bool US_QuickLoad(void)
 	return US_LoadMain(quickSaveSlot, false);
 }
 
+// KEEN WORLDS: the last game saved or loaded (the quick-save slot), for the
+// "Load last save" choice after dying: is there one, and load it without
+// asking again.
+bool US_HasQuickSave(void)
+{
+	int slot = CK_Cross_clamp(CFG_GetConfigInt("quickSaveSlot", US_MAX_NUM_OF_SAVED_GAMES - 1), 0, US_MAX_NUM_OF_SAVED_GAMES - 1);
+	return us_savefiles[slot].used;
+}
+
+bool US_LoadQuickSave(void)
+{
+	int slot = CK_Cross_clamp(CFG_GetConfigInt("quickSaveSlot", US_MAX_NUM_OF_SAVED_GAMES - 1), 0, US_MAX_NUM_OF_SAVED_GAMES - 1);
+	return us_savefiles[slot].used && US_LoadMain(slot, false);
+}
+
 void load_savegame_item(US_CardItem *item)
 {
 	if (USL_ConfirmComm(US_Comm_LoadGame))

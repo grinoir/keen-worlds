@@ -44,7 +44,7 @@ bool FF_IsActive(void);
 #define MAXFALLSPEED 70
 #define SLOPEMASK 7
 #define FOREGROUNDPRIORITY 3
-#define MAXPRIORITY 3 // its 4: it has a sprite layer more than the engine
+#define MAXPRIORITY 4 // its topmost sprite layer (the engine has it for this game)
 #define PLATFORMEDGE (0x18 | 1)
 #define PLATFORMBLOCK 31
 #define DIRARROWSTART 91

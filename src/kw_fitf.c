@@ -671,9 +671,15 @@ void FF_RunFoobsInSpace(void)
 {
 }
 
-// TODO: the fade out and back in around a teleport (DelayedFade in CK_GAME.C)
+// The fade out and back in around a teleport (DelayedFade in CK_GAME.C):
+// the screen goes dark now and comes back after two refreshes, when
+// everything has drawn itself where it now is. The engine has the same for
+// its level starts.
+void CK_BeginFadeDrawing(void);
+
 void FF_DelayedFade(void)
 {
+	CK_BeginFadeDrawing();
 }
 
 // Music. A level's song is a number in its map (ScanInfoPlane, music trigger

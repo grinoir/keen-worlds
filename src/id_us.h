@@ -199,6 +199,9 @@ void US_RunCards();
 
 bool US_QuickSave();
 bool US_QuickLoad();
+// KEEN WORLDS: the last game saved or loaded, for "Load last save" after dying
+bool US_HasQuickSave(void);
+bool US_LoadQuickSave(void);
 
 // Related
 int USL_CtlDialog(const char *s1, const char *s2, const char *s3);

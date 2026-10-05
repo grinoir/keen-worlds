@@ -853,7 +853,11 @@ bool CK_TryAgainMenu()
 	if (--ck_gameState.numLives >= 0)
 	{
 		VL_FixRefreshBuffer();
-		US_CenterWindow(20, 8);
+		// KEEN WORLDS: a third choice when there is a saved game to go back
+		// to (Foray in the Forest has it; here every world does): the last
+		// game saved or loaded.
+		bool canLoad = US_HasQuickSave();
+		US_CenterWindow(20, canLoad ? 10 : 8);
 		US_SetPrintY(US_GetPrintY() + 3);
 		US_CPrint(CK_STRING(ck_str_tryAgainIntro));
 		y1 = US_GetPrintY() + 22;
@@ -863,12 +867,21 @@ bool CK_TryAgainMenu()
 			US_SetPrintY(US_GetPrintY() + 4);
 		US_CPrint(buf);
 
+		int choiceY[3], numChoices = canLoad ? 3 : 2;
 		US_SetPrintY(y1 + 2);
+		choiceY[0] = y1;
 		// KEEN WORLDS: Atroxian Realm restarts from a touched checkpoint
 		US_CPrint((AR_HasCheckpoint() || FF_HasCheckpoint()) ? "Restart from Checkpoint" : CK_STRING(ck_str_tryAgainTryAgain));
 		US_SetPrintY(US_GetPrintY() + 4);
 		y2 = US_GetPrintY() - 2;
+		choiceY[1] = y2;
 		US_CPrint(CK_STRING(ck_str_exitToMap));
+		if (canLoad)
+		{
+			US_SetPrintY(US_GetPrintY() + 4);
+			choiceY[2] = US_GetPrintY() - 2;
+			US_CPrint("Load last save");
+		}
 
 		IN_ClearKeysDown();
 		sel = 0;
@@ -882,10 +895,7 @@ bool CK_TryAgainMenu()
 			IN_PumpEvents();
 
 			/* Decide which selection to draw */
-			if (sel != 0)
-				y = y2;
-			else
-				y = y1;
+			y = choiceY[sel];
 
 			/* Choose a color to draw it in */
 			if ((SD_GetTimeCount() >> 4) & 1)
@@ -925,6 +935,12 @@ bool CK_TryAgainMenu()
 			IN_ReadControls(0, &ck_inputFrame);
 			if (ck_inputFrame.jump || ck_inputFrame.pogo || IN_GetLastScan() == IN_SC_Enter || IN_GetLastScan() == IN_SC_Space)
 			{
+				if (sel == 2)
+				{
+					// the last save; if it can't be loaded, the map
+					ck_gameState.currentLevel = 0;
+					return US_LoadQuickSave();
+				}
 				/* If they want to go back to the Map, set the current level to zero */
 				if (sel != 0)
 					ck_gameState.currentLevel = 0;
@@ -933,11 +949,21 @@ bool CK_TryAgainMenu()
 
 			if (ck_inputFrame.yDirection == -1 || IN_GetLastScan() == IN_SC_UpArrow)
 			{
-				sel = 0;
+				if (sel > 0)
+					sel--;
 			}
 			else if (ck_inputFrame.yDirection == 1 || IN_GetLastScan() == IN_SC_DownArrow)
 			{
-				sel = 1;
+				if (sel < numChoices - 1)
+					sel++;
+			}
+			// one step a press
+			if (IN_GetLastScan() == IN_SC_UpArrow || IN_GetLastScan() == IN_SC_DownArrow)
+				IN_SetLastScan(IN_SC_None);
+			while (ck_inputFrame.yDirection != 0)
+			{
+				IN_PumpEvents();
+				IN_ReadControls(0, &ck_inputFrame);
 			}
 
 #ifdef QUICKSAVE_ENABLED
