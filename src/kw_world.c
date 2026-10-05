@@ -1559,12 +1559,23 @@ static int KW_ChooseCard(const char *title, const char *const *lines, int count)
 
 // A new game: which way to play? (KW_AUTOCHRONICLE=1 answers for the
 // scripted developer runs.)
+void KW_PlayOwnStory(bool handleDemoKeys);
+
 static void KW_ChooseJourney(void)
 {
 	kw_chronicle = getenv("KW_AUTOCHRONICLE") != NULL;
+	if (getenv("KW_AUTOOWNSTORY")) // developer tool: Keen Worlds' story in a scripted run
+		KW_PlayOwnStory(false);
 	if (kw_cardsOff || getenv("KW_AUTOSHOT") || getenv("KW_AUTOCHRONICLE"))
 		return;
 	static const char *const ways[] = {"Free Flight: any world, any order", "The Chronicle: the story, in order"};
+	// Keen Worlds' own story first (any key skips it).
+	KW_StopVoice();
+	SD_MusicOff();
+	SD_FadeAdLibVolume(256, 0);
+	IN_ClearKeysDown();
+	KW_PlayOwnStory(false);
+	IN_ClearKeysDown();
 	VL_ClearScreen(0);
 	VL_SetScrollCoords(0, 0);
 	VL_SetDefaultPalette();
@@ -2184,6 +2195,125 @@ void KW_FitfShipLanded(void)
 	KW_RequestWorld(KW_SHIP);
 }
 
+// ---- Keen Worlds' own title, story and ending picture ----
+// The pictures are in kw_title_art.h (tools/kw_title_art.py, from art/title).
+
+#include "kw_title_art.h"
+
+static void KW_DrawPicture(const uint8_t *packed)
+{
+	for (int y = 0; y < 200; ++y)
+		for (int x = 0; x < 320; x += 2)
+		{
+			uint8_t b = packed[y * 160 + x / 2];
+			VH_Plot(x, y, b >> 4);
+			VH_Plot(x + 1, y, b & 15);
+		}
+}
+
+// The title, in place of the running episode's (ck_inter.c).
+bool KW_DrawTitlePicture(void)
+{
+	VL_ClearScreen(0);
+	KW_DrawPicture(kw_titlePicture);
+	// Developer tool: KW_AUTOTITLE=file.ppm saves the title (or, with
+	// KW_AUTOENDING set, the ending picture) and quits
+	if (getenv("KW_AUTOTITLE"))
+	{
+		if (getenv("KW_AUTOENDING"))
+			KW_DrawPicture(kw_endingPicture);
+		VL_SetScrollCoords(0, 0);
+		KW_DumpScreen(getenv("KW_AUTOTITLE"));
+		Quit(NULL);
+	}
+	return true;
+}
+
+// The story, told the way each episode tells its own: scrolling away into
+// the distance over that episode's star field. It plays in the opening, and
+// when a game begins.
+static const char kw_ownStory[] =
+	"Keen Worlds\n"
+	"\n"
+	"One Megarocket.\n"
+	"A galaxy that remembers.\n"
+	"\n"
+	"Billy Blaze, eight years\n"
+	"old and of unlimited\n"
+	"genius, has saved the\n"
+	"galaxy several times\n"
+	"before bedtime.\n"
+	"\n"
+	"Each time he flew home,\n"
+	"parked the Bean-with-\n"
+	"Bacon Megarocket behind\n"
+	"the shed, and the world\n"
+	"he had saved was\n"
+	"never heard of again.\n"
+	"\n"
+	"Not any more.\n"
+	"\n"
+	"The ship's computer has\n"
+	"been keeping a chart.\n"
+	"Every planet, station\n"
+	"and peculiar moon Keen\n"
+	"has set foot on is on\n"
+	"it, and a good many he\n"
+	"has not: worlds found\n"
+	"by other explorers, who\n"
+	"wrote down the way.\n"
+	"\n"
+	"They are all still out\n"
+	"there. Some are in\n"
+	"trouble. Some have an\n"
+	"inn now.\n"
+	"\n"
+	"So Keen has packed his\n"
+	"pogo stick, his stunner\n"
+	"and a spare helmet,\n"
+	"told his parents he is\n"
+	"going to bed early,\n"
+	"and set a course\n"
+	"for all of them.\n"
+	"\n"
+	"A world that is saved\n"
+	"stays saved. The ones\n"
+	"that are not are\n"
+	"waiting.\n"
+	"\n"
+	"Fly well, Commander.\n";
+
+extern const char *ck_starWarsTextOverride;
+
+void KW_PlayOwnStory(bool handleDemoKeys)
+{
+	printf("KW_AUTOSTORY: the story of Keen Worlds\n");
+	ck_starWarsTextOverride = kw_ownStory;
+	CK_DrawStarWarsEx(handleDemoKeys);
+	ck_starWarsTextOverride = NULL;
+}
+
+// A picture on the whole screen until a key is pressed.
+static void KW_ShowPicture(const uint8_t *packed)
+{
+	VL_FadeToBlack();
+	VL_FixRefreshBuffer();
+	VL_ClearScreen(0);
+	VL_SetScrollCoords(0, 0);
+	KW_DrawPicture(packed);
+	VH_UpdateScreen();
+	VL_FadeFromBlack();
+	KW_WaitForButtonsUp();
+	IN_ClearKeysDown();
+	IN_WaitButton();
+	KW_WaitForButtonsUp();
+	VL_FadeToBlack();
+	RF_ForceRefresh();
+	RF_Refresh();
+	VL_FadeFromBlack();
+	SD_SetLastTimeCount(SD_GetTimeCount());
+}
+
 // The Megarocket is shot down over Krisle: flashes and bangs over the first
 // sight of the crash site, then the ship computer's last announcement.
 static void KW_CrashLanding(void)
@@ -2300,8 +2430,9 @@ void KW_PlayLoopHook(void)
 				break; // one at a time
 			}
 		}
-		// The Chronicle: every world of it is saved.
-		if (kw_chronicle && !kw_chronicleEndTold && !kw_cardsOff && !vl_screenFaded && !KW_VoiceSpeaking())
+		// Every installed world is saved: Keen Worlds' ending picture, and
+		// in the Chronicle its last card.
+		if (!kw_chronicleEndTold && !kw_cardsOff && !vl_screenFaded && !KW_VoiceSpeaking())
 		{
 			bool all = true, any = false;
 			for (int w = 0; w < KW_NUM_WORLDS; ++w)
@@ -2313,7 +2444,10 @@ void KW_PlayLoopHook(void)
 			if (any && all)
 			{
 				kw_chronicleEndTold = 1;
-				KW_ShowCards("The Chronicle\n\nEvery world is saved.\nThe galaxy is quiet, and\nthe Megarocket knows the\nway to all of it."
+				printf("KW_AUTOENDING: every world is saved\n");
+				KW_ShowPicture(kw_endingPicture);
+				KW_ShowCards(!kw_chronicle ? "Every world is saved.\nThe galaxy is quiet, and\nthe Megarocket knows the\nway to all of it." "\fThe ship is yours, Keen.\nFly where you like." :
+					"The Chronicle\n\nEvery world is saved.\nThe galaxy is quiet, and\nthe Megarocket knows the\nway to all of it."
 					"\fThe ship is yours, Keen.\nFly where you like.");
 			}
 		}

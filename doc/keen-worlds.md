@@ -429,6 +429,20 @@ the stories in scripted developer runs.
   world Keen has been to stays open. `KW_AUTOCHRONICLE=1` chooses it in
   scripted developer runs. It is kept in the save block's spare words.
 
+**Keen Worlds' own title, story and ending.** The opening shows Keen
+Worlds' title picture instead of the running episode's (`KW_DrawTitlePicture`;
+the episode's "Commander Keen" scroller, which ends on the episode's title,
+is left out unless `/KWTERMINATOR` is given), and scrolls Keen Worlds' own
+story (`kw_ownStory`, `KW_PlayOwnStory`) over the episode's star field. The
+story also plays when a game begins, before the choice of Free Flight or
+the Chronicle; each world's own story still plays when that world is
+chosen. When every installed world is saved, in either way of playing, the
+ending picture is shown once, in the cabin. Both pictures are in
+`src/kw_title_art.h`, made by `tools/kw_title_art.py` from `art/title`
+(320x200, the 16 EGA colours, no dithering). `KW_AUTOTITLE=file.ppm` saves
+the title (with `KW_AUTOENDING=1` the ending) and quits;
+`KW_AUTOOWNSTORY=1` plays the story in a scripted run.
+
 **The flight menu** (`KW_TravelMenu`): the worlds in two columns of two
 groups each (Goodbye, Galaxy!; The Universe Is Toast!; Other adventures;
 More levels), left and right between the columns. A line under the list

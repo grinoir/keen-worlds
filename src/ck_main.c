@@ -47,6 +47,8 @@ void FF_ChooseGraphics(void); // KEEN WORLDS (kw_fitf.c)
 #include <stdlib.h>
 #include <string.h>
 
+void KW_PlayOwnStory(bool handleDemoKeys); // KEEN WORLDS: its own story (kw_world.c)
+
 /*
  * The 'episode' we're playing.
  */
@@ -247,7 +249,10 @@ void CK_DemoLoop()
 		case 0: // Terminator scroller and Title Screen
 			// If no pixel panning capability
 			// Then the terminator screen isn't shown
-			if (vl_noPan)
+			// KEEN WORLDS: its own title picture comes first, not the
+			// episode's "Commander Keen" scroller (which ends on the
+			// episode's title). /KWTERMINATOR brings the scroller back.
+			if (vl_noPan || !US_ParmPresent("KWTERMINATOR"))
 				CK_ShowTitleScreen();
 			else
 				CK_DrawTerminator();
@@ -258,7 +263,9 @@ void CK_DemoLoop()
 			break;
 		case 2:
 			// Star Wars story text
-			CK_DrawStarWars();
+			// KEEN WORLDS: its own story (the episode's plays when its
+			// world is chosen at the ship's controls)
+			KW_PlayOwnStory(true);
 			break;
 		case 3:
 			CK_PlayDemo(1);

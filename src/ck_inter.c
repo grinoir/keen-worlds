@@ -31,6 +31,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <stdlib.h>
 #include <string.h>
 
+// KEEN WORLDS: its own title picture and story (kw_world.c)
+bool KW_DrawTitlePicture(void);
+void KW_PlayOwnStory(bool handleDemoKeys);
+
 /*
  * CK_INTER: Holds an assortment of screen drawing and state switching routines
  */
@@ -1152,8 +1156,12 @@ void CK_DrawTerminator(void)
 		// RF_Reset();
 
 		// Display Title Screen
-		CA_CacheGrChunk(CK_CHUNKNUM(PIC_TITLESCREEN));
-		VH_DrawBitmap(0, 0, CK_CHUNKNUM(PIC_TITLESCREEN));
+		// KEEN WORLDS: its own title picture (kw_world.c)
+		if (!KW_DrawTitlePicture())
+		{
+			CA_CacheGrChunk(CK_CHUNKNUM(PIC_TITLESCREEN));
+			VH_DrawBitmap(0, 0, CK_CHUNKNUM(PIC_TITLESCREEN));
+		}
 
 		VL_SetScrollCoords(0, 0);
 		/* Instead of flipping to the backbuffer here, we update both. */
@@ -1293,10 +1301,14 @@ void CK_TranslateString(const char *input, char *output)
 // This is PrintStarWars in CKSRCMOD.
 // We print the story text to an offscreen buffer, which we'll later scale
 // invidual rows from to produce the final trapezoidal text.
+// KEEN WORLDS: another text to scroll than the episode's story (Keen Worlds'
+// own: KW_PlayOwnStory in kw_world.c), or NULL.
+const char *ck_starWarsTextOverride = NULL;
+
 void CK_DrawSWText()
 {
 	char currentTextLine[81];
-	const char *storyTextIndex = CK_STRING(ck_str_storyText);
+	const char *storyTextIndex = ck_starWarsTextOverride ? ck_starWarsTextOverride : CK_STRING(ck_str_storyText);
 
 	// We want to render to a 336px wide texture.
 	US_SetWindowX(0);
@@ -1502,8 +1514,12 @@ void CK_DrawStarWarsEx(bool handleDemoKeys)
 void CK_ShowTitleScreen()
 {
 	// scrollofs = 0;
-	CA_CacheGrChunk(CK_CHUNKNUM(PIC_TITLESCREEN));
-	VH_DrawBitmap(0, 0, CK_CHUNKNUM(PIC_TITLESCREEN));
+	// KEEN WORLDS: its own title picture (kw_world.c)
+	if (!KW_DrawTitlePicture())
+	{
+		CA_CacheGrChunk(CK_CHUNKNUM(PIC_TITLESCREEN));
+		VH_DrawBitmap(0, 0, CK_CHUNKNUM(PIC_TITLESCREEN));
+	}
 	// Draw to offscreen buffer and copy?
 	// VW_SetScreen(0,bufferofs_0);
 	VL_SetScrollCoords(0, 0);
