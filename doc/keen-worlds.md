@@ -456,6 +456,20 @@ the map marks all these places in its info plane). Without the folder the
 menu opens at the ship as before. It is not a destination itself. The save
 block remembers which world the ship stands on.
 
+### Keen Dreams (the bed)
+
+Keen Dreams is not a world: it is another game on another engine, reached
+through the bed in the Megarocket's exit room (`KW_Dream` in `kw_world.c`;
+the map marks the bed in its info plane). "Up" at the bed runs the program
+in the folder `dreams` beside the game as a process of its own and waits
+for it, keeping Keen Worlds' own window alive and dark; when the dream is
+left, Keen wakes in the cabin. Nothing is carried in or out. The folder
+holds the player's copy of Keen Dreams and an engine for it (ReflectionHLE,
+"Reflection Keen"); `dreams/dream.sh`, if there, is run instead of the
+default command. Without the folder Keen "is not sleepy". See
+`play/dreams/README.txt`. `KW_DREAMCMD` runs another command (scripted
+developer runs).
+
 ### Operation Station Infiltration
 
 World id `osi`, "The Shikadi Station": Ceilick's game, built on Omnispeak

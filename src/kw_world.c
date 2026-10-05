@@ -1576,6 +1576,7 @@ static void KW_DebugEnding(void)
 #define KW_SHIP_HATCH 0x7702
 #define KW_SHIP_WAY_AFT 0x7703  // walking here takes Keen to the exit room
 #define KW_SHIP_WAY_FORE 0x7704 // ... and here, back to the flight room
+#define KW_SHIP_BED 0x7706      // the bed: "up" and Keen falls asleep (Keen Dreams)
 #define KW_SHIP_AMMO 0x7705     // the box of stunners: "up" tops Keen's shots up
 #define KW_SHIP_AMMO_SHOTS 20
 
@@ -1638,6 +1639,101 @@ void KW_BeginInShip(void)
 	KW_VoiceComingUp(true);
 }
 
+// ---- Keen Dreams: the bed, not the flight console. It is another game on
+// another engine (the dream is not a place the ship can fly to), so it is
+// run as a program of its own: the player's copy of Keen Dreams and an
+// engine for it (Reflection Keen) in the folder "dreams" beside the game.
+// Keen lies down, the dream runs in its own window, and when it is left
+// Keen wakes in his cabin. Nothing of his travels goes into the dream or
+// comes out of it.
+//   dreams/dream.sh        if there: run this instead of the line below
+//   dreams/reflectionhle   the engine; run with -gamever kdreamse113
+//                          (the shareware version 1.13) -datadir . -cfgdir cfg
+//   KW_DREAMCMD            (developer) a command to run instead
+
+#ifndef _WIN32
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#endif
+
+static bool KW_FileIsThere(const char *dir, const char *name)
+{
+	char path[600];
+	snprintf(path, sizeof(path), "%s/%s", dir, name);
+	FILE *f = fopen(path, "rb");
+	if (f)
+		fclose(f);
+	return f != NULL;
+}
+
+static void KW_Dream(void)
+{
+	char dir[512], command[1400];
+	snprintf(dir, sizeof(dir), "%s/dreams", fs_keenPath);
+	const char *forced = getenv("KW_DREAMCMD");
+	bool script = KW_FileIsThere(dir, "dream.sh");
+	bool engine = KW_FileIsThere(dir, "reflectionhle");
+	bool game = KW_FileIsThere(dir, "KDREAMS.EGA") || KW_FileIsThere(dir, "kdreams.ega");
+	if (!forced && !script && !(engine && game))
+	{
+		SD_PlaySound(CK_SOUNDNUM(SOUND_NEEDKEYCARD));
+		if (!kw_cardsOff)
+			KW_ShowCards("Keen lies down, but he\nis not sleepy.\n\n(Keen Dreams is not here:\nits files and an engine for\nit go in the folder dreams.)");
+		return;
+	}
+	if (forced)
+		snprintf(command, sizeof(command), "%s", forced);
+	else if (script)
+		snprintf(command, sizeof(command), "cd '%s' && sh ./dream.sh", dir);
+	else
+		snprintf(command, sizeof(command), "cd '%s' && mkdir -p cfg && ./reflectionhle -gamever kdreamse113 -datadir . -cfgdir cfg", dir);
+	printf("KW_AUTODREAM: Keen falls asleep (%s)\n", forced ? forced : "Keen Dreams");
+
+	if (!kw_cardsOff)
+	{
+		KW_ShowCards("Keen lies down on his bunk.\nJust for a minute...");
+		int tics = KW_FadeMusicOut();
+		VL_FadeToBlack();
+		VL_DelayTics(tics);
+	}
+	KW_MusicQuiet();
+	SD_StopSound();
+
+#ifndef _WIN32
+	// The dream runs beside us; our window stays alive (and dark) meanwhile.
+	pid_t child = fork();
+	if (child == 0)
+	{
+		execl("/bin/sh", "sh", "-c", command, (char *)NULL);
+		_exit(127);
+	}
+	if (child > 0)
+	{
+		int status;
+		while (waitpid(child, &status, WNOHANG) == 0)
+		{
+			IN_PumpEvents();
+			VL_Present();
+			VL_DelayTics(7);
+		}
+	}
+#else
+	system(command);
+#endif
+
+	IN_ClearKeysDown();
+	RF_ForceRefresh();
+	if (!kw_cardsOff)
+	{
+		RF_Refresh();
+		VL_FadeFromBlack();
+		KW_ShowCards("Keen wakes up in his bunk.\n\nWhat a dream!");
+	}
+	SD_SetLastTimeCount(SD_GetTimeCount());
+	printf("KW_AUTODREAM: Keen wakes up\n");
+}
+
 // The ship has two rooms, each its own screen. Walking into the open end of
 // one puts Keen at the open end of the other.
 static void KW_ShipChangeRoom(uint16_t from, int fromY)
@@ -1668,7 +1764,7 @@ static void KW_ShipRoomFrame(void)
 	for (int y = ck_keenObj->clipRects.tileY1; y <= ck_keenObj->clipRects.tileY2 && !marker; ++y)
 	{
 		uint16_t info = CA_TileAtPos(x, y, 2);
-		if (info >= KW_SHIP_CONSOLE && info <= KW_SHIP_AMMO)
+		if (info >= KW_SHIP_CONSOLE && info <= KW_SHIP_BED)
 		{
 			marker = info;
 			markerY = y;
@@ -1686,6 +1782,11 @@ static void KW_ShipRoomFrame(void)
 	if (!marker || !ck_keenObj->topTI || ck_inputFrame.yDirection != IN_motion_Up || upUsed)
 		return;
 	upUsed = true;
+	if (marker == KW_SHIP_BED)
+	{
+		KW_Dream();
+		return;
+	}
 	if (marker == KW_SHIP_AMMO)
 	{
 		// As in Foray in the Forest's ship: Keen never leaves without shots.
