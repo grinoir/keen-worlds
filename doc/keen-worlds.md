@@ -257,6 +257,17 @@ art. So Foray's art is in this repository; the world's card and "About
 this world" name its makers. (The user is to speak to the authors about
 this use before anything is published.)
 
+Keen Worlds adds three things of Keen's to the exit room (own drawing):
+his pogo stick, his bag and a bed (for a later way into Keen Dreams). In
+the flight room Keen can jump up onto the flight deck.
+
+Around the ship the picture is see-through. When Keen boards in Keen 4, the
+background tiles of the screen he was looking at are kept
+(`KW_CaptureShipBackdrop`) and put behind both rooms, so the ship is seen
+standing where it stands; the save block (version 7) keeps them. From any
+other world the ship is seen in black: the ship's world has only Keen 4's
+tiles.
+
 The two rooms are one level, each room a screen, one above the other with
 a Keen 4 scroll stop between them. Walking into the open end of a room puts
 Keen in the other (`KW_ShipChangeRoom` in `kw_world.c`).

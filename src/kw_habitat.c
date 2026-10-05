@@ -187,7 +187,7 @@ const KW_Art kw_portraitArt = {
 #include "kw_shiproom_art.h"
 #define KW_SHIPROOM_PIECE(n) { \
 	KW_SHIPROOM_ORIGIN_X, KW_SHIPROOM_ORIGIN_Y + (n) * KW_SHIPROOM_PIECE_H, KW_SHIPROOM_TILES_W, KW_SHIPROOM_PIECE_H, 1, \
-	&kw_shipRoomSlots[n][0][0], &kw_shipRoomTiles[n][0][0][0], -1, 0, NULL, \
+	&kw_shipRoomSlots[n][0][0], &kw_shipRoomTiles[n][0][0][0], -1, 0, NULL, false, false, NULL, true, \
 }
 const KW_Art kw_shipRoomArt[KW_SHIPROOM_PIECES] = {KW_SHIPROOM_PIECE(0), KW_SHIPROOM_PIECE(1), KW_SHIPROOM_PIECE(2)};
 
@@ -266,6 +266,7 @@ static void KW_ChangeLevel(void)
 				CA_SetTileAtPos(ed->x, ed->y, ed->plane, ed->value);
 		}
 	}
+	KW_PlaceShipBackdrop();
 	for (int i = 0; i < (int)(sizeof(kw_levelArt) / sizeof(kw_levelArt[0])); ++i)
 	{
 		if (kw_levelArt[i].episode != KW_CurrentEpisode() || kw_levelArt[i].level != ca_mapOn)

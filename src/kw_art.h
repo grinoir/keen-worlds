@@ -31,6 +31,9 @@ typedef struct KW_Art
 	// Optional: cells that are solid on all sides (even on the walkable row),
 	// e.g. where the Keen 5 gangway meets the ship's nose.
 	bool (*isSolidCell)(int x, int y);
+	// The original tiles' pictures are dropped everywhere (what the art
+	// leaves see-through shows the background), but their collision stays.
+	bool ownPictureOnly;
 } KW_Art;
 
 // Place art on the loaded map. Call while the level is being set up (before

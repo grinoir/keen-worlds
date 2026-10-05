@@ -104,7 +104,7 @@ void KW_PlaceArt(const KW_Art *art)
 			for (int f = 0; f < art->frames; ++f)
 			{
 				uint16_t slot = KW_ArtSlot(art, f, r, c);
-				KW_ComposeArtTile(slot, under, KW_ArtTile(art, f, r, c));
+				KW_ComposeArtTile(slot, art->ownPictureOnly ? 0 : under, KW_ArtTile(art, f, r, c));
 				bool solid = art->solid ? r != art->walkableRow : (art->isSolidCell && art->isSolidCell(x, y));
 				KW_SetArtTileInfo(art, slot, under, r == art->walkableRow, solid,
 					KW_ArtSlot(art, (f + 1) % art->frames, r, c));

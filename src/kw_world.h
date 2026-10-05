@@ -136,4 +136,8 @@ void KW_WaitForButtonsUp(void);
 void KW_SelfTest(void);
 void KW_Screenshot(const char *worldId, int level, const char *path);
 
+// Inside the ship: what was behind Keen where he boarded goes behind the
+// ship's rooms. Call while the level is being set up.
+void KW_PlaceShipBackdrop(void);
+
 #endif

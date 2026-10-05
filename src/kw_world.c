@@ -397,8 +397,48 @@ bool KW_IsWorldCompleted(int world)
 
 #define KW_SAVE_BLOCK_ID "KWLD"
 static int kw_boardedFrom = KW_KEEN4; // the world the Megarocket stands on (see KW_ShipRoomFrame)
+// What was behind Keen where he boarded (background tiles of the screen he
+// was looking at): inside the ship, it shows around the ship's two rooms.
+// Only from Keen 4 itself, whose tiles the ship's world has; otherwise the
+// ship is seen in black space.
+#define KW_BACKDROP_W 20
+#define KW_BACKDROP_H 13
+#define KW_BACKDROP_X 2  // where the rooms' screens are in the ship's level
+#define KW_BACKDROP_Y1 2
+#define KW_BACKDROP_Y2 16
+static uint16_t kw_shipBackdrop[KW_BACKDROP_W * KW_BACKDROP_H];
+static int16_t kw_shipBackdropSet = 0;
 
-#define KW_SAVE_VERSION 6
+static void KW_CaptureShipBackdrop(void)
+{
+	kw_shipBackdropSet = 0;
+	if (kw_currentWorld != KW_KEEN4 || CA_GetMapWidth() < KW_BACKDROP_W || CA_GetMapHeight() < KW_BACKDROP_H)
+		return;
+	int x0 = CK_Cross_min(RF_UnitToTile(rf_scrollXUnit), CA_GetMapWidth() - KW_BACKDROP_W);
+	int y0 = CK_Cross_min(RF_UnitToTile(rf_scrollYUnit), CA_GetMapHeight() - KW_BACKDROP_H);
+	for (int y = 0; y < KW_BACKDROP_H; ++y)
+		for (int x = 0; x < KW_BACKDROP_W; ++x)
+			kw_shipBackdrop[y * KW_BACKDROP_W + x] = CA_TileAtPos(x0 + x, y0 + y, 0);
+	kw_shipBackdropSet = 1;
+}
+
+// While the ship's level is being set up.
+void KW_PlaceShipBackdrop(void)
+{
+	if (kw_currentWorld != KW_SHIP || !kw_shipBackdropSet || CA_GetMapHeight() < KW_BACKDROP_Y2 + KW_BACKDROP_H)
+		return;
+	for (int y = 0; y < KW_BACKDROP_H; ++y)
+		for (int x = 0; x < KW_BACKDROP_W; ++x)
+		{
+			uint16_t tile = kw_shipBackdrop[y * KW_BACKDROP_W + x];
+			if (tile >= ca_gfxInfoE.numTiles16)
+				continue;
+			CA_SetTileAtPos(KW_BACKDROP_X + x, KW_BACKDROP_Y1 + y, 0, tile);
+			CA_SetTileAtPos(KW_BACKDROP_X + x, KW_BACKDROP_Y2 + y, 0, tile);
+		}
+}
+
+#define KW_SAVE_VERSION 7
 #define KW_LEVELS_EXTRA (CK_LEVELS_TRACKED - CK_LEVELS_SAVED)
 
 // Atroxian Realm's extra game state (kw_arealm.c)
@@ -476,7 +516,10 @@ bool KW_WriteSaveBlock(FS_File fp)
 	// Version 5: Foray in the Forest's state follows Atroxian Realm's.
 	// Version 6: then the world the Megarocket stands on (for a game saved
 	// inside the ship).
-	return AR_WriteState(fp) && FF_WriteState(fp) && KW_WriteId(fp, kw_worldDefs[kw_boardedFrom].id);
+	// Version 7: then what is seen around the ship from inside it.
+	return AR_WriteState(fp) && FF_WriteState(fp) && KW_WriteId(fp, kw_worldDefs[kw_boardedFrom].id) &&
+		FS_WriteInt16LE(&kw_shipBackdropSet, 1, fp) == 1 &&
+		FS_WriteInt16LE(kw_shipBackdrop, KW_BACKDROP_W * KW_BACKDROP_H, fp) == KW_BACKDROP_W * KW_BACKDROP_H;
 }
 
 bool KW_ReadSaveBlock(FS_File fp, bool *deferred)
@@ -548,6 +591,10 @@ bool KW_ReadSaveBlock(FS_File fp, bool *deferred)
 			if (w != KW_NO_WORLD && w != KW_SHIP)
 				kw_boardedFrom = w;
 		}
+		kw_shipBackdropSet = 0;
+		if (version >= 7 && (FS_ReadInt16LE(&kw_shipBackdropSet, 1, fp) != 1 ||
+			FS_ReadInt16LE(kw_shipBackdrop, KW_BACKDROP_W * KW_BACKDROP_H, fp) != KW_BACKDROP_W * KW_BACKDROP_H))
+			return false;
 	}
 	else
 		return false;
@@ -1447,6 +1494,7 @@ void KW_PlayLoopHook(void)
 				return;
 			}
 			kw_boardedFrom = kw_currentWorld;
+			KW_CaptureShipBackdrop();
 			KW_RequestWorld(KW_SHIP);
 			return;
 		}
