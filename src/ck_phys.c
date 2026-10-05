@@ -48,6 +48,17 @@ bool ck_keenIgnoreVertClip;
 
 extern CK_object *ck_keenObj;
 
+// KEEN WORLDS: Foray in the Forest's own movement code (kw_ff_state.c)
+bool FF_CheckPosition(CK_object *ob);
+void FF_ClipToWalls(CK_object *ob);
+void FF_PushObj(CK_object *ob);
+void FF_ClipToSpriteSide(CK_object *push, CK_object *solid);
+void FF_ClipToSpriteTop(CK_object *push, CK_object *solid);
+void FF_ClipToSprite(CK_object *push, CK_object *solid, bool squish);
+void FF_NewState(CK_object *ob, CK_action *state);
+void FF_ChangeState(CK_object *ob, CK_action *state);
+bool FF_IsActive(void);
+
 void CK_ResetClipRects(CK_object *obj)
 {
 	//NOTE: As tile rects are rarely used, keen does not calculate them here.
@@ -227,6 +238,11 @@ void CK_PhysKeenClipUp(CK_object *obj)
 
 bool CK_NotStuckInWall(CK_object *obj)
 {
+	// KEEN WORLDS: Foray in the Forest moves things its own way (kw_ff_state.c)
+	if (FF_IsActive())
+	{
+		return FF_CheckPosition(obj);
+	}
 	for (uint16_t y = obj->clipRects.tileY1; y <= obj->clipRects.tileY2; ++y)
 	{
 		for (uint16_t x = obj->clipRects.tileX1; x <= obj->clipRects.tileX2; ++x)
@@ -360,6 +376,12 @@ void CK_PhysClipHorz(CK_object *obj)
 
 void CK_PhysUpdateNormalObj(CK_object *obj)
 {
+	// KEEN WORLDS: Foray in the Forest moves things its own way (kw_ff_state.c)
+	if (FF_IsActive())
+	{
+		FF_ClipToWalls(obj);
+		return;
+	}
 	uint16_t oldUnitX, oldUnitY;
 	bool wasNotOnPlatform = false;
 	oldUnitX = obj->posX;
@@ -631,6 +653,12 @@ void CK_PhysFullClipToWalls(CK_object *obj)
 
 void CK_PhysUpdateSimpleObj(CK_object *obj)
 {
+	// KEEN WORLDS: Foray in the Forest moves things its own way (kw_ff_state.c)
+	if (FF_IsActive())
+	{
+		FF_PushObj(obj);
+		return;
+	}
 	uint16_t oldUnitX, oldUnitY;
 	oldUnitX = obj->posX;
 	oldUnitY = obj->posY;
@@ -668,6 +696,12 @@ void CK_PhysUpdateSimpleObj(CK_object *obj)
 
 void CK_PhysPushX(CK_object *pushee, CK_object *pusher)
 {
+	// KEEN WORLDS: Foray in the Forest moves things its own way (kw_ff_state.c)
+	if (FF_IsActive())
+	{
+		FF_ClipToSpriteSide(pushee, pusher);
+		return;
+	}
 	int16_t deltaPosX = pusher->deltaPosX - pushee->deltaPosX;
 	int16_t deltaX_1 = pusher->clipRects.unitX2 - pushee->clipRects.unitX1;
 	int16_t deltaX_2 = pushee->clipRects.unitX2 - pusher->clipRects.unitX1;
@@ -697,6 +731,12 @@ void CK_PhysPushX(CK_object *pushee, CK_object *pusher)
 
 void CK_PhysPushY(CK_object *pushee, CK_object *pusher)
 {
+	// KEEN WORLDS: Foray in the Forest moves things its own way (kw_ff_state.c)
+	if (FF_IsActive())
+	{
+		FF_ClipToSpriteTop(pushee, pusher);
+		return;
+	}
 	int16_t deltaDeltaY = pushee->deltaPosY - pusher->deltaPosY;
 	int16_t deltaClipY = pushee->clipRects.unitY2 - pusher->clipRects.unitY1;
 
@@ -720,6 +760,12 @@ void CK_PhysPushY(CK_object *pushee, CK_object *pusher)
 
 void CK_PhysPushXY(CK_object *passenger, CK_object *platform, bool squish)
 {
+	// KEEN WORLDS: Foray in the Forest moves things its own way (kw_ff_state.c)
+	if (FF_IsActive())
+	{
+		FF_ClipToSprite(passenger, platform, squish);
+		return;
+	}
 	int16_t dx = platform->deltaPosX - passenger->deltaPosX;
 	ck_nextX = ck_nextY = 0;
 	int16_t dLeft = platform->clipRects.unitX2 - passenger->clipRects.unitX1;
@@ -789,6 +835,12 @@ void CK_PhysPushXY(CK_object *passenger, CK_object *platform, bool squish)
 
 void CK_SetAction(CK_object *obj, CK_action *act)
 {
+	// KEEN WORLDS: Foray in the Forest moves things its own way (kw_ff_state.c)
+	if (FF_IsActive())
+	{
+		FF_NewState(obj, act);
+		return;
+	}
 	obj->currentAction = act;
 
 	if (act->chunkRight && obj->xDirection > 0)
@@ -817,6 +869,12 @@ void CK_SetAction(CK_object *obj, CK_action *act)
 
 void CK_SetAction2(CK_object *obj, CK_action *act)
 {
+	// KEEN WORLDS: Foray in the Forest moves things its own way (kw_ff_state.c)
+	if (FF_IsActive())
+	{
+		FF_ChangeState(obj, act);
+		return;
+	}
 	obj->currentAction = act;
 	obj->actionTimer = 0;
 

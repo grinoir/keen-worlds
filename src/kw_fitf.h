@@ -183,7 +183,9 @@ static inline uint16_t FF_MapAt(int plane, unsigned off)
 #define originxtilemax (originxtile + 20 - 1)
 #define originytilemax (originytile + 13 - 1)
 #define FF_D_Expert 4 // its fourth difficulty
-#define FF_CLIP_custommid CLIP_normal // TODO: its custom clip box (CK_CustomClipRects)
+#define FF_CLIP_custommid ((CK_ClipType)6) // its custom clip box (CK_CustomClipRects)
+// Where a state pushes its object (its pushtype; kept in the action's stickToGround)
+enum { push_none, push_down, push_up, push_left, push_right, push_side };
 
 // Its sprite drawing beyond the engine's: upside down (drawflipped), rows
 // clipped off (a positive number clips at the top, a negative one at the
@@ -213,8 +215,8 @@ extern bool ff_keenKilled, ff_keenUpHeld, ff_keenMustAdjustNextX;
 extern int ff_brainfucled;
 
 // ---- Parts of its other files the creatures call (kw_fitf.c) ----
-void FF_MoveObjVert(CK_object *ob, int ymove);
-void FF_MoveObjHoriz(CK_object *ob, int xmove);
+void FF_MoveObjVert(CK_object *ob, int16_t ymove);
+void FF_MoveObjHoriz(CK_object *ob, int16_t xmove);
 void FF_CalcTileClipRects(CK_object *ob);
 bool FF_SaveCheckpoint(void);
 bool FF_LoadCheckpoint(void);

@@ -62,37 +62,8 @@ const char *FF_String(int number)
 	return off < size ? (const char *)data + off : "";
 }
 
-// ---- Small helpers of its CK_STATE.C ----
-
-void FF_CalcTileClipRects(CK_object *ob)
-{
-	ob->clipRects.unitXmid = (ob->clipRects.unitX2 - ob->clipRects.unitX1) / 2 + ob->clipRects.unitX1;
-	ob->clipRects.tileX1 = RF_UnitToTile(ob->clipRects.unitX1);
-	ob->clipRects.tileX2 = RF_UnitToTile(ob->clipRects.unitX2);
-	ob->clipRects.tileY1 = RF_UnitToTile(ob->clipRects.unitY1);
-	ob->clipRects.tileY2 = RF_UnitToTile(ob->clipRects.unitY2);
-	ob->clipRects.tileXmid = RF_UnitToTile(ob->clipRects.unitXmid);
-}
-
-void FF_MoveObjVert(CK_object *ob, int ymove)
-{
-	ob->posY += ymove;
-	ob->clipRects.unitY1 += ymove;
-	ob->clipRects.unitY2 += ymove;
-	ob->clipRects.tileY1 = RF_UnitToTile(ob->clipRects.unitY1);
-	ob->clipRects.tileY2 = RF_UnitToTile(ob->clipRects.unitY2);
-}
-
-void FF_MoveObjHoriz(CK_object *ob, int xmove)
-{
-	ob->posX += xmove;
-	ob->clipRects.unitX1 += xmove;
-	ob->clipRects.unitX2 += xmove;
-	ob->clipRects.unitXmid += xmove;
-	ob->clipRects.tileX1 = RF_UnitToTile(ob->clipRects.unitX1);
-	ob->clipRects.tileX2 = RF_UnitToTile(ob->clipRects.unitX2);
-	ob->clipRects.tileXmid = RF_UnitToTile(ob->clipRects.unitXmid);
-}
+// (FF_CalcTileClipRects, FF_MoveObjVert and FF_MoveObjHoriz are in
+// kw_ff_state.c with the rest of its movement code.)
 
 // ---- Not ported yet: parts of its CK_GAME.C, CK_PLAY.C and CK_SPEC.C that
 // Keen and the creatures call. Each does the least that keeps the game

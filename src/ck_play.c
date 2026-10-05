@@ -618,8 +618,17 @@ int16_t CK_ActionThink(CK_object *obj, int16_t time)
 	return newTime;
 }
 
+void FF_StateMachine(CK_object *ob); // KEEN WORLDS (kw_ff_state.c)
+bool FF_IsActive(void);
+
 void CK_RunAction(CK_object *obj)
 {
+	// KEEN WORLDS: Foray in the Forest moves things its own way (kw_ff_state.c)
+	if (FF_IsActive())
+	{
+		FF_StateMachine(obj);
+		return;
+	}
 	int16_t oldChunk = obj->gfxChunk;
 
 	//TODO: Check these
