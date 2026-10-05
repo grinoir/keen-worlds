@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "kw_world.h"
 #include "kw_habitat.h"
 #include "kw_music.h"
+#include "kw_osi.h"
 
 void AR_CheckpointFrame(void); // KEEN WORLDS: Atroxian Realm (kw_arealm.c)
 bool AR_IsActive(void);
@@ -399,12 +400,15 @@ void CK_ItemCheat()
 
 void CK_SetupObjArray()
 {
+	// KEEN WORLDS: the number of objects is a variable (see CK_MAX_OBJECTS)
+	int maxObjects = CK_Cross_clamp(CK_INT(CK_MaxObjects, 100), 2, CK_MAX_OBJECTS);
 	for (int i = 0; i < CK_MAX_OBJECTS; ++i)
 	{
 		ck_objArray[i].prev = &(ck_objArray[i + 1]);
 		ck_objArray[i].next = 0;
 	}
 
+	ck_objArray[maxObjects - 1].prev = 0;
 	ck_objArray[CK_MAX_OBJECTS - 1].prev = 0;
 
 	ck_freeObject = &ck_objArray[0];
@@ -2222,6 +2226,17 @@ void CK_NormalCamera(CK_object *obj)
 	}
 	else
 #endif
+	// KEEN WORLDS: Operation Station Infiltration's screen shake
+	if (OSI_IsActive() && osi_screenShakeOffset)
+	{
+		if (CK_INT(OSI_ScreenShakeInAir, 0) || obj->topTI || (CK_INT(OSI_ScreenShakeUnclipped, 0) && !obj->clipped))
+		{
+			deltaY += CK_INT(OSI_ScreenShakeMultiplier, -10) * osi_screenShakeOffset;
+			osi_screenShakeOffset -= SD_GetSpriteSync();
+			if (osi_screenShakeOffset <= 0)
+				osi_screenShakeOffset = 0;
+		}
+	}
 	if (obj->topTI || !obj->clipped || obj->currentAction == CK_ACTION(CK_ACT_keenHang1))
 	{
 		if (obj->currentAction != CK_ACTION(CK_ACT_keenPull1) &&
@@ -2326,6 +2341,8 @@ void CK_PlayLoop()
 	ck_pogoTimer = 0;
 	memset(&ck_keenState, 0, sizeof(ck_keenState));
 	ck_invincibilityTimer = 0;
+	ck_stunInvincibilityTimer = 0; // KEEN WORLDS (Operation Station Infiltration)
+	osi_screenShakeOffset = 0;
 	ck_scrollDisabled = false;
 	ck_keenState.jumpWasPressed = ck_keenState.pogoWasPressed = ck_keenState.shootWasPressed = false;
 	game_in_progress = 1;
@@ -2523,6 +2540,13 @@ void CK_PlayLoop()
 			ck_invincibilityTimer -= SD_GetSpriteSync();
 			if (ck_invincibilityTimer < 0)
 				ck_invincibilityTimer = 0;
+		}
+		// KEEN WORLDS: Operation Station Infiltration (Keen was stunned)
+		if (ck_stunInvincibilityTimer)
+		{
+			ck_stunInvincibilityTimer -= SD_GetSpriteSync();
+			if (ck_stunInvincibilityTimer < 0)
+				ck_stunInvincibilityTimer = 0;
 		}
 
 #ifdef WITH_KEEN6

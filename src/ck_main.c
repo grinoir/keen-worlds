@@ -37,6 +37,7 @@ void FF_ChooseGraphics(void); // KEEN WORLDS (kw_fitf.c)
 #endif
 #ifdef WITH_KEEN5
 #include "ck5_ep.h"
+#include "kw_osi.h"
 #endif
 #ifdef WITH_KEEN6
 #include "ck6_ep.h"
@@ -548,6 +549,7 @@ int main(int argc, char *argv[])
 #endif
 #ifdef WITH_KEEN5
 	CK5_SetupFunctions();
+	OSI_SetupFunctions(); // KEEN WORLDS: Operation Station Infiltration's own (under OS5_ names)
 #endif
 #ifdef WITH_KEEN6
 	CK6_SetupFunctions();
@@ -676,6 +678,7 @@ int main(int argc, char *argv[])
 		Quit("No episode found! Make sure the game files are present, and run with /EPISODE <EPISODE.CKx>");
 	CK_VAR_LoadVars(ck_episodeFile);
 	FF_ChooseGraphics(); // KEEN WORLDS: Foray in the Forest's two Keens (kw_fitf.c)
+	OSI_ChooseFiles(); // Operation Station Infiltration: its tile properties (kw_osi.c)
 
 	// Determine the base episode number
 	int episodeNumber = CK_INT(ck_episodeNumber, -1);

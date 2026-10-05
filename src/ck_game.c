@@ -40,6 +40,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "kw_habitat.h"
 #include "ck4_ep.h"
 #include "ck5_ep.h"
+#include "kw_osi.h"
 #include "ck6_ep.h"
 
 // =========================================================================
@@ -532,6 +533,8 @@ bool CK_LoadGame(FS_File fp, bool fromMenu)
 				newObj->user4 = 0;
 			else if (newObj->type == CT5_Sphereful)
 				newObj->user1 = newObj->user2 = newObj->user3 = newObj->user4 = 0;
+			else if (newObj->type == CT5_Vlorg) // KEEN WORLDS (Operation Station Infiltration)
+				newObj->user4 = 0;
 		}
 		else if (ck_currentEpisode->ep == EP_CK6)
 		{
@@ -1011,6 +1014,7 @@ void CK_GameLoop()
 			KW_BeginInShip(); // KEEN WORLDS: every game begins inside the Megarocket
 			ck_startingDifficulty = D_NotPlaying;
 		loadLevel:
+			OSI_RememberLevelStart(); // KEEN WORLDS: what dying takes back in Operation Station Infiltration
 			CK_LoadLevel(true, false);
 			AR_AfterLevelLoad(); // KEEN WORLDS: Atroxian Realm restarts from a touched checkpoint
 
@@ -1057,6 +1061,7 @@ void CK_GameLoop()
 		switch (ck_gameState.levelState)
 		{
 		case LS_Died:
+			OSI_TakeBackOnDeath(); // KEEN WORLDS (Operation Station Infiltration)
 			// KEEN WORLDS: Foray in the Forest's checkpoints and free restarts
 			if (FF_IsActive())
 			{

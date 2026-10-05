@@ -29,6 +29,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #endif
 #ifdef WITH_KEEN5
 #include "ck5_ep.h"
+#include "kw_os5_ep.h"
+#include "kw_osi.h"
 #endif
 
 #include "id_ca.h"
@@ -134,6 +136,16 @@ void CK_KeenColFunc(CK_object *a, CK_object *b)
 	impossibleBullet:
 		if (!ck_keenState.platform)
 			CK_PhysPushY(a, b);
+	}
+	// KEEN WORLDS: Operation Station Infiltration: a shot thrown back by the
+	// Big Ampton stuns Keen
+	else if (OSI_IsActive() && b->type == CT_Stunner)
+	{
+		if (b->user4)
+		{
+			CK_StunKeen(a, b);
+			CK_ShotHit(b);
+		}
 	}
 	else if (b->type == CT_Stunner && ck_currentEpisode->ep != EP_CK6)
 	{
@@ -333,7 +345,7 @@ void CK_KeenCheckSpecialTileInfo(CK_object *obj)
 					}
 					else
 					{
-						obj->user1 = targetXUnit;
+						obj->user1 = OSI_IsActive() ? targetXUnit >> 4 : targetXUnit; // KEEN WORLDS (see CK_KeenSlide)
 						obj->currentAction = CK_ACTION(CK_ACT_keenSlide);
 					}
 				}
@@ -437,7 +449,7 @@ bool CK_KeenPressUp(CK_object *obj)
 		}
 		else
 		{
-			obj->user1 = destXunit;
+			obj->user1 = OSI_IsActive() ? destXunit >> 4 : destXunit; // KEEN WORLDS (see CK_KeenSlide)
 			obj->currentAction = CK_ACTION(CK_ACT_keenSlide);
 		}
 		ck_keenState.keenSliding = true;
@@ -459,6 +471,10 @@ bool CK_KeenPressUp(CK_object *obj)
 		if (obj->posX == destUnitX)
 		{
 			//We're at the door.
+			// KEEN WORLDS: Operation Station Infiltration's fix for Keen
+			// pushed off a pole into a door
+			if (OSI_IsActive())
+				obj->yDirection = IN_motion_Down;
 
 			// Is it a security door?
 #ifdef WITH_KEEN5
@@ -504,7 +520,7 @@ bool CK_KeenPressUp(CK_object *obj)
 		}
 		else
 		{
-			obj->user1 = destUnitX;
+			obj->user1 = OSI_IsActive() ? destUnitX >> 4 : destUnitX; // KEEN WORLDS (see CK_KeenSlide)
 			obj->currentAction = CK_ACTION(CK_ACT_keenSlide);
 		}
 
@@ -520,7 +536,9 @@ bool CK_KeenPressUp(CK_object *obj)
 // Think function for keen "sliding" towards a switch, keygem or door.
 void CK_KeenSlide(CK_object *obj)
 {
-	int16_t deltaX = obj->user1 - obj->posX;
+	// KEEN WORLDS: Operation Station Infiltration keeps the place in pixels,
+	// so that it fits in 16 bits in its wide levels
+	int32_t deltaX = OSI_IsActive() ? (obj->user1 << 4) - obj->posX : (int16_t)(obj->user1 - obj->posX);
 	if (deltaX < 0)
 	{
 		// Move left one px per tick.
@@ -592,7 +610,7 @@ void CK_KeenEnterDoor(CK_object *obj)
 void CK_KeenPlaceGem(CK_object *obj)
 {
 	uint16_t oldFGTile = CA_TileAtPos(obj->clipRects.tileXmid, obj->clipRects.tileY2, 1);
-	uint16_t newFGTile = oldFGTile + 18;
+	uint16_t newFGTile = oldFGTile + CK_INT(CK_KeyHolderNewTileOffset, 18); // KEEN WORLDS: variable
 	uint16_t target = CA_TileAtPos(obj->clipRects.tileXmid, obj->clipRects.tileY2, 2);
 
 	int targetX = target >> 8;
@@ -1008,6 +1026,14 @@ void CK_KeenDrawFunc(CK_object *obj)
 	if (!obj->topTI)
 	{
 		SD_PlaySound(CK_SOUNDNUM(SOUND_KEENFALL));
+		// KEEN WORLDS: Operation Station Infiltration: off the end of a
+		// conveyor belt Keen keeps the belt's speed (user4)
+		if (OSI_IsActive() && obj->user4)
+		{
+			obj->velX = obj->user4 * 8;
+			obj->user4 = 0;
+		}
+		else
 		obj->velX = obj->xDirection * 8;
 		obj->velY = 0;
 		CK_SetAction2(obj, CK_ACTION(CK_ACT_keenFall1));
@@ -1024,6 +1050,8 @@ void CK_KeenDrawFunc(CK_object *obj)
 		ck_nextY = 0;
 		obj->user1 = 0;
 		CK_PhysUpdateNormalObj(obj);
+		if (OSI_IsActive())
+			obj->user4 = 1;
 	}
 	else if (obj->topTI == 0x31)
 	{
@@ -1032,6 +1060,11 @@ void CK_KeenDrawFunc(CK_object *obj)
 		ck_nextY = 0;
 		obj->user1 = 0;
 		CK_PhysUpdateNormalObj(obj);
+		if (OSI_IsActive())
+		{
+			obj->velX = -8;
+			obj->user4 = -1;
+		}
 	}
 	RF_AddSpriteDraw(&obj->sde, obj->posX, obj->posY, obj->gfxChunk, 0, obj->zLayer);
 }
@@ -1043,6 +1076,8 @@ void CK_KeenRunDrawFunc(CK_object *obj)
 	if (!obj->topTI)
 	{
 		SD_PlaySound(CK_SOUNDNUM(SOUND_KEENFALL));
+		if (OSI_IsActive())
+			obj->user4 = 0; // KEEN WORLDS (see CK_KeenDrawFunc)
 		obj->velX = obj->xDirection * 8;
 		obj->velY = 0;
 		CK_SetAction2(obj, CK_ACTION(CK_ACT_keenFall1));
@@ -1551,7 +1586,7 @@ void CK_KeenPogoDrawFunc(CK_object *obj)
 #ifdef WITH_KEEN5
 			if (ck_currentEpisode->ep == EP_CK5 && obj->topTI == 0x39) // Fuse
 			{
-				if (obj->velY >= 0x30)
+				if (obj->velY >= CK_INT(CK5_FuseBreakVel, 0x30)) // KEEN WORLDS: variable
 				{
 					CK_KeenBreakFuse(obj->clipRects.tileXmid, obj->clipRects.tileY2);
 					RF_AddSpriteDraw(&obj->sde, obj->posX, obj->posY, obj->gfxChunk, 0, obj->zLayer);

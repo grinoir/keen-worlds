@@ -28,6 +28,8 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 #include "ck_ep.h"
 #include "ck4_ep.h"
 #include "ck5_ep.h"
+#include "kw_os5_ep.h"
+#include "kw_osi.h"
 #include "ck6_ep.h"
 #include "kw_world.h"
 #include "kw_music.h"
@@ -41,6 +43,7 @@ extern const char *ck_episodeFile;
 // Atroxian Realm's own episode definition (kw_arealm.c): Keen 5's code with
 // its own files and level setup.
 #define KW_EPISODE_AREALM 10
+#define KW_EPISODE_OSI 12 // Operation Station Infiltration (kw_osi.c, kw_os5_*.c)
 extern CK_EpisodeDef ar_episode;
 // Foray in the Forest's (kw_fitf.c), the same way with extension CKS.
 #define KW_EPISODE_FITF 11
@@ -144,6 +147,15 @@ static const KW_WorldDef kw_worldDefs[KW_NUM_WORLDS] = {
 		"\f"
 		"Many more are named in the\ngame's own credits (its Help)." KW_NOT_OURS,
 		"A fan game by Nisaba and\nK1n9_Duk3. Download Foray in\nthe Forest v2.0 (see its page\non keenwiki.shikadi.net) and\nput its files in mods/fitf."},
+	// Operation Station Infiltration (Ceilick; programmed by Multimania,
+	// 2022): a game built on Omnispeak itself, with GPL source. The player's
+	// copy of its files (all of them, its variable files too) goes in
+	// play/mods/osi; its code is brought in by tools/kw_osi_port.py.
+	{"osi", "The Shikadi Station", KW_EPISODE_OSI, "mods/osi", "EPISODE.CK5",
+		"Operation Station Infiltration",
+		"A Commander Keen fan game\nby Ceilick, 2022",
+		"Created by Ceilick\n\nProgramming:\nMultimania (David Gow)\n\nBuilt on Omnispeak, by\nDavid Gow, NY00123,\nAndy Durdin, Lemm and others" KW_NOT_OURS,
+		"A fan game by Ceilick (2022).\nDownload Operation Station\nInfiltration v1.4 (see its page\non keenwiki.shikadi.net) and\nput its files in mods/osi."},
 	// The Megarocket: Keen Worlds' own world, the inside of Keen's ship
 	// (tools/kw_shipworld.py writes its map; its folder comes with Keen
 	// Worlds). It runs on Keen 4 and is not a destination in the menu.
@@ -174,6 +186,8 @@ static CK_EpisodeDef *KW_EpisodeDef(int episode)
 		return &ar_episode;
 	case KW_EPISODE_FITF:
 		return &ff_episode;
+	case KW_EPISODE_OSI:
+		return &osi_episode;
 	default:
 		return NULL;
 	}
@@ -234,6 +248,15 @@ bool KW_IsWorldPresent(int world)
 			return false;
 		FS_CloseFile(f);
 		return FS_IsOmniFilePresent("EPISODE.CK5");
+	}
+	if (def->episode == KW_EPISODE_OSI)
+	{
+		// everything is its own, in its own folder
+		f = FSL_OpenFileInDirCaseInsensitive(KW_WorldPath(world), "GAMEMAPS.CK5", false);
+		if (!FS_IsFileValid(f))
+			return false;
+		FS_CloseFile(f);
+		return true;
 	}
 	return FS_IsOmniFilePresent(ep->episodeFile);
 }
@@ -746,6 +769,7 @@ void KW_SwitchWorld(int world)
 	kw_currentWorld = world;
 	CK_VAR_LoadVars(ck_episodeFile);
 	FF_ChooseGraphics(); // Foray in the Forest: which Keen (kw_fitf.c)
+	OSI_ChooseFiles(); // Operation Station Infiltration: its tile properties (kw_osi.c)
 	CA_Startup();
 	CA_InitLumps();
 	CK_CacheCoreChunks();

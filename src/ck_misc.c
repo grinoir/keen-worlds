@@ -114,7 +114,9 @@ void CK_BasicDrawFunc3(CK_object *obj)
 		CK_SetAction2(obj, obj->currentAction);
 	}
 	// Walked off of ledge; turn around
-	else if (obj->topTI == 0 || (obj->topTI & ~SLOPEMASK))
+	// KEEN WORLDS: CK_BDF3SolidPoleHole (Operation Station Infiltration): the
+	// hole a pole goes through is not an edge to turn round at
+	else if ((obj->topTI == 0 || (obj->topTI & ~SLOPEMASK)) && !(CK_INT(CK_BDF3SolidPoleHole, 0) && obj->topTI == 0x11))
 	{
 		obj->posX -= obj->deltaPosX * 2;
 		obj->xDirection = -obj->xDirection;
@@ -151,6 +153,21 @@ void CK_BasicDrawFunc4(CK_object *obj)
 		obj->velY = 0;
 	}
 
+	// KEEN WORLDS: CK_StunnedEnemyConveyorBelt (Operation Station
+	// Infiltration): a stunned creature rides a conveyor belt
+	if (CK_INT(CK_StunnedEnemyConveyorBelt, 0) && obj->topTI == 0x29)
+	{
+		ck_nextX = SD_GetSpriteSync() * 8;
+		ck_nextY = 0;
+		obj->velX = 8;
+	}
+	else if (CK_INT(CK_StunnedEnemyConveyorBelt, 0) && obj->topTI == 0x31)
+	{
+		ck_nextX = SD_GetSpriteSync() * -8;
+		ck_nextY = 0;
+		obj->velX = -8;
+	}
+	else
 	if (obj->topTI)
 	{
 		obj->velX = obj->velY = 0;
@@ -211,14 +228,47 @@ void CK_BasicDrawFunc4(CK_object *obj)
 	{
 		switch (obj->user4)
 		{
+		// KEEN WORLDS: the offsets are variables (Operation Station
+		// Infiltration, which also has the creatures after Korath here)
 		case CT5_Sparky:
-			starsX += 0x40;
+			starsX += CK_INT(CK5_SparkyStarsOffsetX, 0x40);
+			starsY += CK_INT(CK5_SparkyStarsOffsetY, 0);
 			break;
 		case CT5_Ampton:
-			starsY -= 0x80;
+			starsX += CK_INT(CK5_AmptonStarsOffsetX, 0);
+			starsY += CK_INT(CK5_AmptonStarsOffsetY, -0x80);
 			break;
 		case CT5_Korath:
-			starsY -= 0x80;
+			starsX += CK_INT(CK5_KorathStarsOffsetX, 0);
+			starsY += CK_INT(CK5_KorathStarsOffsetY, -0x80);
+			break;
+		case CT5_Shikadi:
+			starsX += CK_INT(CK5_ShikadiStarsOffsetX, 0);
+			starsY += CK_INT(CK5_ShikadiStarsOffsetY, 0);
+			break;
+		case CT5_Shocksund:
+			starsX += CK_INT(CK5_ShockshundStarsOffsetX, 0);
+			starsY += CK_INT(CK5_ShockshundStarsOffsetY, 0);
+			break;
+		case CT5_BigAmpton:
+			starsX += CK_INT(CK5_BigAmptonStarsOffsetX, 0);
+			starsY += CK_INT(CK5_BigAmptonStarsOffsetY, 0);
+			break;
+		case CT5_SparkyJr:
+			starsX += CK_INT(CK5_SparkyJrStarsOffsetX, 0);
+			starsY += CK_INT(CK5_SparkyJrStarsOffsetY, 0);
+			break;
+		case CT5_SparkyII:
+			starsX += CK_INT(CK5_SparkyIIStarsOffsetX, 0x40);
+			starsY += CK_INT(CK5_SparkyIIStarsOffsetY, 0);
+			break;
+		case CT5_Sparky3:
+			starsX += CK_INT(CK5_Sparky3StarsOffsetX, 0x40);
+			starsY += CK_INT(CK5_Sparky3StarsOffsetY, 0);
+			break;
+		case CT5_Vlorg:
+			starsX += CK_INT(CK5_VlorgStarsOffsetX, 0);
+			starsY += CK_INT(CK5_VlorgStarsOffsetY, 0);
 			break;
 		}
 	}

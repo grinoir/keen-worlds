@@ -370,6 +370,13 @@ set(OMNISPEAK_CK_SRCS
 	src/kw_ff_dialog.c
 	src/kw_ff_phys.c
 	src/kw_ff_scan.c
+	src/kw_osi.c
+	src/kw_os5_map.c
+	src/kw_os5_misc.c
+	src/kw_os5_obj1.c
+	src/kw_os5_obj2.c
+	src/kw_os5_obj3.c
+	src/kw_os5_obj4.c
 	src/kw_art.c
 	src/ck_text.h
 	src/icon.c

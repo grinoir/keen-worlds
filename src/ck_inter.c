@@ -1752,6 +1752,6 @@ void CK_DoHighScores()
 {
 	ck_inHighScores = true;
 	IN_ClearKeysDown();
-	CK_PlayDemo(4);
+	CK_PlayDemo(CK_INT(CK_HighScoreDemo, 4));
 	ck_inHighScores = false;
 }

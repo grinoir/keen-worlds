@@ -569,6 +569,17 @@ void CK_PhysFullClipToWalls(CK_object *obj)
 		{
 			delX = delY = 512;
 		}
+		// KEEN WORLDS: Operation Station Infiltration's flying creatures
+		else if (obj->type == CT5_Sparky3)
+		{
+			delX = CK_INT(CK5_Sparky3ClipWidth, 512);
+			delY = CK_INT(CK5_Sparky3ClipHeight, 512);
+		}
+		else if (obj->type == CT5_Vlorg)
+		{
+			delX = CK_INT(CK5_VlorgClipWidth, 512);
+			delY = CK_INT(CK5_VlorgClipHeight, 512);
+		}
 		else
 		{
 			goto badobjclass;
@@ -911,21 +922,30 @@ bool CK_ObjectVisible(CK_object *obj)
 void CK_PhysGravityHigh(CK_object *obj)
 {
 	int32_t lastTimeCount = SD_GetLastTimeCount();
+	// KEEN WORLDS: the numbers are variables, and one level can have lower
+	// gravity (Operation Station Infiltration); the games' own by default.
+	int accel = CK_INT(CK_PhysGravityHighAccel, 4);
+	int terminalVelocity = CK_INT(CK_PhysGravityHighTermVel, 70);
+	if (ca_mapOn == CK_INT(CK_PhysLowGravityLevel, -1))
+	{
+		accel = CK_INT(CK_PhysGravityHighAccelLow, 3);
+		terminalVelocity = CK_INT(CK_PhysGravityHighTermVelLow, 55);
+	}
 	for (int32_t tickCount = lastTimeCount - SD_GetSpriteSync(); tickCount < lastTimeCount; tickCount++)
 	{
 		// Every odd tic...
 		if (tickCount & 1)
 		{
-			if (obj->velY < 0 && obj->velY >= -4)
+			if (obj->velY < 0 && obj->velY >= (-accel))
 			{
 				ck_nextY += obj->velY;
 				obj->velY = 0;
 				return;
 			}
-			obj->velY += 4;
-			if (obj->velY > 70)
+			obj->velY += accel;
+			if (obj->velY > terminalVelocity)
 			{
-				obj->velY = 70;
+				obj->velY = terminalVelocity;
 			}
 		}
 		ck_nextY += obj->velY;
@@ -935,21 +955,30 @@ void CK_PhysGravityHigh(CK_object *obj)
 void CK_PhysGravityMid(CK_object *obj)
 {
 	int32_t lastTimeCount = SD_GetLastTimeCount();
+	// KEEN WORLDS: the numbers are variables, and one level can have lower
+	// gravity (Operation Station Infiltration); the games' own by default.
+	int accel = CK_INT(CK_PhysGravityMidAccel, 3);
+	int terminalVelocity = CK_INT(CK_PhysGravityMidTermVel, 70);
+	if (ca_mapOn == CK_INT(CK_PhysLowGravityLevel, -1))
+	{
+		accel = CK_INT(CK_PhysGravityMidAccelLow, 2);
+		terminalVelocity = CK_INT(CK_PhysGravityMidTermVelLow, 55);
+	}
 	for (int32_t tickCount = lastTimeCount - SD_GetSpriteSync(); tickCount < lastTimeCount; tickCount++)
 	{
 		// Every odd tic...
 		if (tickCount & 1)
 		{
-			if (obj->velY < 0 && obj->velY >= -3)
+			if (obj->velY < 0 && obj->velY >= (-accel))
 			{
 				ck_nextY += obj->velY;
 				obj->velY = 0;
 				return;
 			}
-			obj->velY += 3;
-			if (obj->velY > 70)
+			obj->velY += accel;
+			if (obj->velY > terminalVelocity)
 			{
-				obj->velY = 70;
+				obj->velY = terminalVelocity;
 			}
 		}
 		ck_nextY += obj->velY;
@@ -959,6 +988,15 @@ void CK_PhysGravityMid(CK_object *obj)
 void CK_PhysGravityLow(CK_object *obj)
 {
 	int32_t lastTimeCount = SD_GetLastTimeCount();
+	// KEEN WORLDS: the numbers are variables, and one level can have lower
+	// gravity (Operation Station Infiltration); the games' own by default.
+	int accel = CK_INT(CK_PhysGravityLowAccel, 1);
+	int terminalVelocity = CK_INT(CK_PhysGravityLowTermVel, 70);
+	if (ca_mapOn == CK_INT(CK_PhysLowGravityLevel, -1))
+	{
+		accel = CK_INT(CK_PhysGravityLowAccelLow, 1);
+		terminalVelocity = CK_INT(CK_PhysGravityLowTermVelLow, 55);
+	}
 	for (int32_t tickCount = lastTimeCount - SD_GetSpriteSync(); tickCount < lastTimeCount; tickCount++)
 	{
 		// TODO: recheck this condition
@@ -966,10 +1004,10 @@ void CK_PhysGravityLow(CK_object *obj)
 		if ((tickCount ? 0 : 1) & 3)
 		//if (tickCount == 0)	// This condition is seriously fucked up.
 		{
-			obj->velY += 1;
-			if (obj->velY > 70)
+			obj->velY += accel;
+			if (obj->velY > terminalVelocity)
 			{
-				obj->velY = 70;
+				obj->velY = terminalVelocity;
 			}
 		}
 		ck_nextY += obj->velY;

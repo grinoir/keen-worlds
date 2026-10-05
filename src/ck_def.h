@@ -47,7 +47,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define MISCFLAG_LEFTELEVATOR 33
 #define MISCFLAG_RIGHTELEVATOR 34
 
-#define CK_MAX_OBJECTS 100
+// KEEN WORLDS: room for 124 (Operation Station Infiltration's number); how
+// many are used is a variable, CK_MaxObjects, 100 as in the games.
+#define CK_MAX_OBJECTS 124
 
 // The "default" limit (beyond the edge of the screen) sprites remain active.
 // Override with %int CK_activeLimit 6 in EPISODE.CKx
@@ -148,6 +150,12 @@ typedef enum CK_ClassType
 	CT5_Sphereful = 22,
 	CT5_Korath = 23,
 	CT5_QED = 25,
+	// KEEN WORLDS: Operation Station Infiltration's creatures
+	CT5_BigAmpton = 26,
+	CT5_SparkyJr = 27,
+	CT5_SparkyII = 28,
+	CT5_Sparky3 = 29,
+	CT5_Vlorg = 30,
 
 	CT6_EnemyShot = 4,
 	CT6_Item = 5,

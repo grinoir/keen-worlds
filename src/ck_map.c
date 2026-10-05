@@ -30,6 +30,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "kw_world.h"
 #include "ck4_ep.h"
 #include "ck5_ep.h"
+#include "kw_osi.h"
+void OSI_ShowGravityWarning();
 
 #include <stdio.h>
 #include <string.h>
@@ -371,6 +373,9 @@ void CK_ScanForLevelEntry(CK_object *obj)
 				ck_gameState.mapPosY = obj->posY;
 				ck_gameState.currentLevel = infotile - 0xC000;
 				ck_gameState.levelState = LS_LevelComplete;
+				// KEEN WORLDS: Operation Station Infiltration's warning before its low-gravity level
+				if (OSI_IsActive() && ck_gameState.currentLevel == CK_INT(CK_PhysLowGravityLevel, -1))
+					OSI_ShowGravityWarning();
 				SD_PlaySound(CK_SOUNDNUM(SOUND_UNKNOWN12));
 				return;
 			}
@@ -452,8 +457,9 @@ void CK_AnimateMapTeleporter(int tileX, int tileY)
 	int unitX, unitY;
 	uint16_t timer, animTile, ticsx2;
 
-	int boltTile = ck_currentEpisode->ep == EP_CK5 ? 0xA7F : (ck_currentEpisode->ep == EP_CK6 ? 0xA35 : 0);
-	int doneTile = ck_currentEpisode->ep == EP_CK5 ? 0x427 : (ck_currentEpisode->ep == EP_CK6 ? 0xA45 : 0);
+	// KEEN WORLDS: variables, with the games' tiles as the default (Operation Station Infiltration)
+	int boltTile = CK_INT(CK_MapTeleBoltTile, ck_currentEpisode->ep == EP_CK5 ? 0xA7F : (ck_currentEpisode->ep == EP_CK6 ? 0xA35 : 0));
+	int doneTile = CK_INT(CK_MapTeleDoneTile1, ck_currentEpisode->ep == EP_CK5 ? 0x427 : (ck_currentEpisode->ep == EP_CK6 ? 0xA45 : 0));
 	int doneTile2 = ck_currentEpisode->ep == EP_CK5 ? 0 : (ck_currentEpisode->ep == EP_CK6 ? 0xA45 : 0);
 
 	SD_PlaySound(CK_SOUNDNUM(SOUND_UNKNOWN41));

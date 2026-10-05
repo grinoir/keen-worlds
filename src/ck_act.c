@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <stdlib.h>
 #include <string.h>
 #include "ck_act.h"
+#include "kw_osi.h"
 #include "ck_cross.h"
 #include "ck_def.h"
 
@@ -66,7 +67,11 @@ CK_ACT_Function CK_ACT_GetFunction(const char *fnName)
 {
 	if (!strcmp(fnName, "NULL"))
 		return 0;
-	CK_ACT_Function fnPtr = (CK_ACT_Function)(STR_LookupEntry(ck_functionTable, fnName));
+	// KEEN WORLDS: a world with its own versions of an episode's functions
+	char worldName[128];
+	CK_ACT_Function fnPtr = (CK_ACT_Function)(STR_LookupEntry(ck_functionTable, OSI_FunctionName(fnName, worldName, sizeof(worldName))));
+	if (fnPtr == 0)
+		fnPtr = (CK_ACT_Function)(STR_LookupEntry(ck_functionTable, fnName));
 	if (fnPtr == 0)
 	{
 		CK_Cross_LogMessage(CK_LOG_MSG_WARNING, "GetFunction: Could not find function \"%s\"\n", fnName);
@@ -78,7 +83,10 @@ CK_ACT_ColFunction CK_ACT_GetColFunction(const char *fnName)
 {
 	if (!strcmp(fnName, "NULL"))
 		return 0;
-	CK_ACT_ColFunction fnPtr = (CK_ACT_ColFunction)(STR_LookupEntry(ck_functionTable, fnName));
+	char worldName[128];
+	CK_ACT_ColFunction fnPtr = (CK_ACT_ColFunction)(STR_LookupEntry(ck_functionTable, OSI_FunctionName(fnName, worldName, sizeof(worldName))));
+	if (fnPtr == 0)
+		fnPtr = (CK_ACT_ColFunction)(STR_LookupEntry(ck_functionTable, fnName));
 	if (fnPtr == 0)
 	{
 		CK_Cross_LogMessage(CK_LOG_MSG_NORMAL, "GetColFunction: Could not find function \"%s\"\n", fnName);

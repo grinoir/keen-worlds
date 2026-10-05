@@ -9,5 +9,6 @@ static const struct { const char *id, *file, *text; } kw_landings[] = {
 	{"keen8", "LAND_KEEN8.RAW", "Ship computer:\n\nYou have now landed on\nCalidune.\nBeware of the local desert.\nAll of it.\nPlease drink some water."},
 	{"keen9", "LAND_KEEN9.RAW", "Ship computer:\n\nYou have now docked at the HUB\nCommand Center.\nBeware of the local Mortimer.\nHe is one IQ point smarter\nthan you, and he will mention\nit."},
 	{"arealm", "LAND_AREALM.RAW", "Ship computer:\n\nYou have now crashed on\nKrisle.\nBeware of the local Atroxians.\nAlso, the ship is broken.\nThis was not my fault."},
+	{"osi", "LAND_OSI.RAW", "Ship computer:\n\nYou have now docked at the\nShikadi Station.\nBeware of the local Shikadi.\nThey are made of electricity,\nand they hold a grudge."},
 	{"fitf", "LAND_FITF.RAW", "Ship computer:\n\nYou have now landed on\nGnosticus Pi.\nBeware of the local trees.\nSome of them are not trees."},
 };

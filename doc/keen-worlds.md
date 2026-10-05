@@ -51,6 +51,7 @@ game built on one of them. `kw_worldDefs[]` in `src/kw_world.c` lists them:
 | `keen7` | Krodacia | 4 | `mods/keen7` | `MOD.CK4` |
 | `keen8` | Calidune | 6 | `mods/keen8` | `MOD.CK6` (ours) |
 | `keen9` | HUB Command Center | 5 | `mods/keen9` | `MOD.CK5` (ours) |
+| `osi` | The Shikadi Station | 5 (its own code) | `mods/osi` | its own `EPISODE.CK5` |
 
 - **Installed or not**: a fan game is installed when its folder holds its
   variable file (`KW_IsWorldPresent`). The Megarocket menu lists only
@@ -454,6 +455,15 @@ Boarding a ship in any world takes Keen into the exit room. "Up" at the hatch go
 the map marks all these places in its info plane). Without the folder the
 menu opens at the ship as before. It is not a destination itself. The save
 block remembers which world the ship stands on.
+
+### Operation Station Infiltration
+
+World id `osi`, "The Shikadi Station": Ceilick's game, built on Omnispeak
+itself (GPL source). Its own Keen 5 files are converted by
+`tools/kw_osi_port.py` into `src/kw_os5_*.c` under names of their own;
+`src/kw_osi.c` has its episode and what it added to the shared engine. The
+player copies all of the game's files to `play/mods/osi`. See
+`../research/operation-station-infiltration.md`.
 
 ### Adding a fan game
 
