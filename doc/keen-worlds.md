@@ -475,6 +475,14 @@ world `keen4`: the fan games on the same engine have other words in the
 same windows. `KW_AUTOTALK=n` runs all the dialogues at frame n of a
 scripted run and prints each clip.
 
+Keen's voice is sped up and raised a little (`STYLE` in
+`tools/kw_keen4_voice.py`: quicker and younger than the voice is by itself),
+and the narrator's "Keen", which came out near "Cain" in places, has its
+vowel held with a glide (`tools/kw_voice.mjs` can replace phonemes). In the
+conversations with the elder and the barmaid, the line Keen picks stands on
+a card of his own and he says it (`KW_KeenSays`; clips `KEENSAY_*.RAW`,
+named after the line's text).
+
 **Keen 5 and Keen 6 speak** too (`K5_*.RAW`, `K6_*.RAW`, made by
 `tools/kw_keen56_voice.py`). Keen 5 is Keen at a broken fuse and a narrated
 ending (its secret ending has two pages of its own, `K5S_END_*`). Keen 6

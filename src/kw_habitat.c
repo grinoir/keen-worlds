@@ -803,6 +803,36 @@ static void KW_ResidentSays(const KW_Resident *r, const char *pages, const char 
 		KW_StopVoice();
 }
 
+// The line Keen picked stands on a card of his own and he says it (clips
+// KEENSAY_*.RAW, named after the line: FNV-1a of its text, as
+// keen_says_file in tools/kw_keen4_voice.py names them).
+static void KW_KeenSaysClip(const char *text, char *file, size_t size)
+{
+	uint32_t h = 0x811C9DC5u;
+	for (const unsigned char *c = (const unsigned char *)text; *c; ++c)
+		h = (h ^ *c) * 0x01000193u;
+	snprintf(file, size, "KEENSAY_%08X.RAW", (unsigned)h);
+}
+
+static void KW_KeenSays(const char *text)
+{
+	char clip[32];
+	uint16_t w, h;
+	KW_KeenSaysClip(text, clip, sizeof(clip));
+	US_CenterWindow(26, 8);
+	VHB_DrawBitmap(US_GetWindowX() + US_GetWindowW() - 0x30, US_GetWindowY(), CK_CHUNKNUM(PIC_KEENTALK1));
+	US_SetWindowW(US_GetWindowW() - 0x30);
+	CK_MeasureMultiline(text, &w, &h);
+	US_SetPrintY(US_GetPrintY() + (US_GetWindowH() - h) / 2 - 4);
+	US_CPrint(text);
+	VH_UpdateScreen();
+	KW_Speak(clip, true);
+	IN_ClearKeysDown();
+	IN_WaitButton();
+	KW_WaitForButtonsUp();
+	KW_StopVoice(); // the card is put away: no more of the clip
+}
+
 static int KW_NumChoices(const KW_Resident *r)
 {
 	int n = 0;
@@ -901,6 +931,7 @@ static void KW_ShowTalk(const KW_Resident *r)
 		int choice = KW_ChooseLine(lines, n);
 		if (choice < 0)
 			return;
+		KW_KeenSays(node->choices[choice].keen);
 		if (node->choices[choice].reply)
 			KW_ResidentSays(r, node->choices[choice].reply, node->choices[choice].replyVoice);
 		at = node->choices[choice].next;
@@ -929,6 +960,8 @@ static void KW_ShowConversation(const KW_Resident *r)
 		bool voiced = r->episode == KW_KEEN4 && r->kind == KW_ELDER;
 		KW_ResidentSays(r, r->says, voiced ? "K4_ELDER.RAW" : NULL);
 		int choice = KW_ChooseReply(r);
+		if (choice >= 0)
+			KW_KeenSays(r->choices[choice].keen);
 		if (choice >= 0 && r->choices[choice].reply)
 		{
 			char clip[32];
@@ -968,7 +1001,10 @@ const char *KW_CheckDialogueFits(void)
 		{
 			if (node->choices[c].next >= places)
 				return "the barmaid's talk goes on at a place that does not exist";
-			voices[n] = NULL;
+			// (Keen says the line he picks: its clip is named after it)
+			static char keenClips[KW_MAX_TALK_CHOICES][32];
+			KW_KeenSaysClip(node->choices[c].keen, keenClips[c], sizeof(keenClips[c]));
+			voices[n] = keenClips[c];
 			texts[n++] = node->choices[c].keen;
 			if (node->choices[c].reply)
 			{
@@ -1020,6 +1056,20 @@ const char *KW_CheckDialogueFits(void)
 		{
 			texts[n++] = r->choices[c].keen;
 			texts[n++] = r->choices[c].reply;
+			// what Keen says to the elder of Gnosticus IV has a clip
+			if (r->episode == KW_KEEN4 && r->kind == KW_ELDER)
+			{
+				char clip[32], path[512];
+				KW_KeenSaysClip(r->choices[c].keen, clip, sizeof(clip));
+				snprintf(path, sizeof(path), "%s/voice/%s", fs_keenPath, clip);
+				FILE *f = fopen(path, "rb");
+				if (!f)
+				{
+					snprintf(problem, sizeof(problem), "Keen's clip %s (\"%.20s\") is missing", clip, r->choices[c].keen);
+					return problem;
+				}
+				fclose(f);
+			}
 		}
 		for (int t = 0; t < n; ++t)
 		{
