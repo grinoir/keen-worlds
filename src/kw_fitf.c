@@ -595,6 +595,14 @@ const char *FF_TestSaveRoundTrip(bool (*save)(void), bool (*load)(void))
 // The play loop is about to start (the engine calls this in this world).
 void FF_PlayLoopStart(void)
 {
+	// Developer tool: KW_AUTOFOOBS=1 shows its "Foobs in Space!" screen once
+	static bool foobsShown = false;
+	if (getenv("KW_AUTOFOOBS") && !foobsShown)
+	{
+		foobsShown = true;
+		FF_RunFoobsInSpace();
+		RF_ForceRefresh();
+	}
 	if (ff_loaded.pending)
 	{
 		FF_ApplyLoadedState();
@@ -760,8 +768,139 @@ void FF_Jukebox(void)
 void FF_RunSnailas(void)
 {
 }
+// "Foobs in Space!" (FOOBS.C, by K1n9_Duk3): an arcade machine's waiting
+// screen. Stars fly out of the middle, the word FOOBS is spelled with Foobs
+// that bob up and down, and INSERT COIN flashes. Any key leaves. Written
+// again for this engine (the original draws with the EGA card directly):
+// every frame is drawn whole.
+static int FF_FoobSin(int angle, int factor)
+{
+	static const uint8_t table[65] = {
+		0, 3, 6, 9, 12, 15, 18, 21, 24, 28, 31, 34, 37, 40, 43, 46,
+		48, 51, 54, 57, 60, 63, 65, 68, 71, 73, 76, 78, 81, 83, 85, 88,
+		90, 92, 94, 96, 98, 100, 102, 104, 106, 108, 109, 111, 112, 114, 115, 117,
+		118, 119, 120, 121, 122, 123, 124, 124, 125, 126, 126, 127, 127, 127, 127, 127,
+		128};
+	angle &= 0xFF;
+	int value = angle <= 64 ? table[angle] : angle <= 128 ? table[128 - angle] :
+		angle <= 192 ? -(int)table[angle - 128] : -(int)table[256 - angle];
+	return (factor * value) >> 7;
+}
+
 void FF_RunFoobsInSpace(void)
 {
+	enum { NUM_STARS = 100, W = 320, H = 200 };
+	struct { int angle, moved, speed, x, y; } stars[NUM_STARS];
+	// the picture: two Foobs side by side, 16 x 16 each, as four EGA planes
+	// of 32 x 16. Each becomes a picture of its own; light magenta is shown
+	// as white and light red as black, as the original sets the colours.
+	static uint8_t frames[2][4 * 16 * 2];
+	CA_CacheGrChunk(FF_FOOBSPIC);
+	const uint8_t *pic = (const uint8_t *)ca_graphChunks[FF_FOOBSPIC];
+	if (!pic)
+		return;
+	for (int n = 0; n < 2; ++n)
+	{
+		memset(frames[n], 0, sizeof(frames[n]));
+		for (int y = 0; y < 16; ++y)
+			for (int x = 0; x < 16; ++x)
+			{
+				int sx = n * 16 + x, colour = 0;
+				for (int plane = 0; plane < 4; ++plane)
+					if (pic[plane * 64 + y * 4 + sx / 8] & (0x80 >> (sx % 8)))
+						colour |= 1 << plane;
+				colour = colour == 13 ? 15 : colour == 12 ? 0 : colour;
+				for (int plane = 0; plane < 4; ++plane)
+					if (colour & (1 << plane))
+						frames[n][plane * 32 + y * 2 + x / 8] |= 0x80 >> (x % 8);
+			}
+	}
+	for (int i = 0; i < NUM_STARS; ++i)
+		stars[i].moved = -1;
+
+	static const uint8_t F[] = {0,16, 16,16, 32,16, 0,33, 0,50, 16,50, 0,67, 0,84};
+	static const uint8_t O[] = {0,24, 0,41, 0,58, 0,75, 16,16, 16,84, 32,24, 32,41, 32,58, 32,75};
+	static const uint8_t B[] = {0,16, 16,16, 0,33, 0,50, 16,50, 0,67, 0,84, 16,84, 32,21, 32,38, 32,62, 32,79};
+	static const uint8_t S[] = {32,16, 16,16, 0,24, 0,41, 16,50, 32,58, 32,75, 16,84, 0,84};
+	static const struct { const uint8_t *pattern; int size; } letters[5] = {
+		{F, sizeof(F)}, {O, sizeof(O)}, {O, sizeof(O)}, {B, sizeof(B)}, {S, sizeof(S)}};
+
+	VL_SetScrollCoords(0, 0);
+	VL_SetDefaultPalette();
+	CA_CacheGrChunk(5); // the story's font, for "IN SPACE!"
+	US_SetPrintRoutines(NULL, VH_DrawPropString);
+	IN_ClearKeysDown();
+	int amplitude = 10, ampdelta = 1;
+	for (int counter = 1;; ++counter)
+	{
+		VL_ClearScreen(0);
+		// the stars: dark in the middle, brighter as they fly out
+		for (int i = 0; i < NUM_STARS; ++i)
+		{
+			if (stars[i].moved >= 0)
+				stars[i].moved += stars[i].speed;
+			for (int tries = 0; tries < 50; ++tries)
+			{
+				if (stars[i].moved >= 0)
+				{
+					stars[i].x = FF_FoobSin(stars[i].angle, stars[i].moved / 2) + W / 2;
+					stars[i].y = FF_FoobSin(stars[i].angle + 64, stars[i].moved / 2) + H / 2;
+					if (stars[i].x >= 0 && stars[i].x < W && stars[i].y >= 0 && stars[i].y < H)
+						break;
+				}
+				stars[i].angle = rand() % 256;
+				stars[i].moved = rand() % 128;
+				stars[i].speed = rand() % 4 + 1;
+			}
+			VL_ScreenRect(stars[i].x, stars[i].y, 1, 1, stars[i].moved < 75 ? 8 : stars[i].moved < 150 ? 7 : 15);
+		}
+		// FOOBS, in Foobs
+		if ((counter & 0x1FF) == 0)
+		{
+			if (amplitude == 10 || amplitude == 0)
+				ampdelta = -ampdelta;
+			amplitude += ampdelta;
+		}
+		int x = (W - (5 * 48 + 4 * 8)) / 2, frame = 0;
+		for (int l = 0; l < 5; ++l, x += 48 + 8)
+		{
+			int f = frame++;
+			for (int k = 0; k < letters[l].size; k += 2, f += 8)
+			{
+				int fx = x + letters[l].pattern[k];
+				int fy = letters[l].pattern[k + 1] + FF_FoobSin(counter + fx, amplitude);
+				VL_UnmaskedToScreen(frames[((counter + f) >> 4) & 1], fx & ~7, fy, 16, 16);
+			}
+		}
+		// the words
+		US_SetWindowX(0);
+		US_SetWindowW(W);
+		US_SetPrintFont(2);
+		US_SetPrintColour(14);
+		US_SetPrintY(128);
+		US_CPrint(FF_String(FF_S_INSPACE));
+		US_SetPrintFont(0);
+		US_SetPrintColour((counter & 8) ? 12 : 4);
+		US_SetPrintY(184);
+		US_CPrint(FF_String(FF_S_INSERTCOIN));
+		VL_Present();
+		VL_DelayTics(1);
+
+		IN_PumpEvents();
+		IN_ReadControls(0, &ck_inputFrame);
+		if (IN_GetLastScan() != IN_SC_None || ck_inputFrame.jump || ck_inputFrame.pogo || ck_inputFrame.button2)
+			break;
+		// (developer runs: a picture of the 60th frame, and on)
+		if (counter == 60 && KW_DebugWait())
+			break;
+		if (counter > 60 && getenv("KW_AUTOSHOT"))
+			break;
+	}
+	US_SetPrintFont(0);
+	US_SetPrintColour(15);
+	US_SetPrintRoutines(NULL, NULL);
+	VL_ClearScreen(0);
+	IN_ClearKeysDown();
 }
 
 // The fade out and back in around a teleport (DelayedFade in CK_GAME.C):

@@ -62,16 +62,16 @@ static const KW_TalkNode kw_barmaidTalk[] = {
 		{
 			{"Who made them?", "A fan called\nCeilick began it,\nall in his own\ntime. By the third\fhe had Mink and\nTulip beside him,\nand half the fans\nof the galaxy\fhelping.", "BAR_15.RAW", 6},
 			{"Are they dangerous?", "One of them is a\ndesert that wants\nyou dead, hon. Pack\na hat.", "BAR_16.RAW", 6},
-			{"Other worlds.", NULL, NULL, 4},
+			{"And after that?", "Aspermontis. You\ntook your friends\nhome and found the\nOracle scorched and\fits batteries gone.\nBubbatom made that\none, with Ceilick,\nMink and Gridlock\flending a hand.", "BAR_17.RAW", 6},
 			{"Something else.", NULL, NULL, 1},
 		},
 	},
 	{ // 7: far
-		"Krisle is where the\nAtroxians live.\nGnosticus Pi is our\nlittle sister\fplanet, the one\nwith the rings. And\nthe Shikadi keep a\nstation over\fFribbulus Xax.", "BAR_17.RAW",
+		"Krisle is where the\nAtroxians live.\nGnosticus Pi is our\nlittle sister\fplanet, the one\nwith the rings. And\nthe Shikadi keep a\nstation over\fFribbulus Xax.", "BAR_18.RAW",
 		{
-			{"Who made Krisle?", "Gridlock. Atroxian\nRealm, he called\nit. Years of work,\nwith friends like\fLemm and Gamebird.\nMind you, your ship\nbreaks when you\nland there.", "BAR_18.RAW", 7},
-			{"And Gnosticus Pi?", "Nisaba and\nK1n9_Duk3, with a\nwhole crowd of\nfriends. Foray in\fthe Forest. They\neven drew the\ninside of your\nship, hon.", "BAR_19.RAW", 7},
-			{"The Shikadi Station?", "That one hangs over\nFribbulus Xax.\nCeilick again, with\nMultimania doing\fthe wiring.\nOperation Station\nInfiltration. Mind\nthe big Ampton.", "BAR_20.RAW", 7},
+			{"Who made Krisle?", "Gridlock. Atroxian\nRealm, he called\nit. Years of work,\nwith friends like\fLemm and Gamebird.\nMind you, your ship\nbreaks when you\nland there.", "BAR_19.RAW", 7},
+			{"And Gnosticus Pi?", "Nisaba and\nK1n9_Duk3, with a\nwhole crowd of\nfriends. Foray in\fthe Forest. They\neven drew the\ninside of your\nship, hon.", "BAR_20.RAW", 7},
+			{"The Shikadi Station?", "That one hangs over\nFribbulus Xax.\nCeilick again, with\nMultimania doing\fthe wiring.\nOperation Station\nInfiltration. Mind\nthe big Ampton.", "BAR_21.RAW", 7},
 			{"Something else.", NULL, NULL, 1},
 		},
 	},
