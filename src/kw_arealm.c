@@ -71,8 +71,15 @@ void AR_EndScreens(int dialogue)
 	// Black pages for the endings, Atroxus and his boxes; the red bordered
 	// page for the Krile.
 	static const bool black[] = {true, false, false, true, false, false, true, true, false, true, true, true};
+	// KEEN WORLDS: the screens are spoken (tools/kw_arealm_voice.py; the
+	// secret ending and the unused one have nothing to say)
+	static const char *const voices[] = {"END", "BWB", "ELDER", "ATROXUS", "SHRINE", NULL, "END2", NULL, "NORMALEND",
+		"BOX1", "BOX2", "BOX3"};
+	extern const char *ck_textPagesVoice;
+	ck_textPagesVoice = voices[dialogue];
 	// Screen 6 follows screen 0 and keeps its music playing.
 	CK_ShowTextPages(chunks[dialogue], dialogue == 6 ? -1 : songs[dialogue], black[dialogue]);
+	ck_textPagesVoice = NULL;
 }
 
 void AR_WinGame(void)

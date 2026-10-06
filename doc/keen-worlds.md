@@ -511,6 +511,12 @@ Dreams' ending and the warning at Boobus Tuber's castle). Address Unknown
 and the Shikadi Station say Keen 5's words where they speak, and use Keen
 5's clips.
 
+**Krisle speaks** (`AR_*.RAW`, `tools/kw_arealm_voice.py`): Atroxian
+Realm's talks and endings are text screens shown a page at a time
+(`CK_ShowTextPages`); `ck_textPagesVoice` names the screen and page n plays
+`AR_<SCREEN>_<nn>.RAW`. Keen and the narrator, Atroxus (a machine's voice),
+Elder Krislen and the Krile advisor.
+
 **The flight menu** (`KW_TravelMenu`): the worlds in two columns of two
 groups each (Goodbye, Galaxy!; The Universe Is Toast!; Other adventures;
 More levels), left and right between the columns. A line under the list

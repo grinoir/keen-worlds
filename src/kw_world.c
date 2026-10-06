@@ -3017,6 +3017,14 @@ void KW_DebugFrame(void)
 		CK6_ShowGetPasscard();
 		CK6_GrabbiterCol(ck_keenObj, ck_keenObj);
 	}
+	if (getenv("KW_AUTOTALK") && count + 1 == atoi(getenv("KW_AUTOTALK")) && kw_currentWorld == KW_AREALM)
+	{
+		// (Krisle: every one of its text screens)
+		void AR_EndScreens(int dialogue);
+		for (int i = 0; i < 12; ++i)
+			AR_EndScreens(i);
+		RF_ForceRefresh();
+	}
 	// KW_AUTOWAKE=n: in the dream (Keen Dreams), Keen wakes up at frame n
 	if (getenv("KW_AUTOWAKE") && count + 1 == atoi(getenv("KW_AUTOWAKE")))
 		KW_WakeUp();

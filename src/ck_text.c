@@ -653,6 +653,10 @@ void HelpScreens(void)
 // KEEN WORLDS: show a text chunk's pages the way the ending text is shown
 // (Atroxian Realm's story and dialogue screens), with a song while it runs,
 // on the usual red bordered page or a plain black one.
+// The pages can be spoken: ck_textPagesVoice names the screen, and page n
+// plays the world's clip <prefix>_<name>_<nn>.RAW (tools/kw_arealm_voice.py).
+const char *ck_textPagesVoice = NULL;
+
 void CK_ShowTextPages(int textChunk, int song, bool blackBackground)
 {
 	ck_textBlackBackground = blackBackground;
@@ -671,13 +675,21 @@ void CK_ShowTextPages(int textChunk, int song, bool blackBackground)
 	bool quit = false;
 	while (help_cur_page < help_num_pages && !quit)
 	{
+		if (ck_textPagesVoice)
+		{
+			char clip[48];
+			snprintf(clip, sizeof(clip), "%s_%02d", ck_textPagesVoice, (int)help_cur_page);
+			KW_SayWorldLine(clip);
+		}
 		PageLayout(0);
 		IN_ClearKeysDown();
 		while (true)
 		{
 			VHB_DrawBitmap(0x12A & ~3, 0xB8, CK_CHUNKNUM(PIC_ARROWDIM));
 			VH_UpdateScreen();
-			if (IN_UserInput(70, false))
+			KW_LinePoll(); // the page's lines are over: the music comes back up
+			// (KW_AUTOTALK: the scripted dialogue test turns the pages itself)
+			if (IN_UserInput(70, false) || getenv("KW_AUTOTALK"))
 				break;
 			VHB_DrawBitmap(0x12A & ~3, 0xB8, CK_CHUNKNUM(PIC_ARROWBRIGHT));
 			VH_UpdateScreen();
@@ -689,6 +701,7 @@ void CK_ShowTextPages(int textChunk, int song, bool blackBackground)
 		}
 	}
 
+	KW_LinesOver();
 	MM_SetLock(&ca_graphChunks[textChunk], false);
 	MM_FreePtr(&ca_graphChunks[textChunk]);
 	if (song >= 0)
