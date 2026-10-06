@@ -4,8 +4,8 @@
 
 Reads from the art folder:
   image1.png   the title: the first thing shown when the program is launched
-  image2.png   what Keen Worlds' story scrolls over
-  image3.png   the ending: shown when every world is saved
+  image2.png   what Keen Worlds' story scrolls over (Keen refuels the ship)
+  image3.png   the ending: shown when every world is saved (Keen on the beach)
 Each is cropped to the screen's shape, scaled to 320x200 and written as an
 array of 32000 bytes, two pixels a byte (the left one in the high four bits).
 
@@ -51,14 +51,19 @@ def standard(path):
     return im.quantize(palette=palette_image([(c >> 16, (c >> 8) & 255, c & 255) for c in EGA]), dither=Image.Dither.NONE)
 
 
-def own_colours(path, count, method):
+def own_colours(path, count, method, boost=1.0, kmeans=0):
     """The picture in `count` colours of its own (any colours: the engine can
     show others than the EGA's sixteen), with a little dithering. `method`
     is how they are picked: median cut suits a picture of broad, bright
     areas; "maximum coverage" keeps the few strong colours of a dark one
     (the red of the rocket at night)."""
     im = screen_shaped(path)
-    rough = im.quantize(colors=count, method=method, dither=Image.Dither.NONE).getpalette()[:count * 3]
+    # (`boost`: more colour before picking, and `kmeans`: the picked colours
+    # settled on the picture's own. A bright daylight picture needs both, or
+    # its reds, pinks and greens come out as browns and greys.)
+    if boost != 1.0:
+        im = ImageEnhance.Color(im).enhance(boost)
+    rough = im.quantize(colors=count, method=method, kmeans=kmeans, dither=Image.Dither.NONE).getpalette()[:count * 3]
     colours = [tuple(rough[i * 3:i * 3 + 3]) for i in range(count)]
     return im.quantize(palette=palette_image(colours), dither=Image.Dither.FLOYDSTEINBERG), colours
 
@@ -83,9 +88,9 @@ def main():
         write_array(f, 'kw_titlePicture', im)
         im.convert('RGB').resize((640, 400), Image.NEAREST).save('%s/image1_ega.png' % folder)
         text = (255, 255, 85)
-        for name, src, count, method in (('kw_story', 'image2.png', 15, Image.Quantize.MAXCOVERAGE),
-                                         ('kw_ending', 'image3.png', 16, Image.Quantize.MEDIANCUT)):
-            im, colours = own_colours('%s/%s' % (folder, src), count, method)
+        for name, src, count, method, boost, kmeans in (('kw_story', 'image2.png', 15, Image.Quantize.MAXCOVERAGE, 1.0, 0),
+                                                        ('kw_ending', 'image3.png', 16, Image.Quantize.MEDIANCUT, 1.3, 3)):
+            im, colours = own_colours('%s/%s' % (folder, src), count, method, boost, kmeans)
             write_array(f, name + 'Picture', im)
             f.write('static const uint8_t %sColors[16][3] = {%s};\n' % (name, ', '.join(
                 '{%d, %d, %d}' % c for c in (colours + [text])[:16])))
