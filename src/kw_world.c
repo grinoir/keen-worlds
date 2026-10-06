@@ -2877,6 +2877,8 @@ extern CK_object *ck_scoreBoxObj;
 extern bool ck_scoreBoxEnabled;
 void CK_UpdateScoreBox(CK_object *scorebox);
 
+void KW_DumpScreenTo(const char *path); // (for other files: ck_text.c)
+
 // Save what is on the screen as a PPM picture.
 static void KW_DumpScreen(const char *path)
 {
@@ -2890,6 +2892,11 @@ static void KW_DumpScreen(const char *path)
 		for (int x = 0; x < 320; ++x)
 			fwrite(VL_EGARGBColorTable[VL_SurfacePGet(screen, x + sx, y + sy) & 15], 1, 3, f); // the colours shown now
 	fclose(f);
+}
+
+void KW_DumpScreenTo(const char *path)
+{
+	KW_DumpScreen(path);
 }
 
 // Developer tool for the real play loop, driven by the environment:
@@ -3031,7 +3038,21 @@ void KW_DebugFrame(void)
 		CK6_ShowGetPasscard();
 		CK6_GrabbiterCol(ck_keenObj, ck_keenObj);
 	}
-	if (getenv("KW_AUTOTALK") && count + 1 == atoi(getenv("KW_AUTOTALK")) && kw_currentWorld == KW_FITF)
+	if (getenv("KW_AUTOTALK") && count + 1 == atoi(getenv("KW_AUTOTALK")) && kw_currentWorld == KW_FITF && getenv("KW_AUTOCHUNK"))
+	{
+		// (Gnosticus Pi: one of its ending texts, by chunk number; KW_AUTOFLAGS:
+		// what Keen has collected, as its bits)
+		void CK_ShowTextPages(int textChunk, int song, bool blackBackground);
+		void FF_TestCollected(int bits, int cans);
+		extern const char *ck_textPagesVoice;
+		if (getenv("KW_AUTOFLAGS"))
+			FF_TestCollected(atoi(getenv("KW_AUTOFLAGS")), getenv("KW_AUTOCANS") ? atoi(getenv("KW_AUTOCANS")) : 0);
+		ck_textPagesVoice = getenv("KW_AUTOVOICE");
+		CK_ShowTextPages(atoi(getenv("KW_AUTOCHUNK")), -1, false);
+		ck_textPagesVoice = NULL;
+		RF_ForceRefresh();
+	}
+	else if (getenv("KW_AUTOTALK") && count + 1 == atoi(getenv("KW_AUTOTALK")) && kw_currentWorld == KW_FITF)
 	{
 		// (Gnosticus Pi: its talks with the janitor and Lindsey, and its other windows)
 		void FF_JanitorDialog(int16_t number);

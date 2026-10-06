@@ -116,12 +116,125 @@ void TimedPicCommand(void)
 	VHB_DrawBitmap(help_x & 0xFFF8, help_y, help_pic);
 }
 
+// KEEN WORLDS: Foray in the Forest's text pages (its CK_TEXT.C; K1n9_Duk3's
+// additions to the layout language). Its pages are green, a box can have a
+// colour, a picture can be a sprite or a tile, and there are commands the
+// games' own viewer doesn't have: ^; a comment, ^I a condition (the text up
+// to the next ^I is left out when it is false), ^M music, ^S a sound, ^W
+// wait for the sound, ^Q quiet, ^D a pause, ^F the font, ^H the high scores.
+bool FF_IsActive(void);
+bool FF_TextCondition(int number);
+void FF_StartMusic(uint16_t song, bool repeat);
+#define HELP_BACKCOLOUR (FF_IsActive() ? 2 : 4)
+
+// (its ParseHexNumber: the next hex number on this line, or `val` if none)
+static int ParseHexNumber(int val)
+{
+	unsigned char ch = (unsigned char)CK_Cross_toupper(*help_ptr);
+	while (!((ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'F')))
+	{
+		if (ch == '\n' || ch == '\r')
+			return val;
+		ch = (unsigned char)CK_Cross_toupper(*++help_ptr);
+	}
+	val = 0;
+	while (true)
+	{
+		if (ch >= '0' && ch <= '9')
+			val = (val << 4) + ch - '0';
+		else if (ch >= 'A' && ch <= 'F')
+			val = (val << 4) + ch - 'A' + 10;
+		else
+			break;
+		ch = (unsigned char)CK_Cross_toupper(*++help_ptr);
+	}
+	return val;
+}
+
+// (its TextDelay: show what is drawn so far, then wait; not in the scripted
+// dialogue test, which turns the pages itself)
+static void FF_TextDelay(int tics)
+{
+	VH_UpdateScreen();
+	if (!getenv("KW_AUTOTALK"))
+		IN_UserInput(tics, false);
+}
+
+// Its commands; false for one the games' viewer handles itself.
+static bool FF_HandleCommand(void)
+{
+	char c = CK_Cross_toupper(*help_ptr);
+	switch (c)
+	{
+	case ';':
+		RipToEOL();
+		return true;
+	case 'H': // (the high scores are not drawn here)
+		help_ptr++;
+		return true;
+	case 'I':
+	{
+		int num = ParseNumber();
+		RipToEOL();
+		if (!FF_TextCondition(num))
+			while (!(help_ptr[0] == '^' && CK_Cross_toupper(help_ptr[1]) == 'I') &&
+				!(help_ptr[0] == '^' && CK_Cross_toupper(help_ptr[1]) == 'E'))
+				help_ptr++;
+		return true;
+	}
+	case 'M':
+		switch (CK_Cross_toupper(help_ptr[1]))
+		{
+		case 'P':
+			SD_MusicOff();
+			break;
+		case 'R':
+			SD_MusicOn();
+			break;
+		case 'O':
+			FF_StartMusic(ParseNumber(), false);
+			break;
+		default:
+			FF_StartMusic(ParseNumber(), true);
+			break;
+		}
+		RipToEOL();
+		return true;
+	case 'S':
+		SD_PlaySound(ParseNumber());
+		RipToEOL();
+		return true;
+	case 'W':
+		SD_WaitSoundDone();
+		RipToEOL();
+		return true;
+	case 'Q':
+		StopMusic();
+		SD_StopSound();
+		RipToEOL();
+		return true;
+	case 'D':
+	{
+		int tics = ParseNumber();
+		RipToEOL();
+		FF_TextDelay(tics);
+		return true;
+	}
+	case 'F':
+		US_SetPrintFont(ParseNumber());
+		return true;
+	}
+	return false;
+}
+
 void HandleCommand(void)
 {
 	int16_t i, w, h, midx, wrapx, miny, maxy;
 	VH_BitmapTableEntry bmpinfo;
 
 	help_ptr++;
+	if (FF_IsActive() && FF_HandleCommand())
+		return;
 	switch (CK_Cross_toupper(*help_ptr))
 	{
 	case 'B':
@@ -130,7 +243,8 @@ void HandleCommand(void)
 		help_x = ParseNumber();
 		w = ParseNumber();
 		h = ParseNumber();
-		VHB_Bar(help_x, help_y, w, h, 4);
+		// (Foray in the Forest: in a colour of its own, if one is given)
+		VHB_Bar(help_x, help_y, w, h, FF_IsActive() ? ParseHexNumber(HELP_BACKCOLOUR) : 4);
 		RipToEOL();
 		break;
 
@@ -153,7 +267,7 @@ void HandleCommand(void)
 			US_SetPrintColour(i - 'A' + 10);
 
 		/* We're writing on a red background, so take that into account */
-		US_SetPrintColour(US_GetPrintColour() ^ 4);
+		US_SetPrintColour(US_GetPrintColour() ^ HELP_BACKCOLOUR);
 		help_ptr++;
 		break;
 
@@ -180,10 +294,32 @@ void HandleCommand(void)
 	case 'G':
 		/* Draw the picture */
 		ParsePicCommand();
+		// KEEN WORLDS (Foray in the Forest): it may be a sprite or a tile
+		if (FF_IsActive() && help_pic >= ca_gfxInfoE.offSprites && help_pic < ca_gfxInfoE.offSprites + ca_gfxInfoE.numSprites)
+		{
+			VH_SpriteTableEntry spr = VH_GetSpriteTableEntry(help_pic - ca_gfxInfoE.offSprites);
+			CA_CacheGrChunk(help_pic);
+			VHB_DrawSprite(help_x - (spr.originX >> 4), help_y - (spr.originY >> 4), help_pic);
+			w = spr.width * 8;
+			h = spr.height;
+		}
+		else if (FF_IsActive() && help_pic >= ca_gfxInfoE.offTiles16 && help_pic < ca_gfxInfoE.offTiles16 + ca_gfxInfoE.numTiles16)
+		{
+			VHB_DrawTile16(help_x & ~7, help_y, help_pic - ca_gfxInfoE.offTiles16);
+			w = h = 16;
+		}
+		else if (FF_IsActive() && help_pic >= ca_gfxInfoE.offTiles16m && help_pic < ca_gfxInfoE.offTiles16m + ca_gfxInfoE.numTiles16m)
+		{
+			VHB_DrawTile16M(help_x & ~7, help_y, help_pic - ca_gfxInfoE.offTiles16m);
+			w = h = 16;
+		}
+		else
+		{
 		VHB_DrawBitmap(help_x & ~7, help_y, help_pic);
 		bmpinfo = VH_GetBitmapTableEntry(help_pic - ca_gfxInfoE.offBitmaps);
 		w = bmpinfo.width * 8;
 		h = bmpinfo.height;
+		}
 
 		/* Wrap text either on the left or the right-hand-side of the picture */
 		midx = help_x + w / 2;
@@ -255,6 +391,12 @@ void HandleChar(void)
 	/* If the last character was a newline, do something about it! */
 	if (c == '\n')
 		NewLine();
+	// KEEN WORLDS (Foray in the Forest): a tab goes on to the next 16th pixel
+	else if (c == '\t' && FF_IsActive())
+	{
+		int x = US_GetPrintX() + 16 - 10;
+		US_SetPrintX(x + 10 - (x % 16));
+	}
 }
 
 void HandleWord(void)
@@ -310,7 +452,7 @@ void PageLayout(int show_status)
 
 	/* Save the current print color */
 	old_print_color = US_GetPrintColour();
-	US_SetPrintColour(10);
+	US_SetPrintColour(14 ^ HELP_BACKCOLOUR); // (yellow on the page's colour: 10 on red)
 
 	/* We want to scanout from the right offset. */
 	VL_SetScrollCoords(0, 0);
@@ -318,7 +460,7 @@ void PageLayout(int show_status)
 	/* Fill the background and draw the border */
 	// KEEN WORLDS: ck_textBlackBackground gives a plain black page (some of
 	// Atroxian Realm's story screens)
-	VHB_Bar(0, 0, 320, 200, ck_textBlackBackground ? 0 : 4);
+	VHB_Bar(0, 0, 320, 200, ck_textBlackBackground ? 0 : HELP_BACKCOLOUR);
 #ifdef HAS_HELPSCREEN
 	if (ck_currentEpisode->ep != EP_CK6 && !ck_textBlackBackground)
 	{
@@ -688,6 +830,14 @@ void CK_ShowTextPages(int textChunk, int song, bool blackBackground)
 			VHB_DrawBitmap(0x12A & ~3, 0xB8, CK_CHUNKNUM(PIC_ARROWDIM));
 			VH_UpdateScreen();
 			KW_LinePoll(); // the page's lines are over: the music comes back up
+			// (KW_AUTOPAGES=prefix: the scripted test saves a picture of each page)
+			if (getenv("KW_AUTOPAGES"))
+			{
+				void KW_DumpScreenTo(const char *path);
+				char path[600];
+				snprintf(path, sizeof(path), "%s%02d.ppm", getenv("KW_AUTOPAGES"), (int)help_cur_page);
+				KW_DumpScreenTo(path);
+			}
 			// (KW_AUTOTALK: the scripted dialogue test turns the pages itself)
 			if (IN_UserInput(70, false) || getenv("KW_AUTOTALK"))
 				break;

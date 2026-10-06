@@ -1734,6 +1734,41 @@ void FF_SetupFunctions(void)
 	kw_ff_keen_SetupFunctions();
 }
 
+// A condition of its text pages (HandleCondition in its CK_TEXT.C): what an
+// ending says depends on what Keen found and did.
+#define COLLECT_ALLPLUSHIES 0x003F
+bool FF_TextCondition(int number)
+{
+	uint16_t collected = ff_state.collectiblesTotal & COLLECT_ALLPLUSHIES;
+	switch (number)
+	{
+	case 0: return true;
+	case 1: return ff_state.slugcans >= SLUGCANS_TOTAL;
+	case 2: return collected == COLLECT_ALLPLUSHIES;
+	case 3: return collected != 0 && collected != COLLECT_ALLPLUSHIES;
+	case 4: return collected == 0;
+	case 5: return ck_gameState.levelsDone[MAP_BONUSLEVEL] != 0;
+	case 6: return !ck_gameState.levelsDone[MAP_BONUSLEVEL];
+	case 7: return ck_gameState.levelsDone[MAP_BONUSLEVEL] && ff_state.slugcans < SLUGCANS_TOTAL;
+	case 8: return ck_gameState.levelsDone[MAP_BONUSLEVEL] && ff_state.slugcans >= SLUGCANS_TOTAL;
+	case 9: return ck_gameState.levelsDone[MAP_TARDISLEVEL] != 0;
+	case 10: return !ck_gameState.levelsDone[MAP_TARDISLEVEL];
+	case 11: return ck_gameState.levelsDone[MAP_SLUGBUSTSLEVEL] != 0;
+	case 12: return !ck_gameState.levelsDone[MAP_SLUGBUSTSLEVEL];
+	case 13: return ff_map.machinesActive > 1;
+	case 14: return !(ff_map.machinesActive > 1);
+	case 15: return !(ck_gameState.difficulty >= FF_D_Expert);
+	}
+	return false;
+}
+
+// (scripted tests: what Keen has collected, to see an ending's other pages)
+void FF_TestCollected(int bits, int cans)
+{
+	ff_state.collectiblesTotal = (uint16_t)bits;
+	ff_state.slugcans = (uint16_t)cans;
+}
+
 // The player's game files and our generated support files, all in the
 // world's own folder.
 bool FF_IsPresent(void)
