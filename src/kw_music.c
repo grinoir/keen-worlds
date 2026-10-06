@@ -46,6 +46,13 @@ bool KW_VoiceSpeaking(void)
 	return kw_voicePending || SD_GetTimeCount() < kw_voiceEnd;
 }
 
+// Is a clip sounding right now? (KW_VoiceSpeaking also says yes while one
+// is only expected.)
+bool KW_ClipPlaying(void)
+{
+	return SD_GetTimeCount() < kw_voiceEnd;
+}
+
 void KW_VoiceComingUp(bool pending)
 {
 	kw_voicePending = pending;
@@ -147,6 +154,19 @@ bool KW_SayLine(int world, const char *file)
 	if (getenv("KW_AUTOTALK"))
 		printf("KW_AUTOTALK: %s (%.1f s)\n", file, kw_clipSamples / (double)KW_VOICE_RATE);
 	fflush(stdout);
+	KW_StartClip();
+	return true;
+}
+
+// A clip by itself, with no change to the music (the caller has seen to
+// it): the narrator reading a story while it scrolls.
+bool KW_Narrate(const char *file)
+{
+	KW_StopVoice();
+	if (!KW_LoadClip(file))
+		return false;
+	if (getenv("KW_AUTOTALK"))
+		printf("KW_AUTOTALK: %s (%.1f s)\n", file, kw_clipSamples / (double)KW_VOICE_RATE);
 	KW_StartClip();
 	return true;
 }

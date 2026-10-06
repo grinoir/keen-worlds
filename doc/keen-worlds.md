@@ -525,6 +525,13 @@ Princess Lindsey, HAL and Spaceman Spiff; the game's mirrored, gargled and
 mouth-full lines are made the same way in sound. Its endings are not spoken
 (they are laid out word by word, with colours and alternatives).
 
+**The stories are read out.** When a world's story scrolls
+(`KW_PlayWorldStory`), the narrator reads it (`STORY_<ID>.RAW`,
+`tools/kw_story_voice.py`, from each world's `ck_str_storyText`) in place
+of the story's music; if he is still reading when the last line has
+scrolled away, the dark screen waits for him or a key. Keen Worlds' own
+story in the opening is not read: the title tune plays under it.
+
 **The flight menu** (`KW_TravelMenu`): the worlds in two columns of two
 groups each (Goodbye, Galaxy!; The Universe Is Toast!; Other adventures;
 More levels), left and right between the columns. A line under the list

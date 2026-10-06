@@ -22,6 +22,7 @@ void KW_TitleMusicIsOver(void);
 // back in once the clip is over.
 void KW_Speak(const char *file, bool waitForFade);
 bool KW_VoiceSpeaking(void);
+bool KW_ClipPlaying(void); // (a clip is sounding now, not merely expected)
 // A line of dialogue in a game's own window: its clip, with the music turned
 // down under it (only in the world the clip was made for; no clip, no
 // change). KW_LinesOver: the windows are put away (the play loop does this
@@ -33,6 +34,8 @@ bool KW_SayLine(int world, const char *file); // (true: it is being spoken)
 bool KW_SayWorldLine(const char *name);
 void KW_LinePoll(void);
 void KW_LinesOver(void);
+// A clip by itself; the music is the caller's business (true: it plays).
+bool KW_Narrate(const char *file);
 // Cut the clip short (its card was put away).
 void KW_StopVoice(void);
 // Something is about to be said: music that would start now stays off.

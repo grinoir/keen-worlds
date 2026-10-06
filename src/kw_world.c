@@ -1289,7 +1289,21 @@ static void KW_PlayWorldStory(void)
 	SD_MusicOff();
 	SD_FadeAdLibVolume(256, 0);
 	IN_ClearKeysDown();
+	// The narrator reads it (STORY_<ID>.RAW, tools/kw_story_voice.py), in
+	// place of the story's music; if he has not finished when the last line
+	// has scrolled away, the dark screen waits for him (or a key).
+	extern bool ck_starWarsNarrated;
+	char clip[40];
+	snprintf(clip, sizeof(clip), "STORY_%s.RAW", kw_worldDefs[kw_currentWorld].id);
+	for (char *c = clip; *c && *c != '.'; ++c)
+		*c = (char)toupper((unsigned char)*c);
+	ck_starWarsNarrated = KW_Narrate(clip);
 	CK_DrawStarWarsEx(false);
+	if (ck_starWarsNarrated && !IN_GetLastScan())
+		while (KW_ClipPlaying() && !IN_UserInput(7, false))
+			;
+	ck_starWarsNarrated = false;
+	KW_StopVoice();
 	IN_ClearKeysDown();
 }
 

@@ -1307,6 +1307,8 @@ void CK_TranslateString(const char *input, char *output)
 // KEEN WORLDS: another text to scroll than the episode's story (Keen Worlds'
 // own: KW_PlayOwnStory in kw_world.c), or NULL.
 const char *ck_starWarsTextOverride = NULL;
+// KEEN WORLDS: the narrator is reading the story (KW_PlayWorldStory): no music.
+bool ck_starWarsNarrated = false;
 
 void CK_DrawSWText()
 {
@@ -1514,7 +1516,10 @@ void CK_DrawStarWarsEx(bool handleDemoKeys)
 	{
 		// KEEN WORLDS: its own story has its own tune (which may be
 		// playing already, from the title)
-		if (ck_starWarsTextOverride)
+		// ...and a story the narrator reads has no music under him
+		if (ck_starWarsNarrated)
+			;
+		else if (ck_starWarsTextOverride)
 			KW_StartTitleMusic();
 		else
 			StartMusic(CK_INT(CK_StarWarsMusicLevel, 0));
