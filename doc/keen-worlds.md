@@ -502,6 +502,15 @@ key, in Keen 7). New voices: Mortimer McMire (bm_daniel), Lt. Barker
 the janitor return with theirs. A secret ending's own pages are
 `<prefix>_ENDS_<page>.RAW`.
 
+**The smaller worlds speak** (`tools/kw_packs_voice.py`): Aspermontis
+(`K95_*`: grumpy Keen, the council, Lindsey, the janitor, and an ending at
+the Oracle), Meurglys III (`BH_*`: Elvis, the potion man, and the ending
+with Rick Uller), the Omegamatic II (`K55_*`: its long ending with the
+Narln; two pages differ in the secret ending) and Tuberia (`KD_*`: Keen
+Dreams' ending and the warning at Boobus Tuber's castle). Address Unknown
+and the Shikadi Station say Keen 5's words where they speak, and use Keen
+5's clips.
+
 **The flight menu** (`KW_TravelMenu`): the worlds in two columns of two
 groups each (Goodbye, Galaxy!; The Universe Is Toast!; Other adventures;
 More levels), left and right between the columns. A line under the list

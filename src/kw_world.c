@@ -2970,7 +2970,7 @@ void KW_DebugFrame(void)
 	}
 	// KW_AUTOTALK=n: at frame n, everyone in Keen 4 says their lines (the
 	// windows of its dialogues, one after another)
-	if (getenv("KW_AUTOTALK") && count + 1 == atoi(getenv("KW_AUTOTALK")) && (kw_currentWorld == KW_KEEN4 || kw_currentWorld == KW_KEEN7))
+	if (getenv("KW_AUTOTALK") && count + 1 == atoi(getenv("KW_AUTOTALK")) && (kw_currentWorld == KW_KEEN4 || kw_currentWorld == KW_KEEN7 || kw_currentWorld == KW_KEEN95 || kw_currentWorld == KW_BOUNTY))
 	{
 		void CK4_ShowCouncilMessage(void);
 		void CK4_ShowPrincessMessage(void);
@@ -2983,7 +2983,7 @@ void KW_DebugFrame(void)
 		CK4_ShowCantSwimMessage();
 		CK4_ShowWetsuitMessage();
 	}
-	if (getenv("KW_AUTOTALK") && count + 1 == atoi(getenv("KW_AUTOTALK")) && kw_currentWorld == KW_KEEN5)
+	if (getenv("KW_AUTOTALK") && count + 1 == atoi(getenv("KW_AUTOTALK")) && (kw_currentWorld == KW_KEEN5 || kw_currentWorld == KW_CK55 || kw_currentWorld == KW_ASYLUM))
 	{
 		void CK5_FuseMessage(void);
 		CK5_FuseMessage();

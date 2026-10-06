@@ -157,7 +157,10 @@ bool KW_SayLine(int world, const char *file)
 bool KW_SayWorldLine(const char *name)
 {
 	static const struct { int world; const char *prefix; } spoken[] = {
-		{KW_KEEN4, "K4"}, {KW_KEEN5, "K5"}, {KW_KEEN6, "K6"}, {KW_KEEN7, "K7"}, {KW_KEEN8, "K8"}, {KW_KEEN9, "K9"}};
+		{KW_KEEN4, "K4"}, {KW_KEEN5, "K5"}, {KW_KEEN6, "K6"}, {KW_KEEN7, "K7"}, {KW_KEEN8, "K8"}, {KW_KEEN9, "K9"},
+		{KW_KEEN95, "K95"}, {KW_BOUNTY, "BH"}, {KW_CK55, "K55"}, {KW_DREAM, "KD"},
+		// (Keen Asylum and Operation Station Infiltration say Keen 5's words where they speak)
+		{KW_ASYLUM, "K5"}, {KW_OSI, "K5"}};
 	for (size_t i = 0; i < sizeof(spoken) / sizeof(spoken[0]); ++i)
 		if (spoken[i].world == KW_CurrentWorld())
 		{

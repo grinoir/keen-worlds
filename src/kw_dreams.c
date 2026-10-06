@@ -17,6 +17,7 @@ source.
 */
 
 #include "kw_dreams.h"
+#include "kw_music.h" // KEEN WORLDS: the ending is read out
 
 extern CK_EpisodeDef kd_episode;
 
@@ -343,22 +344,24 @@ void KD_StatusWindow(void)
 
 // ---- The ending (its GameFinale): three windows of text, in its words ----
 
-static void KD_FinalePage(int down, const char *text)
+static void KD_FinalePage(int down, const char *clip, const char *text)
 {
 	US_CenterWindow(30, 21);
 	US_SetPrintY(US_GetPrintY() + down);
 	US_CPrint(text);
 	VH_UpdateScreen();
+	KW_SayWorldLine(clip); // the page is read out (tools/kw_packs_voice.py)
 	VL_DelayTics(60);
 	IN_ClearKeysDown();
 	IN_WaitButton();
+	KW_LinesOver();
 }
 
 void KD_GameFinale(void)
 {
 	VL_FixRefreshBuffer();
 	SD_WaitSoundDone();
-	KD_FinalePage(4,
+	KD_FinalePage(4, "END_00",
 		"Yes!  Boobus Tuber's hash-brown-\n"
 		"like remains rained down from\n"
 		"the skies as Commander Keen\n"
@@ -375,7 +378,7 @@ void KD_GameFinale(void)
 		"in a disconcerting manner, his\n"
 		"eyelids grew heavy, and he\n"
 		"fell asleep....\n");
-	KD_FinalePage(9,
+	KD_FinalePage(9, "END_01",
 		"Billy woke up, looking around the\n"
 		"room, the early morning sun\n"
 		"shining in his face.  Nothing.\n"
@@ -388,7 +391,7 @@ void KD_GameFinale(void)
 		"by him on the bed.\n\n"
 		"\"What news?\" Billy asked,\n"
 		"still groggy.\n\n");
-	KD_FinalePage(23,
+	KD_FinalePage(23, "END_02",
 		"\"The President declared today\n"
 		"National 'I Hate Broccoli' Day.\n"
 		"He said kids are allowed to pick\n"

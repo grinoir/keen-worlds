@@ -1,4 +1,5 @@
 #include "kw_dreams.h"
+#include "kw_music.h"
 
 /*
 Keen Worlds: Keen Dreams - Keen, flower power and the map Keen
@@ -596,7 +597,9 @@ void	KD_CheckEnterLevel (CK_object *ob)
 								   "defeat King Boobus Tuber\n"
 								   "with less than 12 bombs!");
 						VH_UpdateScreen ();
+						KW_SayWorldLine ("BOMBS");	// KEEN WORLDS: read out (tools/kw_packs_voice.py)
 						IN_WaitButton ();
+						KW_LinesOver ();
 						RF_ForceRefresh ();
 						return;
 					}
