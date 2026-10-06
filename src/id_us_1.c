@@ -210,7 +210,9 @@ void US_CPrint(const char *str)
 {
 	char lastChar;
 	char *strInLine, *strLineStart;
-	char buf[256];
+	// KEEN WORLDS: 256 in the original; Foray in the Forest prints Spaceman
+	// Spiff's lists (up to 563 letters) in one go
+	char buf[1024];
 	size_t len;
 
 	len = strlen(str);

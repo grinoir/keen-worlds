@@ -517,6 +517,14 @@ Realm's talks and endings are text screens shown a page at a time
 `AR_<SCREEN>_<nn>.RAW`. Keen and the narrator, Atroxus (a machine's voice),
 Elder Krislen and the Krile advisor.
 
+**Gnosticus Pi speaks** (`FF_S<nnn>.RAW`, `tools/kw_fitf_voice.py`): every
+dialogue window of Foray in the Forest shows one of its strings beside a
+portrait (`FF_DialogWindow`), so a clip is named after the string's number
+and the window plays the clip of the string it shows. The janitor, Keen,
+Princess Lindsey, HAL and Spaceman Spiff; the game's mirrored, gargled and
+mouth-full lines are made the same way in sound. Its endings are not spoken
+(they are laid out word by word, with colours and alternatives).
+
 **The flight menu** (`KW_TravelMenu`): the worlds in two columns of two
 groups each (Goodbye, Galaxy!; The Universe Is Toast!; Other adventures;
 More levels), left and right between the columns. A line under the list

@@ -6,6 +6,7 @@ tools/kw_fitf_port.py, with the hand fixes of tools/kw_fitf_dialog_fixes.py.
 
 #include "kw_fitf.h"
 #include "kw_ff_keen.h"
+#include "kw_music.h" // KEEN WORLDS: the dialogue windows are spoken
 
 void CK_MeasureMultiline(const char *str, uint16_t *w, uint16_t *h);
 
@@ -64,6 +65,13 @@ static void   FF_DialogWindow(int16_t pic, int16_t str, bool left, int16_t wait)
 	US_SetPrintY(US_GetPrintY() + ((US_GetWindowH()-h)/2));
 	SM_CPrint(str);
 	VH_UpdateScreen();
+	{
+		// KEEN WORLDS: the line is spoken (tools/kw_fitf_voice.py: a clip for
+		// each string that is somebody's words, named after its number)
+		char clip[16];
+		snprintf(clip, sizeof(clip), "S%03d", (int)str);
+		KW_SayWorldLine(clip);
+	}
 	if (wait)
 	{
 		VL_DelayTics(wait);
@@ -128,6 +136,7 @@ void  FF_DialogEnter(void)
 
 void  FF_DialogExit(void)
 {
+	KW_LinesOver(); // KEEN WORLDS: no more of the clip; the music comes back up
 	CA_DownLevel();
 	FF_ForceScoreboxUpdate();
 	RF_ForceRefresh();

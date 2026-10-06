@@ -3017,6 +3017,24 @@ void KW_DebugFrame(void)
 		CK6_ShowGetPasscard();
 		CK6_GrabbiterCol(ck_keenObj, ck_keenObj);
 	}
+	if (getenv("KW_AUTOTALK") && count + 1 == atoi(getenv("KW_AUTOTALK")) && kw_currentWorld == KW_FITF)
+	{
+		// (Gnosticus Pi: its talks with the janitor and Lindsey, and its other windows)
+		void FF_JanitorDialog(int16_t number);
+		void FF_LindseyDialog(int16_t number);
+		void FF_MiscDialog(int16_t number);
+		void FF_JanitorSleepMonolog(void);
+		void FF_JanitorStunnedMonolog(void);
+		for (int i = 0; i < 16; ++i)
+			FF_JanitorDialog(i);
+		for (int i = 0; i < 4; ++i)
+			FF_LindseyDialog(i);
+		for (int i = -2; i < 54; ++i)
+			if (i < 1 || i > 3) // (1 to 3 are its jukebox and its two arcade games)
+				FF_MiscDialog(i);
+		FF_JanitorSleepMonolog();
+		FF_JanitorStunnedMonolog();
+	}
 	if (getenv("KW_AUTOTALK") && count + 1 == atoi(getenv("KW_AUTOTALK")) && kw_currentWorld == KW_AREALM)
 	{
 		// (Krisle: every one of its text screens)
