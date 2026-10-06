@@ -1,10 +1,12 @@
-COMMANDER KEEN: WORLDS - test version
-=====================================
+COMMANDER KEEN: WORLDS - version @VERSION@
+==============================================
 
 Keen 4, 5 and 6 and the fan games, joined into one galaxy that Keen
 travels in the Bean-with-Bacon Megarocket.
 
-This is a test version. Things will be wrong. Finding them is the point.
+This is a beta. Every world can be played from landing to ending, but
+few people have done it yet. Things will be wrong. Finding them is the
+point. What is known to be missing is listed in section 5.
 
 
 1. What you need to add
@@ -69,7 +71,33 @@ A voice speaks the conversations. Press a key to move a text on.
   - A new game in the Chronicle, where the story decides the order.
 
 
-5. Reporting a problem
+5. What is not there yet
+------------------------
+
+No need to report these:
+
+  - Life in the levels Keen has saved. When a level is done, Keen can go
+    back and find it changed: people living there, an inn, someone to
+    talk to. So far only one level has this, the Border Village on
+    Gnosticus IV (Keen 4). More comes in later versions.
+  - The voices cannot be turned off or made quieter by themselves.
+  - Inside the dream (the ship's bed) there is no menu. Save in the ship.
+  - Two fan games are not in: The Prisoner's Dilemma and Send in the
+    Clorts.
+  - The Shikadi Station has no ending text, and one of Gnosticus Pi's
+    endings is not spoken.
+  - The Windows version has been tried on few machines.
+
+Good to know, and meant to be so:
+
+  - Krisle is a one-way trip: the ship cannot leave until that world is
+    saved. The game warns before flying there.
+  - In the Chronicle, worlds open in the order of the story. In Free
+    Flight everything is open.
+  - Nothing is carried into or out of the dream.
+
+
+6. Reporting a problem
 ----------------------
 
 Please tell:
@@ -87,7 +115,7 @@ And send, if you can:
   - a screenshot if something looks wrong.
 
 
-6. Who made this
+7. Who made this
 ----------------
 
 Keen Worlds is built on Omnispeak, an open-source rebuild of the Keen 4-6

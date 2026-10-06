@@ -7,6 +7,7 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 #include <stdlib.h>
 #include <string.h>
 
+#include "kw_version.h"
 #include "id_ca.h"
 #include "id_fs.h"
 #include "id_in.h"
@@ -1680,8 +1681,15 @@ static void KW_ShowAboutKeenWorlds(void)
 	}
 	while (n && (text[n - 1] == '\n' || text[n - 1] == '\f'))
 		--n;
-	text[n] = 0;
-	KW_ShowCards(n ? text : "Commander Keen: Worlds\n\nOne Megarocket.\nA galaxy that remembers.");
+	if (!n)
+		n = (size_t)snprintf(text, sizeof(text), "Commander Keen: Worlds\n\nOne Megarocket.\nA galaxy that remembers.");
+	// The last card is the game's own: which version this is, and what
+	// is still to come (kw_version.h).
+	snprintf(text + n, sizeof(text) - n, "\fVersion " KW_VERSION " (" KW_VERSION_NAME ")\n\n"
+		"Every world can be played.\n\n"
+		"Still to come: more life in\nthe levels Keen has saved.\n"
+		"Only the Border Village has\nits people so far.");
+	KW_ShowCards(text);
 }
 
 static int KW_TravelMenu(void)

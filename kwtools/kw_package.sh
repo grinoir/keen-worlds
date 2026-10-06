@@ -40,6 +40,7 @@ done
 
 # The version is written in src/kw_version.h; the commit says which build of it.
 NUMBER=$(sed -n 's/^#define KW_VERSION "\(.*\)"/\1/p' "$REPO/src/kw_version.h")
+NAMED=$(sed -n 's/^#define KW_VERSION_NAME "\(.*\)"/\1/p' "$REPO/src/kw_version.h")
 VERSION=$NUMBER-$(git -C "$REPO" log -1 --format=%h)
 if [ -n "$(git -C "$REPO" status --porcelain)" ]; then
 	VERSION=$VERSION-changed
@@ -87,14 +88,14 @@ fill() {
 	cp "$REPO"/data/keen6e15/*.CK6 "$d/keen6-v1.5/"
 	cp "$REPO"/data/megarocket/* "$d/megarocket/"
 	cp "$REPO"/data/voice/*.OGG "$d/voice/"
-	cp "$REPO/kwtools/package/README.txt" "$d/README.txt"
+	sed "s/@VERSION@/$NUMBER ($NAMED)/" "$REPO/kwtools/package/README.txt" > "$d/README.txt"
 	# Each world's folder, with the files that are Keen Worlds' own in it.
 	cp -r "$REPO"/data/mods/. "$d/mods/"
 	find "$d/mods" -name .keep -delete
 	cp "$REPO/kwtools/package/MODS.txt" "$d/mods/README.txt"
 	cp "$REPO/LICENSE" "$d/LICENSE.txt"
 	cp "$REPO/AUTHORS" "$d/AUTHORS.txt"
-	echo "Keen Worlds $NUMBER (build $VERSION, $(date +%Y-%m-%d))" > "$d/VERSION.txt"
+	echo "Keen Worlds $NUMBER ($NAMED), build $VERSION, $(date +%Y-%m-%d)" > "$d/VERSION.txt"
 	# The program is under the GPL: its source goes with it.
 	git -C "$REPO" archive --format=tar.gz --prefix=keen-worlds-source/ -o "$d/source.tar.gz" HEAD \
 		':!data/voice' ':!data/megarocket' ':!data/mods'
