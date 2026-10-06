@@ -1,6 +1,9 @@
 """The narrator reads each world's story (Keen Worlds).
 
-    python3 tools/kw_story_voice.py . omnispeak/data/voice
+    python3 tools/kw_story_voice.py . omnispeak/data/voice [id ...]
+
+(with ids, only those stories: keen4, fitf, ..., and "worlds" for Keen
+Worlds' own)
 
 Every game's story scrolls away into the distance when its world is first
 chosen at the ship's controls. This makes a clip of each, STORY_<ID>.RAW
@@ -59,18 +62,30 @@ def spoken(text):
     return out
 
 
-def main(root, folder):
+def own_story(root):
+    """Keen Worlds' own story (kw_ownStory in kw_world.c), read while it
+    scrolls after the title: STORY_WORLDS.RAW."""
+    src = open(os.path.join(root, 'omnispeak/src/kw_world.c'), encoding='latin1').read()
+    m = re.search(r'kw_ownStory\[\] =((?:\s*"(?:\\.|[^"\\])*")+);', src)
+    text = ''.join(re.findall(r'"((?:\\.|[^"\\])*)"', m.group(1)))
+    return text.replace('-\\n', '-')        # (a word broken at its hyphen for the screen)
+
+
+def main(root, folder, only=None):
     clips = {}
     for world, (base, own) in WORLDS.items():
         text = story(root, base, own)
         if text:
             clips['STORY_%s.RAW' % world.upper()] = spoken(text)
+    clips['STORY_WORLDS.RAW'] = spoken(own_story(root))
+    if only:
+        clips = {name: lines for name, lines in clips.items() if name[6:-4].lower() in only}
     os.makedirs(folder, exist_ok=True)
     speak_all(clips, NARRATOR, folder, **STYLE.get(NARRATOR, {}))
     print('%d stories' % len(clips))
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 3:
+    if len(sys.argv) < 3:
         sys.exit(__doc__)
-    main(*sys.argv[1:])
+    main(sys.argv[1], sys.argv[2], sys.argv[3:])

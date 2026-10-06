@@ -925,3 +925,17 @@ tools`), because they find the games and the play folder from there.
   (`kw_kd_convert.c`, the same files as `kwtools/kw_dreams.py` byte for
   byte). `kwtools/package/MODS.txt` tells the player where each game
   comes from.
+
+**The version** is written once, in `src/kw_version.h` (`KW_VERSION`,
+`KW_VERSION_NAME`): 0.1.0, "proof of concept", the first version handed to
+testers. 0.x is before the first public release; the last number counts
+fixes. It is the first line of the log, a line on the quit card, the
+archive's `VERSION.txt`, and the archives' names
+(`KeenWorlds-<version>-<commit>-...`).
+
+**Keen Worlds' own story is read by the narrator** too (`STORY_WORLDS`,
+made by `kwtools/kw_story_voice.py . omnispeak/data/voice worlds` from
+`kw_ownStory`). The title tune fades away under him and plays on unheard
+(`KW_NarrateOverMusic`), and comes back up if he finishes before the
+scroll does (`KW_LinePoll` in the scroll loop); if the scroll finishes
+first, the dark screen waits for him or a key, as with the worlds' stories.

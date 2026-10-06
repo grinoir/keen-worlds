@@ -9,6 +9,7 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 
 #include "id_us.h"
 #include "kw_card.h"
+#include "kw_version.h"
 
 // The card's text. Keep lines under 54 characters so they fit the quit
 // screen's box. In the body, an empty string is a blank line.
@@ -17,6 +18,8 @@ const char *kw_cardTitle = "KEEN WORLDS";
 const char *kw_cardBody[] = {
 	"Tying together Keen 4, 5, 6, and fan games.",
 	"Visit completed levels and more.",
+	"",
+	"Version " KW_VERSION ", the " KW_VERSION_NAME ".",
 	NULL,
 };
 
@@ -75,7 +78,7 @@ void KW_PrintQuitCard(void)
 			KW_Put(x, y, ch, KW_ATTR(KW_BLACK, hash == 0 ? KW_WHITE : KW_DGREY));
 		}
 
-	const int boxL = 11, boxR = 68, boxT = 6, boxB = 16, ruleY = 10;
+	const int boxL = 11, boxR = 68, boxT = 6, boxB = 18, ruleY = 10;
 	const uint8_t frame = KW_ATTR(KW_BLUE, KW_LCYAN), fill = KW_ATTR(KW_BLUE, KW_WHITE);
 	for (int y = boxT; y <= boxB; ++y)
 		for (int x = boxL; x <= boxR; ++x)

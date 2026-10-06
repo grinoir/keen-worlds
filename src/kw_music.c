@@ -221,6 +221,27 @@ bool KW_Narrate(const char *file)
 	return true;
 }
 
+// The narrator over music that is playing: the music fades away under him
+// and plays on unheard, to come back up when he has finished (KW_LinePoll)
+// or is cut short (KW_LinesOver). Keen Worlds' own story, over the title
+// tune.
+bool KW_NarrateOverMusic(const char *file)
+{
+	KW_StopVoice();
+	if (!KW_LoadClip(file))
+		return false;
+	if (!kw_ducked && !kw_musicHeld)
+	{
+		SD_FadeAdLibVolume(0, 900);
+		VL_DelayTics(63);
+		kw_ducked = true;
+	}
+	if (getenv("KW_AUTOTALK"))
+		printf("KW_AUTOTALK: %s (%.1f s)\n", file, kw_clipSamples / (double)KW_VOICE_RATE);
+	KW_StartClip();
+	return true;
+}
+
 // The line of the window called `name` in the world Keen is in: the clip
 // <prefix>_<name>.RAW. Worlds on one engine share their windows but not
 // their words (Keen 7 says other things in Keen 4's windows), so each has

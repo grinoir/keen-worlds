@@ -38,7 +38,9 @@ for need in "$ZIG" "$MINGW" "$SDLWIN"; do
 	fi
 done
 
-VERSION=$(date +%Y-%m-%d)-$(git -C "$REPO" log -1 --format=%h)
+# The version is written in src/kw_version.h; the commit says which build of it.
+NUMBER=$(sed -n 's/^#define KW_VERSION "\(.*\)"/\1/p' "$REPO/src/kw_version.h")
+VERSION=$NUMBER-$(git -C "$REPO" log -1 --format=%h)
 if [ -n "$(git -C "$REPO" status --porcelain)" ]; then
 	VERSION=$VERSION-changed
 fi
@@ -92,7 +94,7 @@ fill() {
 	cp "$REPO/kwtools/package/MODS.txt" "$d/mods/README.txt"
 	cp "$REPO/LICENSE" "$d/LICENSE.txt"
 	cp "$REPO/AUTHORS" "$d/AUTHORS.txt"
-	echo "Keen Worlds $VERSION" > "$d/VERSION.txt"
+	echo "Keen Worlds $NUMBER (build $VERSION, $(date +%Y-%m-%d))" > "$d/VERSION.txt"
 	# The program is under the GPL: its source goes with it.
 	git -C "$REPO" archive --format=tar.gz --prefix=keen-worlds-source/ -o "$d/source.tar.gz" HEAD \
 		':!data/voice' ':!data/megarocket' ':!data/mods'

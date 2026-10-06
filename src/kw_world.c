@@ -2454,11 +2454,22 @@ void KW_PlayOwnStory(bool handleDemoKeys)
 	printf("KW_AUTOSTORY: the story of Keen Worlds\n");
 	fflush(stdout);
 	ck_starWarsTextOverride = kw_ownStory;
+	// The narrator reads it (STORY_WORLDS.RAW, tools/kw_story_voice.py).
+	// The title tune, which plays on from the title picture, fades away
+	// under him and comes back when he has finished; if the last line has
+	// scrolled away before that, the dark screen waits for him (or a key).
+	KW_StartTitleMusic();
+	IN_ClearKeysDown();
+	bool narrated = KW_NarrateOverMusic("STORY_WORLDS.RAW");
 	// (the keys of the opening loop are handled below, once the standard
 	// colours are back: a menu opened from here must not be in the story's)
 	CK_DrawStarWarsEx(false);
 	ck_starWarsTextOverride = NULL;
 	VL_SetCustomColors(NULL);
+	if (narrated && !IN_GetLastScan())
+		while (KW_ClipPlaying() && !IN_UserInput(7, false))
+			;
+	KW_LinesOver();
 	if (handleDemoKeys)
 		CK_HandleDemoKeys();
 }

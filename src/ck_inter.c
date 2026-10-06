@@ -36,6 +36,7 @@ bool KW_DrawTitlePicture(void);
 bool KW_DrawStoryBackdrop(void);
 int KW_StoryPixel(int x, int y);
 void KW_StartTitleMusic(void);
+void KW_LinePoll(void);
 void KW_PlayOwnStory(bool handleDemoKeys);
 
 /*
@@ -1446,6 +1447,7 @@ void CK_ScrollSWText()
 		}
 
 		IN_PumpEvents();
+		KW_LinePoll(); // KEEN WORLDS: the narrator has finished: the music comes back up
 		VL_SwapOnNextPresent();
 		VL_Present();
 

@@ -17,6 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+#include "kw_version.h"
 #include "id_ca.h"
 #include "id_fs.h"
 #include "id_in.h"
@@ -535,6 +536,10 @@ int main(int argc, char *argv[])
 	// Send the cmd-line args to the User Manager.
 	us_argc = argc;
 	us_argv = (const char **)argv;
+
+	// KEEN WORLDS: the first line of the log says which version this is.
+	printf("Keen Worlds " KW_VERSION " (" KW_VERSION_NAME ")\n");
+	fflush(stdout);
 
 	// Check if we're running the store demo.
 	if (US_ParmPresent("DEMO"))
