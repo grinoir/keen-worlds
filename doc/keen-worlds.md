@@ -911,6 +911,17 @@ tools`), because they find the games and the play folder from there.
   first lines say which.
 - Both programs pass `/KWTEST` on this machine (the Windows one under
   Wine). Neither has been run on another machine yet.
-- Not there yet: one command that converts the fan games a tester has
-  downloaded. Until then a tester gets Keen 4-6 and the ship from the
-  archive alone.
+- **The fan games need no converting by the player.** The files that are
+  Keen Worlds' own for each world (variable files, tables, the ported
+  games' action and graphics-name files) are in `data/mods/<id>/` and go
+  into the archive's `mods/<id>/`; the tools in `kwtools/` wrote them, and
+  a tool's new output has to be copied there. The player unpacks a game's
+  download into its folder, as it is: a world's files are also looked for
+  one folder down (`FS_OpenWorldFile`), since downloads often unpack into
+  a folder of their own. A world counts as installed when its folder holds
+  the game itself (`KW_FindWorld`: its `EGAGRAPH`, or its levels for the
+  ported games), not just our files. Keen Dreams is written in the
+  engine's form by the game the first time it is found
+  (`kw_kd_convert.c`, the same files as `kwtools/kw_dreams.py` byte for
+  byte). `kwtools/package/MODS.txt` tells the player where each game
+  comes from.

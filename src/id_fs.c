@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <dirent.h>
 #include <string.h>
 
 #include "ck_cross.h"
@@ -258,11 +259,37 @@ size_t FS_GetFileSize(FS_File file)
 
 #endif
 
+// KEEN WORLDS: a file of a world, from the world's folder or from a folder
+// in it. A game's download often unpacks into a folder of its own
+// ("Keen 9.5/", "Atroxian Realm v1.5/"); it may stay that way.
+FS_File FS_OpenWorldFile(const char *worldPath, const char *fileName)
+{
+	FS_File file = FSL_OpenFileInDirCaseInsensitive(worldPath, fileName, false);
+	if (FS_IsFileValid(file))
+		return file;
+	DIR *dir = opendir(worldPath);
+	if (!dir)
+		return 0;
+	for (struct dirent *entry = readdir(dir); entry; entry = readdir(dir))
+	{
+		if (entry->d_name[0] == '.')
+			continue;
+		char inner[512];
+		snprintf(inner, sizeof(inner), "%s/%s", worldPath, entry->d_name);
+		// (Not a folder: nothing opens in it.)
+		file = FSL_OpenFileInDirCaseInsensitive(inner, fileName, false);
+		if (FS_IsFileValid(file))
+			break;
+	}
+	closedir(dir);
+	return file;
+}
+
 FS_File FS_OpenKeenFile(const char *fileName)
 {
 	if (fs_worldPath)
 	{
-		FS_File file = FSL_OpenFileInDirCaseInsensitive(fs_worldPath, fileName, false);
+		FS_File file = FS_OpenWorldFile(fs_worldPath, fileName);
 		if (FS_IsFileValid(file))
 			return file;
 	}
@@ -274,7 +301,7 @@ FS_File FS_OpenOmniFile(const char *fileName)
 	if (fs_worldPath)
 	{
 		// A mod world's own headers and variable files come first.
-		FS_File file = FSL_OpenFileInDirCaseInsensitive(fs_worldPath, fileName, false);
+		FS_File file = FS_OpenWorldFile(fs_worldPath, fileName);
 		if (FS_IsFileValid(file))
 			return file;
 	}

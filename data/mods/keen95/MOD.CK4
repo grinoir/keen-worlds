@@ -1,0 +1,84 @@
+# The Eight Accumulators ("Keen 9.5": Bubbatom, 2011) as a Keen Worlds world.
+# Written by tools/kw_accumulators.py from the mod's CKPatch file; the data
+# files beside it are the player's copy of the mod. It runs on Keen 4.
+
+%string ca_tileInfo "KEEN4.TLI"
+
+%stringarray ck_str_levelNames
+	"Aspermontis",
+	"Dusty Fort",
+	"Pyramid of Time",
+	"The Oracle",
+	"The Perspicuus City",
+	"The Damp Woods",
+	"Blue Bird Caves",
+	"Vitrium",
+	"Defluo",
+	"Pyramid of Heat",
+	"Lichen Caves",
+	"Gnosticene Village",
+	"The Pyramid the Light",
+	"Footsville",
+	"The Desert Creek",
+	"Pyramid of Pain",
+	"The Crack",
+	"Well of Wonders",
+	"The Bean-With-Bacon Megarocket"
+
+%stringarray ck_str_levelEntryText
+	"Keen treks around\nAspermontis",
+	"Keen crunches through\nDusty Fort",
+	"Keen ticks over\nPyramid of Time",
+	"Keen pays a visits\nto The Oracle",
+	"Keen fades into\nThe Perspicuus City",
+	"Keen gets lost in\nThe Damp Woods",
+	"Keen swoops into\nThe Blue Bird Caves",
+	"Keen contemplates on\nVitrium",
+	"Keen blinks\nin and out of existance\nin Defluo",
+	"Keen boils in\nPyramid of Heat",
+	"Keen seeps into\nThe Lichen Caves",
+	"Keen creeps into\nGnosticene Village",
+	"Keen blindly enters\nThe Pyramid of Light",
+	"Keen approaches\nFootsville",
+	"Keen wades through the\nDesert Creek",
+	"Keen is fearful of\nThe Pyramid of Pain",
+	"Keen squeezes into\nThe Crack",
+	"Keen ponders upon\nThe Well of Wonders",
+	"Keen launches into the\nBean-with-Bacon\nMegarocket"
+
+%intarray CK_LevelMusic 0, 3, 2, 3, 1, 3, 4, 4, 1, 2, 3, 3, 3, 4, 2, 2, 2, 1, 4, 1
+
+%string ck4_str_cantSwim "Wetsuit?     "
+%string ck4_str_councilThanks "Thanks once again,  \nCommander Keen. \nThat explosion    \nreally shook  \nme around.  "
+%string ck4_str_councilThanks2 "Thigs oncg aggiag,   \nCommanger Geen.     \nThag gexplogion    \ngreallgy gook  \nmeeg garougnd.      "
+%string ck4_str_gotWetsuit "Wow! I didn't think \nI'd find this!  "
+%string ck4_str_janitor1 "Oh... Hi...            \nUmm...               \nYeah...                 \nI kind of... "
+%string ck4_str_janitor2 "I decided to help  \nyou out.             \nBut I got stuck here..."
+%string ck4_str_janitor3 "Stuck?         \nHow?      "
+%string ck4_str_janitor4 "Giant flying      \nstone feet..."
+%string ck4_str_lindsayMessage1 "It seems you dropped\nyour wetsuit over at   \nthe Pyramid of Light.\n        \n"
+%string ck4_str_lindsayMessage2 "Footsville holds the  \npath to The Isle of  \nPericulum within a  \nhut.  \n"
+%string ck4_str_lindsayThanks1 "Umm. Are you sure?    "
+%string ck4_str_lindsayThanks2 "Thanks. I'll  \nkeep that in    \nmind!    \n"
+%string ck_str_exitToMap "Exit to Aspermontis"
+%string ck_str_storyText "Episode Nine And A Half\n\nThe Eight Accumulators\n\nAfter defeating\nMortimer McMire and\nescaping a giant star,\nCommander Keen started\nthe long trip home.\nAfter several more\nhours of paddle war on\nthe ship's on-board\ngaming system Vorticon\nVI comes into view.\nLt. Barker is thanked\nfor his courage and\nbravery before the Bean\nwith Bacon heads for\nGnosticus IV to drop\noff the Princess and\nThe Oracle Janitor.\nSoon enough the ship\ncomes into orbit. As\nthe ship lands a big\nexplosion shakes the\nEarth-like planet..."
+%stringarray ck4_str_councilMessage
+	"What ever            \nyou say.  ",
+	"Back to the Oracle,\npronto.     ",
+	"I dont care.",
+	"I don't really care, \njust get back to   \nthe Oracle chamber...",
+	"Yep. Thats good.  ",
+	"Stop yapping and \nget back to the   \nOracle...  ",
+	"I am not having a   \ngood day, mate.  ",
+	"Finally! I've just  \nabout had enough  \nof you guys. To\nThe Oracle!    "
+%stringarray ck_defaultHighScoreNames
+	"Id Software      ",
+	"BubbaTom         ",
+	"Tom Hall         ",
+	"Mortimer         ",
+	"Janitor          ",
+	"Lindsey          ",
+	"Spot             ",
+	"Lt. Barker       "
+
+%override "EPISODE.CK4"

@@ -86,13 +86,16 @@ fill() {
 	cp "$REPO"/data/megarocket/* "$d/megarocket/"
 	cp "$REPO"/data/voice/*.OGG "$d/voice/"
 	cp "$REPO/kwtools/package/README.txt" "$d/README.txt"
+	# Each world's folder, with the files that are Keen Worlds' own in it.
+	cp -r "$REPO"/data/mods/. "$d/mods/"
+	find "$d/mods" -name .keep -delete
 	cp "$REPO/kwtools/package/MODS.txt" "$d/mods/README.txt"
 	cp "$REPO/LICENSE" "$d/LICENSE.txt"
 	cp "$REPO/AUTHORS" "$d/AUTHORS.txt"
 	echo "Keen Worlds $VERSION" > "$d/VERSION.txt"
 	# The program is under the GPL: its source goes with it.
 	git -C "$REPO" archive --format=tar.gz --prefix=keen-worlds-source/ -o "$d/source.tar.gz" HEAD \
-		':!data/voice' ':!data/megarocket'
+		':!data/voice' ':!data/megarocket' ':!data/mods'
 	if [ "$WITH_GAMES" = 1 ]; then
 		for e in 4 5 6; do
 			for f in GAMEMAPS EGAGRAPH AUDIO; do

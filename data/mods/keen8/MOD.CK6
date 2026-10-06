@@ -1,0 +1,283 @@
+# Keen 8: Dead in the Desert (Ceilick, patching by Levellass, 2009) as a
+# Keen Worlds world. A Keen 6 v1.4 mod: its own levels, graphics, tile
+# properties and sound, plus the conversion of its CKPatch file (PAT.PAT) to
+# Omnispeak variables. The mod's files are the player's copy;
+# EGADICT/GFXINFOE/AUDINFOE are Keen 6 v1.4's, from Omnispeak's data.
+
+%string ca_audioHead "AUDIOHED.CK6" # the mod's (uncompressed-name) audio header
+%string ca_mapFile "editmaps.ck6"
+%string ca_mapHead "maphead.ck6"
+%string ca_tileInfo "Keen6.tli"
+
+# Texts (from PAT.PAT's text patches)
+# -------------------------------------
+
+%stringarray ck_str_levelNames
+	"Calidune",
+	"The Dusty Dunes",
+	"The Arid Hills",
+	"Red Rock Mountain",
+	"Tumbleworm Alley",
+	"Cobrit Pit",
+	"Cactus Forest",
+	"Lava Lake",
+	"The Molten Passage",
+	"Rocky Road",
+	"Stalagmite Peak",
+	"The Boulder",
+	"Hydro Palace",
+	"Hydro Corp 1",
+	"Hydro Factory",
+	"Hydro Corp 2",
+	"Devil's Cavern",
+	"Battle for the Ship",
+	"High Scores"
+
+%stringarray ck_str_levelEntryText
+	"Keen wanders\n"
+	"across Calidune",
+
+	"Keen treads up the\n"
+	"Dusty Dunes",
+
+	"Keen crawls down the\n"
+	"Arid Hills",
+
+	"Keen clambers up\n"
+	"Red Rock Mountain",
+
+	"Keen blows through\n"
+	"Tumbleworm Alley",
+
+	"Keen dives into\n"
+	"the Cobrit Pit",
+
+	"Keen squirms through\n"
+	"the Cactus Forest",
+
+	"Keen crosses\n"
+	"the Lava Lake",
+
+	"Keen sweats through\n"
+	"the Molten Passage",
+
+	"Keen trips along\n"
+	"the Rocky Road",
+
+	"Keen scales\n"
+	"Stalagmite Peak",
+
+	"Keen bumps into\n"
+	"The Boulder",
+
+	"Keen blasts into the\n"
+	"Hydro Palace",
+
+	"Keen ducks into\n"
+	"Hydro Corp 1",
+
+	"Keen searches the\n"
+	"Hydro Factory",
+
+	"Keen investigates\n"
+	"Hydro Corp 2",
+
+	"Keen descends the\n"
+	"Devil's Cavern",
+
+	"Keen battles for\n"
+	"the ship",
+
+	"Keen is in the High\n"
+	"Score screen. Call Id!"
+
+%string ck_str_storyText
+	"Episode VIII\n"
+	"\n"
+	"Dead in the Desert\n"
+	"\n"
+	"After gaining entry\n"
+	"to Mortimer's base on\n"
+	"the planet Krodacia,\n"
+	"Commander Keen finds\n"
+	"that he has fallen\n"
+	"right into his evil\n"
+	"nemesis' plans! \n"
+	"\n"
+	"Transported across\n"
+	"the cold, blackness\n"
+	"of space to the desert\n"
+	"planet Calidune\n"
+	"without his trusty\n"
+	"Bean with Bacon\n"
+	"Megarocket, Keen has\n"
+	"no escape!\n"
+	"\n"
+	"With only the words\n"
+	"of a less than\n"
+	"trustworthy alien\n"
+	"stranger, Keen must\n"
+	"search Calidune for\n"
+	"a power source for \n"
+	"a spacecraft. That,\n"
+	"or become...\n"
+	"    dead in the desert!"
+
+%string ck6_str_getSandwich
+	"A power source! I\n"
+	"should bring it to\n"
+	"the ship!"
+
+%string ck6_str_getRope
+	"Wow! A lantern!\n"
+	"I should hang\n"
+	"on to this!"
+
+%string ck6_str_getPasscard
+	"What's this? It\n"
+	"looks like a\n"
+	"key-card.  I should\n"
+	"take this with me\n"
+	"just in case!"
+
+%string ck6_str_grabbiterHungry
+	"\"Don't stop now!\n"
+	"Go find the battery\n"
+	"so I... WE can\n"
+	"get off this planet!\""
+
+%string ck6_str_grabbiterFed
+	"The Dude grabs the\n"
+	"battery from Keen.\n"
+	"\"Haha! Now I can leave\n"
+	"and you'll be left\n"
+	"behind! So long\n"
+	"sucker!\""
+
+%string ck6_str_rocketNoPasscard
+	"Hmm, I need some kind\n"
+	"of pass card to\n"
+	"enter."
+
+%string ck6_str_cliffNoRope
+	"It's too dark in\n"
+	"there! I need a\n"
+	"lantern."
+
+%string ck_str_exitToMap "Exit to Calidune"
+
+%string ck_str_statusCentilives "H20"
+
+# Behaviour (from PAT.PAT's value and code patches)
+# --------------------------------------------------
+# Each line names the patch it converts. tools/kw_patconv.py lists the
+# patches and checks the actions at the end of this file against them.
+
+%int ck6_hasCreatureQuestion 0 # $1CC88: skip the creature question
+
+# Music ($3103E; 0 Wonder, 1 Br'er Tar, 2 To the Future, 3 Faster, 4 Space
+# Funk, 5 Aliens Ate, 6 Ominousity, 7 Metal, 8 Mambo Snake)
+%intarray CK_LevelMusic 5, 3, 8, 7, 8, 7, 3, 2, 4, 2, 4, 7, 1, 6, 1, 6, 2, 0, 0, 0
+%int CK_StarWarsMusicLevel 3 # $563F: the story plays level 3's music
+%int CK_EndingMusicLevel 15 # $E33C: the ending plays level 15's music
+
+%int CK6_SatelliteZLayer 0 # $FD58: the satellite is drawn behind Keen
+
+# The boss (Keen 6's Nospike): 16 shots ($10D35); he charges instead of
+# sitting and survives falls (actions below); touching him once he's
+# stunned wins the game.
+%int CK6_NospikeHealth 16
+
+# The key carrier (Orbatrix): an item, so touching it gives the red key
+# ($114F2); it keeps away from Keen ($11586, $1158B) and never curls up.
+%int CK6_OrbatrixObjType 5
+%int CK6_OrbatrixAvoidsKeen 1
+
+%int CK6_BloogguardClubAnyHeight 1 # $109B5: clubs the ground wherever Keen is
+
+# Gik: jumps only when Keen is 2 tiles to its right ($111C8) or 3 to its
+# left ($111C2), barely sideways ($111DE, $111E5) and high ($111EA).
+%int CK6_GikJumpKeenXRadiusMax 0x200
+%int CK6_GikJumpKeenXRadiusMaxLeft 0x300
+%int CK6_GikJumpXVel 1
+%int CK6_GikJumpYVel -60
+
+%int CK6_FleexHealth 2 # $11D6F
+%int CK6_FlectKillsKeen 1 # $11C0B: kills Keen instead of pushing him
+%int CK6_GrabbiterTalkPic 10 # $F54E, $F57B, $F600, $F621: The Dude's picture
+
+%override "EPISODE.CK6"
+
+# Actions (after the original's, which they replace)
+# ---------------------------------------------------
+
+# The Dude (Grabbiter): slower ($327CA). $327EB misses the second timer and
+# writes a speed instead; kept as the mod has it (he doesn't move).
+%action CK6_ACT_GrabbiterHungry0 0x1A90 @SPR_MAPGRABBITER1 @SPR_MAPGRABBITER1 UnscaledOnce 0 0 32 0x0 0x0 NULL CK6_GrabbiterCol CK_BasicDrawFunc1 CK6_ACT_GrabbiterHungry1
+%action CK6_ACT_GrabbiterHungry1 0x1AAE @SPR_MAPGRABBITER2 @SPR_MAPGRABBITER2 UnscaledOnce 0 0 12 -28672 0x0 NULL CK6_GrabbiterCol CK_BasicDrawFunc1 CK6_ACT_GrabbiterHungry0
+
+# Green Blooglet: slower ($32F88...)
+%action CK6_ACT_BloogletGRun0 0x224C @SPR_GBLOOGLETWALKL1 @SPR_GBLOOGLETWALKR1 UnscaledOnce 0 1 5 68 0x0 CK6_Bloog CK6_BloogletCol CK_BasicDrawFunc2 CK6_ACT_BloogletGRun1
+%action CK6_ACT_BloogletGRun1 0x226A @SPR_GBLOOGLETWALKL2 @SPR_GBLOOGLETWALKR2 UnscaledOnce 0 1 5 68 0x0 CK6_Bloog CK6_BloogletCol CK_BasicDrawFunc2 CK6_ACT_BloogletGRun2
+%action CK6_ACT_BloogletGRun2 0x2288 @SPR_GBLOOGLETWALKL3 @SPR_GBLOOGLETWALKR3 UnscaledOnce 0 1 5 68 0x0 CK6_Bloog CK6_BloogletCol CK_BasicDrawFunc2 CK6_ACT_BloogletGRun3
+%action CK6_ACT_BloogletGRun3 0x22A6 @SPR_GBLOOGLETWALKL4 @SPR_GBLOOGLETWALKR4 UnscaledOnce 0 1 5 68 0x0 CK6_Bloog CK6_BloogletCol CK_BasicDrawFunc2 CK6_ACT_BloogletGRun0
+
+# The boss charges ($33190...); stunned, anything touching him wins the game
+# ($3332A with $1256A/$1256C, which turn Keen 6's Ceilick collision into
+# "win the game" - here a function of its own, CK6_WinGameCol).
+%action CK6_ACT_NospikeSit0 0x2460 303 299 UnscaledOnce 0 1 4 0x0 0x0 NULL CK6_NospikeCol CK_BasicDrawFunc2 CK6_ACT_NospikeCharge0
+%action CK6_ACT_NospikeStunned0 0x25E6 @SPR_NOSPIKESTUN @SPR_NOSPIKESTUN Frame 0 0 0 0x0 0x0 CK_Fall CK6_WinGameCol CK_BasicDrawFunc4 CK6_ACT_NospikeStunned0
+%action CK6_ACT_NospikeLanded = CK6_ACT_NospikeSit0 # $11035: a fall doesn't stun him
+
+# A jumping Gik kills ($3339E: its jump runs the Orbatrix's rising code,
+# which hands it straight on to the Gik's deadly slide, so it leaps as one).
+%action CK6_ACT_GikJump0 0x265E @SPR_GIKJUMPL @SPR_GIKJUMPR Frame 0 0 0 0x0 0x0 CK6_OrbatrixUncurlThink CK_PushKeenCol CK6_GikJumpDraw CK6_ACT_GikSlide0
+
+# Orbatrix: faster ($33522, $33540), and shots pass through ($3352A...: the
+# patch gives it the deadly collision, but as an item Keen picks it up first).
+%action CK6_ACT_OrbatrixFloat0 0x27E6 @SPR_ORBATRIXL1 @SPR_ORBATRIXR1 ScaledOnce 0 1 12 32 0x0 CK6_OrbatrixFloat CK_LethalCol CK6_OrbatrixDraw CK6_ACT_OrbatrixFloat1
+%action CK6_ACT_OrbatrixFloat1 0x2804 @SPR_ORBATRIXL2 @SPR_ORBATRIXR2 ScaledOnce 0 1 12 32 0x0 CK6_OrbatrixFloat CK_LethalCol CK6_OrbatrixDraw CK6_ACT_OrbatrixFloat0
+%action CK6_ACT_OrbatrixUncurl2 0x28B8 @SPR_ORBATRIX1 @SPR_ORBATRIX1 UnscaledFrame 0 1 12 0x0 0x0 NULL CK_LethalCol CK6_OrbatrixDraw CK6_ACT_OrbatrixUncurl3
+%action CK6_ACT_OrbatrixUncurl3 0x28D6 @SPR_ORBATRIX2 @SPR_ORBATRIX2 UnscaledFrame 0 1 12 0x0 0x0 NULL CK_LethalCol CK6_OrbatrixDraw CK6_ACT_OrbatrixUncurl4
+%action CK6_ACT_OrbatrixUncurl4 0x28F4 @SPR_ORBATRIX3 @SPR_ORBATRIX3 UnscaledFrame 0 1 12 0x0 0x0 NULL CK_LethalCol CK6_OrbatrixDraw CK6_ACT_OrbatrixUncurl5
+%action CK6_ACT_OrbatrixUncurl5 0x2912 @SPR_ORBATRIX4 @SPR_ORBATRIX4 UnscaledFrame 0 1 12 0x0 0x0 NULL CK_LethalCol CK6_OrbatrixDraw CK6_ACT_OrbatrixFloat0
+%action CK6_ACT_OrbatrixNearKeen = CK6_ACT_OrbatrixFloat1 # $1159F: no curling up
+
+# Flect: slower ($3391E...)
+%action CK6_ACT_FlectWalk0 0x2BE2 @SPR_FLECTWALKL1 @SPR_FLECTWALKR1 UnscaledOnce 0 1 10 96 0x0 CK6_FlectWalk CK6_FlectCol CK6_FlectDraw CK6_ACT_FlectWalk1
+%action CK6_ACT_FlectWalk1 0x2C00 @SPR_FLECTWALKL2 @SPR_FLECTWALKR2 UnscaledOnce 0 1 10 96 0x0 CK6_FlectWalk CK6_FlectCol CK6_FlectDraw CK6_ACT_FlectWalk2
+%action CK6_ACT_FlectWalk2 0x2C1E @SPR_FLECTWALKL3 @SPR_FLECTWALKR3 UnscaledOnce 0 1 10 96 0x0 CK6_FlectWalk CK6_FlectCol CK6_FlectDraw CK6_ACT_FlectWalk3
+%action CK6_ACT_FlectWalk3 0x2C3C @SPR_FLECTWALKL4 @SPR_FLECTWALKR4 UnscaledOnce 0 1 10 96 0x0 CK6_FlectWalk CK6_FlectCol CK6_FlectDraw CK6_ACT_FlectWalk0
+
+# Fleex: looks around for a shorter time ($33A66, $33A84)
+%action CK6_ACT_FleexSearch0 0x2D2C @SPR_FLEEXLOOK1 @SPR_FLEEXLOOK1 UnscaledOnce 0 1 16 0x0 0x0 NULL CK6_FleexCol CK6_MultihitDraw CK6_ACT_FleexSearch1
+%action CK6_ACT_FleexSearch1 0x2D4A @SPR_FLEEXLOOK2 @SPR_FLEEXLOOK2 UnscaledOnce 0 1 16 0x0 0x0 CK6_FleexSearch CK6_FleexCol CK6_MultihitDraw CK6_ACT_FleexTrack0
+
+# Bobba: two extra shooting frames ($11F45, $33B10, $34182, $341A0). The
+# patch also makes the collision function these actions' think function,
+# which does nothing useful on DOS; NULL here.
+%action CK6_ACT_BobbaShoot0 0x2DE0 427 429 UnscaledOnce 0 0 40 0x0 0x0 NULL CK6_BobbaCol CK_BasicDrawFunc1 CK6_ACT_BobbaJump0
+%action KW8_ACT_BobbaShootA 0x3452 428 430 UnscaledOnce 0 0 40 0 0 NULL CK6_BobbaCol CK_BasicDrawFunc1 KW8_ACT_BobbaShootB
+%action KW8_ACT_BobbaShootB 0x3470 402 405 UnscaledOnce 0 0 40 0 0 NULL CK6_BobbaCol CK_BasicDrawFunc1 CK6_ACT_BobbaShoot0
+%action CK6_ACT_BobbaShootStart = KW8_ACT_BobbaShootA
+
+# Babobba: its own shooting frame ($33CD2, $33CD4), no naps ($1217C)
+%action CK6_ACT_BabobbaSit1 0x2FA2 431 432 UnscaledOnce 0 0 70 0x0 0x0 NULL CK6_BabobbaCol CK_BasicDrawFunc1 CK6_ACT_BabobbaSit0
+%action CK6_ACT_BabobbaNapStart = CK6_ACT_BabobbaSit0
+
+# Blorb: faster ($33EA0...), and it can be shot - it no longer kills ($33EA8...)
+%action CK6_ACT_Blorb0 0x3164 @SPR_BLORB1 @SPR_BLORB1 ScaledOnce 0 0 20 16 21 NULL CK6_BobbaCol CK6_BlorbDraw CK6_ACT_Blorb1
+%action CK6_ACT_Blorb1 0x3182 @SPR_BLORB2 @SPR_BLORB2 ScaledOnce 0 0 20 16 32 NULL CK6_BobbaCol CK6_BlorbDraw CK6_ACT_Blorb2
+%action CK6_ACT_Blorb2 0x31A0 @SPR_BLORB3 @SPR_BLORB3 ScaledOnce 0 0 20 16 16 NULL CK6_BobbaCol CK6_BlorbDraw CK6_ACT_Blorb0
+
+# Ceilick: its tongue touches nothing ($3406A...)
+%action CK6_ACT_CeilickStrike10 0x3326 @SPR_CEILICK1 @SPR_CEILICK1 ScaledOnce 1 0 16 0x0 0x10 CK6_CeilickDescend NULL CK_BasicDrawFunc1 CK6_ACT_CeilickStrike11
+%action CK6_ACT_CeilickStrike11 0x3344 @SPR_CEILICK2 @SPR_CEILICK2 UnscaledOnce 1 0 10 0x0 0x0 NULL NULL CK_BasicDrawFunc1 CK6_ACT_CeilickStrike12
+%action CK6_ACT_CeilickStrike12 0x3362 @SPR_CEILICK1 @SPR_CEILICK1 UnscaledOnce 1 0 10 0x0 0x0 NULL NULL CK_BasicDrawFunc1 CK6_ACT_CeilickStrike13
+%action CK6_ACT_CeilickStrike13 0x3380 @SPR_CEILICK2 @SPR_CEILICK2 UnscaledOnce 1 0 10 0x0 0x0 NULL NULL CK_BasicDrawFunc1 CK6_ACT_CeilickStrike14
+%action CK6_ACT_CeilickStrike14 0x339E @SPR_CEILICK1 @SPR_CEILICK1 UnscaledOnce 1 0 10 0x0 0x0 NULL NULL CK_BasicDrawFunc1 CK6_ACT_CeilickStrike15
+%action CK6_ACT_CeilickStrike15 0x33BC @SPR_CEILICK2 @SPR_CEILICK2 UnscaledOnce 1 0 10 0x0 0x0 NULL NULL CK_BasicDrawFunc1 CK6_ACT_CeilickStrike16
+%action CK6_ACT_CeilickStrike16 0x33DA @SPR_CEILICK1 @SPR_CEILICK1 UnscaledOnce 1 0 10 0x0 0x0 NULL NULL CK_BasicDrawFunc1 CK6_ACT_CeilickStrike17
+%action CK6_ACT_CeilickStrike17 0x33F8 @SPR_CEILICK1 @SPR_CEILICK1 ScaledOnce 1 0 16 0x0 -16 NULL NULL CK_BasicDrawFunc1 CK6_ACT_CeilickStrike18
+%action CK6_ACT_CeilickStrike18 0x3416 -1 -1 UnscaledOnce 1 0 60 0x0 0x0 NULL NULL CK_BasicDrawFunc1 CK6_ACT_CeilickWait0
+

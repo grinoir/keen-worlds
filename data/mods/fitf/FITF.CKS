@@ -1,0 +1,350 @@
+# Foray in the Forest (Nisaba and K1n9_Duk3; v2.0) as a Keen Worlds world.
+# Written by tools/kw_fitf.py from the game's GPL source; the data files
+# beside it are the player's copy of the game. It runs on the engine's Keen
+# 5 code, which its own source descends from, so Keen 5's variables are the
+# base.
+
+%string ca_mapFile "MAPTEMP.CKS"
+%string ca_mapHead "MAPHEAD.CKS"
+%string ca_tileInfo "TILEINFO.CKS" # none: the tile properties are in MAPHEAD.CKS
+%string ca_gfxInfoFile "GFXINFOE.CKS"
+%string ca_graphDict "EGADICT.CKC"
+%string ca_graphHead "EGAHEAD.CKC"
+%string ca_graphFile "EGAGRAPH.CKC"
+%int ff_classicKeen 1 # which of its two graphics sets is used (see kw_fitf.py)
+%string ca_audioInfoFile "AUDINFOE.CKS"
+%string ca_audioDict "AUDIODCT.CKS"
+%int ca_audioUncompressed 1
+%string ca_audioFile "AUDIOT.CKS"
+%string ca_audioHead "AUDIOHED.CKS"
+
+%int ck5_mapElevators 0
+
+# Small tiles: menu icons, score box digits
+%int us_menu_itemTile 44
+%int us_menu_itemSelectedTile 45
+%int us_menu_itemCheckedTile 46
+%int us_menu_itemCheckedSelectedTile 47
+%int us_menu_itemDisabledTile 48
+%int us_menu_itemDisabledSelectedTile 49
+%int us_menu_scrollIconTopTile1 50
+%int us_menu_scrollIconBottomTile1 51
+%int us_menu_scrollIconTopTile2 54
+%int us_menu_scrollIconBottomTile2 55
+%int ck_scoreBoxBlankTile 6
+%int ck_scoreBoxDigitOffset 41
+%int ck_scoreBoxScoreDigits 7
+%int ck_scoreBoxShotsColumn 6
+%int ck_scoreBoxLivesColumn 2
+
+%stringarray ck_str_levelNames
+	"Ancient Forest",
+	"BwB Megarocket",
+	"The Deciduous Forest",
+	"The Outpost",
+	"Secret Reservoir",
+	"Spiky Village",
+	"Troubled Water",
+	"Lost Mine",
+	"Donut Dome",
+	"Fawlty Towers",
+	"Asparagus Roots",
+	"Habitatio\nPiscum Swimeatum",
+	"Manara Samarra",
+	"Shilin Forest",
+	"The Concealed Ruin",
+	"The Pyramid of Doors",
+	"The Magic Forest",
+	"S}vng{ngernes Skov",
+	"Temple of Doom",
+	"Slugidarium",
+	"Donut Heaven",
+	"The High Scores",
+	"The Magic Forest",
+	"Le TARDIS",
+	"Top Secret\nACME Inc. Laboratory",
+	"Cloudy Cliff",
+	"Under Construction",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"E_The Outpost",
+	"E_Secret Reservo",
+	"E_Spike Village",
+	"E_Troubled Water",
+	"E_Lost Mine",
+	"E_Donut Dome",
+	"E_Fawlty Towers",
+	"E_Asparagus Root",
+	"",
+	"",
+	"E_Shilin Forest",
+	"",
+	"E_Pyramid of Doo",
+	"",
+	"E_Sovngangere Sk",
+	"E_Temple of Doom",
+	"",
+	"",
+	"",
+	"E_Pink Cave",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"H_The Outpost",
+	"H_Secret Reservo",
+	"H_Spike Village",
+	"H_Troubled Water",
+	"",
+	"H_Donut Dome",
+	"H_Fawlty Towers",
+	"",
+	"",
+	"",
+	"H_Shilin Forest"
+
+%stringarray ck_str_levelEntryText
+	"Keen wanders the\nAncient Forest",
+	"Keen launches into the\nBwB Megarocket",
+	"Keen sways through\nSukkahs and\ndeciduous trees",
+	"Keen warily\ninvestigates\nthe Outpost",
+	"Keen inquisitively\ndescends to the\nSecret Reservoir",
+	"Keen boldly searches\nthe Spiky Village",
+	"Keen crosses over\nTroubled Water",
+	"Keen braces himself\nfor the Lost Mine",
+	"Keen enters the\nDonut Dome\nin awe",
+	"Keen takes delight\nin a series of\nFawlty Towers",
+	"Keen swings by\nthe Asparagus Roots",
+	"Keen plummets into\nthe Habitatio\nPiscum Swimeatum",
+	"Keen bravely ascends\nManara Samarra",
+	"Keen vaults through\nthe Shilin Forest",
+	"Keen unearths\na Concealed Ruin",
+	"Keen discovers\nthe forgotten\nPyramid of Doors",
+	"Keen finds himself\nin the twilight of\nthe Magic Forest",
+	"Keen sights relicts\nin the Skov af\nS}vng{ngere",
+	"Keen stealthy\nwarps through the\nTemple of Doom",
+	"Keen follows a\nsecret slime trail\nto the Slugidarium",
+	"Princess Lindsey\ntakes Keen to\nDonut Heavens",
+	"Keen unexplainedly\ndetects\nthe High-Scores",
+	"Keen strays\neven deeper into\nthe Magic Wonderland",
+	"Keen rematerialises\nthrough\ntime and space",
+	"Keen discovers\nthe top secret\nACME Inc. Laboratory",
+	"Keen bravely\nhops along a\nCloud-Covered Cliff",
+	"Keen gets a vague\nSign of the Vool",
+	"Keen enters\n",
+	"Keen enters\n",
+	"Keen enters\n",
+	"Keen enters\n",
+	"Keen enters\n",
+	"Keen enters\n",
+	"Keen enters\nE_The Outpost",
+	"Keen enters\nE_Secret Reservo",
+	"Keen enters\nE_Spike Village",
+	"Keen enters\nE_Troubled Water",
+	"Keen enters\nE_Lost Mine",
+	"Keen enters\nE_Donut Dome",
+	"Keen enters\nE_Fawlty Towers",
+	"Keen enters\nE_Asparagus Root",
+	"Keen enters\n",
+	"Keen enters\n",
+	"Keen enters\nE_Shilin Forest",
+	"Keen enters\n",
+	"Keen enters\nE_Pyramid of Doo",
+	"Keen enters\n",
+	"Keen enters\nE_Sovngangere Sk",
+	"Keen enters\nE_Temple of Doom",
+	"Keen enters\n",
+	"Keen enters\n",
+	"Keen enters\n",
+	"Keen enters\nE_Pink Cave",
+	"Keen enters\n",
+	"Keen enters\n",
+	"Keen enters\n",
+	"Keen enters\n",
+	"Keen enters\n",
+	"Keen enters\n",
+	"Keen enters\n",
+	"Keen enters\n",
+	"Keen enters\n",
+	"Keen enters\n",
+	"Keen enters\nH_The Outpost",
+	"Keen enters\nH_Secret Reservo",
+	"Keen enters\nH_Spike Village",
+	"Keen enters\nH_Troubled Water",
+	"Keen enters\n",
+	"Keen enters\nH_Donut Dome",
+	"Keen enters\nH_Fawlty Towers",
+	"Keen enters\n",
+	"Keen enters\n",
+	"Keen enters\n",
+	"Keen enters\nH_Shilin Forest"
+
+%string ck_str_storyText
+	"\n"
+	"Commander Keen in...\n"
+	"Episode #\n"
+	"\n"
+	"Foray in the Forest\n"
+	"\n"
+	"After his adventures\n"
+	"on Vorticon VI,\n"
+	"Commander Keen\n"
+	"has returned home,\n"
+	"ready to resume\n"
+	"his life as\n"
+	"simple schoolboy\n"
+	"Billy Blaze.\n"
+	"\n"
+	"Saving the galaxy\n"
+	"is hard work, after all!\n"
+	"\n"
+	"But our intrepid\n"
+	"hero's adventures\n"
+	"are not over yet,\n"
+	"as he is soon\n"
+	"to discover.\n"
+	"\n"
+	"Something extremely\n"
+	"important is missing\n"
+	"from his personal\n"
+	"sanctuary.\n"
+	"\n"
+	"In its place, he finds\n"
+	"a single cryptic note,\n"
+	"which leads him\n"
+	"to a planet\n"
+	"with strange rings\n"
+	"...\n"
+
+%int ck_starWarsPlainText 1
+
+%string ck_str_tryAgainIntro "You didn't make it past"
+%string ck_str_tryAgainTryAgain "Try Again"
+%string ck_str_exitToMap "Exit to Ancient Forest"
+%string ck_str_gameOver "Game Over!"
+
+%intarray CK_LevelMusic 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40
+%int CK_NumMusicLevels 41
+
+# Chunk names the engine's shared code uses, as Foray in the Forest numbers them
+%int FON_MAINFONT 3
+%int FON_WATCHFONT 4
+%int FON_STARWARSFONT 5
+%int PIC_HELPMENU 7
+%int PIC_BORDERTOP 9
+%int PIC_BORDERLEFT 10
+%int PIC_BORDERRIGHT 11
+%int PIC_BORDERBOTTOMSTATUS 12
+%int PIC_BORDERBOTTOM 13
+%int PIC_MENUCARD 14
+%int PIC_NEWGAMECARD 15
+%int PIC_LOADCARD 16
+%int PIC_SAVECARD 17
+%int PIC_CONFIGURECARD 18
+%int PIC_SOUNDCARD 19
+%int PIC_MUSICCARD 20
+%int PIC_KEYBOARDCARD 21
+%int PIC_MOVEMENTCARD 22
+%int PIC_BUTTONSCARD 23
+%int PIC_JOYSTICKCARD 24
+%int PIC_OPTIONSCARD 25
+%int PIC_PADDLEWAR 26
+%int PIC_QUIT 27
+%int PIC_JOYSTICK 28
+%int PIC_WRISTWATCH 29
+%int MPIC_WRISTWATCHSCREEN 100
+%int SPR_DEMOSIGN 108
+%int SPR_SCOREBOX 234
+%int SPR_PADDLE 103
+%int SPR_BALL0 104
+%int DEMOSTART 7772
+%int SPR_BALL1 106
+%int SPR_BALL3 107
+%int PIC_TITLESCREEN 36
+%int PIC_STARWARS 35
+%int PIC_KEENTALK1 47
+%int PIC_KEENTALK2 47
+%int PIC_COUNTDOWN5 37
+%int PIC_COUNTDOWN4 38
+%int PIC_COUNTDOWN3 39
+%int PIC_COUNTDOWN2 40
+%int PIC_COUNTDOWN1 41
+%int PIC_COUNTDOWN0 48
+%int PIC_CREDIT1 30
+%int PIC_CREDIT2 31
+%int PIC_CREDIT3 32
+%int PIC_CREDIT4 33
+%int MPIC_STATUSRIGHT 101
+%int MPIC_STATUSLEFT 102
+%int EXTERN_COMMANDER 7782
+%int EXTERN_KEEN 7783
+%int TEXT_HELPMENU 7760
+%int TEXT_STORY 7759
+%int TEXT_CONTROLS 7762
+%int TEXT_ABOUTID 7765
+%int TEXT_ORDER 7761
+%int TEXT_END 7766
+%int TEXT_SECRETEND 7767
+%int SPR_STARS1 143
+%int SPR_VIVASPLASH1 194
+%int SPR_MAPKEEN_WALK1_W 251
+%int SPR_MAPKEEN_WALK1_E 254
+%int SPR_MAPKEEN_WALK1_N 257
+%int SPR_MAPKEEN_WALK1_S 260
+%int SPR_MAPKEEN_WALK1_SE 263
+%int SPR_MAPKEEN_WALK1_SW 266
+%int SPR_MAPKEEN_WALK1_NW 269
+%int SPR_MAPKEEN_WALK1_NE 272
+%int SPR_MAPKEEN_STAND_W 251
+%int SPR_GEM_A1 223
+%int SPR_GEM_B1 225
+%int SPR_GEM_C1 227
+%int SPR_GEM_D1 229
+%int SPR_100_PTS1 208
+%int SPR_200_PTS1 210
+%int SPR_500_PTS1 212
+%int SPR_1000_PTS1 214
+%int SPR_2000_PTS1 216
+%int SPR_5000_PTS1 218
+%int SPR_STUNNER1 232
+%int SPR_SECURITYCARD_1 220
+%int SPR_BONUS100 198
+%int SPR_BONUS200 199
+%int SPR_BONUS500 200
+%int SPR_BONUS1000 201
+%int SPR_BONUS2000 202
+%int SPR_BONUS5000 203
+%int SPR_BONUS1UP 205
+%int SPR_BONUSCLIP 206
+%int SPR_BONUSGEM 231
+%int SPR_BONUSSECURITYCARD 207
+
+# Sounds the engine's shared code plays, as Foray in the Forest numbers them
+%int SOUND_KEENWALK0 0
+%int SOUND_KEENWALK1 1
+%int SOUND_KEENJUMP 2
+%int SOUND_KEENLAND 3
+%int SOUND_KEENSHOOT 4
+%int SOUND_KEENPOGO 7
+%int SOUND_GOTITEM 8
+%int SOUND_GOTSTUNNER 9
+%int SOUND_GOTCENTILIFE 10
+%int SOUND_UNKNOWN12 12
+%int SOUND_LEVELEXIT 13
+%int SOUND_KEENHITCEILING 15
+
+%include "FFGFX.CKS"
+%override "EPISODE.CK5"
+
+# After Keen 5's actions: Foray in the Forest's replace those of the same name.
+%include "FFACTION.CKS"

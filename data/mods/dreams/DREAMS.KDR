@@ -1,0 +1,103 @@
+# Keen Dreams as a Keen Worlds world: the dream Keen has in the Megarocket's
+# bed. Written by tools/kw_dreams_port.py from the game's GPL source; the
+# data files beside it are converted from the player's copy of the game by
+# tools/kw_dreams.py. It runs on the engine's Keen 4 code - its descendant -
+# so Keen 4's variables are the base.
+
+%string ca_mapFile "GAMEMAPS.KDR"
+%string ca_mapHead "MAPHEAD.KDR"
+%string ca_tileInfo "TILEINFO.KDR" # none: the tile properties are in MAPHEAD.KDR
+%string ca_gfxInfoFile "GFXINFOE.KDR"
+%string ca_graphDict "EGADICT.KDR"
+%string ca_graphHead "EGAHEAD.KDR"
+%string ca_graphFile "EGAGRAPH.KDR"
+%string ca_audioInfoFile "AUDINFOE.KDR"
+%string ca_audioDict "AUDIODCT.KDR"
+%string ca_audioFile "AUDIO.KDR"
+%string ca_audioHead "AUDIOHHD.KDR"
+
+# The score box: its digits are small tiles 1-10 after a blank one
+%int ck_scoreBoxBlankTile 0
+%int ck_scoreBoxDigitOffset 47
+%int ck_scoreBoxScoreDigits 7
+%int ck_scoreBoxShotsColumn 6
+%int ck_scoreBoxLivesColumn 1
+
+%stringarray ck_str_levelNames
+	"The Land of Tuberia",
+	"Horseradish Hill",
+	"The Melon Mines",
+	"Bridge Bottoms",
+	"Rhubarb Rapids",
+	"Parsnip Pass",
+	"Level 6",
+	"Spud City",
+	"Level 8",
+	"Apple Acres",
+	"Grape Grove",
+	"Level 11",
+	"Brussels Sprout Bay",
+	"Level 13",
+	"Squash Swamp",
+	"Boobus' Chamber",
+	"Castle Tuberia",
+	"",
+	"Title Page",
+	"",
+	"Title Screen"
+
+%stringarray ck_str_levelEntryText
+	"Keen dreams of\nThe Land of Tuberia",
+	"Keen dreams of\nHorseradish Hill",
+	"Keen dreams of\nThe Melon Mines",
+	"Keen dreams of\nBridge Bottoms",
+	"Keen dreams of\nRhubarb Rapids",
+	"Keen dreams of\nParsnip Pass",
+	"Keen dreams of\nLevel 6",
+	"Keen dreams of\nSpud City",
+	"Keen dreams of\nLevel 8",
+	"Keen dreams of\nApple Acres",
+	"Keen dreams of\nGrape Grove",
+	"Keen dreams of\nLevel 11",
+	"Keen dreams of\nBrussels Sprout Bay",
+	"Keen dreams of\nLevel 13",
+	"Keen dreams of\nSquash Swamp",
+	"Keen dreams of\nBoobus' Chamber",
+	"Keen dreams of\nCastle Tuberia",
+	"Keen dreams of\n",
+	"Keen dreams of\nTitle Page",
+	"Keen dreams of\n",
+	"Keen dreams of\nTitle Screen"
+
+%string ck_str_tryAgainIntro "You didn't make it past"
+%string ck_str_tryAgainTryAgain "Try Again"
+%string ck_str_exitToMap "Exit to Tuberia"
+
+%int CK_NumMusicLevels 0 # it has no music
+
+# Chunk names the engine's shared code uses, as Keen Dreams numbers them
+%int FON_MAINFONT 3
+%int FON_WATCHFONT 3
+%int FON_STARWARSFONT 3
+%int SPR_SCOREBOX 212
+
+# Sounds the engine's shared code plays, as Keen Dreams numbers them
+%int SOUND_KEENWALK0 0
+%int SOUND_KEENWALK1 1
+%int SOUND_KEENJUMP 2
+%int SOUND_KEENLAND 3
+%int SOUND_KEENSHOOT 4
+%int SOUND_GOTITEM 7
+%int SOUND_GOTSTUNNER 6
+%int SOUND_UNKNOWN12 11
+%int SOUND_LEVELEXIT 13
+%int SOUND_KEENHITCEILING 15
+%int SOUND_NEEDKEYCARD 14
+%int SOUND_KEENDIE 12
+%int SOUND_GOTEXTRALIFE 18
+%int SOUND_KEENFALL 25
+
+%override "EPISODE.CK4"
+
+# After Keen 4's actions
+%include "KDACTION.KDR"

@@ -165,7 +165,7 @@ static const KW_WorldDef kw_worldDefs[KW_NUM_WORLDS] = {
 		"The Eight Accumulators",
 		"After the Battle of the Brains\nA fan episode by Bubbatom, 2011",
 		"Created by Bubbatom\n\nWith help from\nCeilick, Mink and Gridlock" KW_NOT_OURS,
-		"A fan episode by Bubbatom\n(2011). Download \"The Eight\nAccumulators\" (see its page on\nkeenwiki.shikadi.net) and run\ntools/kw_accumulators.py on it."},
+		"A fan episode by Bubbatom\n(2011). Download \"The Eight\nAccumulators\" (see its page on\nkeenwiki.shikadi.net) and put\nits files in mods/keen95."},
 	// Keen 5.5 (The CK Guy) and Keen Asylum, as converted for Omnispeak in
 	// its modding kit (data/mod/ck55, data/mod/asylum): the player copies
 	// those folders to play/mods/ck55 and play/mods/asylum.
@@ -187,7 +187,7 @@ static const KW_WorldDef kw_worldDefs[KW_NUM_WORLDS] = {
 		"Bounty Hunting Brouhaha",
 		"A Commander Keen fan game\nby Kohntarkosz_, 2019",
 		"Created by Kohntarkosz_\n\nLevels, graphics and music\nare its own" KW_NOT_OURS,
-		"A fan game by Kohntarkosz_\n(2019). Download \"Bounty\nHunting Brouhaha\" v1.0 (see\nits page on keenwiki.shikadi.net)\nand run tools/kw_bounty.py on it."},
+		"A fan game by Kohntarkosz_\n(2019). Download \"Bounty\nHunting Brouhaha\" v1.0 (see\nits page on keenwiki.shikadi.net)\nand put its files in mods/bounty."},
 	// The Megarocket: Keen Worlds' own world, the inside of Keen's ship
 	// (tools/kw_shipworld.py writes its map; its folder comes with Keen
 	// Worlds). It runs on Keen 4 and is not a destination in the menu.
@@ -200,14 +200,14 @@ static const KW_WorldDef kw_worldDefs[KW_NUM_WORLDS] = {
 	// by Softdisk; its source is GPL since 2014). It is the dream Keen has
 	// in the Megarocket's bed: not a planet, so not a destination in the
 	// menu, and nothing is carried in or out of it. Its code is ported from
-	// its source (kw_dreams.c, kw_kd_*.c); tools/kw_dreams.py converts the
-	// player's copy of the game's data.
+	// its source (kw_dreams.c, kw_kd_*.c); kw_kd_convert.c rewrites the
+	// player's copy of the game's data in the engine's form.
 	{"dreams", "Tuberia", KW_EPISODE_DREAMS, "mods/dreams", "DREAMS.KDR",
 		"Commander Keen in\nKeen Dreams",
 		"The lost episode\nid Software, 1991",
 		"Programming:\nJohn Carmack, John Romero\n\nCreative director: Tom Hall\nArt: Adrian Carmack\n\n"
 		"Published by Softdisk.\nIts source code was released\nunder the GPL in 2014." KW_NOT_OURS,
-		"Keen Dreams' shareware release\nis free to pass on. Put it in\nthe folder dreams and run\ntools/kw_dreams.py and\ntools/kw_dreams_port.py."},
+		"Keen Dreams' shareware release\n(version 1.13) is free to pass\non. Put its files in\nmods/dreams."},
 };
 
 static CK_EpisodeDef *KW_EpisodeDef(int episode)
@@ -267,54 +267,76 @@ static const char *KW_WorldPath(int world)
 	return path[world];
 }
 
-bool KW_IsWorldPresent(int world)
+// Is this file in the world's folder (or in a folder inside it)?
+static bool KW_WorldHasFile(int world, const char *name)
 {
-	if (world < 0 || world >= KW_NUM_WORLDS)
+	FS_File f = FS_OpenWorldFile(KW_WorldPath(world), name);
+	if (!FS_IsFileValid(f))
 		return false;
+	FS_CloseFile(f);
+	return true;
+}
+
+const char *KD_ConvertGame(const char *dir);
+
+static bool KW_FindWorld(int world)
+{
 	const KW_WorldDef *def = &kw_worldDefs[world];
 	CK_EpisodeDef *ep = KW_EpisodeDef(def->episode);
 	if (!ep)
 		return false;
 	if (!def->dir)
 		return ep->isPresent();
-	// A fan game: its folder must hold its variable file (its levels,
-	// graphics and sounds come with it; Omnispeak's support files for the
-	// base episode come from the game path).
-	FS_File f = FSL_OpenFileInDirCaseInsensitive(KW_WorldPath(world), def->episodeFile, false);
-	if (!FS_IsFileValid(f))
+	// A fan game: its folder must hold its variable file, which comes
+	// with Keen Worlds, and the game itself, which the player puts there
+	// (told by one file of the game's own). Omnispeak's support files for
+	// the base episode come from the game path.
+	if (!KW_WorldHasFile(world, def->episodeFile))
 		return false;
-	FS_CloseFile(f);
 	if (def->episode == KW_EPISODE_AREALM || def->episode == KW_EPISODE_FITF)
 	{
 		// Its support files are in its own folder too; Keen 5's variables
 		// (Omnispeak's own files) are its base.
-		f = FSL_OpenFileInDirCaseInsensitive(KW_WorldPath(world),
-			def->episode == KW_EPISODE_FITF ? "MAPTEMP.CKS" : "maptemp.ckd", false);
-		if (!FS_IsFileValid(f))
-			return false;
-		FS_CloseFile(f);
-		return FS_IsOmniFilePresent("EPISODE.CK5");
+		return KW_WorldHasFile(world, def->episode == KW_EPISODE_FITF ? "MAPTEMP.CKS" : "maptemp.ckd")
+			&& FS_IsOmniFilePresent("EPISODE.CK5");
 	}
 	if (def->episode == KW_EPISODE_DREAMS)
 	{
-		// its converted data is in its own folder; Keen 4's variables
-		// (Omnispeak's own files) are its base
-		f = FSL_OpenFileInDirCaseInsensitive(KW_WorldPath(world), "GAMEMAPS.KDR", false);
-		if (!FS_IsFileValid(f))
-			return false;
-		FS_CloseFile(f);
-		return FS_IsOmniFilePresent("EPISODE.CK4");
+		// The engine reads the game in a form of its own, written here the
+		// first time the game is found (kw_kd_convert.c). Keen 4's
+		// variables (Omnispeak's own files) are its base.
+		if (!KW_WorldHasFile(world, "GAMEMAPS.KDR") && KW_WorldHasFile(world, "KDREAMS.EXE"))
+		{
+			const char *problem = KD_ConvertGame(KW_WorldPath(world));
+			if (problem)
+				CK_Cross_LogMessage(CK_LOG_MSG_WARNING, "Keen Dreams in %s: %s.\n", KW_WorldPath(world), problem);
+		}
+		return KW_WorldHasFile(world, "GAMEMAPS.KDR") && FS_IsOmniFilePresent("EPISODE.CK4");
 	}
 	if (def->episode == KW_EPISODE_OSI)
 	{
 		// everything is its own, in its own folder
-		f = FSL_OpenFileInDirCaseInsensitive(KW_WorldPath(world), "GAMEMAPS.CK5", false);
-		if (!FS_IsFileValid(f))
+		return KW_WorldHasFile(world, "GAMEMAPS.CK5");
+	}
+	if (!strncmp(def->dir, "mods/", 5))
+	{
+		char graphics[16];
+		snprintf(graphics, sizeof(graphics), "EGAGRAPH.CK%d", def->episode);
+		if (!KW_WorldHasFile(world, graphics))
 			return false;
-		FS_CloseFile(f);
-		return true;
 	}
 	return FS_IsOmniFilePresent(ep->episodeFile);
+}
+
+bool KW_IsWorldPresent(int world)
+{
+	// Looked for once: the folders don't change while the game runs.
+	static int8_t found[KW_NUM_WORLDS];
+	if (world < 0 || world >= KW_NUM_WORLDS)
+		return false;
+	if (!found[world])
+		found[world] = KW_FindWorld(world) ? 1 : -1;
+	return found[world] > 0;
 }
 
 // What each world remembers while Keen is somewhere else: where he was on

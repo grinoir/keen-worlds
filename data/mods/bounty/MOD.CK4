@@ -1,0 +1,111 @@
+# Bounty Hunting Brouhaha (Kohntarkosz_, 2019) as a Keen Worlds world.
+# Written by tools/kw_bounty.py from the mod's CKPatch file; the data
+# files beside it are the player's copy of the mod. It runs on Keen 4.
+
+%string ca_tileInfo "KEEN4.TLI"
+
+%stringarray ck_str_levelNames
+	"Meurglys III   ",
+	"   Fern Town   ",
+	"Two Line Temple",
+	"Time Temple    ",
+	"Air Quality Monitoring Stn",
+	"CANDY ISLAND!",
+	"Mount Meurglys ",
+	"King's Canyon",
+	"Twisted Temple ",
+	"Miragia",
+	"Bottling Plant ",
+	"Orbital Hideout",
+	"Sewage Plant (Upstairs)",
+	"Sewage Plant\n(Downstairs)",
+	"Witch Doctor's Hut        ",
+	"Badluck Cave",
+	"A Peculiar Cave",
+	"Sculpture Garden",
+	""
+
+%stringarray ck_str_levelEntryText
+	"Keen explores \nMeurglys III",
+	"Keen gets his game on\nin Fern Town",
+	"Keen crosses\nTwo Line Temple",
+	"Keen winds his watch\nin the Time Temple",
+	"Keen catches his breath\nin the Air Quality\nMonitoring Station\n",
+	"Keen gets a sugar rush\non CANDY ISLAND!",
+	"Keen attempts to\nscale Mount Meurglys",
+	"Keen surveys\nKing's Canyon",
+	"Keen gets turned around\nin Twisted Temple     ",
+	"Keen disappears into\nMiragia",
+	"Keen cools off in the\nIced Tea Bottling Plant ",
+	"Keen charges into\nRick's Orbital Hideout",
+	"Keen inspects the\nSewage Plant (Upstairs)",
+	"Keen cannonballs into\nthe Sewage Plant\n(Downstairs)",
+	"Keen sceptically enters\nthe Witch Doctor's Hut \n               ",
+	"Keen takes his chances\nin Badluck Cave",
+	"Keen peers into a\nPeculiar Cave",
+	"Keen kicks up dust\nin the Sculpture Garden\n",
+	"Keen launches into the\nBean-with-Bacon\nMegarocket"
+
+%intarray CK_LevelMusic 0, 3, 4, 4, 2, 3, 3, 3, 4, 0, 4, 1, 2, 2, 1, 4, 5, 5, 5, 65535
+
+%string ck4_str_gotWetsuit "The jig is up.\nYou're coming with me."
+%string ck4_str_janitor1 "Whoa there young fella!\nDrink this potion. It'll\nfortify you for your\nquest."
+%string ck4_str_janitor2 "It has a bit of a kick\non it, so be careful.\n\n"
+%string ck4_str_janitor3 "I'm not sure about\nthis."
+%string ck4_str_janitor4 "There you go, down the\nhatch! How's the taste?"
+%string ck4_str_lindsayMessage1 "Need a passcode?\nTry 7-3-0-9.\nUh huh huh!\n\n"
+%string ck4_str_lindsayMessage2 "Plants on this island\nstore nutrients by  \nextruding sucrose  \nrods. \n"
+%string ck4_str_lindsaySays "Elvis says:\n"
+%string ck4_str_lindsayThanks1 "Wow, you ARE the king!"
+%string ck4_str_lindsayThanks2 "Sure looks like\ncandy to me...\n\n"
+%string ck_str_exitToMap "Exit to Meurglys III"
+%string ck_str_statusCentilives "COINS"
+%stringarray ck_defaultHighScoreNames
+	"Id Software - '91",
+	"",
+	"Jason Blochowiak",
+	"Adrian Carmack",
+	"John Carmack",
+	"Tom Hall",
+	"John Romero",
+	""
+
+# The mod's changes to the program's rules, as settings
+# levels 16 and 17 can be entered again
+%int ck_maxDoneLevel 15
+# the water level is 13
+%int CK4_UnderwaterCameraLevel 13
+%int CK4_UnderwaterDeathLevel 13
+# the moon tile ends the level
+%int CK4_MoonTileEndsLevel 1
+# platforms without flames
+%int CK4_PlatformNoFlames 1
+# the Arachnut does not kill
+%int CK4_ArachnutHarmless 1
+# the Dopefish does not eat Keen
+%int CK4_DopefishIgnoresKeen 1
+# Keen always swims on the map
+%int CK4_MapAlwaysSwim 1
+# no wetsuit in the status window
+%int CK4_StatusNoWetsuit 1
+# no Council in the status window
+%int CK4_StatusNoCouncil 1
+# what is found in place of the wetsuit wins the game
+%int CK4_WetsuitWinsGame 1
+# where the foot flies
+%int CK4_FootThresholdX 0x3000
+%int CK4_FootThereX 0x2900
+%int CK4_FootThereY 0x2600
+%int CK4_FootBackX 0x3100
+%int CK4_FootBackY 0x4300
+# where the mirage's tiles are in the map
+%int CK4_MiragiaSourceY 80
+# the witch doctor does not stop to think
+%int CK4_CouncilNeverPauses 1
+# the item cheat gives no keys
+%int CK_ItemCheatNoKeys 1
+# its own sound and music headers
+%string ca_audioHead "AUDIOHED.CK4"
+%string ca_audioDict "AUDIODCT.CK4"
+
+%override "EPISODE.CK4"

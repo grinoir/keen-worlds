@@ -35,6 +35,7 @@ extern const char *fs_keenPath;
 extern const char *fs_worldPath;
 // Open a file in one folder, ignoring case (used to check for mod files).
 FS_File FSL_OpenFileInDirCaseInsensitive(const char *dirPath, const char *fileName, bool forWrite);
+FS_File FS_OpenWorldFile(const char *worldPath, const char *fileName);
 
 bool FS_IsFileValid(FS_File file);
 

@@ -1,0 +1,313 @@
+# Atroxian Realm (Gridlock, 2016; v1.5) as a Keen Worlds world. Written by
+# tools/kw_arealm.py from the game's GPL source; the data files beside it are
+# the player's copy of the game. It runs on the engine's Keen 5 code, which
+# its own source was written from, so Keen 5's variables are the base.
+
+%string ca_mapFile "maptemp.ckd"
+%string ca_mapHead "maphead.ckd"
+%string ca_tileInfo "TILEINFO.CKD" # none: the tile properties are in maphead.ckd
+%string ca_gfxInfoFile "GFXINFOE.CKD"
+%string ca_graphDict "EGADICT.CKD"
+%string ca_graphHead "EGAHEAD.CKD"
+%string ca_graphFile "EGAGRAPH.CKD"
+%string ca_audioInfoFile "AUDINFOE.CKD"
+%string ca_audioDict "AUDIODCT.CKD"
+%int ca_audioUncompressed 1
+%string ca_audioFile "AUDIOT.CKD"
+%string ca_audioHead "AUDIOHED.CKD"
+
+%int CK_highScoreLevel 19
+%int ck5_mapElevators 0
+%int ck_minDoneLevel 1
+%int ck_maxDoneLevel 25 # levels the map marks as done
+
+%stringarray ck_str_levelNames
+	"Krisle",
+	"Dark Swamp",
+	"Murky Marsh",
+	"Larvae Lagoon",
+	"Crystallite C",
+	"Emerald Canyon",
+	"Atroxian Mines",
+	"Atroxian Base",
+	"Security Layer",
+	"Port Atrox",
+	"Hornet Hive",
+	"Brythom Bog",
+	"Ruins Gateway",
+	"Ancient Forest 1",
+	"The Catacombs",
+	"Great Ziggurat",
+	"Dark Temple",
+	"Atroxus Battle",
+	"Crystal Shrine",
+	"HighScores",
+	"Plaza Ruins P1",
+	"Plaza Ruins P2",
+	"Cargo Transit A",
+	"Cargo Transit B",
+	"Crystalcomb Hive",
+	"BWB Crash Site",
+	"RandomCrap",
+	"Atroxus Backup",
+	"Krisle",
+	"Plaza Ruins P1",
+	"Supply Transit B",
+	"Kridonea",
+	"Gateway Backup"
+
+%stringarray ck_str_levelEntryText
+	"Keen searches\n planet Krisle",
+	"Keen explores the \n Dark Swamp",
+	"Keen marches\n into Murky Marsh",
+	"Keen lurks in\n the Larvae Lagoon",
+	"Keen climbs through\nCrystallite Caverns",
+	"Keen plummets down\n Emerald Canyon",
+	"Keen infiltrates the\n Atroxian Mines",
+	"Keen attacks the\n Atroxian Base",
+	"Keen sneaks through\n the Security Layer",
+	"Keen breaks into\n Port Atrox",
+	"Keen swarms into\n the Hornet Hive",
+	"Keen bobs through\n Brithom Bog",
+	"Keen discovers the\n Kridonea Gateway",
+	"Keen enters the \nKrilewood Forest",
+	"Keen battles through\nThe Catacombs",
+	"Keen reverently enters\nthe Great Ziggurat",
+	"Keen anxiously ascends\nthe Sky Sanctum",
+	"Keen battles Atroxus\n at the\nRealm Reactor",
+	"Keen scales the\nCrystal Sanctuary",
+	"Keen tallies the\nHigh Scores",
+	"Keen enters the\nKridonea Ruins",
+	"Keen continues through\nthe Kridonea Ruins",
+	"Keen zips through\n Cargo Transit A",
+	"Keen zips through\n Cargo Transit B",
+	"Keen combs through\n Crystalcomb Hive",
+	"Keen explores the\nBWB Megarocket\ncrash site",
+	"Keen enters\nRandomCrap",
+	"Keen enters\nAtroxus Backup",
+	"Keen enters\nKrisle",
+	"Keen enters\nPlaza Ruins P1",
+	"Keen enters\nSupply Transit B",
+	"Keen enters\nKridonea",
+	"Keen enters\nGateway Backup"
+
+%string ck_str_storyText
+	"Commander Keen in...\n"
+	"Atroxian Realm!\n"
+	"\n"
+	"Stranded on planet\n"
+	"Krisle after answering\n"
+	"a distress signal of\n"
+	"garbled Omnispeak,\n"
+	"Commander Keen stumbles\n"
+	"into the center of a\n"
+	"war between the\n"
+	"planet's native race,\n"
+	"the Krile, and a swarm\n"
+	"of robotic invaders\n"
+	"called Atroxians.\n"
+	"\n"
+	"To end the exile of the\n"
+	"Krile and escape the\n"
+	"desolate world, he must\n"
+	"brave the darkness of\n"
+	"the Atroxian Realm that\n"
+	"has engulfed the\n"
+	"planet.\n"
+	"\n"
+	"Deadly swamps, Atroxian\n"
+	"strongholds, and\n"
+	"malevolent forces\n"
+	"await. Only he can\n"
+	"restore light to\n"
+	"Krisle!\n"
+
+%string ar_str_entryMapFinal "Keen prepares for\nhis final battle"
+%string ar_str_entryCrashReturn "Keen returns to the\nBWB Megarocket\ncrash site"
+
+%intarray CK_LevelMusic 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35
+%int CK_NumMusicLevels 36
+
+# Chunk names the engine's shared code uses, as Atroxian Realm numbers them
+%int PIC_ARROWDIM 47
+%int PIC_ARROWBRIGHT 48
+%int SPR_SECURITYCARD_1 340
+%int SPR_BONUSSECURITYCARD 251
+%int PIC_COUNTDOWN5 115
+%int PIC_COUNTDOWN4 116
+%int PIC_COUNTDOWN3 117
+%int PIC_COUNTDOWN2 118
+%int PIC_COUNTDOWN1 119
+%int PIC_COUNTDOWN0 120
+%int PIC_STARWARS 108
+%int PIC_KEENTALK1 111
+%int PIC_KEENTALK2 112
+%int DEMOSTART 5144
+%int FON_MAINFONT 3
+%int FON_WATCHFONT 4
+%int FON_STARWARSFONT 5
+%int PIC_HELPMENU 6
+%int PIC_HELPPOINTER 45
+%int PIC_BORDERTOP 80
+%int PIC_BORDERLEFT 81
+%int PIC_BORDERRIGHT 82
+%int PIC_BORDERBOTTOMSTATUS 83
+%int PIC_BORDERBOTTOM 84
+%int PIC_MENUCARD 88
+%int PIC_NEWGAMECARD 89
+%int PIC_LOADCARD 90
+%int PIC_SAVECARD 91
+%int PIC_CONFIGURECARD 92
+%int PIC_SOUNDCARD 93
+%int PIC_MUSICCARD 94
+%int PIC_KEYBOARDCARD 95
+%int PIC_MOVEMENTCARD 96
+%int PIC_BUTTONSCARD 97
+%int PIC_JOYSTICKCARD 98
+%int PIC_OPTIONSCARD 99
+%int PIC_PADDLEWAR 100
+%int PIC_QUIT 101
+%int PIC_JOYSTICK 102
+%int PIC_WRISTWATCH 103
+%int MPIC_WRISTWATCHSCREEN 131
+%int PIC_CREDIT1 104
+%int PIC_CREDIT2 105
+%int PIC_CREDIT3 106
+%int PIC_CREDIT4 107
+%int PIC_TITLESCREEN 109
+%int MPIC_STATUSLEFT 132
+%int MPIC_STATUSRIGHT 133
+%int SPR_PADDLE 134
+%int SPR_BALL0 135
+%int SPR_BALL1 136
+%int SPR_BALL3 138
+%int SPR_DEMOSIGN 139
+%int SPR_SCOREBOX 263
+%int SPR_STARS1 174
+%int SPR_VIVASPLASH1 225
+%int SPR_MAPKEEN_WALK1_W 264
+%int SPR_MAPKEEN_WALK1_E 267
+%int SPR_MAPKEEN_WALK1_N 270
+%int SPR_MAPKEEN_WALK1_S 273
+%int SPR_MAPKEEN_WALK1_SE 276
+%int SPR_MAPKEEN_WALK1_SW 279
+%int SPR_MAPKEEN_WALK1_NW 282
+%int SPR_MAPKEEN_WALK1_NE 285
+%int SPR_GEM_A1 252
+%int SPR_GEM_B1 254
+%int SPR_GEM_C1 256
+%int SPR_GEM_D1 258
+%int SPR_100_PTS1 237
+%int SPR_200_PTS1 239
+%int SPR_500_PTS1 241
+%int SPR_1000_PTS1 243
+%int SPR_2000_PTS1 245
+%int SPR_5000_PTS1 247
+%int SPR_1UP1 249
+%int SPR_STUNNER1 261
+%int SPR_BONUS100 229
+%int SPR_BONUS200 230
+%int SPR_BONUS500 231
+%int SPR_BONUS1000 232
+%int SPR_BONUS2000 233
+%int SPR_BONUS5000 234
+%int SPR_BONUS1UP 235
+%int SPR_BONUSCLIP 236
+%int SPR_BONUSGEM 260
+%int EXTERN_COMMANDER 5124
+%int EXTERN_KEEN 5125
+%int TEXT_HELPMENU 5127
+%int TEXT_STORY 5128
+%int TEXT_CONTROLS 5129
+%int TEXT_ABOUTID 5130
+%int TEXT_END 5132
+%int TEXT_ORDER 5133
+%int TEXT_SECRETEND 5138
+
+# Sounds the engine's shared code plays, as Atroxian Realm numbers them
+%int SOUND_KEENWALK0 0
+%int SOUND_KEENWALK1 1
+%int SOUND_KEENJUMP 2
+%int SOUND_KEENLAND 3
+%int SOUND_KEENSHOOT 4
+%int SOUND_KEENPOGO 7
+%int SOUND_GOTITEM 8
+%int SOUND_GOTSTUNNER 9
+%int SOUND_GOTCENTILIFE 10
+%int SOUND_UNKNOWN12 12
+%int SOUND_LEVELEXIT 13
+%int SOUND_NEEDKEYCARD 14
+%int SOUND_KEENHITCEILING 15
+%int SOUND_GOTEXTRALIFE 17
+%int SOUND_OPENGEMDOOR 18
+%int SOUND_OPENSECURITYDOOR 18
+%int SOUND_GOTGEM 19
+%int SOUND_KEENFALL 20
+%int SOUND_KEENOUTOFAMMO 21
+%int SOUND_KEENDIE 23
+%int SOUND_KEENSHOTHIT 25
+%int SOUND_STATUSDOWN 34
+%int SOUND_STATUSUP 35
+%int SOUND_FLAGFLIP 43
+%int SOUND_FLAGLAND 44
+%int SOUND_ENEMYSHOOT 45
+%int SOUND_ENEMYSHOTHIT 46
+%int SOUND_KEENPADDLE 47
+%int SOUND_PONGWALL 48
+%int SOUND_COMPPADDLE 49
+%int SOUND_COMPSCORE 50
+%int SOUND_KEENSCORE 51
+%int SOUND_GOTKEYCARD 17
+%int SOUND_UNKNOWN41 14
+%int SOUND_UNKNOWN52 31
+%int SOUND_UNKNOWN63 12
+%int SOUND_GALAXYEXPLODE 31
+%int SOUND_GALAXYEXPLODEPRE 31
+%int SOUND_KEENLANDONFUSE 3
+%intarray ck_itemSounds 19, 19, 19, 19, 8, 8, 8, 8, 8, 8, 17, 9, 17
+
+# Sprite caches (ck_lumpStarts/ck_lumpEnds in AR_MISC.C)
+%int NUMLUMPS 32
+%int KEENLUMP 0
+%int MAPKEENLUMP 1
+%int PLATFORMLUMP 2
+%int LARVACLUMP 3
+%int BEETLELUMP 4
+%int MAGMINELUMP 5
+%int FIREBALLLUMP 6
+%int DARTFROGLUMP 7
+%int SPLIDERLUMP 8
+%int LARVBATLUMP 9
+%int ATROXIANLUMP 10
+%int ATROXITELUMP 11
+%int AXOCLAW1LUMP 12
+%int AXOCLAW2LUMP 13
+%int HORNETLUMP 14
+%int MOXELLUMP 15
+%int MOXELSHOTLUMP 16
+%int KRILEGUARDIANLUMP 17
+%int KRILEGUARDIANSHOTLUMP 18
+%int KRILEGHOSTLUMP 19
+%int AXOSISLUMP 20
+%int MAPKEEN2LUMP 21
+%int DARTLUMP 22
+%int SMALLEXPOSIONLUMP 23
+%int MAGMINEEXPLOSIONLUMP 24
+%int GENERATORLUMP 25
+%int ELDERLUMP 26
+%int BRIDGELUMP 27
+%int CHECKPOINTLUMP 28
+%int KEENVINESLUMP 29
+%int AXOSIS2LUMP 30
+%int ATROXUSLUMP 31
+%int LUMP_KEEN 0
+%int LUMP_MAPKEEN 1
+%intarray lumpStarts 140, 264, 494, 325, 335, 343, 450, 501, 398, 453, 377, 479, 508, 431, 467, 441, 525, 513, 446, 290, 457, 306, 390, 353, 347, 365, 364, 440, 298, 319, 435, 414
+%intarray lumpEnds 263, 289, 494, 334, 338, 351, 452, 507, 413, 456, 389, 493, 512, 434, 477, 443, 528, 524, 449, 297, 466, 318, 397, 355, 351, 371, 364, 440, 303, 324, 438, 430
+%intarray ck_itemLumps 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 # items are in Keen's cache
+
+%include "ARGFX.CKD"
+%override "EPISODE.CK5"
+
+# After Keen 5's actions: Atroxian Realm's replace those of the same name.
+%include "ARACTION.CKD"
