@@ -8,6 +8,7 @@ untouched.
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "id_ca.h"
 #include "id_fs.h"
@@ -86,6 +87,73 @@ void KW_StopVoice(void)
 static int16_t *kw_clip = NULL;
 static long kw_clipSamples = 0;
 
+// A clip's samples (to be freed), or NULL. A clip is asked for by the name
+// <NAME>.RAW; it is kept as <NAME>.OGG (Ogg Vorbis, kw_vorbis.c), or, as
+// they all were once, as the plain samples the name says (16-bit, low byte
+// first). Both at KW_VOICE_RATE, one channel.
+int16_t *KW_DecodeVorbis(const uint8_t *data, int length, long *samples, int *rate);
+
+static FILE *KW_OpenClip(const char *file, bool *vorbis)
+{
+	char path[600];
+	const char *dot = strrchr(file, '.');
+	int stem = dot ? (int)(dot - file) : (int)strlen(file);
+	snprintf(path, sizeof(path), "%s/voice/%.*s.OGG", fs_keenPath, stem, file);
+	FILE *f = fopen(path, "rb");
+	*vorbis = f != NULL;
+	if (!f)
+	{
+		snprintf(path, sizeof(path), "%s/voice/%s", fs_keenPath, file);
+		f = fopen(path, "rb");
+	}
+	return f;
+}
+
+bool KW_ClipIsThere(const char *file)
+{
+	bool vorbis;
+	FILE *f = KW_OpenClip(file, &vorbis);
+	if (f)
+		fclose(f);
+	return f != NULL;
+}
+
+static int16_t *KW_ReadClip(const char *file, long *samples)
+{
+	bool vorbis;
+	FILE *f = KW_OpenClip(file, &vorbis);
+	if (!f)
+		return NULL;
+	fseek(f, 0, SEEK_END);
+	long size = ftell(f);
+	fseek(f, 0, SEEK_SET);
+	uint8_t *data = size >= 2 ? (uint8_t *)malloc(size) : NULL;
+	bool ok = data && fread(data, 1, size, f) == (size_t)size;
+	fclose(f);
+	if (!ok)
+	{
+		free(data);
+		return NULL;
+	}
+	if (vorbis)
+	{
+		int rate = 0;
+		int16_t *out = KW_DecodeVorbis(data, (int)size, samples, &rate);
+		free(data);
+		if (out && rate != KW_VOICE_RATE)
+		{
+			free(out);
+			out = NULL;
+		}
+		return out;
+	}
+	int16_t *out = (int16_t *)data;
+	*samples = size / 2;
+	for (long i = 0; i < *samples; ++i)
+		out[i] = (int16_t)CK_Cross_SwapLE16((uint16_t)out[i]);
+	return out;
+}
+
 static bool KW_LoadClip(const char *file)
 {
 	SD_StopVoice();
@@ -94,26 +162,8 @@ static bool KW_LoadClip(const char *file)
 	kw_voiceEnd = 0;
 	if (SD_GetSoundMode() == sdm_Off || !file)
 		return false;
-	char path[512];
-	snprintf(path, sizeof(path), "%s/voice/%s", fs_keenPath, file);
-	FILE *f = fopen(path, "rb");
-	if (!f)
-		return false;
-	fseek(f, 0, SEEK_END);
-	long size = ftell(f);
-	fseek(f, 0, SEEK_SET);
-	bool ok = size >= 2 && (kw_clip = (int16_t *)malloc(size)) != NULL && fread(kw_clip, 1, size, f) == (size_t)size;
-	fclose(f);
-	if (!ok)
-	{
-		free(kw_clip);
-		kw_clip = NULL;
-		return false;
-	}
-	kw_clipSamples = size / 2;
-	for (long i = 0; i < kw_clipSamples; ++i)
-		kw_clip[i] = (int16_t)CK_Cross_SwapLE16((uint16_t)kw_clip[i]);
-	return true;
+	kw_clip = KW_ReadClip(file, &kw_clipSamples);
+	return kw_clip != NULL;
 }
 
 static void KW_StartClip(void)
@@ -210,14 +260,12 @@ bool KW_SayWorldLines(const char *const *names, int count)
 	const long gap = KW_VOICE_RATE / 4;
 	for (int n = 0; n < count; ++n)
 	{
-		char path[600];
-		snprintf(path, sizeof(path), "%s/voice/%s_%s.RAW", fs_keenPath, prefix, names[n]);
-		FILE *f = fopen(path, "rb");
-		if (!f)
+		char file[80];
+		snprintf(file, sizeof(file), "%s_%s.RAW", prefix, names[n]);
+		long samples = 0;
+		int16_t *one = KW_ReadClip(file, &samples);
+		if (!one)
 			continue;
-		fseek(f, 0, SEEK_END);
-		long samples = ftell(f) / 2;
-		fseek(f, 0, SEEK_SET);
 		int16_t *grown = (int16_t *)realloc(all, (total + gap + samples) * sizeof(int16_t));
 		if (grown)
 		{
@@ -227,14 +275,12 @@ bool KW_SayWorldLines(const char *const *names, int count)
 				memset(all + total, 0, gap * sizeof(int16_t));
 				total += gap;
 			}
-			long got = (long)fread(all + total, sizeof(int16_t), samples, f);
-			for (long i = 0; i < got; ++i)
-				all[total + i] = (int16_t)CK_Cross_SwapLE16((uint16_t)all[total + i]);
-			total += got;
+			memcpy(all + total, one, samples * sizeof(int16_t));
+			total += samples;
 			if (getenv("KW_AUTOTALK"))
-				printf("KW_AUTOTALK: %s_%s.RAW (%.1f s)\n", prefix, names[n], got / (double)KW_VOICE_RATE);
+				printf("KW_AUTOTALK: %s (%.1f s)\n", file, samples / (double)KW_VOICE_RATE);
 		}
-		fclose(f);
+		free(one);
 	}
 	fflush(stdout);
 	if (!total)

@@ -1032,15 +1032,11 @@ const char *KW_CheckDialogueFits(void)
 			}
 			if (voices[t])
 			{
-				char path[512];
-				snprintf(path, sizeof(path), "%s/voice/%s", fs_keenPath, voices[t]);
-				FILE *f = fopen(path, "rb");
-				if (!f)
+				if (!KW_ClipIsThere(voices[t]))
 				{
 					snprintf(problem, sizeof(problem), "the barmaid's clip %s is missing", voices[t]);
 					return problem;
 				}
-				fclose(f);
 			}
 		}
 	}
@@ -1059,16 +1055,13 @@ const char *KW_CheckDialogueFits(void)
 			// what Keen says to the elder of Gnosticus IV has a clip
 			if (r->episode == KW_KEEN4 && r->kind == KW_ELDER)
 			{
-				char clip[32], path[512];
+				char clip[32];
 				KW_KeenSaysClip(r->choices[c].keen, clip, sizeof(clip));
-				snprintf(path, sizeof(path), "%s/voice/%s", fs_keenPath, clip);
-				FILE *f = fopen(path, "rb");
-				if (!f)
+				if (!KW_ClipIsThere(clip))
 				{
 					snprintf(problem, sizeof(problem), "Keen's clip %s (\"%.20s\") is missing", clip, r->choices[c].keen);
 					return problem;
 				}
-				fclose(f);
 			}
 		}
 		for (int t = 0; t < n; ++t)

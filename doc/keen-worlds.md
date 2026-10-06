@@ -543,6 +543,15 @@ of the story's music; if he is still reading when the last line has
 scrolled away, the dark screen waits for him or a key. Keen Worlds' own
 story in the opening is not read: the title tune plays under it.
 
+**The voice clips are Ogg Vorbis.** The voice tools write a clip as plain
+samples (`<NAME>.RAW`, 16-bit mono, 22050 Hz); `tools/kw_voice_pack.py`
+then turns every one in `data/voice` into `<NAME>.OGG` (quality 1, chosen by
+ear from samples: about a twelfth of the size) and takes the `.RAW` away.
+The game asks for a clip by its `.RAW` name and plays the `.OGG` if it is
+there (`KW_ReadClip` in `kw_music.c`), decoding it with stb_vorbis
+(`src/stb_vorbis.c`, public domain, compiled through `src/kw_vorbis.c`).
+Run the packing tool after any voice tool.
+
 **The flight menu** (`KW_TravelMenu`): the worlds in two columns of two
 groups each (Goodbye, Galaxy!; The Universe Is Toast!; Other adventures;
 More levels), left and right between the columns. A line under the list

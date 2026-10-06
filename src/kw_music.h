@@ -34,6 +34,9 @@ bool KW_SayLine(int world, const char *file); // (true: it is being spoken)
 bool KW_SayWorldLine(const char *name);
 void KW_LinePoll(void);
 void KW_LinesOver(void);
+// Is there a clip of this name (see kw_music.c: asked for as <NAME>.RAW,
+// kept as <NAME>.OGG)?
+bool KW_ClipIsThere(const char *file);
 // A clip by itself; the music is the caller's business (true: it plays).
 bool KW_Narrate(const char *file);
 // Several of them as one clip, in order (those that have one).
