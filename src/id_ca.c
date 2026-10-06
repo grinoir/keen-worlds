@@ -746,11 +746,26 @@ void CAL_SetupGrFile()
 	const char *graphName = CK_FILENAME(ca_graphFile, "EGAGRAPH.EXT");
 	ca_graphHandle = FS_OpenKeenFile(graphName);
 	if (!FS_IsFileValid(ca_graphHandle))
-		QuitF("Couldn't open %s!", graphName);
+		QuitF("Couldn't open %s!\n"
+		      "The game's own files are missing. Copy them into the\n"
+		      "folder of this program (see README.txt).", graphName);
 
 	// Find the size of the file. Some mods do not have the last entry in the ?GAHEAD,
 	// so we compute it like so.
 	ca_graphFileSize = FS_GetFileSize(ca_graphHandle);
+
+	// KEEN WORLDS: a header that points past the end of the graphics file
+	// belongs to another version of the game. Loading with it never ends
+	// (the decompressor reads nothing forever), so stop here and say so.
+	for (int offset = 0; offset + 2 < ca_graphHeadSize; offset += 3)
+	{
+		long start = ((uint8_t *)ca_graphStarts)[offset] | ((uint8_t *)ca_graphStarts)[offset + 1] << 8 | ((uint8_t *)ca_graphStarts)[offset + 2] << 16;
+		if (start != 0xFFFFFF && start > (long)ca_graphFileSize)
+			QuitF("%s is not the version this program has tables for.\n"
+			      "(%s points at byte %ld, the file has %ld.)\n"
+			      "See README.txt for the versions that fit.",
+				graphName, headName, start, (long)ca_graphFileSize);
+	}
 
 	// Read in the graphics headers (from TED's GFXINFOE)
 	// For some reason, keen decompresses these differently, not

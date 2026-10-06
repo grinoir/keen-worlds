@@ -25,7 +25,8 @@ from your own copy. You can start with Keen 4 alone; the others show as
 "not installed" in the ship's flight menu.
 
 If your Keen 6 is version 1.5, copy the files from the keen6-v1.5 folder
-over the ones here first.
+over the ones here first. Other versions of Keen 6 do not fit; the program
+says so when it starts instead of running.
 
 The fan games go in the mods folder. See mods/README.txt.
 

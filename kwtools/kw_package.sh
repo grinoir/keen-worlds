@@ -99,6 +99,9 @@ fill() {
 				[ -f "$PLAY/$f.CK$e" ] && cp "$PLAY/$f.CK$e" "$d/"
 			done
 		done
+		# The tables in play fit the games in play (an older Keen 6 has its own).
+		cp "$PLAY"/*.CK4 "$PLAY"/*.CK5 "$PLAY"/*.CK6 "$d/"
+		rm -f "$d"/CONFIG.CK?
 		[ -d "$PLAY/mods" ] && cp -r "$PLAY/mods/." "$d/mods/"
 		echo "This copy contains other people's games. It is for your own machines, not for handing out." > "$d/PRIVATE-COPY.txt"
 	fi
