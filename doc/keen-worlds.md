@@ -522,8 +522,19 @@ dialogue window of Foray in the Forest shows one of its strings beside a
 portrait (`FF_DialogWindow`), so a clip is named after the string's number
 and the window plays the clip of the string it shows. The janitor, Keen,
 Princess Lindsey, HAL and Spaceman Spiff; the game's mirrored, gargled and
-mouth-full lines are made the same way in sound. Its endings are not spoken
-(they are laid out word by word, with colours and alternatives).
+mouth-full lines are made the same way in sound. Its endings are text pages in the game's own layout language, which the
+viewer in `ck_text.c` now knows when Foray is running (`FF_HandleCommand`:
+conditions that pick the text by what Keen found, comments, coloured boxes,
+sprites and tiles as pictures, music, sounds, pauses, fonts, tabs; green
+pages). Because a page's text depends on its conditions, the endings are
+spoken by stretches of text between page marks and conditions: the viewer
+notes where the first word of each stretch it shows lies in the chunk
+(`help_units`) and plays `FF_<ENDING>_<nnnnn>.RAW`, made by
+`tools/kw_fitf_end_voice.py`, which walks the chunk the same way and tells
+the speaker by the text's colour and the portrait beside it. The "lose"
+ending (one sentence, a word at a time) is silent. `KW_AUTOCHUNK`,
+`KW_AUTOVOICE`, `KW_AUTOFLAGS`, `KW_AUTOCANS` and `KW_AUTOPAGES` show an
+ending in a scripted run, with a picture of each page.
 
 **The stories are read out.** When a world's story scrolls
 (`KW_PlayWorldStory`), the narrator reads it (`STORY_<ID>.RAW`,

@@ -193,6 +193,69 @@ bool KW_SayWorldLine(const char *name)
 	return false;
 }
 
+// Several lines one after another as one clip (with a short gap between
+// them): those of the names that have a clip in the world Keen is in.
+bool KW_SayWorldLines(const char *const *names, int count)
+{
+	static const struct { int world; const char *prefix; } spoken[] = {{KW_FITF, "FF"}};
+	const char *prefix = NULL;
+	for (size_t i = 0; i < sizeof(spoken) / sizeof(spoken[0]); ++i)
+		if (spoken[i].world == KW_CurrentWorld())
+			prefix = spoken[i].prefix;
+	KW_StopVoice();
+	if (!prefix || SD_GetSoundMode() == sdm_Off)
+		return false;
+	int16_t *all = NULL;
+	long total = 0;
+	const long gap = KW_VOICE_RATE / 4;
+	for (int n = 0; n < count; ++n)
+	{
+		char path[600];
+		snprintf(path, sizeof(path), "%s/voice/%s_%s.RAW", fs_keenPath, prefix, names[n]);
+		FILE *f = fopen(path, "rb");
+		if (!f)
+			continue;
+		fseek(f, 0, SEEK_END);
+		long samples = ftell(f) / 2;
+		fseek(f, 0, SEEK_SET);
+		int16_t *grown = (int16_t *)realloc(all, (total + gap + samples) * sizeof(int16_t));
+		if (grown)
+		{
+			all = grown;
+			if (total)
+			{
+				memset(all + total, 0, gap * sizeof(int16_t));
+				total += gap;
+			}
+			long got = (long)fread(all + total, sizeof(int16_t), samples, f);
+			for (long i = 0; i < got; ++i)
+				all[total + i] = (int16_t)CK_Cross_SwapLE16((uint16_t)all[total + i]);
+			total += got;
+			if (getenv("KW_AUTOTALK"))
+				printf("KW_AUTOTALK: %s_%s.RAW (%.1f s)\n", prefix, names[n], got / (double)KW_VOICE_RATE);
+		}
+		fclose(f);
+	}
+	fflush(stdout);
+	if (!total)
+	{
+		free(all);
+		return false;
+	}
+	SD_StopVoice();
+	free(kw_clip);
+	kw_clip = all;
+	kw_clipSamples = total;
+	if (!kw_ducked && !kw_musicHeld)
+	{
+		SD_FadeAdLibVolume(0, 300);
+		VL_DelayTics(22);
+		kw_ducked = true;
+	}
+	KW_StartClip();
+	return true;
+}
+
 void KW_LinePoll(void)
 {
 	if (kw_ducked && !KW_VoiceSpeaking())

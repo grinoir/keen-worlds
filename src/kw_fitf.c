@@ -1321,7 +1321,13 @@ static void FF_HandleLevelDone(void)
 
 static void FF_Ending(int textChunk, int song)
 {
+	// KEEN WORLDS: the endings are spoken (tools/kw_fitf_end_voice.py)
+	extern const char *ck_textPagesVoice;
+	ck_textPagesVoice = textChunk == FF_T_END_WIN ? "ENDWIN" : textChunk == FF_T_END_ALL ? "ENDALL" :
+		textChunk == FF_T_END_CHEAT ? "ENDCHEAT" : textChunk == FF_T_END_MINIMUM ? "ENDMIN" :
+		textChunk == FF_T_END_TRICKERY ? "ENDTRICK" : NULL;
 	CK_ShowTextPages(textChunk, song, false);
+	ck_textPagesVoice = NULL;
 	// The engine's own ending text leaves a cache level pushed, which Keen
 	// Worlds pops afterwards (KW_AfterWorldEnding). Ours doesn't, so push one.
 	CA_UpLevel();

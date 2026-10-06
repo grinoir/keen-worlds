@@ -36,6 +36,8 @@ void KW_LinePoll(void);
 void KW_LinesOver(void);
 // A clip by itself; the music is the caller's business (true: it plays).
 bool KW_Narrate(const char *file);
+// Several of them as one clip, in order (those that have one).
+bool KW_SayWorldLines(const char *const *names, int count);
 // Cut the clip short (its card was put away).
 void KW_StopVoice(void);
 // Something is about to be said: music that would start now stays off.

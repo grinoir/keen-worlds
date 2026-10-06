@@ -300,8 +300,10 @@ void VHB_DrawTile16(int x, int y, int tile)
 	x += VL_GetScrollX() & 8;
 	y += VL_GetScrollY();
 
+	// KEEN WORLDS: these two drew an 8 pixel tile of that number (nothing
+	// used them before Foray in the Forest's text pages did)
 	if (VH_MarkUpdateBlock(x, y, x + 15, y + 15))
-		VH_DrawTile8(x, y, tile);
+		VH_DrawTile16(x, y, tile);
 }
 
 void VHB_DrawTile16M(int x, int y, int tile)
@@ -310,7 +312,7 @@ void VHB_DrawTile16M(int x, int y, int tile)
 	y += VL_GetScrollY();
 
 	if (VH_MarkUpdateBlock(x, y, x + 15, y + 15))
-		VH_DrawTile8M(x, y, tile);
+		VH_DrawTile16M(x, y, tile);
 }
 
 void VHB_DrawBitmap(int x, int y, int chunk)

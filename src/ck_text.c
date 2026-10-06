@@ -124,6 +124,14 @@ void TimedPicCommand(void)
 // wait for the sound, ^Q quiet, ^D a pause, ^F the font, ^H the high scores.
 bool FF_IsActive(void);
 bool FF_TextCondition(int number);
+// What a page of its says depends on its conditions, so its pages are spoken
+// by the stretches of text between page marks and conditions: each stretch
+// that is shown is noted by where its first word is in the text
+// (help_units), and its clip is named after that place
+// (tools/kw_fitf_end_voice.py).
+static const char *help_textStart;
+static int help_units[12], help_numUnits;
+static bool help_unitPending;
 void FF_StartMusic(uint16_t song, bool repeat);
 #define HELP_BACKCOLOUR (FF_IsActive() ? 2 : 4)
 
@@ -180,6 +188,7 @@ static bool FF_HandleCommand(void)
 			while (!(help_ptr[0] == '^' && CK_Cross_toupper(help_ptr[1]) == 'I') &&
 				!(help_ptr[0] == '^' && CK_Cross_toupper(help_ptr[1]) == 'E'))
 				help_ptr++;
+		help_unitPending = true;
 		return true;
 	}
 	case 'M':
@@ -305,11 +314,13 @@ void HandleCommand(void)
 		}
 		else if (FF_IsActive() && help_pic >= ca_gfxInfoE.offTiles16 && help_pic < ca_gfxInfoE.offTiles16 + ca_gfxInfoE.numTiles16)
 		{
+			CA_CacheGrChunk(help_pic); // (the level's tiles are not kept while text is shown)
 			VHB_DrawTile16(help_x & ~7, help_y, help_pic - ca_gfxInfoE.offTiles16);
 			w = h = 16;
 		}
 		else if (FF_IsActive() && help_pic >= ca_gfxInfoE.offTiles16m && help_pic < ca_gfxInfoE.offTiles16m + ca_gfxInfoE.numTiles16m)
 		{
+			CA_CacheGrChunk(help_pic);
 			VHB_DrawTile16M(help_x & ~7, help_y, help_pic - ca_gfxInfoE.offTiles16m);
 			w = h = 16;
 		}
@@ -405,6 +416,14 @@ void HandleWord(void)
 	uint16_t w, h, maxx;
 	int16_t i;
 
+	// KEEN WORLDS: the first word of a stretch of text (see help_units)
+	if (help_unitPending && help_textStart)
+	{
+		if (help_numUnits < (int)(sizeof(help_units) / sizeof(help_units[0])))
+			help_units[help_numUnits++] = (int)(help_ptr - help_textStart);
+		help_unitPending = false;
+	}
+
 	/* Read a word into the buffer */
 	buf[0] = *help_ptr++;
 	i = 1;
@@ -486,6 +505,8 @@ void PageLayout(int show_status)
 	US_SetPrintY(10);
 	help_line = 0;
 	help_full_page = 0;
+	help_numUnits = 0;
+	help_unitPending = true;
 
 	/* Skip any nonprinting characters at the start */
 	while (*help_ptr <= ' ')
@@ -810,6 +831,7 @@ void CK_ShowTextPages(int textChunk, int song, bool blackBackground)
 	CA_CacheGrChunk(textChunk);
 	MM_SetLock(&ca_graphChunks[textChunk], true);
 	help_ptr = (char *)ca_graphChunks[textChunk];
+	help_textStart = help_ptr;
 	CacheLayoutGraphics();
 	if (song >= 0)
 		StartMusic(song);
@@ -817,13 +839,26 @@ void CK_ShowTextPages(int textChunk, int song, bool blackBackground)
 	bool quit = false;
 	while (help_cur_page < help_num_pages && !quit)
 	{
-		if (ck_textPagesVoice)
+		if (ck_textPagesVoice && !FF_IsActive())
 		{
 			char clip[48];
 			snprintf(clip, sizeof(clip), "%s_%02d", ck_textPagesVoice, (int)help_cur_page);
 			KW_SayWorldLine(clip);
 		}
 		PageLayout(0);
+		if (ck_textPagesVoice && FF_IsActive())
+		{
+			// (Foray in the Forest: the stretches of text this page showed,
+			// one after another)
+			static char names[12][48];
+			const char *list[12];
+			for (int u = 0; u < help_numUnits; ++u)
+			{
+				snprintf(names[u], sizeof(names[u]), "%s_%05d", ck_textPagesVoice, help_units[u]);
+				list[u] = names[u];
+			}
+			KW_SayWorldLines(list, help_numUnits);
+		}
 		IN_ClearKeysDown();
 		while (true)
 		{
@@ -852,6 +887,7 @@ void CK_ShowTextPages(int textChunk, int song, bool blackBackground)
 	}
 
 	KW_LinesOver();
+	help_textStart = NULL;
 	MM_SetLock(&ca_graphChunks[textChunk], false);
 	MM_FreePtr(&ca_graphChunks[textChunk]);
 	if (song >= 0)
