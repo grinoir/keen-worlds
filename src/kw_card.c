@@ -19,7 +19,7 @@ const char *kw_cardBody[] = {
 	"Tying together Keen 4, 5, 6, and fan games.",
 	"Visit completed levels and more.",
 	"",
-	"Version " KW_VERSION ", the " KW_VERSION_NAME ".",
+	"Version " KW_VERSION " (" KW_VERSION_NAME ")",
 	NULL,
 };
 

@@ -927,9 +927,11 @@ tools`), because they find the games and the play folder from there.
   comes from.
 
 **The version** is written once, in `src/kw_version.h` (`KW_VERSION`,
-`KW_VERSION_NAME`): 0.1.0, "proof of concept", the first version handed to
-testers. 0.x is before the first public release; the last number counts
-fixes. It is the first line of the log, a line on the quit card, the
+`KW_VERSION_NAME`): 0.9.0, "beta". Every world can be played from landing
+to ending, and testers are finding out whether that holds; 1.0 is the
+first release for everyone, and the last number counts fixes. More life in
+saved levels comes after 1.0 (1.1, 1.2, ...): new content, not a missing
+part. It is the first line of the log, a line on the quit card, the
 archive's `VERSION.txt`, and the archives' names
 (`KeenWorlds-<version>-<commit>-...`).
 
