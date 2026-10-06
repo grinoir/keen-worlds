@@ -941,3 +941,15 @@ made by `kwtools/kw_story_voice.py . omnispeak/data/voice worlds` from
 (`KW_NarrateOverMusic`), and comes back up if he finishes before the
 scroll does (`KW_LinePoll` in the scroll loop); if the scroll finishes
 first, the dark screen waits for him or a key, as with the worlds' stories.
+
+**The guide (F1).** F1 opens Keen Worlds' own guide in every world, from
+the menu and while playing (not in the dream): `KW_ShowGuide` in
+`ck_text.c`, ten pages written there in the markup of the games' help
+texts (`kw_guideText`; a colour change only counts at the start of a
+line, a page holds 16 lines). It takes the place of the episodes' help and
+order screens. `KW_AUTOGUIDE=prefix` saves a picture of each page and
+leaves. Keen 4's menu picture has "Press F1 for Help and Order Info"
+lettered on the watch's lower edge; `US_PlainWatchEdge` paints that edge
+plain, as Keen 5's and 6's watches have it, whenever the picture shown has
+lettering there. The quit card (`kw_card.c`) and the tester's guide name
+the same things as the guide does; a change to one belongs in the others.

@@ -9,6 +9,36 @@ few people have done it yet. Things will be wrong. Finding them is the
 point. What is known to be missing is listed in section 5.
 
 
+What Keen Worlds adds
+---------------------
+
+  - One galaxy. Thirteen worlds, the ship and a dream in one game, with
+    one saved game for all of it.
+  - A ship to walk around in. The Megarocket has a cabin, a flight console
+    to choose a world at, a hatch to step out of, and a bed. The ship's
+    computer says where it has landed.
+  - Everybody talks. Every conversation in every world is spoken, each
+    character in a voice of its own, Keen too. The music steps aside
+    while they speak.
+  - Stories read aloud. A narrator reads each world's story the first
+    time Keen flies there, and Keen Worlds' own at the start.
+  - Worlds that remember. A level Keen has finished can be visited again
+    and may have changed: in the Border Village on Gnosticus IV people
+    have moved in, and there is an inn.
+  - Two ways to play. Free Flight, with every world open, or the
+    Chronicle, where the worlds open in the order of the story.
+  - A dream. Go to bed in the ship and Keen dreams Keen Dreams, the lost
+    episode.
+  - A beginning and an end of its own: a title, a tune, a story, and an
+    ending for when every world is saved.
+  - Credit where it is due. Every world names its makers when Keen first
+    lands there.
+  - Nothing to convert. A fan game is unpacked into its folder, and it is
+    a world.
+
+The same is in the game: press F1 for the guide.
+
+
 1. What you need to add
 -----------------------
 
@@ -55,6 +85,7 @@ choose where to fly. Walk to the hatch to go out. The bed is for sleeping.
   Space        shoot
   Enter        status
   Esc          menu: save, load, sound, keys
+  F1           the guide
   F11          full screen
 
 A voice speaks the conversations. Press a key to move a text on.

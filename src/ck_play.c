@@ -1197,10 +1197,13 @@ void CK_CheckKeys()
 
 #ifdef HAS_HELPSCREEN
 	// HELP
-	if ((ck_currentEpisode->ep != EP_CK6) && (IN_GetLastScan() == IN_SC_F1))
+	// KEEN WORLDS: its guide, in every world (ck_text.c); not in the dream,
+	// whose game has no pages of this kind.
+	if (!KD_IsActive() && (IN_GetLastScan() == IN_SC_F1))
 	{
+		void KW_ShowGuide(void);
 		StopMusic();
-		HelpScreens();
+		KW_ShowGuide();
 		StartMusic(ck_gameState.currentLevel);
 
 		// Force scorebox redraw if it's enabled

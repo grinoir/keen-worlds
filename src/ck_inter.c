@@ -1542,6 +1542,13 @@ void CK_DrawStarWarsEx(bool handleDemoKeys)
 
 void CK_ShowTitleScreen()
 {
+	// (KW_AUTOGUIDE=prefix: the scripted test saves the guide's pages and leaves)
+	if (getenv("KW_AUTOGUIDE"))
+	{
+		void KW_ShowGuide(void);
+		KW_ShowGuide();
+		Quit(NULL);
+	}
 	// scrollofs = 0;
 	// KEEN WORLDS: its own title picture (kw_world.c)
 	if (!KW_DrawTitlePicture())

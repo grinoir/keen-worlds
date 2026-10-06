@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <stdlib.h>
 #include <string.h>
 
+#include "kw_version.h"
 #include "id_ca.h"
 #include "id_in.h"
 #include "id_us.h"
@@ -812,6 +813,191 @@ void HelpScreens(void)
 }
 
 #endif
+
+// KEEN WORLDS: the guide, on F1 in every world (in place of the episode's
+// own help and order screens). It is written here, in the markup of the
+// games' help texts: ^P begins a page, ^cX at the start of a line sets its
+// colour, and a line runs on until its end and is folded to the page: about
+// 31 letters across, 16 lines down.
+static char kw_guideText[] =
+	"^P\n"
+	"^cFCOMMANDER KEEN: WORLDS\n"
+	"^cBVersion " KW_VERSION " (" KW_VERSION_NAME ")\n"
+	"\n"
+	"^cEOne Megarocket. A galaxy that remembers.\n"
+	"\n"
+	"^cEKeen 4, 5 and 6 and the fan games are one galaxy here. Keen flies between them in the Bean-with-Bacon Megarocket, and what he does on a world stays done.\n"
+	"\n"
+	"^cBArrows turn the pages. Esc goes back.\n"
+	"^P\n"
+	"^cFWHAT IS NEW\n"
+	"\n"
+	"^cFOne galaxy\n"
+	"^cEThirteen worlds, the ship and a dream, in one game with one saved game.\n"
+	"\n"
+	"^cFA ship to walk around in\n"
+	"^cEA cabin, a flight console, a hatch and a bed. The ship's computer says where it has landed.\n"
+	"\n"
+	"^cFEverybody talks\n"
+	"^cEEvery conversation is spoken, each character in a voice of its own. The music steps aside.\n"
+	"^P\n"
+	"^cFWHAT IS NEW\n"
+	"\n"
+	"^cFStories read aloud\n"
+	"^cEThe narrator reads each world's story the first time Keen flies there.\n"
+	"\n"
+	"^cFWorlds that remember\n"
+	"^cEA level Keen has finished can be visited again. In the Border Village on Gnosticus IV people have moved in, and there is an inn.\n"
+	"\n"
+	"^cFA dream\n"
+	"^cEGo to bed in the ship and Keen dreams Keen Dreams, the lost episode.\n"
+	"^P\n"
+	"^cFWHAT IS NEW\n"
+	"\n"
+	"^cFA beginning and an end\n"
+	"^cEA title, a tune, a story, and an ending for when every world is saved.\n"
+	"\n"
+	"^cFCredit where it is due\n"
+	"^cEEvery world names its makers when Keen first lands there.\n"
+	"\n"
+	"^cFNothing to convert\n"
+	"^cEA fan game is unpacked into its folder, and it is a world.\n"
+	"^P\n"
+	"^cFTHE SHIP\n"
+	"\n"
+	"^cEA new game begins inside the Megarocket.\n"
+	"\n"
+	"^cFThe flight console\n"
+	"^cEPush up at it to choose a world. A world in grey is not installed, or not open yet: choose it to read why.\n"
+	"\n"
+	"^cFThe hatch\n"
+	"^cEWalk to it to step out onto the world the ship stands on.\n"
+	"\n"
+	"^cFThe bed\n"
+	"^cEPush up at it to sleep. Do it again in the dream, or press Esc, to wake.\n"
+	"^P\n"
+	"^cFTWO WAYS TO PLAY\n"
+	"\n"
+	"^cFFree Flight\n"
+	"^cEEvery world is open, in any order.\n"
+	"\n"
+	"^cFThe Chronicle\n"
+	"^cEThe worlds of the story open in its order: saving one opens the next. Worlds outside the story are open from the start.\n"
+	"\n"
+	"^cFTake care\n"
+	"^cEKrisle is a one-way trip. The ship cannot leave until that world is saved. The game warns first.\n"
+	"^P\n"
+	"^cFTHE KEYS\n"
+	"\n"
+	"^cEArrows: move, look, use doors\n"
+	"^cECtrl: jump\n"
+	"^cEAlt: pogo stick\n"
+	"^cESpace: shoot\n"
+	"^cEEnter: what Keen has\n"
+	"^cEEsc: menu (save, load, keys)\n"
+	"^cEF1: this guide\n"
+	"^cEF11: full screen\n"
+	"\n"
+	"^cEWhile someone speaks, a key moves the text on. Where Keen has a choice of words, the arrows choose.\n"
+	"^P\n"
+	"^cFTHE WORLDS\n"
+	"\n"
+	"^cEKeen Worlds brings the ship and the voices. The games are yours to add: Keen 4, 5 and 6 beside the program, each fan game unpacked into its folder under mods.\n"
+	"\n"
+	"^cEREADME.txt, beside the program, says which files and where each game comes from.\n"
+	"\n"
+	"^cEA missing world shows as not installed at the flight console. Choose it to read what it is.\n"
+	"^P\n"
+	"^cFSTILL TO COME\n"
+	"\n"
+	"^cEThis is a beta. Every world can be played, but few people have played them here yet.\n"
+	"\n"
+	"^cFLife in saved levels\n"
+	"^cEOnly the Border Village has its people so far.\n"
+	"\n"
+	"^cFA switch for the voices\n"
+	"^cEThey cannot be turned down by themselves yet.\n"
+	"\n"
+	"^cFA menu in the dream\n"
+	"^cESave in the ship for now.\n"
+	"^P\n"
+	"^cFWHO MADE IT\n"
+	"\n"
+	"^cECommander Keen is by id Software.\n"
+	"\n"
+	"^cEEvery fan game is the work of its makers. Keen Worlds only joins them, and each says who made it when Keen lands there.\n"
+	"\n"
+	"^cEThe engine is Omnispeak, by David Gow and others.\n"
+	"\n"
+	"^cEKeen Worlds was linked together by GriNoir.\n"
+	"\n"
+	"^cFFly well, Commander.\n"
+	"^E\n";
+
+void KW_ShowGuide(void)
+{
+	int16_t oldfont = US_GetPrintFont();
+	int8_t oldColour = US_GetPrintColour();
+	bool changed = true;
+	// (KW_AUTOGUIDE=prefix: the scripted test saves a picture of each page)
+	const char *shots = getenv("KW_AUTOGUIDE");
+
+	VL_SetScrollCoords(0, 0);
+	VL_ClearScreen(4);
+	US_SetPrintFont(0);
+	help_ptr = kw_guideText;
+	CacheLayoutGraphics();
+	IN_ClearKeysDown();
+	do
+	{
+		if (changed)
+		{
+			changed = false;
+			PageLayout(1);
+			VL_SwapOnNextPresent();
+			VL_Present();
+			if (shots)
+			{
+				void KW_DumpScreenTo(const char *path);
+				char path[600];
+				snprintf(path, sizeof(path), "%s%02d.ppm", shots, (int)help_cur_page);
+				KW_DumpScreenTo(path);
+				if (help_cur_page >= help_num_pages)
+					break;
+				changed = true;
+				continue;
+			}
+		}
+		IN_ClearKeysDown();
+		while (IN_GetLastScan() == IN_SC_None)
+			IN_PumpEvents();
+		switch (IN_GetLastScan())
+		{
+		case IN_SC_UpArrow:
+		case IN_SC_PgUp:
+		case IN_SC_LeftArrow:
+			if (help_cur_page <= 1)
+				break;
+			BackPage(); /* (to the top of this page, then of the one before) */
+			BackPage();
+			changed = true;
+			break;
+		case IN_SC_RightArrow:
+		case IN_SC_DownArrow:
+		case IN_SC_PgDown:
+		case IN_SC_Enter:
+		case IN_SC_Space:
+			if (help_cur_page >= help_num_pages)
+				break;
+			changed = true;
+			break;
+		}
+	} while (IN_GetLastScan() != IN_SC_Escape);
+	IN_ClearKeysDown();
+	US_SetPrintFont(oldfont);
+	US_SetPrintColour(oldColour);
+	VL_ClearScreen(4);
+}
 
 // KEEN WORLDS: show a text chunk's pages the way the ending text is shown
 // (Atroxian Realm's story and dialogue screens), with a song while it runs,

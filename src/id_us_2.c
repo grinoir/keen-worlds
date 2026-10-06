@@ -92,6 +92,8 @@ US_CardItem main_menu_items[] = {
 	{US_ITEM_None, 0, IN_SC_None, NULL, US_Comm_None, NULL, 0, 0}};
 
 //AS:00A2
+void KW_ShowGuide(void);
+
 US_Card main_menu = {32, 4, CK_CHUNKID(PIC_MENUCARD), 0, main_menu_items, NULL, 0, 0, 0};
 
 #ifndef CK_VANILLA
@@ -379,12 +381,53 @@ void USL_DrawCard()
 	}
 }
 
+// KEEN WORLDS: Keen 4's watch has "Press F1 for Help and Order Info"
+// lettered on its lower edge. There is nothing to order here, and F1 is
+// Keen Worlds' guide in every world, so the edge is painted plain, as
+// Keen 5's and Keen 6's watches have it. Told by the picture itself (a
+// row of the edge that isn't all grey), so a fan game with the same
+// lettering loses it too and one with an edge of its own keeps it.
+void US_PlainWatchEdge(bool buffered)
+{
+	void (*bar)(int, int, int, int, int) = buffered ? VHB_Bar : VH_Bar;
+	int chunk = CK_CHUNKNUM(PIC_WRISTWATCH);
+	VH_BitmapTableEntry dim = VH_GetBitmapTableEntry(chunk - ca_gfxInfoE.offBitmaps);
+	const uint8_t *pic = (const uint8_t *)ca_graphChunks[chunk];
+	if (!pic || dim.width != 40 || dim.height != 200)
+		return;
+	bool lettered = false;
+	for (int byte = 184 * 40 + 6; byte < 184 * 40 + 33 && !lettered; ++byte)
+		lettered = pic[byte] != 0xFF || pic[8000 + byte] != 0xFF || pic[16000 + byte] != 0xFF || pic[24000 + byte] != 0;
+	if (!lettered)
+		return;
+	// The edge with its screws' highlights, the shadow under it, the feet.
+	bar(33, 180, 243, 7, 7);
+	bar(41, 180, 1, 1, 15);
+	bar(44, 180, 1, 1, 15);
+	bar(264, 180, 1, 1, 15);
+	bar(267, 180, 1, 1, 15);
+	bar(42, 181, 2, 1, 15);
+	bar(265, 181, 2, 1, 15);
+	bar(33, 187, 243, 1, 0);
+	bar(33, 188, 242, 1, 0);
+	for (int row = 189; row <= 190; ++row)
+	{
+		int foot = row == 189 ? 15 : 7;
+		bar(33, row, 22, 1, 3);
+		bar(55, row, 203, 1, 0);
+		bar(56, row, 9, 1, foot);
+		bar(248, row, 9, 1, foot);
+		bar(258, row, 18, 1, 3);
+	}
+}
+
 void US_DrawCards()
 {
 	// Draw the watch screen and the active card
 	if (us_currentCard->items || us_currentCard->gfxChunk)
 	{
 		VHB_DrawBitmap(0, 0, CK_CHUNKNUM(PIC_WRISTWATCH));
+		US_PlainWatchEdge(true);
 		USL_DrawCard();
 	}
 
@@ -1134,16 +1177,12 @@ void US_RunCards()
 				action_taken = true;
 				break;
 			case IN_SC_F1:
-#ifdef HAS_HELPSCREEN
-				if (ck_currentEpisode->ep != EP_CK6)
-				{
-					HelpScreens();
-					US_DrawCards();
-					action_taken = true;
-					break;
-				}
-#endif
-				// Fall-through
+				// KEEN WORLDS: its guide, in every world (ck_text.c), in
+				// place of the episode's help and order screens.
+				KW_ShowGuide();
+				US_DrawCards();
+				action_taken = true;
+				break;
 			default:
 				if (lastScan == in_kbdControls.jump || lastScan == in_kbdControls.pogo)
 				{

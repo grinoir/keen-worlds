@@ -1376,6 +1376,7 @@ bool CK_PaddleWar(US_CardMsg msg, US_CardItem *item)
 
 	/* Draw the watch */
 	VH_DrawBitmap(0, 0, CK_CHUNKNUM(PIC_WRISTWATCH));
+	US_PlainWatchEdge(false); // KEEN WORLDS: no "F1 for Help and Order Info" (id_us_2.c)
 
 	/* Draw the PaddleWar title */
 	VH_DrawBitmap(130, 48, CK_CHUNKNUM(PIC_PADDLEWAR));
