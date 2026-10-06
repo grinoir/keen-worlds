@@ -32,7 +32,7 @@ bool US_TerminalOk()
 {
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 	DWORD consoleMode;
-	US_Win32ConsoleMode mode = CFG_GetConfigEnum("win32_consoleMode", US_Win32ConsoleMode_Strings, US_W32Console_IfAvailable);
+	US_Win32ConsoleMode mode = (US_Win32ConsoleMode)CFG_GetConfigEnum("win32_consoleMode", US_Win32ConsoleMode_Strings, US_W32Console_IfAvailable);
 
 	if (mode == US_W32Console_Never)
 		return false;

@@ -1,0 +1,26 @@
+THE FAN GAMES
+=============
+
+Each fan game is a world of its own in the flight menu. Keen Worlds does
+not contain them: they are their authors' work. A world whose files are
+missing shows as "not installed", and choosing it in the flight menu
+tells what it is and where it comes from.
+
+One folder for each world goes here:
+
+  keen7    Krodacia             The Keys of Krodacia
+  keen8    Calidune             Dead in the Desert
+  keen9    HUB Command Center   Battle of the Brains
+  keen95   Aspermontis          The Eight Accumulators
+  bounty   Meurglys III         Bounty Hunting Brouhaha
+  ck55     The Omegamatic II    Keen 5.5
+  asylum   Address Unknown      Asylum
+  osi      The Shikadi Station  Operation Station Infiltration
+  arealm   Krisle               Atroxian Realm
+  fitf     Gnosticus Pi         Foray in the Forest
+  dreams   Tuberia              Keen Dreams
+
+Most of these games were not made for this engine. Their files have to be
+converted first, with the tools in the source (kwtools/). There is no
+one-step setup for that yet; until there is, ask the person who gave you
+this test version for the converted folders.
