@@ -1364,7 +1364,7 @@ static const char *KW_ChartStory(int world)
 // The scroll itself, for the current world (whose graphics must be loaded).
 static void KW_PlayWorldStory(void)
 {
-	extern const char *ck_starWarsChartText;
+	extern const char *ck_starWarsTextOverride;
 	const char *chart = KW_ChartStory(kw_currentWorld);
 	kw_storyShown[kw_currentWorld] = true;
 	// The game's own title first, for a few seconds or until a key.
@@ -1405,9 +1405,16 @@ static void KW_PlayWorldStory(void)
 	for (char *c = clip; *c && *c != '.'; ++c)
 		*c = (char)toupper((unsigned char)*c);
 	ck_starWarsNarrated = KW_Narrate(clip);
-	ck_starWarsChartText = chart;
+	// A chart page is Keen Worlds' own text, so it scrolls over Keen
+	// Worlds' own picture, as its own story does, not over the world's.
+	// (Bounty Hunting Brouhaha's picture for this, which its game never
+	// shows, is a note to people taking the mod apart: "HEY YOU! STOP
+	// TEARING MY MOD APART! haha jk have fun".)
+	ck_starWarsTextOverride = chart;
 	CK_DrawStarWarsEx(false);
-	ck_starWarsChartText = NULL;
+	ck_starWarsTextOverride = NULL;
+	if (chart)
+		VL_SetCustomColors(NULL);
 	if (ck_starWarsNarrated && !IN_GetLastScan())
 		while (KW_ClipPlaying() && !IN_UserInput(7, false))
 			;

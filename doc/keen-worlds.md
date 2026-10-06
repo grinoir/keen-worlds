@@ -968,7 +968,9 @@ the same things as the guide does; a change to one belongs in the others.
 - Bounty Hunting Brouhaha and Keen Asylum came with no story, and used to
   scroll their base game's (Keen 4's, Keen 5's). They scroll a page "from
   the ship's chart" instead, in Keen Worlds' words (`kw_chartBounty`,
-  `kw_chartAsylum`, `ck_starWarsChartText`), read by the narrator. Asylum
+  `kw_chartAsylum`), read by the narrator, over Keen Worlds' own story picture
+  (the picture Bounty Hunting Brouhaha has in that place, which its game
+  never shows, is a joke note to people taking the mod apart). Asylum
   has no title picture either; Keen 5's is no longer shown for it.
 - The score box has no frame in Foray in the Forest and Atroxian Realm
   because those games drew it that way; it is their sprite, shown as it
