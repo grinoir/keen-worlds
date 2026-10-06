@@ -1308,13 +1308,17 @@ void CK_TranslateString(const char *input, char *output)
 // KEEN WORLDS: another text to scroll than the episode's story (Keen Worlds'
 // own: KW_PlayOwnStory in kw_world.c), or NULL.
 const char *ck_starWarsTextOverride = NULL;
+// KEEN WORLDS: other words for the world's own scroll, with the world's
+// own star field and nothing else changed (a world that came with no
+// story: kw_world.c).
+const char *ck_starWarsChartText = NULL;
 // KEEN WORLDS: the narrator is reading the story (KW_PlayWorldStory): no music.
 bool ck_starWarsNarrated = false;
 
 void CK_DrawSWText()
 {
 	char currentTextLine[81];
-	const char *storyTextIndex = ck_starWarsTextOverride ? ck_starWarsTextOverride : CK_STRING(ck_str_storyText);
+	const char *storyTextIndex = ck_starWarsTextOverride ? ck_starWarsTextOverride : ck_starWarsChartText ? ck_starWarsChartText : CK_STRING(ck_str_storyText);
 
 	// We want to render to a 336px wide texture.
 	US_SetWindowX(0);

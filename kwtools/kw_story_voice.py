@@ -28,7 +28,7 @@ WORLDS = {   # id: the base episode's strings file (or None), the world's own fo
     'keen95': (K4, 'keen95'), 'bounty': (K4, 'bounty'), 'ck55': (K5, 'ck55'), 'asylum': (K5, 'asylum'),
     'osi': (None, 'osi'), 'arealm': (None, 'arealm'), 'fitf': (None, 'fitf'),
 }
-SAID = {'#': 'Pi', 'VIII': 'Eight', 'BwB': 'Bean-with-Bacon', 'doesnt': "doesn't", '&': 'and'}
+SAID = {'Meurglys III': 'Meurglys Three', '#': 'Pi', 'VIII': 'Eight', 'BwB': 'Bean-with-Bacon', 'doesnt': "doesn't", '&': 'and'}
 
 
 def story(root, base, folder):
@@ -56,17 +56,19 @@ def spoken(text):
             continue
         for a, b in SAID.items():
             p = p.replace(a, b)
-        if p[-1] not in '.!?':
+        if p[-1] not in '.!?:':
             p += '.'
         out += [s.strip() for s in re.split(r'(?<=[.!?])\s+(?=[A-Z"])', p) if s.strip()]
     return out
 
 
-def own_story(root):
-    """Keen Worlds' own story (kw_ownStory in kw_world.c), read while it
-    scrolls after the title: STORY_WORLDS.RAW."""
+def own_story(root, name='kw_ownStory'):
+    """A story written in kw_world.c: Keen Worlds' own (kw_ownStory, read
+    while it scrolls after the title: STORY_WORLDS.RAW), or the page from
+    the ship's chart of a world that came with no story (kw_chartBounty,
+    kw_chartAsylum)."""
     src = open(os.path.join(root, 'omnispeak/src/kw_world.c'), encoding='latin1').read()
-    m = re.search(r'kw_ownStory\[\] =((?:\s*"(?:\\.|[^"\\])*")+);', src)
+    m = re.search(name + r'\[\] =((?:\s*"(?:\\.|[^"\\])*")+);', src)
     text = ''.join(re.findall(r'"((?:\\.|[^"\\])*)"', m.group(1)))
     return text.replace('-\\n', '-')        # (a word broken at its hyphen for the screen)
 
@@ -78,6 +80,9 @@ def main(root, folder, only=None):
         if text:
             clips['STORY_%s.RAW' % world.upper()] = spoken(text)
     clips['STORY_WORLDS.RAW'] = spoken(own_story(root))
+    # (these two came with no story; without this they would get their base game's)
+    clips['STORY_BOUNTY.RAW'] = spoken(own_story(root, 'kw_chartBounty'))
+    clips['STORY_ASYLUM.RAW'] = spoken(own_story(root, 'kw_chartAsylum'))
     if only:
         clips = {name: lines for name, lines in clips.items() if name[6:-4].lower() in only}
     os.makedirs(folder, exist_ok=True)

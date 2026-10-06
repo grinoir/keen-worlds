@@ -994,9 +994,25 @@ static bool kw_launchRequested = false;
 
 #include "kw_gate_art.h"
 
+// The gate also stands on the maps of the level packs that keep Keen 5's
+// dock: The Omegamatic II (Keen 5.5: the same map) and Address Unknown
+// (Asylum: the same dock, elsewhere on a larger map). Their levels use none
+// of the gate's tile slots. kw_gateDX/DY: how far this world's dock is
+// from Keen 5's.
+static int kw_gateDX, kw_gateDY;
+
+static bool KW_HasKeen5Dock(void)
+{
+	kw_gateDX = kw_currentWorld == KW_ASYLUM ? 21 : 0;
+	kw_gateDY = kw_currentWorld == KW_ASYLUM ? -22 : 0;
+	return kw_currentWorld == KW_KEEN5 || kw_currentWorld == KW_CK55 || kw_currentWorld == KW_ASYLUM;
+}
+
 // The solid gangway knob is replaced, not drawn over.
 static bool KW_GateDropsUnderlay(int x, int y)
 {
+	x -= kw_gateDX;
+	y -= kw_gateDY;
 	return y == 95 && (x == 29 || x == 30);
 }
 
@@ -1005,7 +1021,7 @@ static bool KW_GateDropsUnderlay(int x, int y)
 #define KW_KEEN5_SHIP_NOSE_X 31
 static bool KW_GateNoseIsSolid(int x, int y)
 {
-	return x == KW_KEEN5_SHIP_NOSE_X && y == KW_GATE_ORIGIN_Y + 1;
+	return x - kw_gateDX == KW_KEEN5_SHIP_NOSE_X && y - kw_gateDY == KW_GATE_ORIGIN_Y + 1;
 }
 
 static const KW_Art kw_gateArt = {
@@ -1017,9 +1033,16 @@ static const KW_Art kw_gateArt = {
 	false, false, KW_GateNoseIsSolid,
 };
 
+static const KW_Art kw_asylumGateArt = {
+	KW_GATE_ORIGIN_X + 21, KW_GATE_ORIGIN_Y - 22, KW_GATE_TILES_W, KW_GATE_TILES_H, KW_GATE_FRAMES,
+	&kw_gateSlots[0][0][0], &kw_gateTiles[0][0][0][0],
+	1, 12, KW_GateDropsUnderlay,
+	false, false, KW_GateNoseIsSolid,
+};
+
 static void KW_BuildKeen5Gate(void)
 {
-	KW_PlaceArt(&kw_gateArt);
+	KW_PlaceArt(kw_currentWorld == KW_ASYLUM ? &kw_asylumGateArt : &kw_gateArt);
 }
 
 // ---- Megarockets parked on fan games' world maps ----
@@ -1057,11 +1080,11 @@ static const KW_MapShip *KW_MapShipFor(int world)
 
 void KW_SetLaunchSpot(int tileX, int tileY)
 {
-	if (kw_currentWorld == KW_KEEN5)
+	if (KW_HasKeen5Dock())
 	{
 		// Replace Keen 5's unused yellow map border with a sparse starfield
 		// tile already used beside the dock. This affects only the loaded map.
-		for (int y = 0; y < CA_GetMapHeight(); ++y)
+		for (int y = 0; kw_currentWorld == KW_KEEN5 && y < CA_GetMapHeight(); ++y)
 			for (int x = 0; x < CA_GetMapWidth(); ++x)
 				if (CA_TileAtPos(x, y, 0) == 0x352)
 					CA_SetTileAtPos(x, y, 0, 0x327);
@@ -1159,10 +1182,10 @@ void KW_PlaceArrivalAtShip(void)
 
 void KW_ConstrainKeen5Dock(CK_object *mapKeen)
 {
-	if (kw_currentWorld != KW_KEEN5 || ca_mapOn != 0)
+	if (!KW_HasKeen5Dock() || ca_mapOn != 0)
 		return;
 
-	int x = mapKeen->posX >> 8;
+	int x = (mapKeen->posX >> 8) - kw_gateDX;
 	// Once Keen is on the bridge, it is a horizontal boarding route only.
 	if (x >= 29)
 		mapKeen->yDirection = IN_motion_None;
@@ -1282,9 +1305,67 @@ static bool KW_StoryIsDue(int world)
 	return !kw_cardsOff || getenv("KW_AUTOSTORY");
 }
 
+// Two worlds came with no story: Bounty Hunting Brouhaha switches its
+// base game's off, and Keen Asylum says in its Read Me that it has none.
+// Left alone they would scroll the base game's story (Keen 4's, Keen 5's),
+// which is about somewhere else. They get a page from the ship's chart
+// instead, in Keen Worlds' words and saying so: it tells nothing about
+// the game that the game's title and its makers' notes don't.
+// (The narrator's clips: tools/kw_story_voice.py reads these.)
+static const char kw_chartBounty[] =
+	"Meurglys III\n"
+	"\n"
+	"From the ship's chart\n"
+	"\n"
+	"This world came with\n"
+	"no story of its own.\n"
+	"\n"
+	"The chart has a name,\n"
+	"a mountain, and a\n"
+	"title written across\n"
+	"the top in large\n"
+	"letters:\n"
+	"\n"
+	"Bounty Hunting\n"
+	"Brouhaha.\n"
+	"\n"
+	"Keen has been called\n"
+	"many things. This is\n"
+	"a new one.\n"
+	"\n"
+	"He will find out what\n"
+	"it means down there.\n";
+
+static const char kw_chartAsylum[] =
+	"Address Unknown\n"
+	"\n"
+	"From the ship's chart\n"
+	"\n"
+	"This place came with\n"
+	"no story and no name.\n"
+	"\n"
+	"Its builders left a\n"
+	"note instead: the\n"
+	"rooms in here were\n"
+	"made to show what a\n"
+	"level can do. They\n"
+	"were not made to be\n"
+	"kind.\n"
+	"\n"
+	"Keen likes a puzzle.\n"
+	"\n"
+	"Mostly.\n";
+
+static const char *KW_ChartStory(int world)
+{
+	return world == KW_BOUNTY ? kw_chartBounty : world == KW_ASYLUM ? kw_chartAsylum : NULL;
+}
+
 // The scroll itself, for the current world (whose graphics must be loaded).
 static void KW_PlayWorldStory(void)
 {
+	extern const char *ck_starWarsChartText;
+	const char *chart = KW_ChartStory(kw_currentWorld);
 	kw_storyShown[kw_currentWorld] = true;
 	// The game's own title first, for a few seconds or until a key.
 	if (!getenv("KW_AUTOSHOT") || getenv("KW_AUTOSTORY"))
@@ -1293,8 +1374,11 @@ static void KW_PlayWorldStory(void)
 		VL_ClearScreen(0);
 		VL_SetScrollCoords(0, 0);
 		VL_SetDefaultPalette();
-		CA_CacheGrChunk(CK_CHUNKNUM(PIC_TITLESCREEN));
-		if (ca_graphChunks[CK_CHUNKNUM(PIC_TITLESCREEN)])
+		// (Not for Address Unknown: Keen Asylum has no title picture, and
+		// the one in its place is Keen 5's.)
+		if (kw_currentWorld != KW_ASYLUM)
+			CA_CacheGrChunk(CK_CHUNKNUM(PIC_TITLESCREEN));
+		if (kw_currentWorld != KW_ASYLUM && ca_graphChunks[CK_CHUNKNUM(PIC_TITLESCREEN)])
 		{
 			printf("KW_AUTOSTORY: the title of %s\n", kw_worldDefs[kw_currentWorld].id);
 			VH_DrawBitmap(0, 0, CK_CHUNKNUM(PIC_TITLESCREEN));
@@ -1305,7 +1389,7 @@ static void KW_PlayWorldStory(void)
 		}
 		VL_ClearScreen(0);
 	}
-	if (!*CK_STRING(ck_str_storyText))
+	if (!chart && !*CK_STRING(ck_str_storyText))
 		return;
 	printf("KW_AUTOSTORY: the story of %s\n", kw_worldDefs[kw_currentWorld].id);
 	KW_StopVoice();
@@ -1321,7 +1405,9 @@ static void KW_PlayWorldStory(void)
 	for (char *c = clip; *c && *c != '.'; ++c)
 		*c = (char)toupper((unsigned char)*c);
 	ck_starWarsNarrated = KW_Narrate(clip);
+	ck_starWarsChartText = chart;
 	CK_DrawStarWarsEx(false);
+	ck_starWarsChartText = NULL;
 	if (ck_starWarsNarrated && !IN_GetLastScan())
 		while (KW_ClipPlaying() && !IN_UserInput(7, false))
 			;
@@ -1813,10 +1899,22 @@ static int KW_TravelMenu(void)
 				snprintf(status, sizeof(status), "The Chronicle: save %s first.", kw_worldDefs[KW_ChronicleKey(w)].name);
 			else if (KW_WorldIsSaved(w))
 				snprintf(status, sizeof(status), "Saved.");
-			else if (kw_worlds[w].visited)
-				snprintf(status, sizeof(status), "Keen has been here.");
 			else
-				snprintf(status, sizeof(status), "Keen has not been here yet.");
+			{
+				// Been here, but not saved it: said with how far he got.
+				// (Told by the levels done as well as by the record's own
+				// mark, which is only set when Keen leaves a world.)
+				int done = 0;
+				for (int level = 1; level < CK_LEVELS_TRACKED; ++level)
+					if (kw_worlds[w].levelsDone[level])
+						done++;
+				if (done)
+					snprintf(status, sizeof(status), "Been here: %d level%s done. Not saved yet.", done, done == 1 ? "" : "s");
+				else if (kw_worlds[w].visited)
+					snprintf(status, sizeof(status), "Keen has been here. Not saved yet.");
+				else
+					snprintf(status, sizeof(status), "Keen has not been here yet.");
+			}
 			VHB_Bar(winX, footY, winW, 22, 15);
 			US_SetPrintY(footY);
 			US_CPrint(title);

@@ -1117,7 +1117,10 @@ void CK_GameLoop()
 				// buffer.
 				US_CenterWindow(26, 8);
 				US_SetPrintY(US_GetPrintY() + 25);
-				US_Print("One moment");
+				// KEEN WORLDS: in the middle of the box. The original
+				// prints it from the box's left edge, which sits against
+				// the frame in games whose frame is drawn thicker.
+				US_CPrint("One moment");
 				// The original only does this for CGA due to
 				// the frontbuffer hack above.
 				VH_UpdateScreen();

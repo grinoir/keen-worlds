@@ -953,3 +953,23 @@ lettered on the watch's lower edge; `US_PlainWatchEdge` paints that edge
 plain, as Keen 5's and 6's watches have it, whenever the picture shown has
 lettering there. The quit card (`kw_card.c`) and the tester's guide name
 the same things as the guide does; a change to one belongs in the others.
+
+**Small things, 2026-10-07.**
+- The flight menu says how far Keen got on a world that is not saved
+  ("Been here: 3 levels done. Not saved yet."), told by the levels done as
+  well as by the record's `visited` mark.
+- Keen 5's boarding gate also stands on the maps of the Omegamatic II
+  (Keen 5.5: the same map) and Address Unknown (Asylum: the same dock,
+  21 tiles right and 22 up): `KW_HasKeen5Dock`, `kw_asylumGateArt`. No
+  level of either uses the gate's tile slots.
+- "One moment" is printed in the middle of its box (`US_CPrint`), not from
+  the left edge, where it sat against the frame in games with thicker
+  frames.
+- Bounty Hunting Brouhaha and Keen Asylum came with no story, and used to
+  scroll their base game's (Keen 4's, Keen 5's). They scroll a page "from
+  the ship's chart" instead, in Keen Worlds' words (`kw_chartBounty`,
+  `kw_chartAsylum`, `ck_starWarsChartText`), read by the narrator. Asylum
+  has no title picture either; Keen 5's is no longer shown for it.
+- The score box has no frame in Foray in the Forest and Atroxian Realm
+  because those games drew it that way; it is their sprite, shown as it
+  is.
