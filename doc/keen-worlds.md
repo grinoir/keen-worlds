@@ -975,3 +975,11 @@ the same things as the guide does; a change to one belongs in the others.
 - The score box has no frame in Foray in the Forest and Atroxian Realm
   because those games drew it that way; it is their sprite, shown as it
   is.
+
+**Debug: the last world (W + A).** Holding W and pressing A makes every
+other installed world count as saved, so the world Keen is on (or whose
+cabin he is in) is the last. Finishing it, or W + E on its map, plays that
+world's own ending as always; back in the cabin the computer says the
+world is saved, and then Keen Worlds' ending follows: the ending picture,
+the About text, the last cards. Pressed when the last world is saved too,
+it shows that ending again.

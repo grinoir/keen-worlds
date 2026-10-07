@@ -36,6 +36,7 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 #include "kw_music.h"
 #include "kw_art.h"
 #include "kw_habitat.h"
+#include "kw_title_art.h"
 
 extern const char *ck_episodeFile;
 
@@ -1242,6 +1243,8 @@ static bool KW_IsAtShipHatch(void)
 static bool kw_cardsOff = false;             // the self-test has nobody to press a key
 static int kw_arrivalCard = KW_NO_WORLD;     // world whose arrival card is due
 
+static void KW_ShowPicture(const uint8_t *packed, const uint8_t colours[16][3]);
+
 #define KW_CARD_MAX_W 38
 #define KW_CARD_MAX_H 22
 
@@ -1294,6 +1297,7 @@ static void KW_WorldCardText(int world, bool withCredits, char *out, size_t size
 void CK_DrawStarWarsEx(bool handleDemoKeys);
 bool FF_IsActive(void);
 void FF_LevelPalette(void);
+bool KW_DrawWorldTitlePicture(void);
 void StartMusic(int16_t level);
 
 // Should the current world's story be shown now? (Once a game for a world
@@ -1374,11 +1378,10 @@ static void KW_PlayWorldStory(void)
 		VL_ClearScreen(0);
 		VL_SetScrollCoords(0, 0);
 		VL_SetDefaultPalette();
-		// (Not for Address Unknown: Keen Asylum has no title picture, and
-		// the one in its place is Keen 5's.)
-		if (kw_currentWorld != KW_ASYLUM)
+		bool ownTitle = KW_DrawWorldTitlePicture();
+		if (!ownTitle)
 			CA_CacheGrChunk(CK_CHUNKNUM(PIC_TITLESCREEN));
-		if (kw_currentWorld != KW_ASYLUM && ca_graphChunks[CK_CHUNKNUM(PIC_TITLESCREEN)])
+		if (ownTitle || ca_graphChunks[CK_CHUNKNUM(PIC_TITLESCREEN)])
 		{
 			printf("KW_AUTOSTORY: the title of %s\n", kw_worldDefs[kw_currentWorld].id);
 			VH_DrawBitmap(0, 0, CK_CHUNKNUM(PIC_TITLESCREEN));
@@ -1476,6 +1479,11 @@ static void KW_ShowArrivalCard(int world)
 {
 	// with everyone who made it: Keen Worlds only links the worlds
 	char text[1024];
+	// Keen Asylum has no original arrival screen.  Show its own image before
+	// the usual credits card, so the first step into Address Unknown feels
+	// like arriving somewhere rather than inheriting Keen 5's presentation.
+	if (world == KW_ASYLUM)
+		KW_ShowPicture(kw_asylumArrivalPicture, kw_asylumArrivalColors);
 	KW_WorldCardText(world, true, text, sizeof(text));
 	KW_ShowCards(text);
 }
@@ -2446,8 +2454,6 @@ void KW_FitfShipLanded(void)
 // ---- Keen Worlds' own title, story and ending picture ----
 // The pictures are in kw_title_art.h (tools/kw_title_art.py, from art/title).
 
-#include "kw_title_art.h"
-
 static void KW_DrawPicture(const uint8_t *packed)
 {
 	for (int y = 0; y < 200; ++y)
@@ -2460,6 +2466,15 @@ static void KW_DrawPicture(const uint8_t *packed)
 }
 
 bool KW_DrawStoryBackdrop(void);
+
+bool KW_DrawWorldTitlePicture(void)
+{
+	if (kw_currentWorld != KW_ASYLUM)
+		return false;
+	VL_ClearScreen(0);
+	KW_DrawPicture(kw_asylumTitlePicture);
+	return true;
+}
 
 // The title, in place of the running episode's (ck_inter.c).
 bool KW_DrawTitlePicture(void)
@@ -2491,10 +2506,22 @@ bool KW_DrawTitlePicture(void)
 // (KW_PlayOwnStory).
 bool KW_DrawStoryBackdrop(void)
 {
+	const uint8_t *picture = kw_storyPicture;
+	const uint8_t (*colours)[3] = kw_storyColors;
+	if (kw_currentWorld == KW_BOUNTY)
+	{
+		picture = kw_bountyStoryPicture;
+		colours = kw_bountyStoryColors;
+	}
+	else if (kw_currentWorld == KW_ASYLUM)
+	{
+		picture = kw_asylumStoryPicture;
+		colours = kw_asylumStoryColors;
+	}
 	VL_ClearScreen(0);
-	KW_DrawPicture(kw_storyPicture);
+	KW_DrawPicture(picture);
 	VL_SetDefaultPalette();
-	VL_SetCustomColors(kw_storyColors);
+	VL_SetCustomColors(colours);
 	return true;
 }
 
@@ -2502,7 +2529,9 @@ int KW_StoryPixel(int x, int y)
 {
 	if (x < 0 || x >= 320 || y < 0 || y >= 200)
 		return 0;
-	uint8_t b = kw_storyPicture[y * 160 + x / 2];
+	const uint8_t *picture = kw_currentWorld == KW_BOUNTY ? kw_bountyStoryPicture :
+		kw_currentWorld == KW_ASYLUM ? kw_asylumStoryPicture : kw_storyPicture;
+	uint8_t b = picture[y * 160 + x / 2];
 	return (x & 1) ? (b & 15) : (b >> 4);
 }
 
@@ -2822,14 +2851,38 @@ void KW_PlayLoopHook(void)
 		return;
 	}
 
-	// Debug shortcuts: hold W and press 4 to 9 to fly to a world, or E to
-	// see the ending of the world Keen is in (on its map or at its ship).
+	// Debug shortcuts: hold W and press 4 to 9 to fly to a world, E to see
+	// the ending of the world Keen is in (on its map or at its ship), or A
+	// to make that world the last one unsaved.
 	if (!IN_GetKeyState(IN_SC_W))
 		return;
 	if (IN_GetKeyState(IN_SC_E))
 	{
 		KW_WaitForButtonsUp();
 		KW_DebugEnding();
+		return;
+	}
+	// A: every other world counts as saved, so that this one is the last.
+	// Its own ending (play it, or W + E) is then followed by Keen Worlds':
+	// back in the cabin the computer says the world is saved, then the
+	// ending picture, the About text and the last cards.
+	if (IN_GetKeyState(IN_SC_A))
+	{
+		int last = kw_currentWorld == KW_SHIP ? kw_boardedFrom : kw_currentWorld;
+		KW_WaitForButtonsUp();
+		for (int w = 0; w < KW_NUM_WORLDS; ++w)
+			if (KW_IsPlanet(w) && w != last && KW_IsWorldPresent(w))
+			{
+				kw_worlds[w].completed = true;
+				kw_savedTold[w] = 1; // (without the computer saying so for each)
+			}
+		kw_chronicleEndTold = 0; // (to see it again)
+		char text[200];
+		if (KW_IsPlanet(last) && !KW_WorldIsSaved(last))
+			snprintf(text, sizeof(text), "Debug\n\nEvery other world now\ncounts as saved.\n%s is the last:\nfinish it, or press W + E\non its map.", kw_worldDefs[last].name);
+		else
+			snprintf(text, sizeof(text), "Debug\n\nEvery world now counts\nas saved. The ending shows\nin the ship's cabin.");
+		KW_ShowCards(text);
 		return;
 	}
 	if (IN_GetKeyState(IN_SC_Four))
