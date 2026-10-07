@@ -1310,6 +1310,7 @@ void CK_TranslateString(const char *input, char *output)
 const char *ck_starWarsTextOverride = NULL;
 // KEEN WORLDS: the narrator is reading the story (KW_PlayWorldStory): no music.
 bool ck_starWarsNarrated = false;
+bool ck_starWarsKeepMusic = false; // the music playing is the caller's, and stays
 
 void CK_DrawSWText()
 {
@@ -1526,7 +1527,9 @@ void CK_DrawStarWarsEx(bool handleDemoKeys)
 		else
 			StartMusic(CK_INT(CK_StarWarsMusicLevel, 0));
 		CK_ScrollSWText();
-		StopMusic();
+		// KEEN WORLDS: its ending's tune plays on into the picture after it
+		if (!ck_starWarsKeepMusic)
+			StopMusic();
 	}
 
 	VL_DestroySurface(ck_starWarsTextSurface);

@@ -81,6 +81,7 @@ def main(root, folder, only=None):
             clips['STORY_%s.RAW' % world.upper()] = spoken(text)
     clips['STORY_WORLDS.RAW'] = spoken(own_story(root))
     # (these two came with no story; without this they would get their base game's)
+    clips['STORY_EPILOGUE.RAW'] = spoken(own_story(root, 'kw_epilogue'))   # when every world is saved
     clips['STORY_BOUNTY.RAW'] = spoken(own_story(root, 'kw_chartBounty'))
     clips['STORY_ASYLUM.RAW'] = spoken(own_story(root, 'kw_chartAsylum'))
     if only:

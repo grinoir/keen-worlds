@@ -67,4 +67,8 @@ int KW_TavernBarmaidX(void);
 // For /KWTEST: count hostile objects and residents in the loaded level.
 void KW_CountLevelPeople(int *hostiles, int *residents, struct CK_object **firstResident);
 
+// Every world is saved: the next time the Border Village is entered Keen
+// stands at the bar and tells the barmaid about it.
+void KW_BragAtTheBar(void);
+
 #endif

@@ -87,6 +87,14 @@ def speak_all(clips, voice, folder, speed=1.0, pitch=1.0, sounds=None):
     sounds: phonemes to replace, to mend a word the voice says badly (see
     tools/kw_voice.mjs)."""
     chime = voice == VOICE
+    # KW_VOICE_ONLY_NEW=1: leave the clips that are there already (as .RAW
+    # or packed as .OGG) and make only the new ones.
+    if os.environ.get('KW_VOICE_ONLY_NEW'):
+        clips = {name: words for name, words in clips.items()
+                 if not os.path.exists(os.path.join(folder, name))
+                 and not os.path.exists(os.path.join(folder, name[:-4] + '.OGG'))}
+        if not clips:
+            return
     with tempfile.TemporaryDirectory() as tmp:
         jobs = [{'voice': voice, 'speed': speed, 'sounds': sounds or {}, 'text': words,
                  'out': os.path.join(tmp, name + '.f32')} for name, words in clips.items()]

@@ -465,6 +465,8 @@ static void KW_LoadState(const KW_WorldState *w)
 static bool kw_debugEnding; // the ending was started with W + E
 void AR_DebugCompleteState(void); // Atroxian Realm's part of it (kw_arealm.c)
 
+static void KW_Finale(void);
+
 void KW_AfterWorldEnding(void)
 {
 	// help_endgame() pushes a cache level and, as in the original, never
@@ -509,6 +511,8 @@ void KW_AfterWorldEnding(void)
 			ck_gameState.currentLevel = ship->level;
 		kw_placeArrivalAtShip = ship != NULL || KW_MapShipFor(kw_currentWorld) != NULL;
 	}
+	// That was the last world: Keen Worlds' own ending follows its ending.
+	KW_Finale();
 }
 
 bool KW_IsWorldCompleted(int world)
@@ -1243,8 +1247,6 @@ static bool KW_IsAtShipHatch(void)
 static bool kw_cardsOff = false;             // the self-test has nobody to press a key
 static int kw_arrivalCard = KW_NO_WORLD;     // world whose arrival card is due
 
-static void KW_ShowPicture(const uint8_t *packed, const uint8_t colours[16][3]);
-
 #define KW_CARD_MAX_W 38
 #define KW_CARD_MAX_H 22
 
@@ -1259,7 +1261,8 @@ static void KW_ShowCard(const char *text)
 	US_CPrint(text);
 	VH_UpdateScreen();
 	KW_WaitForButtonsUp();
-	IN_WaitButton();
+	if (!getenv("KW_AUTOFINALE")) // (the scripted test of the ending has nobody to press a key)
+		IN_WaitButton();
 	KW_WaitForButtonsUp();
 }
 
@@ -1384,7 +1387,10 @@ static void KW_PlayWorldStory(void)
 		if (ownTitle || ca_graphChunks[CK_CHUNKNUM(PIC_TITLESCREEN)])
 		{
 			printf("KW_AUTOSTORY: the title of %s\n", kw_worldDefs[kw_currentWorld].id);
-			VH_DrawBitmap(0, 0, CK_CHUNKNUM(PIC_TITLESCREEN));
+			// (a title of Keen Worlds' own is drawn already: the game's,
+			// which for Address Unknown is Keen 5's, must not cover it)
+			if (!ownTitle)
+				VH_DrawBitmap(0, 0, CK_CHUNKNUM(PIC_TITLESCREEN));
 			VH_UpdateScreen();
 			IN_ClearKeysDown();
 			IN_UserInput(5 * 70, false);
@@ -1479,11 +1485,6 @@ static void KW_ShowArrivalCard(int world)
 {
 	// with everyone who made it: Keen Worlds only links the worlds
 	char text[1024];
-	// Keen Asylum has no original arrival screen.  Show its own image before
-	// the usual credits card, so the first step into Address Unknown feels
-	// like arriving somewhere rather than inheriting Keen 5's presentation.
-	if (world == KW_ASYLUM)
-		KW_ShowPicture(kw_asylumArrivalPicture, kw_asylumArrivalColors);
 	KW_WorldCardText(world, true, text, sizeof(text));
 	KW_ShowCards(text);
 }
@@ -2480,7 +2481,9 @@ bool KW_DrawWorldTitlePicture(void)
 bool KW_DrawTitlePicture(void)
 {
 	VL_ClearScreen(0);
-	KW_DrawPicture(kw_titlePicture);
+	// Address Unknown used Keen 5's title art.  Its own title must be used
+	// here too (the actual game-start screen), not only before its story.
+	KW_DrawPicture(kw_currentWorld == KW_ASYLUM ? kw_asylumTitlePicture : kw_titlePicture);
 	// Developer tool: KW_AUTOTITLE=file.ppm saves the title (or, with
 	// KW_AUTOENDING set, the ending picture) and quits
 	if (getenv("KW_AUTOTITLE"))
@@ -2589,6 +2592,36 @@ static const char kw_ownStory[] =
 	"\n"
 	"Fly well, Commander.\n";
 
+// What scrolls when the last world is saved, before the picture of Keen on
+// the beach (KW_Finale). The narrator reads it: STORY_EPILOGUE.RAW, made by
+// tools/kw_story_voice.py from these words.
+static const char kw_epilogue[] =
+	"The last world\n"
+	"is saved.\n"
+	"\n"
+	"The ship's computer\n"
+	"went through the chart\n"
+	"twice, to be sure.\n"
+	"Every planet, every\n"
+	"station, every\n"
+	"peculiar moon: quiet.\n"
+	"\n"
+	"Nobody gave Keen a\n"
+	"medal. Nobody on\n"
+	"Earth knows he was\n"
+	"away. His parents\n"
+	"think he slept well.\n"
+	"\n"
+	"That is how he\n"
+	"likes it.\n"
+	"\n"
+	"So he set one more\n"
+	"course, for nowhere\n"
+	"in particular,\n"
+	"\n"
+	"and took the\n"
+	"afternoon off.\n";
+
 extern const char *ck_starWarsTextOverride;
 
 void KW_PlayOwnStory(bool handleDemoKeys)
@@ -2638,6 +2671,89 @@ static void KW_ShowPicture(const uint8_t *packed, const uint8_t colours[16][3])
 	RF_Refresh();
 	VL_FadeFromBlack();
 	SD_SetLastTimeCount(SD_GetTimeCount());
+}
+
+// ---- Keen Worlds' ending: when the last world is saved, straight after
+// that world's own ending (KW_AfterWorldEnding; no level is loaded here).
+//   1. a last story scrolls, read by the narrator, the calm tune low
+//      under him (the one place music plays under speech: asked for so);
+//   2. the picture of Keen on the beach, the tune at its full level,
+//      until a key is pressed;
+//   3. Keen is put at the bar of the Border Village's inn on Gnosticus IV
+//      and tells the barmaid what he has done (KW_BragAtTheBar);
+//   4. and then he is free: the ship stands on Gnosticus IV as always.
+// Once a game (kw_chronicleEndTold; W + A makes it due again).
+#define KW_EPILOGUE_MUSIC 77 // the tune's level under the narrator, of 256
+
+static bool KW_EveryWorldIsSaved(void)
+{
+	bool any = false;
+	for (int w = 0; w < KW_NUM_WORLDS; ++w)
+		if (KW_IsPlanet(w) && KW_IsWorldPresent(w))
+		{
+			if (!KW_WorldIsSaved(w))
+				return false;
+			any = true;
+		}
+	return any;
+}
+
+static void KW_Finale(void)
+{
+	extern bool ck_starWarsNarrated, ck_starWarsKeepMusic;
+	if (kw_chronicleEndTold || kw_cardsOff || !KW_EveryWorldIsSaved())
+		return;
+	kw_chronicleEndTold = 1;
+	printf("KW_AUTOENDING: every world is saved\n");
+	fflush(stdout);
+
+	KW_StopVoice();
+	KW_StartEndingMusic(KW_EPILOGUE_MUSIC);
+	IN_ClearKeysDown();
+	bool narrated = KW_Narrate("STORY_EPILOGUE.RAW");
+	ck_starWarsNarrated = true; // (no music of the scroll's own)
+	ck_starWarsKeepMusic = true;
+	ck_starWarsTextOverride = kw_epilogue;
+	CK_DrawStarWarsEx(false);
+	ck_starWarsTextOverride = NULL;
+	ck_starWarsNarrated = ck_starWarsKeepMusic = false;
+	VL_SetCustomColors(NULL);
+	if (narrated && !IN_GetLastScan())
+		while (KW_ClipPlaying() && !IN_UserInput(7, false))
+			;
+	KW_StopVoice();
+
+	// The picture: the tune comes up.
+	SD_FadeAdLibVolume(256, 1500);
+	VL_FadeToBlack();
+	VL_ClearScreen(0);
+	VL_SetScrollCoords(0, 0);
+	KW_DrawPicture(kw_endingPicture);
+	VH_UpdateScreen();
+	VL_SetCustomColors(kw_endingColors);
+	VL_FadeFromBlack();
+	KW_WaitForButtonsUp();
+	IN_ClearKeysDown();
+	if (!getenv("KW_AUTOFINALE"))
+		IN_WaitButton();
+	KW_WaitForButtonsUp();
+	VL_DelayTics(KW_FadeMusicOut());
+	VL_FadeToBlack();
+	VL_SetCustomColors(NULL);
+	VL_ClearScreen(0);
+	SD_MusicOff();
+	SD_FadeAdLibVolume(256, 0);
+
+	// To the bar. (Keen 4 is always there: the ship is made of it.)
+	if (KW_IsWorldPresent(KW_KEEN4))
+	{
+		KW_SwitchWorld(KW_KEEN4);
+		if (!ck_gameState.levelsDone[1])
+			ck_gameState.levelsDone[1] = 1;
+		ck_gameState.currentLevel = 1;
+		kw_placeArrivalAtShip = false;
+		KW_BragAtTheBar();
+	}
 }
 
 // The Megarocket is shot down over Krisle: flashes and bangs over the first
@@ -2756,28 +2872,6 @@ void KW_PlayLoopHook(void)
 				break; // one at a time
 			}
 		}
-		// Every installed world is saved: Keen Worlds' ending picture, and
-		// in the Chronicle its last card.
-		if (!kw_chronicleEndTold && !kw_cardsOff && !vl_screenFaded && !KW_VoiceSpeaking())
-		{
-			bool all = true, any = false;
-			for (int w = 0; w < KW_NUM_WORLDS; ++w)
-				if (KW_IsPlanet(w) && KW_IsWorldPresent(w))
-				{
-					any = true;
-					all = all && KW_WorldIsSaved(w) && kw_savedTold[w];
-				}
-			if (any && all)
-			{
-				kw_chronicleEndTold = 1;
-				printf("KW_AUTOENDING: every world is saved\n");
-				KW_ShowPicture(kw_endingPicture, kw_endingColors);
-				KW_ShowAboutKeenWorlds();
-				KW_ShowCards(!kw_chronicle ? "Every world is saved.\nThe galaxy is quiet, and\nthe Megarocket knows the\nway to all of it." "\fThe ship is yours, Keen.\nFly where you like." :
-					"The Chronicle\n\nEvery world is saved.\nThe galaxy is quiet, and\nthe Megarocket knows the\nway to all of it."
-					"\fThe ship is yours, Keen.\nFly where you like.");
-			}
-		}
 		// The Chronicle: a world has been saved, and the ship has learned
 		// the course to the next.
 		if (kw_chronicle && !kw_cardsOff && !vl_screenFaded && !KW_VoiceSpeaking())
@@ -2854,6 +2948,21 @@ void KW_PlayLoopHook(void)
 	// Debug shortcuts: hold W and press 4 to 9 to fly to a world, E to see
 	// the ending of the world Keen is in (on its map or at its ship), or A
 	// to make that world the last one unsaved.
+	// (KW_AUTOFINALE: the scripted test of Keen Worlds' ending. On a
+	// world's map it makes that world the last one and wins it; the
+	// ending's waits pass by themselves, and it leaves when Keen stands
+	// free at the bar.)
+	if (getenv("KW_AUTOFINALE") && ca_mapOn == 0 && KW_IsPlanet(kw_currentWorld) && !kw_chronicleEndTold)
+	{
+		for (int w = 0; w < KW_NUM_WORLDS; ++w)
+			if (KW_IsPlanet(w) && w != kw_currentWorld && KW_IsWorldPresent(w))
+				kw_worlds[w].completed = true;
+		kw_cardsOff = false;
+		printf("KW_AUTOFINALE: winning %s, the last world\n", kw_worldDefs[kw_currentWorld].id);
+		fflush(stdout);
+		KW_DebugEnding();
+		return;
+	}
 	if (!IN_GetKeyState(IN_SC_W))
 		return;
 	if (IN_GetKeyState(IN_SC_E))
@@ -2863,9 +2972,8 @@ void KW_PlayLoopHook(void)
 		return;
 	}
 	// A: every other world counts as saved, so that this one is the last.
-	// Its own ending (play it, or W + E) is then followed by Keen Worlds':
-	// back in the cabin the computer says the world is saved, then the
-	// ending picture, the About text and the last cards.
+	// Its own ending (play it, or W + E) is then followed by Keen Worlds'
+	// (KW_Finale).
 	if (IN_GetKeyState(IN_SC_A))
 	{
 		int last = kw_currentWorld == KW_SHIP ? kw_boardedFrom : kw_currentWorld;
@@ -2881,7 +2989,7 @@ void KW_PlayLoopHook(void)
 		if (KW_IsPlanet(last) && !KW_WorldIsSaved(last))
 			snprintf(text, sizeof(text), "Debug\n\nEvery other world now\ncounts as saved.\n%s is the last:\nfinish it, or press W + E\non its map.", kw_worldDefs[last].name);
 		else
-			snprintf(text, sizeof(text), "Debug\n\nEvery world now counts\nas saved. The ending shows\nin the ship's cabin.");
+			snprintf(text, sizeof(text), "Debug\n\nEvery world counts as\nsaved. To see the ending\nagain, press W + E on\na world's map.");
 		KW_ShowCards(text);
 		return;
 	}

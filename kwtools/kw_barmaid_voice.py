@@ -89,11 +89,45 @@ TALK = {
                                  "Operation Station Infiltration. Mind the big Ampton.", 'far'),
         ("Something else.", None, 'more'),
     ]),
+    # ---- When every world is saved (KW_Finale in kw_world.c): Keen is put at
+    # her bar and the talk begins here, at 'brag1'. Each of his lines is a
+    # boast about one world (the fourth thing in its row: the world's id) and
+    # is only offered if that world is installed. Whatever he picks, the talk
+    # moves on; a round with nothing to offer is passed over.
+    'brag1': ("Look who's back! They say you've been everywhere, hon. Go on, then. Impress me.", [
+        ("I saved the Oracle!", "Eight old men out of the Shadowlands. I know, hon. Half of them drink here now.", 'brag2', 'keen4'),
+        ("I blew the fuses!", "On the Omegamatic? A doomsday machine, and all it took was a few fuses.", 'brag2', 'keen5'),
+        ("I rescued Molly!", "From the Bloogs! And she was the one meant to be minding you.", 'brag2', 'keen6'),
+        ("I found the keys.", "Krodacia's keys? All of them? I can't find my own on a good day.", 'brag2', 'keen7'),
+    ]),
+    'brag2': ("Not bad. What else?", [
+        ("I beat the desert.", "Calidune. I told you to pack a hat.", 'brag3', 'keen8'),
+        ("I won on brains.", "At the HUB? Against the cleverest heads in the Universe, and you turned up with a pogo stick.", 'brag3', 'keen9'),
+        ("I brought batteries.", "The eight accumulators! The Oracle hums again. It keeps the neighbours up.", 'brag3', 'keen95'),
+    ]),
+    'brag3': ("Go on, I'm listening.", [
+        ("I got off Krisle.", "With a broken ship! The Atroxians still talk about it. Not kindly.", 'brag4', 'arealm'),
+        ("I tidied the forest.", "On Gnosticus Pi, our little sister planet. They say it is quiet again.", 'brag4', 'fitf'),
+        ("I took a station.", "The Shikadi one, over Fribbulus Xax? Mind the big Ampton, I said. Did you mind it?", 'brag4', 'osi'),
+    ]),
+    'brag4': ("Is that all?", [
+        ("I climbed Meurglys.", "And met the local Elvis, I hear. Did he sing?", 'brag5', 'bounty'),
+        ("I broke another one.", "A second Omegamatic? Some people never learn, hon.", 'brag5', 'ck55'),
+        ("I found the address.", "Address Unknown? Nobody finds that place. That's the point of the name.", 'brag5', 'asylum'),
+    ]),
+    'brag5': ("Every world, saved. I'll say this once, Keen: well done. Sit down. This one's on the house. They all are, from now on.", [
+        ("Thanks. A root beer!", "Coming right up, hero.", END),
+        ("It was nothing.", "It was a whole galaxy, hon. Drink up.", END),
+    ]),
 }
 START = 'hello'
+# The world a boast belongs to, as the engine names it.
+WORLD = {'keen4': 'KW_KEEN4', 'keen5': 'KW_KEEN5', 'keen6': 'KW_KEEN6', 'keen7': 'KW_KEEN7', 'keen8': 'KW_KEEN8',
+         'keen9': 'KW_KEEN9', 'keen95': 'KW_KEEN95', 'arealm': 'KW_AREALM', 'fitf': 'KW_FITF', 'osi': 'KW_OSI',
+         'bounty': 'KW_BOUNTY', 'ck55': 'KW_CK55', 'asylum': 'KW_ASYLUM'}
 # How names are spelled for the voice.
 SAID = {'Aspermontis': 'Asper-montis', 'Bubbatom': 'Bubba Tom', 'Shikadi': 'Shick-ah-dee', 'Multimania': 'Multi-mania', 'GriNoir': 'Grih noir', 'K1n9_Duk3': 'King Duke', 'id Software': 'I D Software', 'Ceilick': 'Sy lick',
-        'Krisle': 'Krizzle', 'Atroxians': 'A-troxians', 'Fribbulus Xax': 'Fribbulus Zax', 'hon': 'hun'}
+        'Omegamatic II': 'Omegamatic Two', 'Krisle': 'Krizzle', 'Atroxians': 'A-troxians', 'Fribbulus Xax': 'Fribbulus Zax', 'hon': 'hun'}
 
 
 def pages(text):
@@ -133,13 +167,15 @@ def main(folder, header):
         lines.append('\t{ // %d: %s' % (names.index(name), name))
         lines.append('\t\t%s, "%s",' % (c_string(pages(says)), clip(says)))
         lines.append('\t\t{')
-        for keen, reply, then in choices:
+        for keen, reply, then, *world in choices:
             assert len(keen) <= KEEN_LINE, keen
-            lines.append('\t\t\t{%s, %s, %s, %d},' % (
+            lines.append('\t\t\t{%s, %s, %s, %d, %s},' % (
                 c_string(keen), c_string(pages(reply)) if reply else 'NULL',
-                '"%s"' % clip(reply) if reply else 'NULL', names.index(then) if then else -1))
+                '"%s"' % clip(reply) if reply else 'NULL', names.index(then) if then else -1,
+                WORLD[world[0]] if world else '-1'))
         lines += ['\t\t},', '\t},']
     lines.append('};')
+    lines.append('#define KW_BARMAID_BRAG %d // where the talk begins when every world is saved' % names.index('brag1'))
     if folder != '-':     # ('-': only the text, when no spoken words have changed)
         speak_all(clips, VOICE, folder)
     open(header, 'w').write('\n'.join(lines) + '\n')

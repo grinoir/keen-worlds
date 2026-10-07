@@ -983,3 +983,26 @@ world's own ending as always; back in the cabin the computer says the
 world is saved, and then Keen Worlds' ending follows: the ending picture,
 the About text, the last cards. Pressed when the last world is saved too,
 it shows that ending again.
+
+**Keen Worlds' ending (`KW_Finale`).** When the last world is saved, its
+own ending plays as always, and Keen Worlds' follows straight after it
+(`KW_AfterWorldEnding`), once a game:
+1. a last story scrolls (`kw_epilogue`), read by the narrator
+   (`STORY_EPILOGUE`), with the calm tune low under him
+   (`KW_EPILOGUE_MUSIC`, of 256): the one place music plays under speech;
+2. the picture of Keen on the beach, the tune at full level, until a key;
+3. Keen is put at the bar of the Border Village's inn on Gnosticus IV and
+   tells the barmaid what he has done (`KW_BragAtTheBar`; her talk from
+   `KW_BARMAID_BRAG` on in `kwtools/kw_barmaid_voice.py`). Each boast
+   belongs to a world and is offered only if that world is installed;
+4. then he is free. The ship stands on Gnosticus IV as always.
+
+The tune is `kwtools/kw_ending_music.py` (three candidates;
+`src/kw_ending_music.h` holds the one in use). The picture, the About text
+and the cards that used to show in the cabin are gone. Keen 4 is required
+by the program now (it stops with the reason without it): the ship is
+built of its pictures and the inn is on its world. `W + A` makes the
+ending due again; `KW_AUTOFINALE=1` is its scripted test (it wins the
+world it starts on as the last one, passes every wait, and leaves when
+Keen stands free at the bar). `KW_VOICE_ONLY_NEW=1` makes the voice tools
+leave the clips that exist and make only new ones.

@@ -120,7 +120,7 @@ def main(folder):
     import kw_barmaid_voice as bar
     picks = list(ELDER_CHOICES)
     for says, choices in bar.TALK.values():
-        picks += [keen for keen, reply, then in choices]
+        picks += [choice[0] for choice in choices]
     picks = list(dict.fromkeys(picks))
     speak_all({keen_says_file(p): bar.spoken(p) for p in picks}, KEEN, folder, **STYLE[KEEN])
     # the Oracle speaks in a great hall

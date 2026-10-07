@@ -360,6 +360,17 @@ void KW_TitleMusicIsOver(void)
 	kw_titleTunePlaying = false;
 }
 
+// The calm tune of Keen Worlds' ending (tools/kw_ending_music.py), at a
+// volume of 0 to 256: low under the narrator, full with the picture.
+#include "kw_ending_music.h"
+
+void KW_StartEndingMusic(int volume)
+{
+	SD_StartMusicData(kw_endingMusic, sizeof(kw_endingMusic));
+	SD_FadeAdLibVolume(volume, 0);
+	kw_titleTunePlaying = false;
+}
+
 bool KW_StartShipMusic(void)
 {
 	if (KW_CurrentWorld() != KW_SHIP)

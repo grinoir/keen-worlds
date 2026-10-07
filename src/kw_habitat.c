@@ -85,6 +85,7 @@ typedef struct KW_TalkChoice
 	const char *keen;
 	const char *reply, *replyVoice;
 	int next;
+	int world; // offered only if this world is installed (-1: always)
 } KW_TalkChoice;
 
 typedef struct KW_TalkNode
@@ -124,6 +125,10 @@ static const KW_Resident kw_residents[] = {
 		NULL, {{NULL, NULL}}, KW_PAINTED, kw_barmaidTalk},
 };
 #define KW_NUM_RESIDENTS ((int)(sizeof(kw_residents) / sizeof(kw_residents[0])))
+
+// (when every world is saved: see KW_BragAtTheBar)
+static bool kw_bragDue;
+static int kw_talkStart;
 
 // How close (in tiles) Keen must be to talk.
 #define KW_TALK_RANGE 1
@@ -745,6 +750,9 @@ void KW_SetupLevelResidents(void)
 
 	// Keen walks back in from the opposite side, and everything is open.
 	KW_PlaceRevisitStart();
+	// (every world is saved: Keen is at the bar, facing the barmaid)
+	if (kw_bragDue && KW_CurrentEpisode() == KW_KEEN4 && ca_mapOn == 1)
+		KW_PutKeen(KW_TAVERN_BARMAID_X - 1, KW_TAVERN_ROOM_STAND, IN_motion_Right);
 	KW_OpenGemDoors();
 
 	// ...and the residents have moved in.
@@ -777,7 +785,8 @@ static void KW_ResidentCard(const KW_Resident *r, const char *text)
 	US_CPrint(text);
 	VH_UpdateScreen();
 	IN_ClearKeysDown();
-	IN_WaitButton();
+	if (!getenv("KW_AUTOFINALE"))
+		IN_WaitButton();
 	KW_WaitForButtonsUp();
 }
 
@@ -828,7 +837,8 @@ static void KW_KeenSays(const char *text)
 	VH_UpdateScreen();
 	KW_Speak(clip, true);
 	IN_ClearKeysDown();
-	IN_WaitButton();
+	if (!getenv("KW_AUTOFINALE"))
+		IN_WaitButton();
 	KW_WaitForButtonsUp();
 	KW_StopVoice(); // the card is put away: no more of the clip
 }
@@ -862,6 +872,13 @@ static int KW_ChooseLine(const char *const *lines, int n)
 	}
 
 	int sel = 0, x1 = US_GetWindowX() + 2, x2 = US_GetWindowX() + US_GetWindowW() - 2;
+	if (getenv("KW_AUTOFINALE"))
+	{
+		// (the scripted test takes the last line offered, and says which)
+		printf("KW_AUTOFINALE: Keen says \"%s\" (of %d)\n", lines[n - 1], n);
+		VH_UpdateScreen();
+		return n - 1;
+	}
 	while (true)
 	{
 		IN_PumpEvents();
@@ -913,24 +930,48 @@ static int KW_ChooseReply(const KW_Resident *r)
 	return KW_ChooseLine(lines, n);
 }
 
+// When every world is saved Keen is put at the barmaid's bar and her talk
+// begins at another place: he tells her what he has done (KW_Finale in
+// kw_world.c; the talk from KW_BARMAID_BRAG on in tools/kw_barmaid_voice.py).
+void KW_BragAtTheBar(void)
+{
+	kw_bragDue = true;
+}
+
 // A longer talk: round and round until it ends or the player backs out.
+// A line that belongs to a world is only offered if that world is
+// installed; a place with nothing left to offer is passed over.
 static void KW_ShowTalk(const KW_Resident *r)
 {
-	int at = 0;
+	int at = kw_talkStart;
+	kw_talkStart = 0;
 	while (at >= 0)
 	{
 		const KW_TalkNode *node = &r->talk[at];
-		KW_ResidentSays(r, node->says, node->voice);
 		const char *lines[KW_MAX_TALK_CHOICES];
-		int n = 0;
-		while (n < KW_MAX_TALK_CHOICES && node->choices[n].keen)
+		int which[KW_MAX_TALK_CHOICES];
+		int n = 0, all = 0;
+		while (all < KW_MAX_TALK_CHOICES && node->choices[all].keen)
 		{
-			lines[n] = node->choices[n].keen;
-			++n;
+			if (node->choices[all].world < 0 || KW_IsWorldPresent(node->choices[all].world))
+			{
+				lines[n] = node->choices[all].keen;
+				which[n++] = all;
+			}
+			++all;
 		}
+		if (!n)
+		{
+			if (!all)
+				return;
+			at = node->choices[0].next;
+			continue;
+		}
+		KW_ResidentSays(r, node->says, node->voice);
 		int choice = KW_ChooseLine(lines, n);
 		if (choice < 0)
 			return;
+		choice = which[choice];
 		KW_KeenSays(node->choices[choice].keen);
 		if (node->choices[choice].reply)
 			KW_ResidentSays(r, node->choices[choice].reply, node->choices[choice].replyVoice);
@@ -1085,6 +1126,25 @@ void KW_CheckTalk(void)
 {
 	if (!kw_levelIsPeaceful || !ck_keenObj)
 		return;
+	// Every world is saved, and Keen has just been put at the bar: he
+	// starts bragging without being asked.
+	if (kw_bragDue && KW_CurrentEpisode() == KW_KEEN4 && ca_mapOn == 1 && ck_keenObj->topTI)
+	{
+		kw_bragDue = false;
+		for (int i = 0; i < KW_NUM_RESIDENTS; ++i)
+			if (kw_residents[i].talk == kw_barmaidTalk)
+			{
+				kw_talkStart = KW_BARMAID_BRAG;
+				KW_ShowConversation(&kw_residents[i]);
+				if (getenv("KW_AUTOFINALE"))
+				{
+					printf("KW_AUTOFINALE: Keen is free, at tile %d,%d of level %d\n",
+						ck_keenObj->clipRects.tileX1, ck_keenObj->clipRects.tileY2, ca_mapOn);
+					Quit(NULL);
+				}
+				return;
+			}
+	}
 	// Talk by pressing up while standing (not jumping, not on a pole).
 	if (ck_inputFrame.yDirection != IN_motion_Up || !ck_keenObj->topTI)
 		return;

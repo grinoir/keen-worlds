@@ -608,6 +608,15 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	// KEEN WORLDS: Keen 4 is the one game it cannot do without: the ship
+	// is built of its pictures, and the inn of its ending is on its world.
+#ifdef WITH_KEEN4
+	if (!ck4_episode.isPresent())
+		Quit("Keen Worlds needs Keen 4: Secret of the Oracle.\n"
+		     "Copy GAMEMAPS.CK4, EGAGRAPH.CK4 and AUDIO.CK4 (version 1.4)\n"
+		     "into the folder of this program. See README.txt.");
+#endif
+
 	bool isFullScreen = CFG_GetConfigBool("fullscreen", false);
 	bool isAspectCorrected = CFG_GetConfigBool("aspect", true);
 	bool hasBorder = CFG_GetConfigBool("border", true);

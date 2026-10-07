@@ -6,73 +6,114 @@ static const KW_TalkNode kw_barmaidTalk[] = {
 	{ // 0: hello
 		"Well, if it isn't\nthe hero of the\nShadowlands! What\ncan I get you?", "BAR_00.RAW",
 		{
-			{"A root beer, please.", "Coming right up!\nThe first one's on\nthe house, hon.", "BAR_01.RAW", 1},
-			{"Who's in the picture?", NULL, NULL, 2},
-			{"About the worlds...", NULL, NULL, 4},
-			{"Goodbye!", "Fly safe, Keen. And\nmind the slugs on\nyour way out.", "BAR_02.RAW", -1},
+			{"A root beer, please.", "Coming right up!\nThe first one's on\nthe house, hon.", "BAR_01.RAW", 1, -1},
+			{"Who's in the picture?", NULL, NULL, 2, -1},
+			{"About the worlds...", NULL, NULL, 4, -1},
+			{"Goodbye!", "Fly safe, Keen. And\nmind the slugs on\nyour way out.", "BAR_02.RAW", -1, -1},
 		},
 	},
 	{ // 1: more
 		"Anything else, hon?", "BAR_03.RAW",
 		{
-			{"Another root beer!", "That one goes on\nyour tab. Heroes\npay too, you know.", "BAR_04.RAW", 1},
-			{"Who's in the picture?", NULL, NULL, 2},
-			{"About the worlds...", NULL, NULL, 4},
-			{"Goodbye!", "Fly safe, Keen. And\nmind the slugs on\nyour way out.", "BAR_02.RAW", -1},
+			{"Another root beer!", "That one goes on\nyour tab. Heroes\npay too, you know.", "BAR_04.RAW", 1, -1},
+			{"Who's in the picture?", NULL, NULL, 2, -1},
+			{"About the worlds...", NULL, NULL, 4, -1},
+			{"Goodbye!", "Fly safe, Keen. And\nmind the slugs on\nyour way out.", "BAR_02.RAW", -1, -1},
 		},
 	},
 	{ // 2: picture
 		"That's GriNoir, the\ngreat Linker. He\njoined the worlds\ninto one galaxy.", "BAR_05.RAW",
 		{
-			{"What did he link?", "Every world you can\nfly to. Before him\neach one sat alone\nin the dark. He\fstrung them\ntogether like\nlanterns.", "BAR_06.RAW", 3},
-			{"He made the worlds?", "Oh no, hon, and\nhe'd be the first\nto say so. Every\nworld has its own\fmakers. He only\nbuilt the roads\nbetween.", "BAR_07.RAW", 3},
-			{"Why is he up there?", "He paid for the\nframe. And he tips\nwell.", "BAR_08.RAW", 3},
-			{"Something else.", NULL, NULL, 1},
+			{"What did he link?", "Every world you can\nfly to. Before him\neach one sat alone\nin the dark. He\fstrung them\ntogether like\nlanterns.", "BAR_06.RAW", 3, -1},
+			{"He made the worlds?", "Oh no, hon, and\nhe'd be the first\nto say so. Every\nworld has its own\fmakers. He only\nbuilt the roads\nbetween.", "BAR_07.RAW", 3, -1},
+			{"Why is he up there?", "He paid for the\nframe. And he tips\nwell.", "BAR_08.RAW", 3, -1},
+			{"Something else.", NULL, NULL, 1, -1},
 		},
 	},
 	{ // 3: picture2
 		"Handsome frame,\nisn't it?", "BAR_09.RAW",
 		{
-			{"What did he link?", "Every world you can\nfly to. Before him\neach one sat alone\nin the dark. He\fstrung them\ntogether like\nlanterns.", "BAR_06.RAW", 3},
-			{"He made the worlds?", "Oh no, hon, and\nhe'd be the first\nto say so. Every\nworld has its own\fmakers. He only\nbuilt the roads\nbetween.", "BAR_07.RAW", 3},
-			{"Why is he up there?", "He paid for the\nframe. And he tips\nwell.", "BAR_08.RAW", 3},
-			{"Something else.", NULL, NULL, 1},
+			{"What did he link?", "Every world you can\nfly to. Before him\neach one sat alone\nin the dark. He\fstrung them\ntogether like\nlanterns.", "BAR_06.RAW", 3, -1},
+			{"He made the worlds?", "Oh no, hon, and\nhe'd be the first\nto say so. Every\nworld has its own\fmakers. He only\nbuilt the roads\nbetween.", "BAR_07.RAW", 3, -1},
+			{"Why is he up there?", "He paid for the\nframe. And he tips\nwell.", "BAR_08.RAW", 3, -1},
+			{"Something else.", NULL, NULL, 1, -1},
 		},
 	},
 	{ // 4: worlds
 		"You hear things,\nbehind a bar. Which\nworlds do you want\nto know about?", "BAR_10.RAW",
 		{
-			{"The old ones.", NULL, NULL, 5},
-			{"Universe is Toast?", NULL, NULL, 6},
-			{"The far ones.", NULL, NULL, 7},
-			{"Something else.", NULL, NULL, 1},
+			{"The old ones.", NULL, NULL, 5, -1},
+			{"Universe is Toast?", NULL, NULL, 6, -1},
+			{"The far ones.", NULL, NULL, 7, -1},
+			{"Something else.", NULL, NULL, 1, -1},
 		},
 	},
 	{ // 5: old
 		"Gnosticus, the\nOmegamatic,\nFribbulus Xax. The\nclassics! id\fSoftware made\nthose, back in\n1991.", "BAR_11.RAW",
 		{
-			{"Who exactly?", "Tom Hall dreamed\nyou up, hon. John\nCarmack and John\nRomero built it\fall, Adrian Carmack\npainted it, and\nBobby Prince wrote\nthe tunes.", "BAR_12.RAW", 5},
-			{"Which is the best?", "This one, of\ncourse. We have\nroot beer.", "BAR_13.RAW", 5},
-			{"Other worlds.", NULL, NULL, 4},
-			{"Something else.", NULL, NULL, 1},
+			{"Who exactly?", "Tom Hall dreamed\nyou up, hon. John\nCarmack and John\nRomero built it\fall, Adrian Carmack\npainted it, and\nBobby Prince wrote\nthe tunes.", "BAR_12.RAW", 5, -1},
+			{"Which is the best?", "This one, of\ncourse. We have\nroot beer.", "BAR_13.RAW", 5, -1},
+			{"Other worlds.", NULL, NULL, 4, -1},
+			{"Something else.", NULL, NULL, 1, -1},
 		},
 	},
 	{ // 6: toast
 		"Krodacia, Calidune,\nand the HUB Command\nCenter. Three\nplaces, one long\fstory.", "BAR_14.RAW",
 		{
-			{"Who made them?", "A fan called\nCeilick began it,\nall in his own\ntime. By the third\fhe had Mink and\nTulip beside him,\nand half the fans\nof the galaxy\fhelping.", "BAR_15.RAW", 6},
-			{"Are they dangerous?", "One of them is a\ndesert that wants\nyou dead, hon. Pack\na hat.", "BAR_16.RAW", 6},
-			{"And after that?", "Aspermontis. You\ntook your friends\nhome and found the\nOracle scorched and\fits batteries gone.\nBubbatom made that\none, with Ceilick,\nMink and Gridlock\flending a hand.", "BAR_17.RAW", 6},
-			{"Something else.", NULL, NULL, 1},
+			{"Who made them?", "A fan called\nCeilick began it,\nall in his own\ntime. By the third\fhe had Mink and\nTulip beside him,\nand half the fans\nof the galaxy\fhelping.", "BAR_15.RAW", 6, -1},
+			{"Are they dangerous?", "One of them is a\ndesert that wants\nyou dead, hon. Pack\na hat.", "BAR_16.RAW", 6, -1},
+			{"And after that?", "Aspermontis. You\ntook your friends\nhome and found the\nOracle scorched and\fits batteries gone.\nBubbatom made that\none, with Ceilick,\nMink and Gridlock\flending a hand.", "BAR_17.RAW", 6, -1},
+			{"Something else.", NULL, NULL, 1, -1},
 		},
 	},
 	{ // 7: far
 		"Krisle is where the\nAtroxians live.\nGnosticus Pi is our\nlittle sister\fplanet, the one\nwith the rings. And\nthe Shikadi keep a\nstation over\fFribbulus Xax.", "BAR_18.RAW",
 		{
-			{"Who made Krisle?", "Gridlock. Atroxian\nRealm, he called\nit. Years of work,\nwith friends like\fLemm and Gamebird.\nMind you, your ship\nbreaks when you\nland there.", "BAR_19.RAW", 7},
-			{"And Gnosticus Pi?", "Nisaba and\nK1n9_Duk3, with a\nwhole crowd of\nfriends. Foray in\fthe Forest. They\neven drew the\ninside of your\nship, hon.", "BAR_20.RAW", 7},
-			{"The Shikadi Station?", "That one hangs over\nFribbulus Xax.\nCeilick again, with\nMultimania doing\fthe wiring.\nOperation Station\nInfiltration. Mind\nthe big Ampton.", "BAR_21.RAW", 7},
-			{"Something else.", NULL, NULL, 1},
+			{"Who made Krisle?", "Gridlock. Atroxian\nRealm, he called\nit. Years of work,\nwith friends like\fLemm and Gamebird.\nMind you, your ship\nbreaks when you\nland there.", "BAR_19.RAW", 7, -1},
+			{"And Gnosticus Pi?", "Nisaba and\nK1n9_Duk3, with a\nwhole crowd of\nfriends. Foray in\fthe Forest. They\neven drew the\ninside of your\nship, hon.", "BAR_20.RAW", 7, -1},
+			{"The Shikadi Station?", "That one hangs over\nFribbulus Xax.\nCeilick again, with\nMultimania doing\fthe wiring.\nOperation Station\nInfiltration. Mind\nthe big Ampton.", "BAR_21.RAW", 7, -1},
+			{"Something else.", NULL, NULL, 1, -1},
+		},
+	},
+	{ // 8: brag1
+		"Look who's back!\nThey say you've\nbeen everywhere,\nhon. Go on, then.\fImpress me.", "BAR_22.RAW",
+		{
+			{"I saved the Oracle!", "Eight old men out\nof the Shadowlands.\nI know, hon. Half\nof them drink here\fnow.", "BAR_23.RAW", 9, KW_KEEN4},
+			{"I blew the fuses!", "On the Omegamatic?\nA doomsday machine,\nand all it took was\na few fuses.", "BAR_24.RAW", 9, KW_KEEN5},
+			{"I rescued Molly!", "From the Bloogs!\nAnd she was the one\nmeant to be minding\nyou.", "BAR_25.RAW", 9, KW_KEEN6},
+			{"I found the keys.", "Krodacia's keys?\nAll of them? I\ncan't find my own\non a good day.", "BAR_26.RAW", 9, KW_KEEN7},
+		},
+	},
+	{ // 9: brag2
+		"Not bad. What else?", "BAR_27.RAW",
+		{
+			{"I beat the desert.", "Calidune. I told\nyou to pack a hat.", "BAR_28.RAW", 10, KW_KEEN8},
+			{"I won on brains.", "At the HUB? Against\nthe cleverest heads\nin the Universe,\nand you turned up\fwith a pogo stick.", "BAR_29.RAW", 10, KW_KEEN9},
+			{"I brought batteries.", "The eight\naccumulators! The\nOracle hums again.\nIt keeps the\fneighbours up.", "BAR_30.RAW", 10, KW_KEEN95},
+		},
+	},
+	{ // 10: brag3
+		"Go on, I'm\nlistening.", "BAR_31.RAW",
+		{
+			{"I got off Krisle.", "With a broken ship!\nThe Atroxians still\ntalk about it. Not\nkindly.", "BAR_32.RAW", 11, KW_AREALM},
+			{"I tidied the forest.", "On Gnosticus Pi,\nour little sister\nplanet. They say it\nis quiet again.", "BAR_33.RAW", 11, KW_FITF},
+			{"I took a station.", "The Shikadi one,\nover Fribbulus Xax?\nMind the big\nAmpton, I said. Did\fyou mind it?", "BAR_34.RAW", 11, KW_OSI},
+		},
+	},
+	{ // 11: brag4
+		"Is that all?", "BAR_35.RAW",
+		{
+			{"I climbed Meurglys.", "And met the local\nElvis, I hear. Did\nhe sing?", "BAR_36.RAW", 12, KW_BOUNTY},
+			{"I broke another one.", "A second\nOmegamatic? Some\npeople never learn,\nhon.", "BAR_37.RAW", 12, KW_CK55},
+			{"I found the address.", "Address Unknown?\nNobody finds that\nplace. That's the\npoint of the name.", "BAR_38.RAW", 12, KW_ASYLUM},
+		},
+	},
+	{ // 12: brag5
+		"Every world, saved.\nI'll say this once,\nKeen: well done.\nSit down. This\fone's on the house.\nThey all are, from\nnow on.", "BAR_39.RAW",
+		{
+			{"Thanks. A root beer!", "Coming right up,\nhero.", "BAR_40.RAW", -1, -1},
+			{"It was nothing.", "It was a whole\ngalaxy, hon. Drink\nup.", "BAR_41.RAW", -1, -1},
 		},
 	},
 };
+#define KW_BARMAID_BRAG 8 // where the talk begins when every world is saved

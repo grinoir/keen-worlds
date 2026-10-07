@@ -6,6 +6,9 @@ Reads from the art folder:
   image1.png   the title: the first thing shown when the program is launched
   image2.png   what Keen Worlds' story scrolls over (Keen refuels the ship)
   image3.png   the ending: shown when every world is saved (Keen on the beach)
+  asylum_title.png  Address Unknown's title card
+  bounty_story.png  Meurglys III's story backdrop
+  asylum_story.png  Address Unknown's story backdrop
 Each is cropped to the screen's shape, scaled to 320x200 and written as an
 array of 32000 bytes, two pixels a byte (the left one in the high four bits).
 
@@ -87,9 +90,16 @@ def main():
         im = standard('%s/image1.png' % folder)
         write_array(f, 'kw_titlePicture', im)
         im.convert('RGB').resize((640, 400), Image.NEAREST).save('%s/image1_ega.png' % folder)
+        # Address Unknown has no title picture of its own.  Keep it in the
+        # same standard EGA palette as the episode title cards.
+        im = standard('%s/asylum_title.png' % folder)
+        write_array(f, 'kw_asylumTitlePicture', im)
+        im.convert('RGB').resize((640, 400), Image.NEAREST).save('%s/asylum_title_ega.png' % folder)
         text = (255, 255, 85)
         for name, src, count, method, boost, kmeans in (('kw_story', 'image2.png', 15, Image.Quantize.MAXCOVERAGE, 1.0, 0),
-                                                        ('kw_ending', 'image3.png', 16, Image.Quantize.MEDIANCUT, 1.3, 3)):
+                                                        ('kw_ending', 'image3.png', 16, Image.Quantize.MEDIANCUT, 1.3, 3),
+                                                        ('kw_bountyStory', 'bounty_story.png', 15, Image.Quantize.MAXCOVERAGE, 1.0, 0),
+                                                        ('kw_asylumStory', 'asylum_story.png', 15, Image.Quantize.MAXCOVERAGE, 1.0, 0)):
             im, colours = own_colours('%s/%s' % (folder, src), count, method, boost, kmeans)
             write_array(f, name + 'Picture', im)
             f.write('static const uint8_t %sColors[16][3] = {%s};\n' % (name, ', '.join(

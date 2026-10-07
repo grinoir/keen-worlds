@@ -16,6 +16,8 @@ bool KW_StartShipMusic(void);
 // plays. KW_TitleMusicIsOver: other music began, or the music was stopped.
 void KW_StartTitleMusic(void);
 void KW_TitleMusicIsOver(void);
+// The ending's calm tune, at a volume of 0 to 256.
+void KW_StartEndingMusic(int volume);
 // Voice clips (files in the game folder's "voice" folder). Music never
 // plays under a voice: KW_Speak fades it out (waiting for the fade if asked;
 // not when the music is already off), plays the clip, and the music fades
