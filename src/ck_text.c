@@ -1151,7 +1151,8 @@ void help_endgame(void)
 			VH_UpdateScreen();
 			KW_LinePoll(); // KEEN WORLDS: the line is over: the music comes back up
 
-			if (IN_UserInput(70, false))
+			// (KW_AUTOFINALE: the scripted test of Keen Worlds' ending turns the pages itself)
+			if (IN_UserInput(70, false) || getenv("KW_AUTOFINALE"))
 			{
 				advancePage = true;
 				break;
