@@ -232,119 +232,6 @@ def furnish_exit(r):
     return r
 
 
-# ---- Keen Worlds' own look. The rooms' shapes are Foray in the Forest's;
-# what is in them and how they are painted is changed here, so that the
-# cabin is recognisably Keen Worlds' Megarocket: the white hull with a red
-# band of the ship on the title picture, a star chart of Keen Worlds' galaxy
-# on the navigation screen, Keen Worlds' own box of stunners, a red nose,
-# and a name plate over the hatch.
-
-FONT = {'K': ['#.#', '#.#', '##.', '#.#', '#.#'], 'E': ['###', '#..', '##.', '#..', '###'],
-        'N': ['#.#', '###', '###', '#.#', '#.#'], 'B': ['##.', '#.#', '##.', '#.#', '##.'],
-        'W': ['#.#', '#.#', '###', '###', '#.#'], '-': ['...', '...', '###', '...', '...']}
-
-
-def letters(r, text, x, y, colour):
-    for ch in text:
-        for dy, row in enumerate(FONT[ch]):
-            for dx, c in enumerate(row):
-                if c == '#':
-                    r[y + dy][x + dx] = colour
-        x += 4
-
-
-def livery(r, keep=()):
-    """The grey ship painted white: light grey becomes white and the dither
-    of light and dark grey becomes white and light grey. Broad dark walls
-    become the dark blue of the ship's canopy frame. `keep`: boxes
-    (x0, y0, x1, y1) left as they are."""
-    h, w = len(r), len(r[0])
-    o = [row[:] for row in r]
-    kept = lambda x, y: any(x0 <= x < x1 and y0 <= y < y1 for x0, y0, x1, y1 in keep)
-    for y in range(h):
-        for x in range(w):
-            if kept(x, y):
-                continue
-            if o[y][x] == 7:
-                r[y][x] = 15
-            elif o[y][x] == 8:
-                around = [o[y + dy][x + dx] for dx, dy in ((-1, 0), (1, 0), (0, -1), (0, 1))
-                          if 0 <= y + dy < h and 0 <= x + dx < w]
-                r[y][x] = 1 if all(c in (8, 0) for c in around) and around.count(8) >= 3 else 7
-    return r
-
-
-def ours_flight(r):
-    livery(r, keep=[(150, 52, 170, 72)])          # (the wall panel keeps its own greys)
-    # the nose: red, as the nose of a rocket should be
-    for y in range(38, 68):
-        for x in range(0, 52):
-            r[y][x] = {2: 4, 10: 12}.get(r[y][x], r[y][x])
-    # a red band along the top of the hold, as along the ship's side outside
-    for x in range(82, 186):
-        if r[54][x] in (1, 7, 8, 15):
-            r[54][x] = 12
-        if r[55][x] in (1, 7, 8, 15):
-            r[55][x] = 4
-    # the navigation screen: Keen Worlds' galaxy. Thirteen worlds as stars,
-    # the courses between them as faint lines, and the ship as a red dot.
-    screen = [(x, y) for y in range(46, 67) for x in range(54, 78) if r[y][x] in (1, 9, 11, 3)]
-    for x, y in screen:
-        r[y][x] = 0
-    inside = set(screen)
-    stars = [(59, 52), (63, 50), (67, 53), (71, 51), (60, 57), (65, 58), (70, 56), (73, 60), (62, 62), (67, 63), (71, 64), (57, 60), (74, 55)]
-    for (x0, y0), (x1, y1) in zip(stars, stars[1:7]):
-        n = max(abs(x1 - x0), abs(y1 - y0), 1)
-        for t in range(n + 1):
-            p = (round(x0 + (x1 - x0) * t / n), round(y0 + (y1 - y0) * t / n))
-            if p in inside:
-                r[p[1]][p[0]] = 8
-    for i, (x, y) in enumerate(stars):
-        if (x, y) in inside:
-            r[y][x] = 14 if i % 3 else 11
-    if (65, 55) in inside:
-        r[55][65] = 12
-    # the pilot's seat: red
-    for y in range(22, 46):
-        for x in range(120, 142):
-            r[y][x] = {11: 12, 3: 4}.get(r[y][x], r[y][x])
-    # Keen Worlds' own box of stunners, where Foray's box of plants stood
-    for y in range(50, 79):
-        for x in range(117, 152):
-            if y < 79 and r[y][x] not in (0,) or y < 76:
-                r[y][x] = 1 if y > 55 else r[y][x] if y < 54 else 1
-    for x in range(117, 152):                      # (the band runs on behind it)
-        r[54][x], r[55][x] = 12, 4
-    s = Stamp()
-    s.rect(121, 62, 148, 78, 4)                    # the box
-    s.rect(121, 62, 148, 63, 12), s.rect(121, 62, 122, 78, 12)
-    s.rect(121, 59, 148, 62, 6), s.rect(121, 59, 148, 60, 14)      # its lid
-    s.rect(132, 60, 137, 62, 7)                    # the catch
-    for i, (x0, x1) in enumerate(((136, 139), (134, 138), (132, 137), (133, 140), (135, 138), (133, 136), (131, 135))):
-        s.rect(x0, 65 + i * 2, x1, 67 + i * 2 if i < 6 else 78, 14)   # a bolt of lightning
-    s.onto(r)
-    return r
-
-
-def ours_exit(r):
-    """(Before Keen's things are put in: they keep their own colours.)"""
-    # the cables overhead: red and yellow
-    for y in range(8, 32):
-        for x in range(56, 122):
-            r[y][x] = {1: 4, 9: 12, 3: 6, 11: 14}.get(r[y][x], r[y][x])
-    livery(r)
-    # the plate over the hatch: the ship's name
-    for y in range(40, 52):
-        for x in range(42, 70):
-            if r[y][x] in (2, 10):
-                r[y][x] = 4
-    for x in range(43, 69):
-        if r[41][x] == 4:
-            r[41][x] = 12
-    letters(r, 'B-W-B', 46, 44, 15)
-    return r
-
-
 def cut_out(room):
     """A room with everything outside the ship see-through (None), so the
     place the ship stands in shows around it."""
@@ -358,8 +245,7 @@ def cut_out(room):
 def draw():
     flight, exit_room = foray_rooms()
     px = [[None] * W for _ in range(H)]
-    for room, (ox, oy) in ((ours_flight(clean_flight(flight)), FLIGHT_AT),
-                           (furnish_exit(ours_exit(clean_exit(exit_room))), EXIT_AT)):
+    for room, (ox, oy) in ((clean_flight(flight), FLIGHT_AT), (furnish_exit(clean_exit(exit_room)), EXIT_AT)):
         for y, row in enumerate(cut_out(room)):
             px[oy + y][ox:ox + len(row)] = row
     return px
@@ -414,10 +300,9 @@ def csource(out):
     slots = slots_all[:TW * TH]
     pieces = TH // PIECE_ROWS
     lines = ['/* Generated by tools/kw_shiproom_art.py -- do not edit by hand. */',
-             '// The inside of the Megarocket. The two rooms\' shapes are those of Keen\'s ship in',
-             '// Foray in the Forest (Nisaba and K1n9_Duk3, GPL v2 or later); they are cleaned',
-             '// of what lay about in them and repainted and refitted as Keen Worlds\' own ship.',
-             '// One picture in %d pieces of %d rows.' % (pieces, PIECE_ROWS),
+             '// The inside of the Megarocket: the two rooms of Keen\'s ship from Foray in the',
+             '// Forest (Nisaba and K1n9_Duk3, GPL v2 or later), cleaned of the things lying',
+             '// about in them. One picture in %d pieces of %d rows.' % (pieces, PIECE_ROWS),
              '#define KW_SHIPROOM_ORIGIN_X %d' % ORIGIN[0], '#define KW_SHIPROOM_ORIGIN_Y %d' % ORIGIN[1],
              '#define KW_SHIPROOM_TILES_W %d' % TW, '#define KW_SHIPROOM_PIECE_H %d' % PIECE_ROWS,
              '#define KW_SHIPROOM_PIECES %d' % pieces,
