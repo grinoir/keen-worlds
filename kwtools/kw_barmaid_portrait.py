@@ -11,7 +11,7 @@ masked tiles in Keen 4 tile slots; the engine draws it on the card.
 import os, sys
 from PIL import Image
 
-HERE = os.path.dirname(__file__)
+HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from kw_gate_art import EGA, tile_bytes, free_slots_in
 
@@ -122,7 +122,7 @@ def to_image(px):
 
 def preview(out):
     import keenrender, struct
-    d = os.path.join(HERE, '..', 'play')
+    d = os.path.join(os.path.dirname(HERE), 'play')
     sp = keenrender.Sprites(d, EPISODE)
     info = struct.unpack('<23H', open(os.path.join(d, 'GFXINFOE.CK4'), 'rb').read()[:46])
     raw = sp._chunk(info[18])

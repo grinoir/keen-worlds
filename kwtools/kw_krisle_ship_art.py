@@ -20,7 +20,7 @@ sys.path.insert(0, HERE)
 from kw_gate_art import EGA, tile_bytes
 import keenmap, keenrender
 
-PLAY = os.path.join(HERE, '..', 'play')
+PLAY = os.path.join(os.path.dirname(HERE), 'play')
 # The ship in Keen 4's level 18: these columns and rows, these tiles only.
 K4_X0, K4_Y0, SHIP_TW, SHIP_TH = 4, 8, 15, 6
 K4_TILES = range(2700, 2810)

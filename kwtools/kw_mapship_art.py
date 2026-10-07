@@ -12,7 +12,7 @@ player's files in play/mods/keen8.
 import os, sys, tempfile
 from PIL import Image
 
-HERE = os.path.dirname(__file__)
+HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from kw_gate_art import EGA, tile_bytes
 
@@ -59,7 +59,7 @@ def draw_ship():
     1012-1013 beside Keen's start). Keen 4 v1.4 is the freely distributable
     shareware episode."""
     import keenrender
-    g = keenrender.Graphics(os.path.join(HERE, '..', 'play'), '4')
+    g = keenrender.Graphics(os.path.join(os.path.dirname(HERE), 'play'), '4')
     px = canvas(SHIP_W, SHIP_H)
     for i, tile in enumerate(KEEN4_SHIP_TILES):
         img = g.tile(tile, True).convert('RGBA')
@@ -84,7 +84,7 @@ def to_image(px):
 def mod_view(world):
     """A temporary folder with the mod's files under the standard names."""
     folder, ep = WORLDS[world][0], WORLDS[world][1]
-    src = os.path.abspath(os.path.join(HERE, '..', 'play', 'mods', folder))
+    src = os.path.abspath(os.path.join(os.path.dirname(HERE), 'play', 'mods', folder))
     d = tempfile.mkdtemp(prefix='kw_' + world + '_')
     for std, real in MOD_FILES[ep].items():
         os.symlink(os.path.join(src, real), os.path.join(d, std))

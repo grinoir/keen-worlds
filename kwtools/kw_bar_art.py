@@ -12,7 +12,7 @@ villagers are back and the bar is open.
 import os, sys
 from PIL import Image
 
-HERE = os.path.dirname(__file__)
+HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from kw_gate_art import EGA, tile_bytes, free_slots_in
 
@@ -152,7 +152,7 @@ def to_image(px):
 
 def preview(out):
     import keenmap, keenrender
-    d = os.path.join(HERE, '..', 'play')
+    d = os.path.join(os.path.dirname(HERE), 'play')
     name, w, h, (bg, fg, info) = keenmap.level(d, EPISODE, LEVEL)
     g = keenrender.Graphics(d, EPISODE)
     x0, y0, x1, y1 = 76, 9, 96, 19

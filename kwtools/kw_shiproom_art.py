@@ -27,7 +27,7 @@ sys.path.insert(0, HERE)
 import keenmap, keenrender
 from kw_gate_art import EGA, tile_bytes, free_slots_in
 
-FITF = os.path.join(HERE, '..', 'play', 'mods', 'fitf')
+FITF = os.path.join(os.path.dirname(HERE), 'play', 'mods', 'fitf')
 FITF_LEVEL = 1
 FLIGHT_BOX = (5, 24, 19, 30)   # the rooms in that level, in tiles (x0, y0, x1, y1)
 EXIT_BOX = (7, 38, 17, 44)

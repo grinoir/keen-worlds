@@ -136,7 +136,7 @@ def tile_bytes(px, tx, ty):
 
 def preview(out):
     import keenmap, keenrender
-    d = os.path.join(os.path.dirname(__file__), '..', 'play')
+    d = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'play')
     name, w, h, (bg, fg, info) = keenmap.level(d, '5', 0)
     g = keenrender.Graphics(d, '5')
     x0, y0, x1, y1 = 24, 91, 35, 99
@@ -163,7 +163,7 @@ def free_slots_in(episode, count, lo, hi, d=None):
     frames, so the offsets between frames fit in an int8. d: the game folder
     (default play/), with standard file names."""
     import struct, keenmap
-    d = d or os.path.join(os.path.dirname(__file__), '..', 'play')
+    d = d or os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'play')
     head = open(os.path.join(d, 'EGAHEAD.CK%s' % episode), 'rb').read()
     starts = [int.from_bytes(head[i:i + 3], 'little') for i in range(0, len(head), 3)]
     info = struct.unpack('<23H', open(os.path.join(d, 'GFXINFOE.CK%s' % episode), 'rb').read()[:46])

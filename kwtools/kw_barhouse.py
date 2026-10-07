@@ -25,13 +25,13 @@ player's GAMEMAPS.CK4 stays untouched.
 import os, sys
 from PIL import Image
 
-HERE = os.path.dirname(__file__)
+HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import keenmap, keenrender
 from kw_gate_art import EGA, tile_bytes, free_slots_in
 from kw_bar_art import Canvas, FONT
 
-DATA = os.path.join(HERE, '..', 'play')
+DATA = os.path.join(os.path.dirname(HERE), 'play')
 EPISODE, LEVEL = '4', 1
 
 BLACK, BLUE, GREEN, CYAN, RED, MAGENTA, BROWN, LGREY = range(8)
