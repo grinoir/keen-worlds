@@ -195,8 +195,8 @@ static const KW_WorldDef kw_worldDefs[KW_NUM_WORLDS] = {
 	// Worlds). It runs on Keen 4 and is not a destination in the menu.
 	{"megarocket", "The Megarocket", 4, "megarocket", "SHIP.CK4",
 		"The Bean-with-Bacon\nMegarocket",
-		"Keen's ship, as drawn for\nForay in the Forest",
-		"The inside of the Megarocket\nis from Foray in the Forest\nby Nisaba and K1n9_Duk3,\ntidied up for Keen Worlds.\n\nIt is built on the tiles of\nCommander Keen 4\n(id Software, 1991).",
+		"Keen's ship, as drawn for\nKeen Worlds",
+		"The inside of the Megarocket\nis Keen Worlds' own art,\nshaped after Keen's ship\nin Commander Keen 4.\n\nIt is built on the tiles of\nCommander Keen 4\n(id Software, 1991).",
 		"It comes with Keen Worlds:\nthe folder megarocket is missing\nfrom the game folder."},
 	// Tuberia: Keen Dreams, id Software's "lost episode" (1991, published
 	// by Softdisk; its source is GPL since 2014). It is the dream Keen has
@@ -557,6 +557,7 @@ static int16_t kw_savedTold[KW_NUM_WORLDS];  // ... has said its piece about thi
 static int16_t kw_chronicleEndTold = 0;      // the Chronicle's last card has been shown
 static bool kw_crashLanding = false;      // the ship is being shot down over Krisle (see KW_CrashLanding)
 static int kw_dreamEnded = 0;             // Keen has just woken: 1 as usual, 2 the dream was lost, 3 it was won
+static bool kw_epilogueBackdrop = false;  // the last-world-saved crawl has its own sky
 // Tuberia is a dream and the ship is the ship: the rest are places to fly to.
 static bool KW_IsPlanet(int world)
 {
@@ -2511,7 +2512,12 @@ bool KW_DrawStoryBackdrop(void)
 {
 	const uint8_t *picture = kw_storyPicture;
 	const uint8_t (*colours)[3] = kw_storyColors;
-	if (kw_currentWorld == KW_BOUNTY)
+	if (kw_epilogueBackdrop)
+	{
+		picture = kw_epilogueStoryPicture;
+		colours = kw_epilogueStoryColors;
+	}
+	else if (kw_currentWorld == KW_BOUNTY)
 	{
 		picture = kw_bountyStoryPicture;
 		colours = kw_bountyStoryColors;
@@ -2532,7 +2538,8 @@ int KW_StoryPixel(int x, int y)
 {
 	if (x < 0 || x >= 320 || y < 0 || y >= 200)
 		return 0;
-	const uint8_t *picture = kw_currentWorld == KW_BOUNTY ? kw_bountyStoryPicture :
+	const uint8_t *picture = kw_epilogueBackdrop ? kw_epilogueStoryPicture :
+		kw_currentWorld == KW_BOUNTY ? kw_bountyStoryPicture :
 		kw_currentWorld == KW_ASYLUM ? kw_asylumStoryPicture : kw_storyPicture;
 	uint8_t b = picture[y * 160 + x / 2];
 	return (x & 1) ? (b & 15) : (b >> 4);
@@ -2714,7 +2721,9 @@ static void KW_Finale(void)
 	ck_starWarsNarrated = true; // (no music of the scroll's own)
 	ck_starWarsKeepMusic = true;
 	ck_starWarsTextOverride = kw_epilogue;
+	kw_epilogueBackdrop = true;
 	CK_DrawStarWarsEx(false);
+	kw_epilogueBackdrop = false;
 	ck_starWarsTextOverride = NULL;
 	ck_starWarsNarrated = ck_starWarsKeepMusic = false;
 	VL_SetCustomColors(NULL);

@@ -256,24 +256,15 @@ World id `megarocket`: the inside of Keen's ship, on Keen 4's engine. Its
 map is written by `kwtools/kw_shipworld.py` into `data/megarocket`
 (`play/run.sh` copies the folder to `play/megarocket`).
 
-Its look is the ship of **Foray in the Forest** (Nisaba and K1n9_Duk3, GPL
-v2 or later): that game's flight room and exit room, with the things lying
-about in them painted out. `kwtools/kw_shiproom_art.py` reads the two rooms
-from the game's own files (`play/mods/fitf`, level 1), cleans them and
-writes `src/kw_shiproom_art.h`, which is placed like the other Keen Worlds
-art. So Foray's art is in this repository; the world's card and "About
-this world" name its makers. (The user is to speak to the authors about
-this use before anything is published.)
+Its look is original Keen Worlds art. `kwtools/kw_shiproom_art.py` draws a
+low, white, wedge-shaped cutaway with the blue canopy and aft engine language
+of Keen 4's exterior Megarocket, then writes `src/kw_shiproom_art.h` for the
+engine. The flight room holds the world-selection console; the aft bay holds
+Keen's pogo stick, travel bag and bed (the way into Keen Dreams).
 
-Keen Worlds adds three things of Keen's to the exit room (own drawing):
-his pogo stick, his bag and a bed (the way into Keen Dreams).
-
-The flight room follows Foray's own layout (read from its level and tile
-properties): Keen can jump up onto the flight deck, which is as wide as
-Foray's so he stays under the glass, and the box of stunners under the deck
-is the ammo station. "Up" opens the
-list of worlds at the navigation screen in the nose, where a small sign
-with an arrow blinks, and also on the flight deck at the controls.
+The flight deck keeps the existing walkable console and ammo-station logic.
+"Up" opens the list of worlds at the navigation screen in the nose, where a
+small sign with an arrow blinks, and also on the flight deck at the controls.
 
 **Every game begins inside the ship** (`KW_BeginInShip`, called for a new
 game): the ship has landed on the world the game starts in, and Keen steps
@@ -344,24 +335,13 @@ World id `megarocket`: the inside of Keen's ship, on Keen 4's engine. Its
 map is written by `kwtools/kw_shipworld.py` into `data/megarocket`
 (`play/run.sh` copies the folder to `play/megarocket`).
 
-Its look is the ship of **Foray in the Forest** (Nisaba and K1n9_Duk3, GPL
-v2 or later): that game's flight room and exit room, with the things lying
-about in them painted out. `kwtools/kw_shiproom_art.py` reads the two rooms
-from the game's own files (`play/mods/fitf`, level 1), cleans them and
-writes `src/kw_shiproom_art.h`, which is placed like the other Keen Worlds
-art. So Foray's art is in this repository; the world's card and "About
-this world" name its makers. (The user is to speak to the authors about
-this use before anything is published.)
-
-Keen Worlds adds three things of Keen's to the exit room (own drawing):
-his pogo stick, his bag and a bed (the way into Keen Dreams).
-
-The flight room follows Foray's own layout (read from its level and tile
-properties): Keen can jump up onto the flight deck, which is as wide as
-Foray's so he stays under the glass, and the box of stunners under the deck
-is the ammo station. "Up" opens the
-list of worlds at the navigation screen in the nose, where a small sign
-with an arrow blinks, and also on the flight deck at the controls.
+Its look is original Keen Worlds art: a low, white, wedge-shaped cutaway with
+Keen 4's blue canopy and an exposed aft engine. `kwtools/kw_shiproom_art.py`
+writes `src/kw_shiproom_art.h`, which is placed like the other project art.
+The flight room has the navigation screen and ammo station; the aft bay has
+Keen's pogo stick, travel bag and bed (the way into Keen Dreams). "Up" opens
+the list of worlds at the navigation screen in the nose, where a small arrow
+sign blinks, and also on the flight deck at the controls.
 
 **Every game begins inside the ship** (`KW_BeginInShip`, called for a new
 game): the ship has landed on the world the game starts in, and Keen steps
@@ -895,14 +875,24 @@ tools`), because they find the games and the play folder from there.
 
 **A test version** for Linux and Windows is made by
 `kwtools/kw_package.sh`, into `dist/` beside the repository:
-`KeenWorlds-<date>-<commit>-linux.tar.gz` and `-windows.zip`.
+`KeenWorlds-<version>-<commit>-linux.tar.gz` and `-windows.zip`.
 
 - Each holds the program, Omnispeak's tables for Keen 4-6 (Keen 6 v1.4's in
   place, v1.5's in `keen6-v1.5/`), the Megarocket, the voices, a guide for
   testers (`kwtools/package/README.txt`), a starter that writes
-  `keenworlds-log.txt`, and the source. It holds nobody's game.
-- `--with-my-games` also copies in the games from `play/`. That copy is
-  marked private: it is for trying the archives on one's own machines.
+  `keenworlds-log.txt`, and the source.
+- It also holds Keen 4's shareware episode, so it plays as it is: Apogee's
+  CK4SW14 package whole and unchanged in `keen4-shareware/` (its VENDOR.DOC
+  asks for that), and its three game files beside the program. The script
+  takes it from `keen4/v1.4` beside the repository (or `$KW_KEEN4SW`) and
+  checks the files are the ones released. Keen 5 and 6 and the fan games
+  the player adds; section 1 of the guide says where
+  (`kwtools/package/SUPPLY-public.txt`).
+- `--with-my-games` makes the full copy, `...-full-private-...`: it also
+  copies in the games from `play/` (Keen 5 and 6, every fan game), and
+  section 1 of its guide (`SUPPLY-full.txt`) says it is complete and not
+  for handing out. It is for one's own machines and testers.
+- `/KWTEST` needs Keen 4, 5 and 6: run it on a full copy, not a public one.
 - The Linux program is built with zig's clang against glibc 2.28, so it
   runs on distributions back to 2018; it needs SDL2 and OpenGL from the
   system. The Windows program is one 64-bit `.exe` with SDL2 inside, built

@@ -9,6 +9,7 @@ Reads from the art folder:
   asylum_title.png  Address Unknown's title card
   bounty_story.png  Meurglys III's story backdrop
   asylum_story.png  Address Unknown's story backdrop
+  epilogue_story.png the final all-worlds-saved story backdrop
 Each is cropped to the screen's shape, scaled to 320x200 and written as an
 array of 32000 bytes, two pixels a byte (the left one in the high four bits).
 
@@ -99,7 +100,8 @@ def main():
         for name, src, count, method, boost, kmeans in (('kw_story', 'image2.png', 15, Image.Quantize.MAXCOVERAGE, 1.0, 0),
                                                         ('kw_ending', 'image3.png', 16, Image.Quantize.MEDIANCUT, 1.3, 3),
                                                         ('kw_bountyStory', 'bounty_story.png', 15, Image.Quantize.MAXCOVERAGE, 1.0, 0),
-                                                        ('kw_asylumStory', 'asylum_story.png', 15, Image.Quantize.MAXCOVERAGE, 1.0, 0)):
+                                                        ('kw_asylumStory', 'asylum_story.png', 15, Image.Quantize.MAXCOVERAGE, 1.0, 0),
+                                                        ('kw_epilogueStory', 'epilogue_story.png', 15, Image.Quantize.MAXCOVERAGE, 1.0, 0)):
             im, colours = own_colours('%s/%s' % (folder, src), count, method, boost, kmeans)
             write_array(f, name + 'Picture', im)
             f.write('static const uint8_t %sColors[16][3] = {%s};\n' % (name, ', '.join(

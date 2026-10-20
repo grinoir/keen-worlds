@@ -1,15 +1,18 @@
 #!/bin/sh
 # Build Keen Worlds for Linux and Windows and pack each as one archive.
 #
-#   kwtools/kw_package.sh                  both archives, in ../dist
-#   kwtools/kw_package.sh --with-my-games  also copies the games found in
-#                                          ../play (Keen 4-6 and mods/) in
+#   kwtools/kw_package.sh                  the public archives, in ../dist
+#   kwtools/kw_package.sh --with-my-games  the full ones: also copies the
+#                                          games found in ../play (Keen 4-6
+#                                          and mods/) in
 #
 # An archive holds the game program, Keen Worlds' own files (the Megarocket,
-# the voices, Omnispeak's tables for Keen 4-6), the guide and the source.
-# It holds nobody's game: the player adds those. --with-my-games is for
-# trying the archives on your own machines; such an archive contains other
-# people's games and is not for handing out.
+# the voices, Omnispeak's tables for Keen 4-6), the guide, the source and
+# Keen 4's shareware episode (Apogee's CK4SW14 package, whole and unchanged,
+# as its VENDOR.DOC asks; from ../keen4/v1.4 or $KW_KEEN4SW). The player
+# adds Keen 5 and 6 and the fan games. --with-my-games is for your own
+# machines and your testers; such an archive contains other people's games
+# and is not for handing out.
 #
 # Needs, in ../toolchain (or $KW_TOOLCHAIN):
 #   zig-x86_64-linux-*      https://ziglang.org/download/  (Linux build that
@@ -25,12 +28,21 @@ PROJECT=$(dirname "$REPO")
 TOOLCHAIN=${KW_TOOLCHAIN:-$PROJECT/toolchain}
 DIST=${KW_DIST:-$PROJECT/dist}
 PLAY=$PROJECT/play
+KEEN4SW=${KW_KEEN4SW:-$PROJECT/keen4/v1.4}
 WITH_GAMES=0
 [ "$1" = "--with-my-games" ] && WITH_GAMES=1
 
 ZIG=$(ls -d "$TOOLCHAIN"/zig-x86_64-linux-*/zig 2>/dev/null | tail -1)
 MINGW=$(ls -d "$TOOLCHAIN"/llvm-mingw-*/bin 2>/dev/null | tail -1)
 SDLWIN=$(ls -d "$TOOLCHAIN"/SDL2-2.* 2>/dev/null | tail -1)
+# The shareware package as Apogee released it (its VENDOR.DOC lists these four).
+for f in AUDIO.CK4:33325 EGAGRAPH.CK4:520581 GAMEMAPS.CK4:99040 KEEN4E.EXE:105108 VENDOR.DOC ORDER.FRM; do
+	n=${f%%:*}
+	if [ ! -f "$KEEN4SW/$n" ] || { [ "$n" != "$f" ] && [ "$(wc -c < "$KEEN4SW/$n")" != "${f#*:}" ]; }; then
+		echo "kw_package: $KEEN4SW does not hold Keen 4 shareware v1.4 as released ($n)." >&2
+		exit 1
+	fi
+done
 for need in "$ZIG" "$MINGW" "$SDLWIN"; do
 	if [ -z "$need" ]; then
 		echo "kw_package: a build tool is missing from $TOOLCHAIN (see the top of this script)." >&2
@@ -88,7 +100,16 @@ fill() {
 	cp "$REPO"/data/keen6e15/*.CK6 "$d/keen6-v1.5/"
 	cp "$REPO"/data/megarocket/* "$d/megarocket/"
 	cp "$REPO"/data/voice/*.OGG "$d/voice/"
-	sed "s/@VERSION@/$NUMBER ($NAMED)/" "$REPO/kwtools/package/README.txt" > "$d/README.txt"
+	# Section 1 of the guide says what the player still has to add.
+	supply=$REPO/kwtools/package/SUPPLY-public.txt
+	[ "$WITH_GAMES" = 1 ] && supply=$REPO/kwtools/package/SUPPLY-full.txt
+	sed "s/@VERSION@/$NUMBER ($NAMED)/" "$REPO/kwtools/package/README.txt" |
+		awk -v f="$supply" '$0 == "@SUPPLY@" { while ((getline l < f) > 0) print l; next } { print }' > "$d/README.txt"
+	# Keen 4's shareware episode: the package whole in its own folder, and
+	# its three game files beside the program, where the game looks.
+	mkdir -p "$d/keen4-shareware"
+	cp "$KEEN4SW"/* "$d/keen4-shareware/"
+	cp "$KEEN4SW/GAMEMAPS.CK4" "$KEEN4SW/EGAGRAPH.CK4" "$KEEN4SW/AUDIO.CK4" "$d/"
 	# Each world's folder, with the files that are Keen Worlds' own in it.
 	cp -r "$REPO"/data/mods/. "$d/mods/"
 	find "$d/mods" -name .keep -delete
@@ -97,8 +118,18 @@ fill() {
 	cp "$REPO/AUTHORS" "$d/AUTHORS.txt"
 	echo "Keen Worlds $NUMBER ($NAMED), build $VERSION, $(date +%Y-%m-%d)" > "$d/VERSION.txt"
 	# The program is under the GPL: its source goes with it.
-	git -C "$REPO" archive --format=tar.gz --prefix=keen-worlds-source/ -o "$d/source.tar.gz" HEAD \
-		':!data/voice' ':!data/megarocket' ':!data/mods'
+	# A "-changed" build must carry the sources it was actually built from,
+	# not just HEAD.  Start with the clean archive, then lay its tracked
+	# working-tree changes over it before packing the source bundle.
+	mkdir -p "$WORK/source"
+	git -C "$REPO" archive --format=tar.gz --prefix=keen-worlds-source/ HEAD \
+		':!data/voice' ':!data/megarocket' ':!data/mods' | tar -xzf - -C "$WORK/source"
+	# (new files too, and none that git ignores)
+	{ git -C "$REPO" diff --name-only; git -C "$REPO" ls-files --others --exclude-standard; } | while IFS= read -r f; do
+		mkdir -p "$WORK/source/keen-worlds-source/$(dirname "$f")"
+		cp "$REPO/$f" "$WORK/source/keen-worlds-source/$f"
+	done
+	tar -C "$WORK/source" -czf "$d/source.tar.gz" keen-worlds-source
 	if [ "$WITH_GAMES" = 1 ]; then
 		for e in 4 5 6; do
 			for f in GAMEMAPS EGAGRAPH AUDIO; do
@@ -114,7 +145,7 @@ fill() {
 }
 
 NAME=KeenWorlds-$VERSION
-[ "$WITH_GAMES" = 1 ] && NAME=$NAME-private
+[ "$WITH_GAMES" = 1 ] && NAME=$NAME-full-private
 mkdir -p "$DIST"
 
 L=$WORK/pack/$NAME-linux

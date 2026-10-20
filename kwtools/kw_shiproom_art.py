@@ -3,15 +3,12 @@
     python3 tools/kw_shiproom_art.py preview OUT.png   # both rooms, 3x
     python3 tools/kw_shiproom_art.py csource OUT.h     # C data for the engine
 
-The two rooms of Keen's ship as they are in Foray in the Forest (by Nisaba
-and K1n9_Duk3, GPL v2 or later): the flight room and the exit room. The
-pictures are taken from that game's own files (its level 1, "BwB", read from
-play/mods/fitf) and then cleaned here: the things lying about in them (the
-bottles, papers, radio, the creature, the toolbox...) are painted out,
-so what is left is the ship itself. Keen Worlds adds three things of
-Keen's to the exit room: his pogo stick, his bag and a bed. Around the ship
-the picture is see-through: the engine puts the place the ship stands in
-behind it.
+The flight room and living bay are original Keen Worlds pixel art.  Their
+low, white, wedge-shaped pressure hull, blue canopy and exposed aft machinery
+are based on the *outside* silhouette of Keen 4's Megarocket, rather than on
+another game's cabin.  Keen's pogo, travel bag and bunk live in the aft bay.
+Around the ship the picture is see-through: the engine puts the place the ship
+stands in behind it.
 
 The result is one picture, 20 x 27 tiles: the flight room on the first
 screen (13 rows), a row the camera never shows, and the exit room on
@@ -19,18 +16,15 @@ the second screen. It covers map tiles 2-21 x 2-28 of the Megarocket
 world's level (tools/kw_shipworld.py). The engine lays it over the level in
 three pieces (an art piece holds at most 256 tiles).
 """
-import os, struct, sys
+import os, sys
 from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+PLAY = os.path.abspath(os.path.join(HERE, '..', '..', 'play'))
+ASSET_DIR = os.path.abspath(os.path.join(HERE, '..', 'assets'))
 sys.path.insert(0, HERE)
 import keenmap, keenrender
 from kw_gate_art import EGA, tile_bytes, free_slots_in
-
-FITF = os.path.join(os.path.dirname(HERE), 'play', 'mods', 'fitf')
-FITF_LEVEL = 1
-FLIGHT_BOX = (5, 24, 19, 30)   # the rooms in that level, in tiles (x0, y0, x1, y1)
-EXIT_BOX = (7, 38, 17, 44)
 
 TW, TH = 20, 27
 W, H = TW * 16, TH * 16
@@ -38,7 +32,8 @@ ORIGIN = (2, 2)
 PIECE_ROWS = 9            # rows in each of the three pieces
 SLOT_RANGE = (300, 2915)  # Keen 4 masked-tile slots to take free ones from
 EPISODE = '4'
-FLIGHT_AT = (48, 64)      # where the rooms go in the picture
+FLIGHT_AT = (48, 61)      # where the rooms go in the picture (the flight room
+                          # 3 px up: its floor meets Keen's feet)
 EXIT_AT = (80, 14 * 16 + 64)
 
 
@@ -232,6 +227,122 @@ def furnish_exit(r):
     return r
 
 
+def own_hull(kind):
+    """An original cutaway based on Keen 4's low wedge Megarocket.
+
+    This deliberately draws the cabin from simple construction marks instead
+    of sampling a level: a sloped white nose, blue canopy, belly panels, and
+    an unmistakable exposed engine at the back.
+    """
+    w, h = 224, 96
+    r = [[None] * w for _ in range(h)]
+    # The low silhouette: pointy nose, long level belly, then engine cowling.
+    for x in range(8, 218):
+        top = 45 - min(24, max(0, (x - 18) // 4))
+        if x > 170:
+            top += (x - 170) // 3
+        bottom = 82 if x < 186 else 82 - (x - 186) // 5
+        for y in range(max(13, top), min(87, bottom)):
+            r[y][x] = 8
+    # Give the hull some lived-in depth before the hard construction lines:
+    # riveted skin, deep under-deck shadow, and the big coloured canopy.
+    for y in range(22, 42):
+        left = 58 + max(0, (32 - y) * 2)
+        right = 158 - max(0, (y - 27) * 2)
+        for x in range(left, right):
+            r[y][x] = 9 if y < 31 else 3
+    for y in range(67, 80):
+        for x in range(24, 180):
+            if (x + y) % 5:
+                r[y][x] = 0 if y < 73 else 8
+    for x in range(18, 205, 9):
+        y = 40 - min(18, max(0, (x - 28) // 7))
+        if 15 < y < 70:
+            r[y][x] = 7
+    # white skin follows the outside profile; blue keel makes this ours.
+    s = Stamp()
+    s.line(9, 45, 47, 31, 15); s.line(47, 31, 165, 21, 15)
+    s.line(165, 21, 183, 31, 7); s.line(183, 31, 215, 43, 7)
+    s.line(8, 46, 8, 62, 7); s.line(9, 63, 31, 72, 7)
+    s.line(31, 72, 203, 82, 1); s.line(203, 82, 217, 70, 7)
+    # blue canopy, a strong echo of the proper exterior ship rather than a bus.
+    s.line(58, 32, 82, 21, 9); s.line(82, 21, 143, 20, 9)
+    s.line(143, 20, 158, 27, 9); s.line(58, 32, 75, 42, 3)
+    s.line(75, 42, 151, 42, 3); s.line(151, 42, 158, 27, 3)
+    # Cockpit with an angled instrument bench and an old-fashioned pilot's
+    # chair. The information-plane console remains here, so world-map
+    # selection stays exactly where it was.
+    s.rect(20, 48, 59, 72, 7); s.rect(23, 50, 57, 70, 8)
+    s.rect(27, 52, 50, 65, 0); s.rect(29, 54, 48, 63, 1)
+    s.rect(31, 56, 45, 61, 11); s.rect(33, 57, 44, 58, 15)
+    s.rect(25, 67, 55, 70, 0); s.rect(28, 67, 52, 68, 7)
+    for x in range(31, 52, 5): s.rect(x, 69, x + 2, 71, 4)
+    s.rect(55, 57, 62, 70, 0); s.rect(57, 54, 65, 67, 3)
+    s.rect(59, 52, 63, 55, 11); s.rect(57, 66, 67, 69, 7)
+    s.rect(60, 69, 63, 73, 7); s.rect(55, 72, 68, 74, 7)
+    s.rect(63, 50, 103, 60, 7); s.rect(66, 52, 100, 58, 15)
+    s.rect(69, 54, 96, 57, 8)
+    for x in range(71, 96, 5): s.rect(x, 54, x + 2, 56, 10)
+    s.rect(106, 48, 137, 71, 0); s.rect(108, 50, 135, 69, 8)
+    s.rect(111, 52, 132, 66, 1)
+    for x in range(113, 131, 4): s.rect(x, 54, x + 2, 64, 10)
+    s.rect(114, 57, 129, 59, 11); s.rect(118, 63, 131, 66, 2)
+    # A proper box of stunners, below the deck rather than a loose screen.
+    s.rect(137, 61, 160, 75, 0); s.rect(139, 63, 158, 73, 1)
+    s.rect(141, 65, 156, 71, 4); s.rect(143, 66, 154, 69, 12)
+    s.rect(147, 70, 151, 73, 6)
+    # Pipes and cable looms make the ceiling feel engineered rather than flat.
+    s.line(148, 38, 169, 38, 7); s.line(169, 38, 173, 49, 7)
+    s.line(151, 40, 168, 40, 15); s.line(168, 40, 171, 50, 15)
+    for x in (145, 151, 157, 163): s.rect(x, 43, x + 2, 47, 4)
+    # belly ribs give a roomy, walkable cabin without borrowing a room layout.
+    for x in range(18, 185, 21):
+        s.line(x, 73, x + 10, 79, 7)
+    # Aft machinery: layered struts, a hot blue engine core and service panel.
+    s.rect(177, 37, 210, 72, 7); s.rect(181, 41, 206, 68, 0)
+    s.rect(184, 43, 203, 48, 15); s.rect(184, 52, 203, 56, 15)
+    s.rect(187, 58, 201, 67, 1); s.rect(190, 60, 198, 65, 11)
+    s.rect(210, 44, 217, 68, 8); s.rect(212, 47, 217, 65, 7)
+    s.rect(174, 48, 180, 65, 0); s.rect(175, 50, 179, 54, 4)
+    s.rect(175, 57, 179, 62, 10)
+    s.onto(r)
+    if kind == 'bay':
+        # The forward bay gets an asymmetric bulkhead and storage lockers,
+        # deliberately unlike the flight room while sharing the same hull.
+        s = Stamp()
+        s.rect(26, 45, 67, 73, 0); s.rect(29, 48, 64, 70, 8)
+        s.rect(33, 52, 60, 56, 7); s.rect(37, 60, 58, 67, 0)
+        s.rect(39, 61, 56, 64, 10); s.rect(43, 62, 53, 63, 15)
+        s.rect(27, 48, 31, 67, 7); s.rect(33, 48, 36, 67, 0)
+        for y in (51, 57, 64): s.rect(34, y, 25 + y // 3, y + 2, 15)
+        # A little round porthole and trailing wire give the bay its own
+        # personality, not a duplicated cockpit.
+        s.rect(58, 46, 72, 59, 0); s.rect(60, 48, 70, 57, 11)
+        s.rect(62, 50, 69, 55, 3); s.rect(65, 51, 69, 53, 9)
+        s.line(65, 59, 65, 68, 4); s.line(65, 68, 71, 72, 4)
+        s.onto(r)
+    return r
+
+
+def furnish_own_exit(r):
+    """Keen's portable life, intentionally distinct from the old cabin."""
+    s = Stamp()
+    # Pogo parked in a magnetic wall clip.
+    s.rect(78, 45, 84, 48, 9); s.line(84, 48, 79, 75, 15)
+    s.line(82, 48, 77, 75, 7); s.rect(75, 50, 88, 52, 4)
+    s.rect(72, 68, 83, 70, 4); s.rect(73, 68, 82, 69, 12)
+    s.rect(75, 75, 80, 78, 7); s.rect(76, 78, 79, 80, 4)
+    # Small blue travel bag, then the red-and-white bunk under the canopy.
+    s.rect(90, 67, 105, 78, 1); s.rect(92, 64, 102, 67, 1)
+    s.rect(92, 68, 103, 70, 9); s.rect(96, 70, 99, 74, 14)
+    s.rect(112, 57, 115, 80, 6); s.rect(166, 53, 169, 80, 6)
+    s.rect(115, 71, 166, 74, 6); s.rect(116, 66, 166, 71, 15)
+    s.rect(116, 62, 147, 69, 4); s.rect(116, 62, 147, 64, 12)
+    s.rect(151, 61, 164, 66, 7); s.rect(152, 61, 164, 63, 15)
+    s.onto(r)
+    return r
+
+
 def cut_out(room):
     """A room with everything outside the ship see-through (None), so the
     place the ship stands in shows around it."""
@@ -242,11 +353,34 @@ def cut_out(room):
              else None for x in range(w)] for y in range(h)]
 
 
+def model_room(filename):
+    """Read a prepared model concept panel as masked EGA pixels.
+
+    The source sheets deliberately use a purple surrounding field.  It is
+    discarded here, leaving the two separate cutaways transparent just like
+    the old tile art; all other colours are reduced to the game EGA palette.
+    """
+    img = Image.open(os.path.join(ASSET_DIR, filename)).convert('RGB')
+    room = []
+    for y in range(img.height):
+        row = []
+        for x in range(img.width):
+            rgb = img.getpixel((x, y))
+            r, g, b = rgb
+            if 65 <= r <= 125 and g < 35 and 65 <= b <= 125:
+                row.append(None)
+            else:
+                row.append(min(range(len(EGA)), key=lambda i: sum((rgb[j] - EGA[i][j]) ** 2 for j in range(3))))
+        room.append(row)
+    return room
+
+
 def draw():
-    flight, exit_room = foray_rooms()
     px = [[None] * W for _ in range(H)]
-    for room, (ox, oy) in ((clean_flight(flight), FLIGHT_AT), (furnish_exit(clean_exit(exit_room)), EXIT_AT)):
-        for y, row in enumerate(cut_out(room)):
+    flight = model_room('kw_shiproom_front.png')
+    exit_room = model_room('kw_shiproom_aft.png')
+    for room, (ox, oy) in ((flight, FLIGHT_AT), (exit_room, EXIT_AT)):
+        for y, row in enumerate(room):
             px[oy + y][ox:ox + len(row)] = row
     return px
 
@@ -260,7 +394,7 @@ def draw_with_hint():
     return px
 
 
-HINT_AT = (96, 48)        # in the flight room: the tile right of the navigation screen
+HINT_AT = (96, 51)        # in the flight room (tile-aligned in the level): by the navigation screen
 ARROW = ['...#...', '..###..', '.#####.', '#######', '..###..', '..###..']
 
 
@@ -296,13 +430,12 @@ def preview(out):
 
 def csource(out):
     px = draw()
-    slots_all = free_slots_in(EPISODE, TW * TH + 2, *SLOT_RANGE)
+    slots_all = free_slots_in(EPISODE, TW * TH + 2, *SLOT_RANGE, d=PLAY)
     slots = slots_all[:TW * TH]
     pieces = TH // PIECE_ROWS
     lines = ['/* Generated by tools/kw_shiproom_art.py -- do not edit by hand. */',
-             '// The inside of the Megarocket: the two rooms of Keen\'s ship from Foray in the',
-             '// Forest (Nisaba and K1n9_Duk3, GPL v2 or later), cleaned of the things lying',
-             '// about in them. One picture in %d pieces of %d rows.' % (pieces, PIECE_ROWS),
+             '// The inside of the Megarocket: original Keen Worlds rooms, in one picture',
+             '// of %d pieces of %d rows.' % (pieces, PIECE_ROWS),
              '#define KW_SHIPROOM_ORIGIN_X %d' % ORIGIN[0], '#define KW_SHIPROOM_ORIGIN_Y %d' % ORIGIN[1],
              '#define KW_SHIPROOM_TILES_W %d' % TW, '#define KW_SHIPROOM_PIECE_H %d' % PIECE_ROWS,
              '#define KW_SHIPROOM_PIECES %d' % pieces,

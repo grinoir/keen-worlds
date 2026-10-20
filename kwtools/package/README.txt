@@ -39,28 +39,7 @@ What Keen Worlds adds
 The same is in the game: press F1 for the guide.
 
 
-1. What you need to add
------------------------
-
-Keen Worlds brings the game program and its own files. It does not
-contain the Commander Keen games: those are yours to supply.
-
-Copy these files into this folder, next to the program. All must be
-version 1.4 (EGA).
-
-  Keen 4: Secret of the Oracle       GAMEMAPS.CK4  EGAGRAPH.CK4  AUDIO.CK4
-  Keen 5: The Armageddon Machine     GAMEMAPS.CK5  EGAGRAPH.CK5  AUDIO.CK5
-  Keen 6: Aliens Ate My Baby Sitter  GAMEMAPS.CK6  EGAGRAPH.CK6  AUDIO.CK6
-
-Keen 4 is shareware and free (Apogee's CK4SW14 package). Keen 5 and 6 are
-from your own copy. You can start with Keen 4 alone; the others show as
-"not installed" in the ship's flight menu.
-
-If your Keen 6 is version 1.5, copy the files from the keen6-v1.5 folder
-over the ones here first. Other versions of Keen 6 do not fit; the program
-says so when it starts instead of running.
-
-The fan games go in the mods folder. See mods/README.txt.
+@SUPPLY@
 
 
 2. Starting

@@ -1,0 +1,32 @@
+1. What is in it, and what you can add
+--------------------------------------
+
+Keen 4 is in it. Its shareware episode, Secret of the Oracle, is free:
+id Software and Apogee let anyone pass it on. The whole shareware
+package, unchanged, is in the folder keen4-shareware (its terms are in
+VENDOR.DOC there), and its three game files are also next to the
+program. So you can start right away.
+
+Keen 5, Keen 6 and the fan games are not in it: they are their owners'.
+Add the ones you have, like this:
+
+  KeenWorlds folder
+    GAMEMAPS.CK4  EGAGRAPH.CK4  AUDIO.CK4    Keen 4 (already here)
+    GAMEMAPS.CK5  EGAGRAPH.CK5  AUDIO.CK5    copy from your Keen 5
+    GAMEMAPS.CK6  EGAGRAPH.CK6  AUDIO.CK6    copy from your Keen 6
+    mods/keen7, mods/bounty, ...            unpack each fan game into
+                                             its folder (mods/README.txt)
+
+Keen 5 and 6 must be version 1.4 (EGA), from your own copy. Copy only
+those three files of each; the other .CK5 and .CK6 files here belong to
+Keen Worlds.
+
+If your Keen 6 is version 1.5, copy the files from the keen6-v1.5 folder
+over the ones here first. Other versions of Keen 6 do not fit; the program
+says so when it starts instead of running.
+
+Anything missing shows as "not installed" in the ship's flight menu, and
+choosing it there says where it comes from. Four fan worlds need only
+Keen 4, so they work with what is here once their game is unpacked:
+Krodacia (keen7), Aspermontis (keen95), Meurglys III (bounty) and the
+dream, Keen Dreams (dreams).
