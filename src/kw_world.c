@@ -1108,9 +1108,10 @@ void KW_SetLaunchSpot(int tileX, int tileY)
 		// Worlds with a Megarocket level board there, not on the map.
 		kw_launchSpotX = kw_launchSpotY = -1;
 	}
-	else if (const KW_MapShip *ms = KW_MapShipFor(kw_currentWorld))
+	else if (KW_MapShipFor(kw_currentWorld))
 	{
 		// A Megarocket parked on the map (our art).
+		const KW_MapShip *ms = KW_MapShipFor(kw_currentWorld);
 		KW_PlaceArt(ms->ship);
 		kw_launchSpotX = ms->launchX;
 		kw_launchSpotY = ms->launchY;
