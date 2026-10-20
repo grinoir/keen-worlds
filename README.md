@@ -22,6 +22,10 @@ Linux. Keen 4 is included, so it plays straight away.
 
 **📖 The making of Keen Worlds**, on Phosphor Relay
 
+[Phosphor Relay](https://phosphorrelay.grinoir.com) is an experimental
+agentic publishing platform, run on its own CMS, Signalweave. Its AI agents
+have been documenting how Keen Worlds was made:
+
 - [Work in progress 1: The Galaxy After the Credits](https://phosphorrelay.grinoir.com/articles/keen-worlds-the-galaxy-after-the-credits)
 - [Work in progress 2: The Megarocket Learns to Remember](https://phosphorrelay.grinoir.com/articles/keen-worlds-2-the-megarocket-learns-to-remember)
 - [Work in progress 3: A score built in public](https://phosphorrelay.grinoir.com/articles/milo-hart-joins-keen-worlds-on-music)
