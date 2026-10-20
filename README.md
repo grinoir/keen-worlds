@@ -18,20 +18,36 @@ Xax, or the worlds the Keen community has made since.
 **[⬇ Download the latest version](../../releases/latest)** for Windows or
 Linux. Keen 4 is included, so it plays straight away.
 
+<table><tr><td>
+
+**📖 The making of Keen Worlds**, on Phosphor Relay
+
+- [Work in progress 1: The Galaxy After the Credits](https://phosphorrelay.grinoir.com/articles/keen-worlds-the-galaxy-after-the-credits)
+- [Work in progress 2: The Megarocket Learns to Remember](https://phosphorrelay.grinoir.com/articles/keen-worlds-2-the-megarocket-learns-to-remember)
+- [Work in progress 3: A score built in public](https://phosphorrelay.grinoir.com/articles/milo-hart-joins-keen-worlds-on-music)
+- [Work completed: A Galaxy with Memory](https://phosphorrelay.grinoir.com/articles/keen-worlds-a-galaxy-with-memory)
+
+All of them: [phosphorrelay.grinoir.com/tags/keen-worlds](https://phosphorrelay.grinoir.com/tags/keen-worlds)
+
+</td></tr></table>
+
 ---
 
 ## What Keen Worlds adds
 
 <p align="center">
-<img src="doc/images/ship-flight-room.png" alt="The Megarocket's flight room" width="49%">
-<img src="doc/images/ship-aft-bay.png" alt="The Megarocket's aft bay with the hatch and Keen's bed" width="49%">
+<img src="doc/images/story.png" alt="Keen Worlds' own story picture: Keen fuels his rocket at night" width="49%">
+<img src="doc/images/world-title.png" alt="A fan world's own title: Commander Keen, Address Unknown" width="49%">
+<img src="doc/images/guide.png" alt="The in-game guide, page 2: What is new" width="49%">
+<img src="doc/images/ending-beach.png" alt="Keen Worlds' ending: Keen on the beach" width="49%">
 </p>
 
-- **One galaxy.** Thirteen worlds, the ship and a dream in one game, with one
-  saved game for all of it.
-- **A ship to walk around in.** The Megarocket has a flight console to choose
-  a world at, a hatch to step out of, a box of stunners and a bed. The ship's
-  computer says where it has landed.
+- **One galaxy.** Thirteen worlds and a dream in one game, with one saved
+  game for all of it.
+- **New music.** Original tunes for the AdLib sound card: *The Greatest
+  Adventure* plays under the title and the story, the inn in the Border
+  Village has a jig of its own, faded in at its door, and the ending has a
+  calm tune.
 - **Everybody talks.** Every conversation in every world is spoken, each
   character in a voice of their own, Keen too. The music steps aside while
   they speak.
@@ -44,8 +60,10 @@ Linux. Keen 4 is included, so it plays straight away.
   Chronicle* opens them in the order of the story.
 - **A dream.** Go to bed in the ship and Keen dreams *Keen Dreams*, the lost
   episode.
-- **A beginning and an end of its own.** A title, a tune, a story, and an
-  ending for when every world is saved.
+- **A beginning and an end of its own.** A new title picture, a story read
+  aloud, and an ending for when every world is saved: a last story, Keen on
+  the beach, and his boasting at the inn's bar.
+- **A guide in the game.** Press F1 to read what is new and how to play.
 - **Credit where it is due.** Every world names its makers when Keen first
   lands there.
 - **Nothing to convert.** A fan game is unpacked into its folder, and it is
