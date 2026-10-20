@@ -32,9 +32,8 @@ ORIGIN = (2, 2)
 PIECE_ROWS = 9            # rows in each of the three pieces
 SLOT_RANGE = (300, 2915)  # Keen 4 masked-tile slots to take free ones from
 EPISODE = '4'
-FLIGHT_AT = (48, 61)      # where the rooms go in the picture (the flight room
-                          # 3 px up: its floor meets Keen's feet)
-EXIT_AT = (80, 14 * 16 + 64)
+FLIGHT_AT = (48, 55)      # where the rooms go in the picture: placed so that
+EXIT_AT = (80, 14 * 16 + 57)  # Keen's feet are halfway into the floor, as in Keen 4
 
 
 def foray_rooms():
@@ -394,7 +393,7 @@ def draw_with_hint():
     return px
 
 
-HINT_AT = (96, 51)        # in the flight room (tile-aligned in the level): by the navigation screen
+HINT_AT = (96, 57)        # in the flight room (tile-aligned in the level): by the navigation screen
 ARROW = ['...#...', '..###..', '.#####.', '#######', '..###..', '..###..']
 
 
