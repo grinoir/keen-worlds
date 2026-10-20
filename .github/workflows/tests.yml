@@ -1,6 +1,8 @@
 name: "CI: Demo Dump Tests"
 
-on: [push, pull_request]
+# Needs Keen 5/6 data from a secret URL only upstream Omnispeak has, and Keen
+# Worlds' changes would not match upstream's demo dumps; run it by hand only.
+on: [workflow_dispatch]
 
 jobs:
   demodumptest:
