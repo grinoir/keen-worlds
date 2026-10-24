@@ -356,6 +356,7 @@ set(OMNISPEAK_CK_SRCS
 	src/kw_card.c
 	src/kw_habitat.c
 	src/kw_music.c
+	src/kw_skip.c
 	src/kw_keen9.c
 	src/kw_arealm.c
 	src/kw_ar_act1.c

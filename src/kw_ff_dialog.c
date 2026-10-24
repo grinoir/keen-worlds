@@ -7,6 +7,7 @@ tools/kw_fitf_port.py, with the hand fixes of tools/kw_fitf_dialog_fixes.py.
 #include "kw_fitf.h"
 #include "kw_ff_keen.h"
 #include "kw_music.h" // KEEN WORLDS: the dialogue windows are spoken
+#include "kw_skip.h"
 
 void CK_MeasureMultiline(const char *str, uint16_t *w, uint16_t *h);
 
@@ -258,7 +259,7 @@ void FF_JanitorSleepMonolog(void)
 
 	FF_DialogWindow(FF_JANITORMOPPIC, FF_S_JANITORMONOLOG0+ff_map.dreamMsg, true, 0);
 	IN_ClearKeysDown();
-	IN_UserInput(8*70, true);	// show message for 8 seconds, then resume the game
+	KW_WaitPresentation(8 * 70, true); // let a longer spoken line finish
 
 	if (++ff_map.dreamMsg >= FF_S_JANITORMONOLOGEND-FF_S_JANITORMONOLOG0)
 		ff_map.dreamMsg = 0;

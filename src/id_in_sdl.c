@@ -21,6 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "id_sd.h"
 #include "id_us.h"
 #include "id_vl.h"
+#include "kw_skip.h"
 
 #include <SDL.h>
 #include <string.h>
@@ -323,6 +324,13 @@ static void IN_SDL_HandleSDLEvent(SDL_Event *event)
 		IN_HandleKeyUp(sc, false);
 		break;
 #if SDL_VERSION_ATLEAST(2, 0, 0)
+	case SDL_WINDOWEVENT:
+		if (event->window.event == SDL_WINDOWEVENT_FOCUS_LOST)
+		{
+			KW_ClearPresentationKeys();
+			IN_ClearKeysDown();
+		}
+		break;
 	case SDL_TEXTINPUT:
 		IN_HandleTextEvent(event->text.text);
 		break;

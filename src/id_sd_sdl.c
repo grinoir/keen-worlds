@@ -97,6 +97,8 @@ static SDL_Thread *SD_SDL_t0Thread = 0;
 static SDL_cond *SD_SDL_TimerConditionVar;
 static bool SD_SDL_WaitTicksSpin = false;
 
+static void SD_SDL_MixOutput(int16_t *stream, int frames);
+
 /* NEVER call this from the SDL callback!!! (Or you want a deadlock?) */
 void SD_SDL_SetTimer0(int16_t int_8_divisor)
 {
@@ -295,8 +297,7 @@ void SD_SDL_alOut(uint8_t reg, uint8_t val)
 		if (sd_sdl_queueAudio)
 		{
 			YM3812UpdateOne(&oplChip, SD_ALOut_Samples, length);
-			if (SD_PC_Speaker_On)
-				PCSpeakerUpdateOne(SD_ALOut_Samples, length);
+			SD_SDL_MixOutput(SD_ALOut_Samples, length);
 			SDL_QueueAudio(1, SD_ALOut_Samples, length * numChannels * 2);
 			sd_sdl_bonusSamplesQueued += length;
 		}
@@ -335,6 +336,17 @@ static inline void PCSpeakerUpdateOne(int16_t *stream, int length)
 			SD_SDL_CurrentBeepSample = 24575 - SD_SDL_CurrentBeepSample;
 		}
 	}
+}
+
+// Both the callback and Windows' queued audio must apply music fades and
+// mix voices. The caller holds the audio lock so a clip cannot be freed
+// while its samples are being read.
+static void SD_SDL_MixOutput(int16_t *stream, int frames)
+{
+	SD_ApplyAdLibVolume(stream, frames, numChannels, SD_SDL_AudioSpec.freq);
+	if (SD_PC_Speaker_On)
+		PCSpeakerUpdateOne(stream, frames);
+	SD_MixVoice(stream, frames, numChannels, SD_SDL_AudioSpec.freq);
 }
 
 /* FIXME: The SDL prefix may conflict with SDL functions in the future(???)
@@ -383,13 +395,7 @@ void SD_SDL_CallBack(void *unused, Uint8 *stream, int len)
 			memcpy(currSamplePtr, &SD_ALOut_Samples[SD_ALOut_SamplesStart], 2 * numChannels * currNumOfSamples);
 			SD_ALOut_SamplesStart += currNumOfSamples;
 		}
-		// KEEN WORLDS: music fades
-		SD_ApplyAdLibVolume(currSamplePtr, currNumOfSamples, numChannels, SD_SDL_AudioSpec.freq);
-		// PC Speaker
-		if (SD_PC_Speaker_On)
-			PCSpeakerUpdateOne(currSamplePtr, currNumOfSamples);
-		// KEEN WORLDS: a voice clip
-		SD_MixVoice(currSamplePtr, currNumOfSamples, numChannels, SD_SDL_AudioSpec.freq);
+		SD_SDL_MixOutput(currSamplePtr, currNumOfSamples);
 		// We're done for now
 		currSamplePtr += currNumOfSamples * numChannels;
 		SD_SDL_SampleOffsetInSound += currNumOfSamples;
@@ -419,6 +425,7 @@ int SD_SDL_t0InterruptThread(void *param)
 #ifdef SD_SDL_WITH_QUEUEAUDIO
 		if (SD_SDL_AudioSubsystem_Up && sd_sdl_queueAudio && sd_sdl_queueAudioMinBufSize)
 		{
+			SDL_LockAudio();
 			int curQueueLen = SDL_GetQueuedAudioSize(1) / (numChannels * sizeof(int16_t));
 			if (curQueueLen < sd_sdl_queueAudioMinBufSize)
 			{
@@ -430,12 +437,12 @@ int SD_SDL_t0InterruptThread(void *param)
 				{
 					int chunkLen = (length > 512) ? 512 : length;
 					YM3812UpdateOne(&oplChip, SD_ALOut_Samples, chunkLen);
-					if (SD_PC_Speaker_On)
-						PCSpeakerUpdateOne(SD_ALOut_Samples, chunkLen);
+					SD_SDL_MixOutput(SD_ALOut_Samples, chunkLen);
 					SDL_QueueAudio(1, SD_ALOut_Samples, chunkLen * numChannels * sizeof(int16_t));
 					length -= chunkLen;
 				}
 			}
+			SDL_UnlockAudio();
 		}
 #endif
 
@@ -454,10 +461,11 @@ int SD_SDL_t0InterruptThread(void *param)
 				sd_sdl_bonusSamplesQueued -= SD_SDL_SamplesInCurrentPart;
 				if (sd_sdl_bonusSamplesQueued < 0) sd_sdl_bonusSamplesQueued = 0;
 				if (length < 1) continue;
+				SDL_LockAudio();
 				YM3812UpdateOne(&oplChip, SD_ALOut_Samples, length);
-				if (SD_PC_Speaker_On)
-					PCSpeakerUpdateOne(SD_ALOut_Samples, length);
+				SD_SDL_MixOutput(SD_ALOut_Samples, length);
 				SDL_QueueAudio(1, SD_ALOut_Samples, length * numChannels * sizeof(int16_t));
+				SDL_UnlockAudio();
 				if (++SD_SDL_ScaledSamplesPartNum == PC_PIT_RATE)
 					SD_SDL_ScaledSamplesPartNum = 0;
 

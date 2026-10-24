@@ -31,7 +31,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ck_act.h"
 #include "ck_cross.h"
 #include "ck_def.h"
-#include "kw_music.h" // KEEN WORLDS: Keen 4's ending is spoken
+#include "kw_music.h"
+#include "kw_skip.h"
 #include "kw_world.h"
 
 int help_delay, help_pic, help_y, help_x;
@@ -898,7 +899,15 @@ static char kw_guideText[] =
 	"^cEF1: this guide\n"
 	"^cEF11: full screen\n"
 	"\n"
-	"^cEWhile someone speaks, a key moves the text on. Where Keen has a choice of words, the arrows choose.\n"
+	"^cEWhere Keen has a choice of words, the arrows choose.\n"
+	"^P\n"
+	"^cFSTORIES AND CONVERSATIONS\n"
+	"\n"
+	"^cEHold Esc for one second to skip a scene or move spoken dialogue on early. The small bar shows how long to hold.\n"
+	"\n"
+	"^cEOnce the voice finishes, press a key to move the text on.\n"
+	"\n"
+	"^cERelease the button before advancing again. Moving, jumping and shooting leave story scenes playing.\n"
 	"^P\n"
 	"^cFTHE WORLDS\n"
 	"\n"
@@ -1022,8 +1031,7 @@ void CK_ShowTextPages(int textChunk, int song, bool blackBackground)
 	if (song >= 0)
 		StartMusic(song);
 
-	bool quit = false;
-	while (help_cur_page < help_num_pages && !quit)
+	while (help_cur_page < help_num_pages)
 	{
 		if (ck_textPagesVoice && !FF_IsActive())
 		{
@@ -1045,31 +1053,17 @@ void CK_ShowTextPages(int textChunk, int song, bool blackBackground)
 			}
 			KW_SayWorldLines(list, help_numUnits);
 		}
-		IN_ClearKeysDown();
-		while (true)
+		VHB_DrawBitmap(0x12A & ~3, 0xB8, CK_CHUNKNUM(PIC_ARROWDIM));
+		VH_UpdateScreen();
+		if (getenv("KW_AUTOPAGES"))
 		{
-			VHB_DrawBitmap(0x12A & ~3, 0xB8, CK_CHUNKNUM(PIC_ARROWDIM));
-			VH_UpdateScreen();
-			KW_LinePoll(); // the page's lines are over: the music comes back up
-			// (KW_AUTOPAGES=prefix: the scripted test saves a picture of each page)
-			if (getenv("KW_AUTOPAGES"))
-			{
-				void KW_DumpScreenTo(const char *path);
-				char path[600];
-				snprintf(path, sizeof(path), "%s%02d.ppm", getenv("KW_AUTOPAGES"), (int)help_cur_page);
-				KW_DumpScreenTo(path);
-			}
-			// (KW_AUTOTALK: the scripted dialogue test turns the pages itself)
-			if (IN_UserInput(70, false) || getenv("KW_AUTOTALK"))
-				break;
-			VHB_DrawBitmap(0x12A & ~3, 0xB8, CK_CHUNKNUM(PIC_ARROWBRIGHT));
-			VH_UpdateScreen();
-			if (IN_UserInput(70, false))
-			{
-				quit = IN_GetLastScan() == IN_SC_Escape;
-				break;
-			}
+			void KW_DumpScreenTo(const char *path);
+			char path[600];
+			snprintf(path, sizeof(path), "%s%02d.ppm", getenv("KW_AUTOPAGES"), (int)help_cur_page);
+			KW_DumpScreenTo(path);
 		}
+		if (!getenv("KW_AUTOTALK"))
+			KW_WaitPresentation(0, true);
 	}
 
 	KW_LinesOver();
@@ -1139,34 +1133,10 @@ void help_endgame(void)
 		}
 		/* Draw the current page (which also advances to the next page) */
 		PageLayout(0);
-		IN_ClearKeysDown();
-		//VW_SetScreen( AZ : A7B4, 0 );
-
-		// This looks like it was written with a GOTO instead of an "advancePage" variable
-		bool advancePage = false;
-		while (!advancePage)
-		{
-			/* Draw the dim arrow and wait a short time */
-			VHB_DrawBitmap(0x12A & ~3, 0xB8, CK_CHUNKNUM(PIC_ARROWDIM));
-			VH_UpdateScreen();
-			KW_LinePoll(); // KEEN WORLDS: the line is over: the music comes back up
-
-			// (KW_AUTOFINALE: the scripted test of Keen Worlds' ending turns the pages itself)
-			if (IN_UserInput(70, false) || getenv("KW_AUTOFINALE"))
-			{
-				advancePage = true;
-				break;
-			}
-			/* Draw the bright arrow and wait a short time */
-			VHB_DrawBitmap(0x12A & ~3, 0xB8, CK_CHUNKNUM(PIC_ARROWBRIGHT));
-			VH_UpdateScreen();
-
-			if (IN_UserInput(70, false))
-			{
-				advancePage = true;
-				break;
-			}
-		}
+		VHB_DrawBitmap(0x12A & ~3, 0xB8, CK_CHUNKNUM(PIC_ARROWDIM));
+		VH_UpdateScreen();
+		if (!getenv("KW_AUTOFINALE"))
+			KW_WaitPresentation(0, true);
 	}
 
 	/* Uncache our graphics and clean up */

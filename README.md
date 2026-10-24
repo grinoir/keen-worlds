@@ -11,7 +11,7 @@ episode, you start inside the Bean-with-Bacon Megarocket, walk to the flight
 console and choose where to land: Gnosticus IV, the Shikadi armada, Fribbulus
 Xax, or the worlds the Keen community has made since.
 
-> **Beta (0.9.0).** Every world can be played from landing to ending, but few
+> **Beta (0.9.1).** Every world can be played from landing to ending, but few
 > people have done it yet. Things will be wrong; finding them is the point.
 > See [Reporting a problem](#reporting-a-problem).
 
@@ -160,7 +160,10 @@ after adding a game.
 | F1 | the guide |
 | F11 | full screen |
 
-A voice speaks the conversations; press a key to move a text on.
+A voice speaks the conversations. Hold **Esc for one second** to skip a
+scene or advance spoken dialogue early; a small bar shows the hold. Once
+the voice finishes, a fresh key press advances the text. Release the button
+before advancing again.
 
 ## Known gaps
 

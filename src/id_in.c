@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "id_vl.h"
 #include "id_fs.h"
 #include "ck_cross.h"
+#include "kw_skip.h"
 
 #include <stdlib.h> /* For abs() */
 #include <string.h>
@@ -191,6 +192,7 @@ static const int in_joystickDiagonalSlope[2] = {IN_JOYSTICK_DIAGONAL_SLOPE};
 
 void IN_HandleKeyUp(IN_ScanCode sc, bool special)
 {
+	KW_PresentationKey(sc, false);
 	//Use F11 to toggle fullscreen.
 	if (sc == IN_SC_F11)
 		VL_ToggleFullscreen();
@@ -200,6 +202,8 @@ void IN_HandleKeyUp(IN_ScanCode sc, bool special)
 
 void IN_HandleKeyDown(IN_ScanCode sc, bool special)
 {
+	if (sc != 0xe0 && sc != IN_SC_Pause)
+		KW_PresentationKey(sc & 0x7f, !(sc & 0x80));
 	in_keyStates[sc] = true;
 	in_lastKeyScanned = sc;
 	char c;
@@ -432,6 +436,7 @@ void IN_StopTextInput()
 
 void IN_Startup(void)
 {
+	KW_ClearPresentationKeys();
 	in_backend = IN_Impl_GetBackend();
 	for (int i = 0; i < 256; ++i)
 		in_keyStates[i] = 0;
@@ -860,36 +865,9 @@ void IN_ReadControls(int player, IN_ControlFrame *controls)
 	}
 }
 
-bool KW_DebugWait(void); // KEEN WORLDS developer tool (kw_world.c)
-
 void IN_WaitButton()
 {
-	if (KW_DebugWait())
-		return;
-	// Zero all of the input
-	IN_PumpEvents();
-
-	in_keyStates[in_lastKeyScanned] = 0;
-
-	in_lastKeyScanned = 0;
-
-#if 0
-	if (MousePresent)
-	{
-		while (INL_GetMouseButtons())
-			;
-	}
-
-	for (int i = 0; i < 2; i++)
-	{
-		if (JoyPresent[i] || Gamepad)
-			while (IN_GetJoyButtonsDB(i))
-				;
-	}
-#endif
-
-	// Now wait for a button press
-	IN_WaitForButtonPress();
+	KW_WaitPresentation(0, true);
 }
 
 // TODO: Handle Joy/Mouse

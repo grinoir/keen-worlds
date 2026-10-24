@@ -27,6 +27,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ck_game.h"
 #include "ck_play.h"
 #include "ck_act.h"
+#include "kw_skip.h"
+#include "kw_music.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -1390,11 +1392,12 @@ void CK_DrawSWText()
 }
 
 // This is StarWarsLoop in CKSRCMOD.
-void CK_ScrollSWText()
+bool CK_ScrollSWText()
 {
-	SD_SetLastTimeCount(0);
-	SD_SetTimeCount(0);
+	SD_SetLastTimeCount(SD_GetTimeCount());
 	SD_SetSpriteSync(0);
+	KW_Presentation presentation;
+	KW_BeginPresentation(&presentation);
 	// We draw the text on plane 4.
 	VL_SetMapMask(8);
 	// KEEN WORLDS: over its own picture (which has fifteen colours, not
@@ -1408,10 +1411,10 @@ void CK_ScrollSWText()
 	VL_SwapOnNextPresent();
 	VL_Present();
 	VL_FixRefreshBuffer();
-
-
+	void *footer = KW_SavePresentationFooter();
 	while (scrollDistance <= ck_starWarsTotalHeight + 400)
 	{
+		KW_RestorePresentationFooter(footer);
 		// Update rows from the bottom.
 
 		for (int row = 199; row >= 0; --row)
@@ -1447,10 +1450,11 @@ void CK_ScrollSWText()
 			}
 		}
 
-		IN_PumpEvents();
 		KW_LinePoll(); // KEEN WORLDS: the narrator has finished: the music comes back up
+		if (KW_PollPresentation(&presentation, false))
+			break;
 		VL_SwapOnNextPresent();
-		VL_Present();
+		KW_PresentWithSkipHint(&presentation, false);
 
 		uint32_t newTime = SD_GetTimeCount();
 		SD_SetSpriteSync(SD_GetSpriteSync() + newTime - SD_GetLastTimeCount());
@@ -1461,26 +1465,34 @@ void CK_ScrollSWText()
 
 		scrollDistance += SD_GetSpriteSync() / 4;
 		SD_SetSpriteSync(SD_GetSpriteSync() % 4);
-
-		if (IN_CheckAck() && IN_GetLastScan() != IN_SC_F1)
-			IN_SetLastScan(IN_SC_Space);
-
-		if (IN_GetLastScan())
-			return;
 	}
+	// Keep the final frame while the narrator finishes; the same hold carries
+	// across the scroll and its remaining speech without accepting stray keys.
+	while (!presentation.accepted && KW_ClipPlaying())
+	{
+		KW_LinePoll();
+		if (KW_PollPresentation(&presentation, false))
+			break;
+		KW_PresentWithSkipHint(&presentation, false);
+	}
+	if (presentation.accepted)
+		KW_StopVoice();
+	KW_EndPresentation(&presentation);
+	VL_DestroySurface(footer);
+	return presentation.accepted;
 }
 
 // KEEN WORLDS: the story can also be shown in the middle of a game (the
 // first time Keen sets foot in a world); then the title loop's keys (menu,
 // demos) are not handled afterwards.
-void CK_DrawStarWarsEx(bool handleDemoKeys);
+bool CK_DrawStarWarsEx(bool handleDemoKeys);
 
 void CK_DrawStarWars()
 {
 	CK_DrawStarWarsEx(true);
 }
 
-void CK_DrawStarWarsEx(bool handleDemoKeys)
+bool CK_DrawStarWarsEx(bool handleDemoKeys)
 {
 	// Keen5 sets the palette to the default one here.
 	VL_ClearScreen(0);
@@ -1514,23 +1526,18 @@ void CK_DrawStarWarsEx(bool handleDemoKeys)
 	// Instead, we just precalculate the various scaling factors.
 	CK_PrepareSWUpdate();
 
-	// ...and scroll the text!
-	if (!IN_GetLastScan())
+	// A narrated world story has no music of its own. Keen Worlds' own
+	// opening keeps its title tune, which is already playing.
+	if (!ck_starWarsNarrated)
 	{
-		// KEEN WORLDS: its own story has its own tune (which may be
-		// playing already, from the title)
-		// ...and a story the narrator reads has no music under him
-		if (ck_starWarsNarrated)
-			;
-		else if (ck_starWarsTextOverride)
+		if (ck_starWarsTextOverride)
 			KW_StartTitleMusic();
 		else
 			StartMusic(CK_INT(CK_StarWarsMusicLevel, 0));
-		CK_ScrollSWText();
-		// KEEN WORLDS: its ending's tune plays on into the picture after it
-		if (!ck_starWarsKeepMusic)
-			StopMusic();
 	}
+	bool skipped = CK_ScrollSWText();
+	if (!ck_starWarsKeepMusic)
+		StopMusic();
 
 	VL_DestroySurface(ck_starWarsTextSurface);
 
@@ -1539,8 +1546,12 @@ void CK_DrawStarWarsEx(bool handleDemoKeys)
 	VL_SetDefaultPalette();
 	CA_ClearMarks();
 
-	if (handleDemoKeys)
+	if (handleDemoKeys && skipped)
+	{
+		IN_SetLastScan(IN_SC_Space);
 		CK_HandleDemoKeys();
+	}
+	return skipped;
 }
 
 void CK_ShowTitleScreen()

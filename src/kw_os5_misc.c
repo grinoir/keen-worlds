@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "id_ca.h"
 #include "id_fs.h"
 #include "id_in.h"
+#include "kw_skip.h"
 #include "id_rf.h"
 #include "id_vl.h"
 #include "ck_act.h"
@@ -985,7 +986,7 @@ void OS5_ExplodeGalaxy()
 	VH_DrawBitmap(32, 80, 98);
 	VL_Present();
 
-	IN_UserInput(24 * 70, false);
+	KW_WaitPresentation(24 * 70, false);
 
 	StopMusic();
 }

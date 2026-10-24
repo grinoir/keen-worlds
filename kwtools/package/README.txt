@@ -49,7 +49,8 @@ The same is in the game: press F1 for the guide.
   Linux     ./keenworlds.sh       (needs SDL2: the package is called
                                    libsdl2-2.0-0, sdl2 or SDL2)
 
-The title appears, then the story. Any key opens the menu: New Game.
+The title appears, then the story. A key on the title opens the menu:
+New Game. During the story, hold Esc for one second to skip to the menu.
 
 You start inside the Megarocket. Walk to the flight console and push up to
 choose where to fly. Walk to the hatch to go out. The bed is for sleeping.
@@ -67,7 +68,10 @@ choose where to fly. Walk to the hatch to go out. The bed is for sleeping.
   F1           the guide
   F11          full screen
 
-A voice speaks the conversations. Press a key to move a text on.
+A voice speaks the conversations. Hold Esc for one second to skip a scene
+or move spoken dialogue on early. A small bar shows the hold. Once the
+voice finishes, a fresh key press moves the text on. Release the button
+before advancing again.
 
 
 4. What to try

@@ -32,6 +32,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ck5_ep.h"
 #include "kw_music.h" // KEEN WORLDS: Keen speaks his lines
 #include "kw_world.h"
+#include "kw_skip.h"
 
 CK_EpisodeDef ck5_episode = {
 	EP_CK5,
@@ -791,12 +792,15 @@ void CK5_ExplodeGalaxy()
 	VH_DrawBitmap(0, 0, CK_CHUNKNUM(PIC_MILKYWAY));
 	VL_FadeFromBlack();
 	IN_ClearKeysDown();
+	KW_Presentation presentation;
+	KW_BeginPresentation(&presentation);
+	void *footer = KW_SavePresentationFooter();
 	SD_PlaySound(CK_SOUNDNUM(SOUND_GALAXYEXPLODEPRE));
 
 	// Galaxy is about to explode
 	for (int i = 0; i < 18; i++)
 	{
-		IN_PumpEvents();
+		KW_RestorePresentationFooter(footer);
 
 		endsplosion_palette[8] = endsplosion_pal_change[0][i];
 		endsplosion_palette[7] = endsplosion_pal_change[0][i];
@@ -804,10 +808,10 @@ void CK5_ExplodeGalaxy()
 		//VW_WaitVBL(10);
 		VL_DelayTics(10);
 
-		if (IN_GetLastScan())
+		if (KW_PollPresentation(&presentation, false))
 			goto done;
 
-		VL_Present();
+		KW_PresentWithSkipHint(&presentation, false);
 	}
 
 	// Write Mode 2();
@@ -818,12 +822,14 @@ void CK5_ExplodeGalaxy()
 
 	for (int i = 0; i < 30; i++)
 	{
-		IN_PumpEvents();
+		if (KW_PollPresentation(&presentation, false))
+			goto done;
 
 		SD_SetLastTimeCount(SD_GetTimeCount());
 
 		CK_GalExplodeUpdateCoords(2000);
 		CK_GalExplodePageFlip(2000);
+		KW_PresentWithSkipHint(&presentation, false);
 
 		// Delay
 		while (SD_GetTimeCount() - SD_GetLastTimeCount() < 4)
@@ -833,16 +839,17 @@ void CK5_ExplodeGalaxy()
 
 		CK_GalExplodeUpdateCoords(0);
 		CK_GalExplodePageFlip(0);
+		KW_PresentWithSkipHint(&presentation, false);
 
 		// Delay
 		while (SD_GetTimeCount() - SD_GetLastTimeCount() < 4)
 			;
 
-		if (IN_GetLastScan())
-			goto done;
 	}
 
 done:
+	KW_EndPresentation(&presentation);
+	VL_DestroySurface(footer);
 	// Set Video back to normal
 	VL_ClearScreen(0);
 	// VW_SetLineWidth(0);
@@ -855,7 +862,7 @@ done:
 	VH_DrawBitmap(32, 80, CK_CHUNKNUM(PIC_GAMEOVER));
 	VL_Present();
 
-	IN_UserInput(24 * 70, false);
+	KW_WaitPresentation(24 * 70, false);
 
 	StopMusic();
 }

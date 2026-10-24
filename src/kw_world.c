@@ -34,6 +34,7 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 #include "ck6_ep.h"
 #include "kw_world.h"
 #include "kw_music.h"
+#include "kw_skip.h"
 #include "kw_art.h"
 #include "kw_habitat.h"
 #include "kw_title_art.h"
@@ -1298,8 +1299,8 @@ static void KW_WorldCardText(int world, bool withCredits, char *out, size_t size
 // The world's own story, scrolling away into the distance as in the game's
 // title sequence, the first time Keen sets foot in it. (Foray in the Forest
 // shows its story at the start of every new game; the others only in their
-// title sequence, which a traveller never sees.) Any key skips it.
-void CK_DrawStarWarsEx(bool handleDemoKeys);
+// title sequence, which a traveller never sees.) Hold Escape to skip it.
+bool CK_DrawStarWarsEx(bool handleDemoKeys);
 bool FF_IsActive(void);
 void FF_LevelPalette(void);
 bool KW_DrawWorldTitlePicture(void);
@@ -1395,7 +1396,7 @@ static void KW_PlayWorldStory(void)
 				VH_DrawBitmap(0, 0, CK_CHUNKNUM(PIC_TITLESCREEN));
 			VH_UpdateScreen();
 			IN_ClearKeysDown();
-			IN_UserInput(5 * 70, false);
+			KW_WaitPresentation(5 * 70, false);
 			IN_ClearKeysDown();
 		}
 		VL_ClearScreen(0);
@@ -1408,8 +1409,8 @@ static void KW_PlayWorldStory(void)
 	SD_FadeAdLibVolume(256, 0);
 	IN_ClearKeysDown();
 	// The narrator reads it (STORY_<ID>.RAW, tools/kw_story_voice.py), in
-	// place of the story's music; if he has not finished when the last line
-	// has scrolled away, the dark screen waits for him (or a key).
+	// place of the story's music; the scroll waits for him to finish unless
+	// Escape is held to skip.
 	extern bool ck_starWarsNarrated;
 	char clip[40];
 	snprintf(clip, sizeof(clip), "STORY_%s.RAW", kw_worldDefs[kw_currentWorld].id);
@@ -1426,9 +1427,6 @@ static void KW_PlayWorldStory(void)
 	ck_starWarsTextOverride = NULL;
 	if (chart)
 		VL_SetCustomColors(NULL);
-	if (ck_starWarsNarrated && !IN_GetLastScan())
-		while (KW_ClipPlaying() && !IN_UserInput(7, false))
-			;
 	ck_starWarsNarrated = false;
 	KW_StopVoice();
 	IN_ClearKeysDown();
@@ -2640,25 +2638,25 @@ void KW_PlayOwnStory(bool handleDemoKeys)
 	// The narrator reads it (STORY_WORLDS.RAW, tools/kw_story_voice.py).
 	// The title tune, which plays on from the title picture, fades away
 	// under him and comes back when he has finished; if the last line has
-	// scrolled away before that, the dark screen waits for him (or a key).
+	// scrolled away before that, the final frame waits for him (or a held Escape).
 	KW_StartTitleMusic();
 	IN_ClearKeysDown();
-	bool narrated = KW_NarrateOverMusic("STORY_WORLDS.RAW");
+	KW_NarrateOverMusic("STORY_WORLDS.RAW");
 	// (the keys of the opening loop are handled below, once the standard
 	// colours are back: a menu opened from here must not be in the story's)
-	CK_DrawStarWarsEx(false);
+	bool skipped = CK_DrawStarWarsEx(false);
 	ck_starWarsTextOverride = NULL;
 	VL_SetCustomColors(NULL);
-	if (narrated && !IN_GetLastScan())
-		while (KW_ClipPlaying() && !IN_UserInput(7, false))
-			;
 	KW_LinesOver();
-	if (handleDemoKeys)
+	if (handleDemoKeys && skipped)
+	{
+		IN_SetLastScan(IN_SC_Space);
 		CK_HandleDemoKeys();
+	}
 }
 
-// A picture on the whole screen, in its own sixteen colours, until a key is
-// pressed.
+// A picture on the whole screen, in its own sixteen colours, until Escape
+// is deliberately held.
 static void KW_ShowPicture(const uint8_t *packed, const uint8_t colours[16][3])
 {
 	VL_FadeToBlack();
@@ -2671,7 +2669,7 @@ static void KW_ShowPicture(const uint8_t *packed, const uint8_t colours[16][3])
 	VL_FadeFromBlack();
 	KW_WaitForButtonsUp();
 	IN_ClearKeysDown();
-	IN_WaitButton();
+	KW_WaitPresentation(0, false);
 	KW_WaitForButtonsUp();
 	VL_FadeToBlack();
 	VL_SetCustomColors(NULL);
@@ -2718,7 +2716,7 @@ static void KW_Finale(void)
 	KW_StopVoice();
 	KW_StartEndingMusic(KW_EPILOGUE_MUSIC);
 	IN_ClearKeysDown();
-	bool narrated = KW_Narrate("STORY_EPILOGUE.RAW");
+	KW_Narrate("STORY_EPILOGUE.RAW");
 	ck_starWarsNarrated = true; // (no music of the scroll's own)
 	ck_starWarsKeepMusic = true;
 	ck_starWarsTextOverride = kw_epilogue;
@@ -2728,9 +2726,6 @@ static void KW_Finale(void)
 	ck_starWarsTextOverride = NULL;
 	ck_starWarsNarrated = ck_starWarsKeepMusic = false;
 	VL_SetCustomColors(NULL);
-	if (narrated && !IN_GetLastScan())
-		while (KW_ClipPlaying() && !IN_UserInput(7, false))
-			;
 	KW_StopVoice();
 
 	// The picture: the tune comes up.
@@ -2745,7 +2740,7 @@ static void KW_Finale(void)
 	KW_WaitForButtonsUp();
 	IN_ClearKeysDown();
 	if (!getenv("KW_AUTOFINALE"))
-		IN_WaitButton();
+		KW_WaitPresentation(0, false);
 	KW_WaitForButtonsUp();
 	VL_DelayTics(KW_FadeMusicOut());
 	VL_FadeToBlack();

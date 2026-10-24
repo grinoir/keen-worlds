@@ -13,7 +13,7 @@ Keen has saved (1.1, 1.2, ...). That is new content, not a missing part.
 #ifndef KW_VERSION_H
 #define KW_VERSION_H
 
-#define KW_VERSION "0.9.0"
+#define KW_VERSION "0.9.1"
 #define KW_VERSION_NAME "beta"
 
 #endif
