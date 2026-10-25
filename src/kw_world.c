@@ -2352,7 +2352,7 @@ static void KW_SetTally(const KW_Tally *t)
 
 static KW_ArcadeTally KW_LiveArcadeTally(void)
 {
-	KW_ArcadeTally t={KW_LiveTally(),ck_gameState.numCentilife,ck_gameState.difficulty};
+	KW_ArcadeTally t={KW_LiveTally(),ck_gameState.numCentilife,(int16_t)ck_gameState.difficulty};
 	return t;
 }
 

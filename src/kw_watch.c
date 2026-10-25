@@ -20,14 +20,14 @@ void KW_CacheWatchFont(void)
  if(kw_sharedWatchFont || (KW_CurrentWorld()!=KW_KEEN4 && KW_CurrentWorld()!=KW_SHIP)) return;
  int chunk=CK_CHUNKNUM(FON_WATCHFONT);
  CA_CacheGrChunk(chunk);
- const uint8_t *font=ca_graphChunks[chunk];
+	const uint8_t *font=(const uint8_t *)ca_graphChunks[chunk];
  int height=font[0]|font[1]<<8,size=770;
  for(int ch=0;ch<256;++ch) {
   int width=font[514+ch],offset=font[2+ch*2]|font[3+ch*2]<<8;
   int end=offset+((width+7)/8)*height;
   if(width && end>size) size=end;
  }
- kw_sharedWatchFont=malloc(size);
+	kw_sharedWatchFont=(uint8_t *)malloc(size);
  if(!kw_sharedWatchFont) Quit("Keen Worlds: cannot retain the shared watch font");
  memcpy(kw_sharedWatchFont,font,size);
 }
