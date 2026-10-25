@@ -37,22 +37,21 @@ Suburb and Alphamatic. Normal and sanitizer checks pass. Local install only;
 user testing and commit review are still pending. Native watch captures:
 `../../art/blaze-mk8/`. Original sketches: `../../art/watch-concepts.html`.
 
-Discussion draft, 2026-10-24. Current release: **0.9.1 beta**.
-Proposed next release: **0.9.2 beta**.
+Current release: **0.9.2 beta**.
 Expanded world research: 2026-10-25.
 Story placement and arcade decision: [Chronicle timeline](chronicle-timeline.md).
 
 The first two priorities come from player feedback. The user has also
 accepted voice volume, controller skipping and story replay as important.
-This document records the plan and investigation results. Implementation is
-now under way in the local **0.9.2-dev** tree; see the implementation update
-below for completed work and remaining validation. New-world candidates still
-need assessment.
+This document records the plan, implementation and remaining human-testing
+notes. The 0.9.2 beta is built for Linux and Windows. New-world candidates
+still need assessment.
 
 ## Current working mode — user direction, 2026-10-25
 
-Test locally in `play/`. Do not create release/package builds or publish
-anything until the user asks. `play/test-here.sh` runs the current local
+The user requested a normal **0.9.2 beta** release with Linux and Windows
+packages for both the public and private repositories. Human campaign and
+real-PC testing remain open for follow-up. `play/test-here.sh` runs the current local
 executables through the normal title and narrated opening, with no compilation
 or packaging. The old forced cabin start (`/TEDLEVEL`, `KW_AUTOLEVEL`) was
 removed after hands-on testing reported the missing opening.
@@ -419,12 +418,11 @@ story replay against the entire game/world state. Make/CMake and Windows
 cross-builds were exercised. The full 15-world self-test passes with ASan and
 UBSan configured to stop on the first error. Original Keen 1 reaches its own intro natively.
 
-Still required before calling this a release: human play on real Windows
-(including audio/controller use), complete original Keen 2/3 play checks with
-player-supplied data, a human cabinet/travel/save/replay pass, and final review of the development
-archives before publication. The Galaxy remake needs a human full playthrough;
-Alphamatic now has automated native coverage; its human playthrough remains. The public release is still
-0.9.1 beta.
+Human testing remains open after this beta: real Windows play (including
+audio/controller use), complete original Keen 2/3 play checks with
+player-supplied data, a human cabinet/travel/save/replay pass, the Galaxy
+remake's full playthrough, and the Alphamatic campaign. These checks are
+needed before 1.0.
 
 ### Arcade speech validation, 2026-10-25
 

@@ -935,7 +935,7 @@ tools`), because they find the games and the play folder from there.
   comes from.
 
 **The version** is written once, in `src/kw_version.h` (`KW_VERSION`,
-`KW_VERSION_NAME`): 0.9.0, "beta". Every world can be played from landing
+`KW_VERSION_NAME`): 0.9.2, "beta". Every world can be played from landing
 to ending, and testers are finding out whether that holds; 1.0 is the
 first release for everyone, and the last number counts fixes. More life in
 saved levels comes after 1.0 (1.1, 1.2, ...): new content, not a missing
