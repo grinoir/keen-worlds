@@ -15,6 +15,12 @@ line. Four-way navigation, Page Up/Down and Home/End work; full
 frame redraws prevent cursor trails. Suburb's destination is named **Earth**. Up opens flight controls at the cabin's blinking sign;
 that animated tile had overwritten its own interaction marker.
 
+The Alphamatic's map exit follows Keen 5's physical dock: a lit, supported
+gangway runs from the map's real spawn to the shuttle, and its nose stops Keen
+beside the ship. Up returns to the Megarocket there. The boarding regression
+walks from the actual map spawn before checking Up; it no longer teleports
+Keen to a guessed coordinate.
+
 End Game now returns directly to the title. Its shared score panel replaces
 episode high-score demos, which can refer to maps absent from native worlds
 (the cabin failed while loading map 19). Keen Dreams retains the compact
@@ -40,8 +46,8 @@ Suburb and Alphamatic. Normal and sanitizer checks pass. Native watch captures:
 
 The Alphamatic opening's credit roll is shorter, and its contextual Escape
 prompt stays inside the black reading/subtitle panels instead of covering the
-illustration. On Alphamatic's map, Up at the marked shuttle now returns to the
-Megarocket, following the Keen 5 dock interaction.
+illustration. Alphamatic's physical gangway and corrected return route are
+described above.
 
 Current release: **0.9.2 beta**.
 Expanded world research: 2026-10-25.

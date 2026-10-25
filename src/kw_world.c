@@ -42,6 +42,7 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 #include "kw_music.h"
 #include "kw_skip.h"
 #include "kw_art.h"
+#include "kw_alphamatic_dock_art.h"
 #include "kw_habitat.h"
 #include "kw_title_art.h"
 
@@ -1074,8 +1075,34 @@ static bool kw_launchRequested = false;
 
 // How far (in tiles) from the launch spot Keen may stand to board the rocket.
 #define KW_LAUNCH_RANGE 1
-#define KW_ALPHAMATIC_DOCK_X 37
-#define KW_ALPHAMATIC_DOCK_Y 127
+
+// Alphamatic v3.0's shuttle sits five tiles east of Keen's map start. The
+// gangway is fitted to that route, like the walkway on Keen 5's dock.
+#define KW_ALPHAMATIC_GANGWAY_DX 2
+#define KW_ALPHAMATIC_SHUTTLE_DX 5
+
+static bool KW_AlDockSolidCell(int x, int y);
+
+static KW_Art kw_alDockArt = {
+	0, 0, KW_AL_DOCK_TILES_W, KW_AL_DOCK_TILES_H, 1,
+	&kw_alDockSlots[0][0][0], &kw_alDockTiles[0][0][0][0],
+	1, 0, NULL, false, false, KW_AlDockSolidCell, false,
+};
+
+static bool KW_AlDockSolidCell(int x, int y)
+{
+	// A solid deck under the bridge keeps Keen from falling into space; the
+	// nose cell stops him beside the shuttle, as Keen 5's gate does.
+	return y == kw_alDockArt.originY + 2 ||
+		(x == kw_alDockArt.originX + 3 && y == kw_alDockArt.originY + 1);
+}
+
+static void KW_BuildAlphamaticDock(int spawnX, int spawnY)
+{
+	kw_alDockArt.originX = spawnX + KW_ALPHAMATIC_GANGWAY_DX;
+	kw_alDockArt.originY = spawnY - 1;
+	KW_PlaceArt(&kw_alDockArt);
+}
 
 
 // ---- Keen 5 boarding gate ----
@@ -1206,11 +1233,12 @@ void KW_SetLaunchSpot(int tileX, int tileY)
 	{
 		if (kw_currentWorld == KW_ALPHAMATIC)
 		{
-			// The Alphamatic's map shows its launch shuttle at this marked
-			// station dock. Up here returns to the Megarocket, like the Keen 5
-			// dock; the map spawn itself is not the exit.
-			kw_launchSpotX = KW_ALPHAMATIC_DOCK_X;
-			kw_launchSpotY = KW_ALPHAMATIC_DOCK_Y;
+			// Build the bridge from the real map start to the visible shuttle.
+			// The map's shuttle is at start + 5 tiles; the boarding point is
+			// beside its nose, just as on Keen 5.
+			KW_BuildAlphamaticDock(tileX, tileY);
+			kw_launchSpotX = tileX + KW_ALPHAMATIC_SHUTTLE_DX;
+			kw_launchSpotY = tileY;
 		}
 		else
 		{
@@ -5014,24 +5042,17 @@ void KW_TestBoarding(void)
 		kw_launchRequested = false;
 		memset(&ck_inputFrame, 0, sizeof(ck_inputFrame));
 		ck_keenState.jumpIsPressed = ck_keenState.pogoIsPressed = ck_keenState.shootIsPressed = false;
-		if (!ship && world == KW_ALPHAMATIC)
+		if (!ship && (KW_HasKeen5Dock() || world == KW_ALPHAMATIC))
 		{
-			// Test from the walkable tile beside the marked station shuttle,
-			// not the initial map spawn.
-			ck_keenObj->posX = RF_TileToUnit(KW_ALPHAMATIC_DOCK_X - 1);
-			ck_keenObj->posY = RF_TileToUnit(KW_ALPHAMATIC_DOCK_Y);
-			CK_ResetClipRects(ck_keenObj);
-		}
-		else if (!ship && KW_HasKeen5Dock())
-		{
-			// These arrivals stand at the start of a short gangway. Walk to
-			// the ship's nose before testing the actual boarding controls.
+			// Walk from the actual map spawn along the dock to the ship.
 			ck_inputFrame.dir = IN_dir_East;
 			ck_inputFrame.xDirection = IN_motion_Right;
 			CK_SetAction(ck_keenObj, CK_ACTION(CK_ACT_MapKeenWalk0));
 			SD_SetSpriteSync(2);
 			for (int frame = 0; frame < 400; ++frame) CK_RunAction(ck_keenObj);
 			memset(&ck_inputFrame, 0, sizeof(ck_inputFrame));
+			if (world == KW_ALPHAMATIC)
+				BOARD_CHECK(KW_IsArtPlaced(&kw_alDockArt));
 		}
 		CK_object parked = *ck_keenObj;
 		// The three gameplay buttons must never cause an accidental boarding.
