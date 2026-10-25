@@ -1,0 +1,145 @@
+# Chocolate Keen
+Chocolate Keen is a reverse engineering of Commander Keen in C and SDL. The goal is to be as accurate as possible to the original.
+
+## How to Play
+* You can play directly in the browser! Click <a href="http://www.jamesfmackenzie.com/chocolatekeen">here</a>
+* If you want to download and play offline, see the Releases section below  
+
+### Controls
+* Arrows - Move Keen around
+* Ctrl - Jump
+* Alt on Windows/Linux, or Option on Mac - Use Pogo/Stop Pogo (if you have one)
+* Ctrl AND Alt on Windows/Linux, or Ctrl AND Option on Mac - Fire raygun (if it has charges)
+
+If you’re having issues with the controls (e.g. on a Mac keyboard), you can change the key bindings with F3.
+
+On PlayStation Vita, use D-Pad or left analog for movement/navigation, Cross for jump/confirm, Circle for pogo or back, Square to fire, Triangle for status, and Start for confirm. For the full context-sensitive Vita mapping table, see [PlayStation Vita Controls](docs/vita-controls.md).
+
+## Releases
+Downloadable game packages are published on <a href="https://github.com/jamesfmackenzie/chocolatekeen/releases">GitHub Releases</a>. Desktop and WebAssembly builds are published as zip files with game data; PlayStation Vita builds are published as `.vpk` packages. On Linux, you'll need the <a href="https://wiki.libsdl.org/Installation#Linux.2FUnix" target="_blank">SDL 2.0 runtime</a> installed. Other release packages include what they need to run.
+
+* <a href="https://github.com/jamesfmackenzie/chocolatekeen/releases/latest">Latest release</a> - includes Linux, WebAssembly, Windows x86, Windows x64, and PlayStation Vita packages
+
+### Episodes Two and Three
+The downloadable releases above come packaged with Commander Keen "Invasion of the Vorticons" Episode One: Marooned on Mars. But the engine supports the entire Vorticons trilogy.
+
+For desktop builds, if you have Episode Two or Three, drop the level/data files into the `GAMEDATA` folder as follows:
+
+    .
+    ├── chocolate-keen
+    └── GAMEDATA
+        ├── KEEN1
+        |   └── ... Episode One level data (pre-packaged)
+        ├── KEEN2
+        |   └── ... Episode Two level data
+        └── KEEN3
+            └── ... Episode Three level data
+    
+You can then start each episode via `chocolate-keen -startkeen1`, `chocolate-keen -startkeen2`, and `chocolate-keen -startkeen3` respectively. On Windows, the executable is `chocolate-keen.exe`.
+
+On PlayStation Vita, you can copy Episode 2 and Episode 3 data into `ux0:data/chocolatekeen/GAMEDATA/KEEN2` and `ux0:data/chocolatekeen/GAMEDATA/KEEN3`. If more than one episode is available, the Vita build automatically shows the launcher so you can pick which episode to start.
+
+## Building
+You can clone or download the `chocolatekeen` repo and build it yourself.
+
+## Documentation
+
+- [Architecture Overview](docs/architecture.md)
+- [Graphics Modes and Timing](docs/graphics-modes.md)
+- [Technical Debt Backlog](docs/tech-debt.md)
+- [PlayStation Vita Controls](docs/vita-controls.md)
+- [Docs Layout Note](docs/README.md)
+
+### Linux
+For Linux builds you'll need a C compiler (e.g. gcc) and toolchain. The setup varies between distros. For Ubuntu you can install the build-essential package via `sudo apt-get install build-essential`. Once you have that setup:
+
+1. Install the SDL 2.0 development libraries. This varies between Linux distros. For Ubuntu it's `sudo apt-get install libsdl2-dev`. More info <a href="https://wiki.libsdl.org/Installation#Linux.2FUnix" target="_blank">here</a>
+2. Launch a shell
+3. Navigate to `/build/linux`
+4. Run `./build_linux.sh`
+
+### WebAssembly
+To build for WebAssembly, you'll need the <a href="https://github.com/emscripten-core/emsdk" target="_blank">Emscripten SDK</a>. Find setup instructions <a href="https://emscripten.org/docs/getting_started/downloads.html" target="_blank">here</a>
+
+1. Launch a shell with emscripten build tools (emsdk) in the PATH
+2. Navigate to `/build/emscripten`
+3. Run `./build_emscripten.sh`
+
+### Windows (MinGW)
+This is a Makefile project. To build for Windows, the supported path is <a href="https://www.msys2.org/" target="_blank">MSYS2</a> with the MinGW toolchain and SDL2 package installed.
+
+1. Install MSYS2 and open the matching MinGW shell (`MINGW32` for x86, `MINGW64` for x64).
+2. Install the required packages:
+   `pacman -S --needed make mingw-w64-i686-gcc mingw-w64-i686-SDL2` for x86, or
+   `pacman -S --needed make mingw-w64-x86_64-gcc mingw-w64-x86_64-SDL2` for x64.
+3. Navigate to `/build/mingw`.
+4. Run the build script that corresponds to your platform:
+* Windows x86:
+  * `./build_mingw32.sh -j4`
+* Windows x64:
+  * `./build_mingw-w64.sh -j4`
+
+The scripts expect `sdl2-config` to be in `PATH` and copy `SDL2.dll` from the active MSYS2 MinGW environment.
+
+### Windows (Visual Studio)
+Build and Debug with Microsoft Visual Studio / Visual C++
+
+1. Navigate to `/build/visual_studio`
+2. Open Solution file (`ChocolateKeen.sln`) in Visual Studio
+3. Restore NuGet dependencies (Project -> Manage NuGet Dependencies > Restore)
+4. Build (Build > Build Solution)
+5. Run (Debug > Start Without Debugging) or Debug (Debug > Start Debugging)
+
+Game data is automatically copied to the Target Directory as part of build - so everything should "just run"
+
+### PlayStation Vita (VitaSDK)
+The repository includes a VitaSDK target in `build/vita`. It builds a `.vpk` that packages the executable and bundled Episode One `GAMEDATA`.
+
+Prerequisites:
+1. Install VitaSDK and SDL2 for Vita.
+2. Source the VitaSDK environment so tools like `arm-vita-eabi-gcc`, `vita-elf-create`, `vita-make-fself`, and `vita-mksfoex` are in `PATH`.
+3. Make sure `zip` is available on the host machine that is building the VPK.
+
+Build steps:
+1. Launch a shell with VitaSDK environment loaded.
+2. Navigate to `/build/vita`.
+3. Run `./build_vita.sh -j4` to build and package `chocolate-keen-vita.vpk`.
+4. Optional: Run `./build_vita.sh game -j4` if you only want `chocolate-keen.elf`.
+5. Copy `build/vita/chocolate-keen-vita.vpk` to the Vita and install it with VitaShell or another VPK installer.
+
+Install/runtime layout:
+* Read-only bundled game data is loaded from `app0:/GAMEDATA/...`
+* On Vita, you can add Episode 2 and Episode 3 under `ux0:data/chocolatekeen/GAMEDATA/...`
+* Config, save data, mapper data, and other writable files are created under `ux0:data/chocolatekeen/`
+* The build copies `data/GAMEDATA/*` into the VPK, so Episode One is available immediately after install
+* If more than one episode is available, the Vita build automatically shows the launcher at startup
+
+Notes:
+* The Vita build defaults to software rendering (`USE_OPENGL=0`).
+* The Vita target uses a platform-specific input policy in [src/platform/input_vita.c](/Users/jamesmackenzie/Documents/Code/GitHub/chocolatekeen/src/platform/input_vita.c) and still has open follow-up work tracked in [docs/tech-debt.md](/Users/jamesmackenzie/Documents/Code/GitHub/chocolatekeen/docs/tech-debt.md).
+* The build currently places a default `chocolate-keen.cfg` in the VPK for packaging completeness, but the writable runtime config path on Vita is `ux0:data/chocolatekeen/chocolate-keen.cfg`.
+
+## Authors
+The original authors of Chocolate Keen are NY00123, QuantumG and Lemm. The project started with a reverse engineering of the original Keen code, and the goal is complete authenticity to the original - bugs and all. For more info see https://pckf.com/viewtopic.php?f=4&t=2536
+
+Since bringing this to GitHub, I've ported to WebAssembly and I intend to support other platforms too.
+
+## Developer Notes
+
+### Local CI-Style Check
+
+Run this from the repo root to execute the same quick checks used during refactors:
+
+```bash
+./scripts/ci-local.sh
+```
+
+### WebAssembly Notes
+
+#### Performance
+The default WebAssembly build of Chocolate Keen uses Emscripten Asyncify rather than the older Emterpreter-based path. Performance can still vary depending on the browser and host machine, and on slower systems you may notice audio stutters or frame skips. The legacy `emscripten-legacy` profile still exists for older experiments and continues to use Emterpreter-style settings.
+
+#### Graphics
+Although the original game supports both EGA and VGA graphics modes, the WebAssembly build is hardcoded to VGA. The original game resolution is 320x200, which is internally scan-doubled to 320x400. The x-axis is then doubled also to preserve the aspect ratio, yielding 640x400. Once overscan borders are added, the internal game resolution jumps to 672x414. This is rendered into the HTML canvas to provide a pixel perfect image, and then aspect-ratio corrected to 4:3 via CSS
+
+Some parts of the game (initial load and exit screen) use VGA text mode. Internally this renders at 720x400 (or 736x414 with overscan) and is nearest-neighbour downsampled to the game resolution of 672x414. It looks ugly, but we have to live with this for now to preserve crisp game visuals

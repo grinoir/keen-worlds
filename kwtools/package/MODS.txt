@@ -45,5 +45,10 @@ Where each game comes from:
            Keen has in the ship's bed, not a place in the flight menu.
 
 Each world needs its base game too: Keen 4 for keen7, keen95, bounty and
-dreams; Keen 5 for keen9, ck55, asylum, osi, arealm and fitf; Keen 6 for
+dreams; Keen 5 for keen9, ck55, asylum, osi, arealm, alphamatic and fitf; Keen 6 for
 keen8.
+
+  alphamatic  The Alphamatic    The Alphamatic v3.0, by Gridlock
+              https://pckf.com/viewtopic.php?t=4086
+              Unpack the original mod archive in mods/alphamatic.
+              Continues Atroxian Realm; unlocked after it in the Chronicle.

@@ -11,7 +11,7 @@ episode, you start inside the Bean-with-Bacon Megarocket, walk to the flight
 console and choose where to land: Gnosticus IV, the Shikadi armada, Fribbulus
 Xax, or the worlds the Keen community has made since.
 
-> **Beta (0.9.1).** Every world can be played from landing to ending, but few
+> **Development for 0.9.2.** Every world can be played from landing to ending, but few
 > people have done it yet. Things will be wrong; finding them is the point.
 > See [Reporting a problem](#reporting-a-problem).
 
@@ -47,7 +47,7 @@ All of them: [phosphorrelay.grinoir.com/tags/keen-worlds](https://phosphorrelay.
 <img src="doc/images/ending-beach.png" alt="Keen Worlds' ending: Keen on the beach" width="49%">
 </p>
 
-- **One galaxy.** Thirteen worlds and a dream in one game, with one saved
+- **One galaxy.** Fifteen destinations and a dream in one game, with one saved
   game for all of it.
 - **New music.** Original tunes for the AdLib sound card: *The Greatest
   Adventure* plays under the title and the story, the inn in the Border
@@ -63,6 +63,9 @@ All of them: [phosphorrelay.grinoir.com/tags/keen-worlds](https://phosphorrelay.
   moved in, and there is an inn.
 - **Two ways to play.** *Free Flight* opens every world at once; *the
   Chronicle* opens them in the order of the story.
+  Krisle follows Keen 5; Alphamatic requires both Krisle and The Eight
+  Accumulators; the Shikadi Station follows The Eight Accumulators.
+  Missing chapters are passed over, and older saves keep their open courses.
 - **A dream.** Go to bed in the ship and Keen dreams *Keen Dreams*, the lost
   episode.
 - **A beginning and an end of its own.** A new title picture, a story read
@@ -126,9 +129,15 @@ Worlds.
 | `mods/asylum` | Address Unknown | *Keen Asylum* | Keen 5 |
 | `mods/osi` | The Shikadi Station | *Operation Station Infiltration* v1.4, by Ceilick (2022), Omnispeak version | Keen 5 |
 | `mods/arealm` | Krisle | *Atroxian Realm* v1.5, by Gridlock (2016) | Keen 5 |
+| `mods/alphamatic` | The Alphamatic | *The Alphamatic* v3.0, by Gridlock | Keen 5 |
+| `mods/suburb` | Earth | *Suburb Shenanigans* v1.2, by Bubbatom, Levellass and K1n9_Duk3 | Keen 5 |
 | `mods/fitf` | Gnosticus Pi | *Foray in the Forest* v2.0, by Nisaba and K1n9_Duk3 | Keen 5 |
 
 Where to find them:
+
+Suburb currently needs its audited v1.2 data prepared with
+`kwtools/kw_suburb.py`; see `data/mods/suburb/README.txt`. The local port
+has automated coverage; it still needs a human campaign playthrough.
 
 - **Krodacia, The Omegamatic II, Address Unknown:** the
   [Omnispeak modding kit](https://github.com/sulix/omnispeak/releases)
@@ -151,7 +160,7 @@ after adding a game.
 
 | Key | Action |
 |---|---|
-| Arrow keys | move, look up and down, enter doors, use the console |
+| Arrow keys | move, look up and down; Up enters doors, boards ships and uses the console |
 | Ctrl | jump |
 | Alt | pogo stick |
 | Space | shoot |
@@ -160,15 +169,62 @@ after adding a game.
 | F1 | the guide |
 | F11 | full screen |
 
-A voice speaks the conversations. Hold **Esc for one second** to skip a
-scene or advance spoken dialogue early; a small bar shows the hold. Once
-the voice finishes, a fresh key press advances the text. Release the button
-before advancing again.
+Voices and their volume are under **Configure → Options → Voices**, independent
+of music and effects. Select voice volume to cycle through 0–100% in 10% steps.
+The settings are remembered between sessions.
+
+Hold **Esc**, or the controller's mapped **menu button**, for one second to
+skip a story scene. On Xbox controllers the default is **Y**; a remapped
+menu button is respected. The upper-right hint is hidden while idle and
+shows progress as soon as a skip hold starts. Other fresh keys/buttons
+reveal help briefly. After speech ends,
+a fresh press advances story pages. Popup conversations use a fresh key or
+controller tap, including Escape, even while a line is being spoken. Popups
+have no hold-to-skip hint. Release before advancing again.
+
+**Blaze Mk. 8**, Billy's homemade yellow calculator watch, has a purple
+strap, green display and a paper reminder for the current world. Its menus
+use one scrolling column. The flight chart groups the numbered main story
+on the left, side adventures on the right, with independent column scrolling
+in its original window size. The selected destination explains its story links. Use all four arrows or the D-pad;
+the flight chart also accepts Page Up/Down and Home/End.
+Press Up at the blinking arrow in the cabin to open the chart. Outside,
+Up boards the ship; jump, pogo and fire keep their gameplay actions.
+Escape resumes play. End Game returns to the title; its high-score table
+is shared across worlds and does not load an episode demo. Return to Cabin
+leaves the Galaxy arcade remake or wakes Keen from a dream.
+
+### The ship's arcade
+
+Press Up at the cabinet beside the bunk for the original **Keen 1, 2 and 3**.
+They run in the native Chocolate Keen engine, with separate saves and scores;
+exit the arcade game to return to the cabinet and cabin. Add your original
+v1.31 games to `arcade/keen1`, `arcade/keen2` and `arcade/keen3`. See
+[the arcade guide](kwtools/package/ARCADE.txt) for files, controls and credits.
+Arcade completion is outside the Chronicle and the galaxy's ending.
+
+Keen 1 also lists **Marooned on Mars — Galaxy**, credited to Dr. Colossus.
+It runs inside the current Keen Worlds game and window. Its progress is
+included in the shared save slots, while its score, lives, ammunition, pogo
+and difficulty stay separate from the journey. Return to Cabin leaves Keen
+beside the cabinet. Convert the K1n9_Duk3-fixed September 2020
+version with `kwtools/kw_mars.py`; the arcade guide explains the inputs.
+The Alphamatic opens with a short illustrated roll followed by Keen and
+Spot's workshop video call. Subtitles and the established cast accompany
+fourteen abridged turns; a fresh tap advances a turn and held Escape skips
+the whole opening.
+
+The cabinet's tiny CRT animates while Keen is aboard. Arcade entry/return
+fade through black. Original Keen 1–3 return directly to the cabin without
+the DOS information screen; their exit prompt names the arcade. Falling
+asleep and waking in Keen Dreams use a slower fade and a pause in darkness.
+
+All arcade games follow the visible Keen Worlds window's screen mode,
+including fullscreen set with a desktop shortcut.
 
 ## Known gaps
 
 - Life in saved levels exists so far only in the Border Village (Keen 4).
-- Voices cannot yet be turned off or made quieter on their own.
 - Inside the dream there is no menu; save in the ship.
 - *The Prisoner's Dilemma* and *Send in the Clorts* are not in yet.
 - The Shikadi Station has no ending text, and one of Gnosticus Pi's endings
@@ -199,7 +255,7 @@ installed:
 make -C src
 ```
 
-The program is written to `bin/`. Put the game files and the folders
+The main program and native `keen-vorticons` arcade companion are written to `bin/`. Put the game files and the folders
 `megarocket`, `voice` and `mods` from a release (or from `data/`) next to it.
 `kwtools/kw_package.sh` makes the release archives for Linux and Windows;
 its first lines say which build tools it needs. `doc/keen-worlds.md` describes

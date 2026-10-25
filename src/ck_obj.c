@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ck_def.h"
 #include "ck_phys.h"
 #include "ck_play.h"
+#include "kw_mars.h"
 
 bool AR_IsActive(void); // KEEN WORLDS: Atroxian Realm (kw_arealm.c)
 
@@ -584,12 +585,14 @@ void CK_TurretShoot(CK_object *obj)
 		break;
 	case 1:
 		shot->velX = 64;
+		if (MARS_IsActive()) shot->velY = -64;
 		break;
 	case 2:
 		shot->velY = 64;
 		break;
 	case 3:
 		shot->velX = -64;
+		if (MARS_IsActive()) shot->velY = -64;
 		break;
 	}
 

@@ -236,7 +236,7 @@ def write_data(src, out, engine):
                 '%string ca_audioFile "AUDIO.KDR"\n%string ca_audioHead "AUDIOHHD.KDR"\n\n')
         f.write('# The score box: its digits are small tiles 1-10 after a blank one\n'
                 '%int ck_scoreBoxBlankTile 0\n%int ck_scoreBoxDigitOffset 47\n'
-                '%int ck_scoreBoxScoreDigits 7\n%int ck_scoreBoxShotsColumn 6\n%int ck_scoreBoxLivesColumn 1\n\n')
+                '%int ck_scoreBoxScoreColumn 2\n%int ck_scoreBoxLivesDigits 1\n%int ck_scoreBoxScoreDigits 6\n%int ck_scoreBoxShotsColumn 6\n%int ck_scoreBoxLivesColumn 2\n\n')
         f.write('%stringarray ck_str_levelNames\n' + ',\n'.join('\t"%s"' % n for n in names) + '\n\n')
         f.write('%stringarray ck_str_levelEntryText\n' + ',\n'.join('\t"Keen dreams of\\n%s"' % n for n in names) + '\n\n')
         f.write('%string ck_str_tryAgainIntro "You didn\'t make it past"\n%string ck_str_tryAgainTryAgain "Try Again"\n'

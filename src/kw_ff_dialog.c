@@ -259,7 +259,7 @@ void FF_JanitorSleepMonolog(void)
 
 	FF_DialogWindow(FF_JANITORMOPPIC, FF_S_JANITORMONOLOG0+ff_map.dreamMsg, true, 0);
 	IN_ClearKeysDown();
-	KW_WaitPresentation(8 * 70, true); // let a longer spoken line finish
+	KW_WaitDialogue(8 * 70); // a fresh press advances; otherwise let the line finish
 
 	if (++ff_map.dreamMsg >= FF_S_JANITORMONOLOGEND-FF_S_JANITORMONOLOG0)
 		ff_map.dreamMsg = 0;

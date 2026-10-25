@@ -352,6 +352,12 @@ set(OMNISPEAK_CK_SRCS
 	src/ck_play.h
 	src/ck_quit.c
 	src/ck_text.c
+	src/kw_arcade.c
+	src/kw_mars.c
+	src/kw_alphamatic.c
+	src/kw_suburb.c
+	src/kw_watch.c
+	src/kw_alphamatic_opening.c
 	src/kw_world.c
 	src/kw_card.c
 	src/kw_habitat.c
@@ -483,4 +489,24 @@ target_link_libraries(omnispeak
 # TODO: Should this be for Unix, or for gcc?
 if (UNIX)
 	target_link_libraries(omnispeak m)
+endif()
+
+# Native arcade companion; original game files remain player supplied.
+option(WITH_ARCADE "Build the native Keen 1-3 arcade player" ON)
+if(WITH_ARCADE AND RENDERER MATCHES "^sdl2")
+ file(GLOB_RECURSE ARCADE_SOURCES CONFIGURE_DEPENDS third_party/chocolate-keen/src/*.c)
+ list(FILTER ARCADE_SOURCES EXCLUDE REGEX "/platform/(input_vita|input_windows|sleep_vita|sleep_emscripten)\\.c$")
+ add_executable(keen-vorticons ${ARCADE_SOURCES})
+ target_include_directories(keen-vorticons PRIVATE third_party/chocolate-keen/src ${SDL2_INCLUDE_DIRS})
+ target_compile_definitions(keen-vorticons PRIVATE SDL_MAIN_HANDLED
+  CHOCOLATE_KEEN_IS_EPISODE1_ENABLED CHOCOLATE_KEEN_IS_EPISODE2_ENABLED CHOCOLATE_KEEN_IS_EPISODE3_ENABLED)
+ if(MSVC)
+  target_compile_options(keen-vorticons PRIVATE /FIstring.h)
+ else()
+  target_compile_options(keen-vorticons PRIVATE -include string.h)
+ endif()
+ target_link_libraries(keen-vorticons ${SDL2_LIBRARIES})
+ if(UNIX)
+  target_link_libraries(keen-vorticons m)
+ endif()
 endif()

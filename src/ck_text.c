@@ -31,9 +31,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ck_act.h"
 #include "ck_cross.h"
 #include "ck_def.h"
+#include "ck_text.h"
 #include "kw_music.h"
 #include "kw_skip.h"
 #include "kw_world.h"
+#include "kw_suburb.h"
 
 int help_delay, help_pic, help_y, help_x;
 char *help_ptr;
@@ -102,6 +104,9 @@ void ParseTimedCommand(void)
 	RipToEOL();
 }
 
+static KW_Presentation ck_timedPageControls;
+static bool ck_timedPageActive, ck_timedPageSkipped;
+
 void TimedPicCommand(void)
 {
 	// int timeCount = 0;
@@ -114,8 +119,35 @@ void TimedPicCommand(void)
 	// (long) TimeCount = 0;
 	// SD_SetTimeCount(0);
 
-	VL_DelayTics(help_delay);
-	VHB_DrawBitmap(help_x & 0xFFF8, help_y, help_pic);
+	if (!getenv("KW_AUTOPAGES") && ck_timedPageActive)
+	{
+		VH_UpdateScreen();
+		uint32_t started=SD_GetTimeCount();
+		while ((uint32_t)(SD_GetTimeCount()-started)<(uint32_t)help_delay)
+		{
+			KW_LinePoll();
+			if (KW_PollPresentation(&ck_timedPageControls,false))
+			{
+				ck_timedPageSkipped=true;
+				KW_StopVoice();
+				while (*help_ptr && !(help_ptr[0]=='^' && (CK_Cross_toupper(help_ptr[1])=='P' || CK_Cross_toupper(help_ptr[1])=='E')))
+					++help_ptr;
+				help_full_page=1;
+				KW_ClearPresentationHint(&ck_timedPageControls);
+				return;
+			}
+			KW_PresentWithSkipHint(&ck_timedPageControls,false);
+			VL_DelayTics(1);
+		}
+		KW_ClearPresentationHint(&ck_timedPageControls);
+	}
+	else if (!getenv("KW_AUTOPAGES")) VL_DelayTics(help_delay);
+	// Alphamatic intentionally places a dummy timed picture below the
+	// visible page (e.g. Y=400) to pause without drawing. DOS could write
+	// outside its displayed page; a native surface must stay in bounds.
+	VH_BitmapTableEntry dimensions=VH_GetBitmapTableEntry(help_pic-ca_gfxInfoE.offBitmaps);
+	if (help_x>=0 && help_y>=0 && help_x+dimensions.width*8<=320 && help_y+dimensions.height<=200)
+		VHB_DrawBitmap(help_x & 0xFFF8, help_y, help_pic);
 }
 
 // KEEN WORLDS: Foray in the Forest's text pages (its CK_TEXT.C; K1n9_Duk3's
@@ -737,7 +769,7 @@ void HelpScreens(void)
 	US_SetPrintFont(0);
 
 	if (ck_currentEpisode->ep == EP_CK5)
-		StartMusic(19);
+		StartMusic(CK_INT(CK_HelpMusicLevel,19));
 
 	while (1)
 	{
@@ -758,6 +790,15 @@ void HelpScreens(void)
 			return;
 		}
 
+		// Suburb's full illustrated family story remains available in Help;
+		// arrival uses its shorter narrated scroll, as the original did.
+		if (SS_IsActive() && n==2)
+		{
+			ck_textPagesVoice="STORY";
+			CK_ShowTextPages(CK_CHUNKNUM(TEXT_STORY),CK_INT(CK_HelpMusicLevel,25),false);
+			ck_textPagesVoice=NULL;
+			continue;
+		}
 		/* Cache the chunk with the topic */
 		n = CK_LookupChunk(help_chunks[n]);
 		CA_CacheGrChunk(n);
@@ -903,11 +944,17 @@ static char kw_guideText[] =
 	"^P\n"
 	"^cFSTORIES AND CONVERSATIONS\n"
 	"\n"
-	"^cEHold Esc for one second to skip a scene or move spoken dialogue on early. The small bar shows how long to hold.\n"
+	"^cEIn stories, hold Esc or your controller menu button for one second to skip. Other keys briefly reveal the hidden corner hint.\n"
 	"\n"
-	"^cEOnce the voice finishes, press a key to move the text on.\n"
+	"^cEPopup dialogue uses a fresh tap, including Esc, even during speech. There is no hold gesture or skip hint. Voices: Configure, Options, Voices.\n"
 	"\n"
 	"^cERelease the button before advancing again. Moving, jumping and shooting leave story scenes playing.\n"
+	"^P\n"
+	"^cFTHE ARCADE\n"
+	"\n"
+	"^cEPress Up at the cabinet beside the bunk for original Keen 1, 2 and 3. Add your v1.31 games in arcade/keen1, keen2 and keen3.\n"
+	"\n"
+	"^cEArcade games keep their own saves, scores and inventory. Exit to return to the cabin. They are outside the Chronicle.\n"
 	"^P\n"
 	"^cFTHE WORLDS\n"
 	"\n"
@@ -924,8 +971,8 @@ static char kw_guideText[] =
 	"^cFLife in saved levels\n"
 	"^cEOnly the Border Village has its people so far.\n"
 	"\n"
-	"^cFA switch for the voices\n"
-	"^cEThey cannot be turned down by themselves yet.\n"
+	"^cFThe arcade remake\n"
+	"^cEMarooned on Mars - Galaxy is not playable yet.\n"
 	"\n"
 	"^cFA menu in the dream\n"
 	"^cESave in the ship for now.\n"
@@ -1011,6 +1058,17 @@ void KW_ShowGuide(void)
 // KEEN WORLDS: show a text chunk's pages the way the ending text is shown
 // (Atroxian Realm's story and dialogue screens), with a song while it runs,
 // on the usual red bordered page or a plain black one.
+static bool CK_StoryLayoutPage(void)
+{
+	ck_timedPageSkipped=false;
+	ck_timedPageActive=true;
+	KW_BeginPresentation(&ck_timedPageControls);
+	PageLayout(0);
+	ck_timedPageActive=false;
+	KW_EndPresentation(&ck_timedPageControls);
+	return ck_timedPageSkipped;
+}
+
 // The pages can be spoken: ck_textPagesVoice names the screen, and page n
 // plays the world's clip <prefix>_<name>_<nn>.RAW (tools/kw_arealm_voice.py).
 const char *ck_textPagesVoice = NULL;
@@ -1039,7 +1097,7 @@ void CK_ShowTextPages(int textChunk, int song, bool blackBackground)
 			snprintf(clip, sizeof(clip), "%s_%02d", ck_textPagesVoice, (int)help_cur_page);
 			KW_SayWorldLine(clip);
 		}
-		PageLayout(0);
+		if (CK_StoryLayoutPage()) break;
 		if (ck_textPagesVoice && FF_IsActive())
 		{
 			// (Foray in the Forest: the stretches of text this page showed,
@@ -1063,7 +1121,10 @@ void CK_ShowTextPages(int textChunk, int song, bool blackBackground)
 			KW_DumpScreenTo(path);
 		}
 		if (!getenv("KW_AUTOTALK"))
+		{
 			KW_WaitPresentation(0, true);
+			if (KW_LastPresentationWasSkipped()) break;
+		}
 	}
 
 	KW_LinesOver();
@@ -1076,6 +1137,13 @@ void CK_ShowTextPages(int textChunk, int song, bool blackBackground)
 	IN_ClearKeysDown();
 	VL_ClearScreen(blackBackground ? 0 : 4);
 	ck_textBlackBackground = false;
+}
+
+bool CK_UseSecretEnding(void)
+{
+	int level=CK_INT(CK5_SecretFuseLevel,13);
+	return level>=0 && level<CK_LEVELS_TRACKED &&
+		(CK_INT(CK5_SecretEndingAnyExit,0) ? ck_gameState.levelsDone[level]>=1 : ck_gameState.levelsDone[level]==LS_KorathFuse);
 }
 
 void help_endgame(void)
@@ -1096,7 +1164,7 @@ void help_endgame(void)
 
 	// Check for Korath Fuse
 #ifdef WITH_KEEN5
-	if (/*ck_currentEpisode->ep == EP_CK5 &&*/ (CK_INT(CK5_SecretEndingAnyExit, 0) ? ck_gameState.levelsDone[CK_INT(CK5_SecretFuseLevel, 13)] >= 1 : ck_gameState.levelsDone[CK_INT(CK5_SecretFuseLevel, 13)] == 0x0E)) // KEEN WORLDS: variable
+	if (CK_UseSecretEnding())
 	{
 		CA_CacheGrChunk(CK_CHUNKNUM(TEXT_SECRETEND));
 		ptext = (char *)ca_graphChunks[CK_CHUNKNUM(TEXT_SECRETEND)];
@@ -1132,18 +1200,21 @@ void help_endgame(void)
 			}
 		}
 		/* Draw the current page (which also advances to the next page) */
-		PageLayout(0);
+		if (CK_StoryLayoutPage()) break;
 		VHB_DrawBitmap(0x12A & ~3, 0xB8, CK_CHUNKNUM(PIC_ARROWDIM));
 		VH_UpdateScreen();
 		if (!getenv("KW_AUTOFINALE"))
+		{
 			KW_WaitPresentation(0, true);
+			if (KW_LastPresentationWasSkipped()) break;
+		}
 	}
 
 	/* Uncache our graphics and clean up */
 	KW_LinesOver(); // KEEN WORLDS
 	StopMusic();
 #ifdef WITH_KEEN5
-	if (CK_INT(CK5_SecretEndingAnyExit, 0) ? ck_gameState.levelsDone[CK_INT(CK5_SecretFuseLevel, 13)] >= 1 : ck_gameState.levelsDone[CK_INT(CK5_SecretFuseLevel, 13)] == LS_KorathFuse) // KEEN WORLDS: variable
+	if (CK_UseSecretEnding())
 		MM_FreePtr(&ca_graphChunks[CK_CHUNKNUM(TEXT_SECRETEND)]);
 	else
 #endif

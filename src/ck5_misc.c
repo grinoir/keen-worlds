@@ -33,6 +33,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "kw_music.h" // KEEN WORLDS: Keen speaks his lines
 #include "kw_world.h"
 #include "kw_skip.h"
+#include "kw_mars.h"
+#include "kw_alphamatic.h"
+#include "kw_suburb.h"
 
 CK_EpisodeDef ck5_episode = {
 	EP_CK5,
@@ -235,6 +238,9 @@ void CK5_SetupFunctions()
 	CK5_Obj2_SetupFunctions();
 	CK5_Obj3_SetupFunctions();
 	KW9_SetupFunctions(); // KEEN WORLDS: Keen 9's functions (kw_keen9.c)
+	MARS_SetupFunctions();
+	AL_SetupFunctions();
+	SS_SetupFunctions();
 	AR_Act1_SetupFunctions(); // KEEN WORLDS: Atroxian Realm's creatures (kw_ar_act*.c)
 	FF_SetupFunctions(); // KEEN WORLDS: Foray in the Forest's creatures (kw_ff_act.c)
 	AR_Act2_SetupFunctions();
@@ -317,6 +323,7 @@ void CK5_ScanInfoLayer()
 		for (int x = 0; x < mapW; ++x)
 		{
 			int infoValue = CA_TileAtPos(x, y, 2);
+			if (SS_ScanObject(infoValue,x,y)) continue;
 			switch (infoValue)
 			{
 			case 1:
@@ -385,12 +392,15 @@ void CK5_ScanInfoLayer()
 				break;
 
 			case 18:
-				if (ck_gameState.difficulty < D_Hard)
-					break;
 			case 17:
-				if (ck_gameState.difficulty < D_Normal)
-					break;
 			case 16:
+				if (AL_IsActive()) {
+					AL_SpawnImpact(x,y);
+					CA_MARKLUMP(LUMP_SPIROGRIP);
+					break;
+				}
+				if (infoValue==18 && ck_gameState.difficulty<D_Hard) break;
+				if (infoValue==17 && ck_gameState.difficulty<D_Normal) break;
 				CK5_SpawnSpirogrip(x, y);
 				CA_MARKLUMP(LUMP_SPIROGRIP);
 				break;
@@ -675,6 +685,9 @@ void CK5_ScanInfoLayer()
 			obj->active = OBJ_INACTIVE;
 	}
 	// TODO: Some more stuff (including opening elevator after breaking fuses)
+	MARS_AfterScan();
+	AL_AfterScan();
+	SS_AfterScan();
 
 	// Mark all of the chunks for needed lumps.
 	CA_MarkAllLumps();
@@ -794,13 +807,12 @@ void CK5_ExplodeGalaxy()
 	IN_ClearKeysDown();
 	KW_Presentation presentation;
 	KW_BeginPresentation(&presentation);
-	void *footer = KW_SavePresentationFooter();
 	SD_PlaySound(CK_SOUNDNUM(SOUND_GALAXYEXPLODEPRE));
 
 	// Galaxy is about to explode
 	for (int i = 0; i < 18; i++)
 	{
-		KW_RestorePresentationFooter(footer);
+		KW_ClearPresentationHint(&presentation);
 
 		endsplosion_palette[8] = endsplosion_pal_change[0][i];
 		endsplosion_palette[7] = endsplosion_pal_change[0][i];
@@ -818,6 +830,7 @@ void CK5_ExplodeGalaxy()
 	// Set Plane Write Mask;
 
 	SD_PlaySound(CK_SOUNDNUM(SOUND_GALAXYEXPLODE));
+	KW_ClearPresentationHint(&presentation);
 	VL_ClearScreen(0);
 
 	for (int i = 0; i < 30; i++)
@@ -827,6 +840,7 @@ void CK5_ExplodeGalaxy()
 
 		SD_SetLastTimeCount(SD_GetTimeCount());
 
+		KW_ClearPresentationHint(&presentation);
 		CK_GalExplodeUpdateCoords(2000);
 		CK_GalExplodePageFlip(2000);
 		KW_PresentWithSkipHint(&presentation, false);
@@ -837,6 +851,7 @@ void CK5_ExplodeGalaxy()
 
 		SD_SetLastTimeCount(SD_GetTimeCount());
 
+		KW_ClearPresentationHint(&presentation);
 		CK_GalExplodeUpdateCoords(0);
 		CK_GalExplodePageFlip(0);
 		KW_PresentWithSkipHint(&presentation, false);
@@ -849,7 +864,6 @@ void CK5_ExplodeGalaxy()
 
 done:
 	KW_EndPresentation(&presentation);
-	VL_DestroySurface(footer);
 	// Set Video back to normal
 	VL_ClearScreen(0);
 	// VW_SetLineWidth(0);
@@ -857,7 +871,7 @@ done:
 
 	// RF_Reset();
 
-	StartMusic(18);
+	StartMusic(CK_INT(CK_GameOverMusicLevel, 18));
 
 	VH_DrawBitmap(32, 80, CK_CHUNKNUM(PIC_GAMEOVER));
 	VL_Present();

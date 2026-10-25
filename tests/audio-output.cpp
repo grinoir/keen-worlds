@@ -34,7 +34,7 @@ extern SD_Backend *sd_backend;
 // Run exactly one timer iteration; no game state or waiting is needed.
 void TestTimerService() { SD_SDL_useTimerFallback = false; }
 
-static void CheckPath(int path)
+static void CheckPath(int path, int volume)
 {
 	static int16_t voice[64];
 	for (int i = 0; i < 64; ++i)
@@ -49,6 +49,7 @@ static void CheckPath(int path)
 	sd_sdl_bonusSamplesQueued = 0;
 	sd_sdl_queueAudioMinBufSize = path == 2 ? 128 : 0;
 	SD_SDL_useTimerFallback = true;
+	SD_SetVoiceVolume(volume);
 	SD_PlayVoice(voice, 64, SD_SDL_AudioSpec.freq);
 	SD_FadeAdLibVolume(0, 0);
 	if (path == 0)
@@ -74,7 +75,7 @@ static void CheckPath(int path)
 	for (unsigned i = 0; i < capturedBytes / sizeof(int16_t); ++i)
 	{
 		unsigned frame = i / numChannels;
-		int expected = frame < 64 ? ((frame & 1) ? -750 : 750) : 0;
+		int expected = frame < 64 ? ((frame & 1) ? -750 : 750) * volume / 100 : 0;
 		assert(captured[i] == expected);
 	}
 	assert(!SD_VoicePlaying());
@@ -98,7 +99,8 @@ int main()
 			sd_oplEmulator = (SD_OPLEmulator)emulator;
 			YM3812Init(1, 3579545, SD_SDL_AudioSpec.freq);
 			for (int path = 0; path < 4; ++path)
-				CheckPath(path);
+				for (int volume = 0; volume <= 100; volume += 25)
+					CheckPath(path, volume);
 		}
 	}
 	puts("PASS: callback, queued timer, queue top-up and register-delay audio; mono/stereo, both OPL emulators");

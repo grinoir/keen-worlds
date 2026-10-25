@@ -41,9 +41,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "id_vh.h"
 #include "id_vl.h"
 #include "ck_def.h"
+#include "kw_mars.h"
 #include "ck_text.h"
+#include "kw_watch.h"
 
 void USL_DrawCardItemIcon(US_CardItem *item);
+void US_SelectItem(US_Card *card, int itemIndex, bool redraw);
 void CK_US_SetKeyBinding(US_CardItem *item, int which_control);
 void CK_US_SetJoyBinding(US_CardItem *item, IN_JoyConfItem which_control);
 #include "ck_us_2.c"
@@ -108,9 +111,9 @@ void US_SetupCards(US_Card *initial)
 	us_cardStack[0] = initial;
 	us_currentCard = initial;
 #ifndef CK_VANILLA
-	us_menu_backgroundColour = CK_INT(us_menu_backgroundColour, 8);
-	us_menu_foregroundColour = CK_INT(us_menu_foregroundColour, 10);
-	us_menu_disabledColour = CK_INT(us_menu_disabledColour, 2);
+	us_menu_backgroundColour = 0;
+	us_menu_foregroundColour = 10;
+	us_menu_disabledColour = 14;
 #endif
 }
 
@@ -150,34 +153,17 @@ void USL_DrawCardItemIcon(US_CardItem *item)
 	if (us_currentCard->msgCallback && us_currentCard->msgCallback(US_MSG_DrawItemIcon, item))
 		return;
 
-	int gfxChunk;
-
-	if (item->state & US_IS_Disabled)
+	int x=item->x,y=item->y;
+	int ink=item->state&US_IS_Disabled?8:item->state&US_IS_Selected?14:10;
+	VHB_Bar(x,y,8,8,0);
+	if(item->state&US_IS_Selected)
+		for(int row=0;row<5;++row) VHB_Bar(x+1,y+1+row,3-abs(2-row),1,ink);
+	else if(item->type==US_ITEM_Radio)
 	{
-		if (item->state & US_IS_Selected)
-			gfxChunk = CK_INT(us_menu_itemDisabledSelectedTile, 92 + 5);
-		else
-			gfxChunk = CK_INT(us_menu_itemDisabledTile, 92 + 4);
+		VHB_Bar(x+1,y+1,5,5,ink);VHB_Bar(x+2,y+2,3,3,0);
+		if(item->state&US_IS_Checked) VHB_Bar(x+3,y+3,1,1,ink);
 	}
-	else
-	{
-		if ((item->type == US_ITEM_Radio) && !(item->state & US_IS_Checked))
-		{
-			if (item->state & US_IS_Selected)
-				gfxChunk = CK_INT(us_menu_itemCheckedSelectedTile, 92 + 3);
-			else
-				gfxChunk = CK_INT(us_menu_itemCheckedTile, 92 + 2);
-		}
-		else
-		{
-			if (item->state & US_IS_Selected)
-				gfxChunk = CK_INT(us_menu_itemSelectedTile, 92 + 1);
-			else
-				gfxChunk = CK_INT(us_menu_itemTile, 92 + 0);
-		}
-	}
-
-	VHB_DrawTile8(item->x, item->y, gfxChunk);
+	else VHB_Bar(x+2,y+3,2,2,ink);
 }
 
 void USL_DrawCardItem(US_CardItem *item)
@@ -200,7 +186,8 @@ void USL_DrawCardItem(US_CardItem *item)
 
 	USL_DrawCardItemIcon(item);
 
-	if (!(item->state & US_IS_Selected) || (item->state & US_IS_Disabled))
+	if(item->state&US_IS_Disabled) US_SetPrintColour(8);
+	else if (!(item->state & US_IS_Selected))
 		US_SetPrintColour(us_menu_foregroundColour);
 	else
 		US_SetPrintColour(us_menu_disabledColour);
@@ -236,21 +223,18 @@ void USL_DrawMenuFooter(void)
 
 #ifndef CK_VANILLA
 
+static int USL_VisibleMenuItems(void)
+{
+	return us_currentCard == &ck_us_mainMenu ? 8 : CK_INT(us_menu_maxCardItems, 9);
+}
+
 void USL_DrawScrollIcons(bool blink)
 {
-	if (us_menuScrollIconTop)
+	VHB_Bar(69,60,6,5,0);VHB_Bar(69,124,6,5,0);
+	for(int row=0;row<3;++row)
 	{
-		int iconX = CK_INT(us_menu_scrollIconTopX, 78);
-		int iconY = CK_INT(us_menu_scrollIconTopY, 60);
-		int tile = blink ? CK_INT(us_menu_scrollIconTopTile1, 98) : CK_INT(us_menu_scrollIconTopTile2, 102);
-		VHB_DrawTile8(iconX, iconY, tile);
-	}
-	if (us_menuScrollIconBottom)
-	{
-		int iconX = CK_INT(us_menu_scrollIconBottomX, 78);
-		int iconY = CK_INT(us_menu_scrollIconBottomY, 124);
-		int tile = blink ? CK_INT(us_menu_scrollIconBottomTile1, 99) : CK_INT(us_menu_scrollIconBottomTile2, 103);
-		VHB_DrawTile8(iconX, iconY, tile);
+		if(us_menuScrollIconTop) VHB_Bar(71-row,60+row,1+row*2,1,blink?14:6);
+		if(us_menuScrollIconBottom) VHB_Bar(69+row,124+row,5-row*2,1,blink?14:6);
 	}
 }
 
@@ -259,13 +243,13 @@ void USL_ScrollTo(int cardIndex)
 	if (!us_currentCard || !us_currentCard->items)
 		return;
 
-	int firstIndex = CK_Cross_max(0, cardIndex - CK_INT(us_menu_maxCardItems, 9) + 1);
+	int firstIndex = CK_Cross_max(0, cardIndex - USL_VisibleMenuItems() + 1);
 	if (cardIndex < us_menuScrollOffset)
 	{
 		us_menuScrollOffset = cardIndex;
 		us_menuScrollDirty = true;
 	}
-	if (cardIndex >= us_menuScrollOffset + CK_INT(us_menu_maxCardItems, 9))
+	if (cardIndex >= us_menuScrollOffset + USL_VisibleMenuItems())
 	{
 		us_menuScrollOffset = firstIndex;
 		us_menuScrollDirty = true;
@@ -302,7 +286,7 @@ void USL_ScrollCardItems(bool redraw)
 				continue;
 			}
 
-			if (itemIndex >= us_menuScrollOffset + CK_INT(us_menu_maxCardItems, 9))
+			if (itemIndex >= us_menuScrollOffset + USL_VisibleMenuItems())
 			{
 				us_menuScrollIconBottom = true;
 				item->state |= US_IS_Hidden;
@@ -332,6 +316,26 @@ void USL_ScrollCardItems(bool redraw)
 }
 #endif
 
+static const char *USL_WatchTitle(void)
+{
+	if(us_currentCard==&ck_us_mainMenu) return "MAIN MENU";
+	if(us_currentCard==&ck_us_newGameMenu) return "NEW GAME";
+	if(us_currentCard==&ck_us_saveGameMenu) return "SAVE GAME";
+	if(us_currentCard==&ck_us_loadGameMenu) return "LOAD GAME";
+	if(us_currentCard==&ck_us_configureMenu) return "CONFIGURE";
+	if(us_currentCard==&ck_us_optionsMenu) return "OPTIONS";
+	if(us_currentCard==&ck_us_soundMenu) return "SOUND";
+	if(us_currentCard==&ck_us_musicMenu) return "MUSIC";
+	if(us_currentCard==&ck_us_keyboardMenu) return "KEYBOARD";
+	if(us_currentCard==&ck_us_movementMenu) return "MOVEMENT";
+	if(us_currentCard==&ck_us_buttonsMenu) return "BUTTONS";
+	if(us_currentCard==&ck_us_joystick1Menu || us_currentCard==&ck_us_joystick2Menu || us_currentCard==&ck_us_gamepadMenu) return "JOYSTICK";
+#ifdef EXTRA_JOYSTICK_OPTIONS
+	if(us_currentCard==&ck_us_joyconfMenu) return "PAD BUTTONS";
+#endif
+	return "SETTINGS";
+}
+
 void USL_DrawCard()
 {
 	// Run the custom draw procedure if it exists
@@ -341,8 +345,7 @@ void USL_DrawCard()
 	// Draw the header (if any))
 	if (us_currentCard->gfxChunk)
 	{
-		VHB_HLine(CK_INT(us_menu_horzLineX1, 77), CK_INT(us_menu_horzLineX2, 231), CK_INT(us_menu_horzLineY1, 55), us_menu_foregroundColour);
-		VHB_DrawBitmap(80, 48, CK_LookupChunk(us_currentCard->gfxChunk));
+		KW_DrawWatchTitle(USL_WatchTitle(),true);
 	}
 
 	// Draw the Footer
@@ -381,53 +384,12 @@ void USL_DrawCard()
 	}
 }
 
-// KEEN WORLDS: Keen 4's watch has "Press F1 for Help and Order Info"
-// lettered on its lower edge. There is nothing to order here, and F1 is
-// Keen Worlds' guide in every world, so the edge is painted plain, as
-// Keen 5's and Keen 6's watches have it. Told by the picture itself (a
-// row of the edge that isn't all grey), so a fan game with the same
-// lettering loses it too and one with an edge of its own keeps it.
-void US_PlainWatchEdge(bool buffered)
-{
-	void (*bar)(int, int, int, int, int) = buffered ? VHB_Bar : VH_Bar;
-	int chunk = CK_CHUNKNUM(PIC_WRISTWATCH);
-	VH_BitmapTableEntry dim = VH_GetBitmapTableEntry(chunk - ca_gfxInfoE.offBitmaps);
-	const uint8_t *pic = (const uint8_t *)ca_graphChunks[chunk];
-	if (!pic || dim.width != 40 || dim.height != 200)
-		return;
-	bool lettered = false;
-	for (int byte = 184 * 40 + 6; byte < 184 * 40 + 33 && !lettered; ++byte)
-		lettered = pic[byte] != 0xFF || pic[8000 + byte] != 0xFF || pic[16000 + byte] != 0xFF || pic[24000 + byte] != 0;
-	if (!lettered)
-		return;
-	// The edge with its screws' highlights, the shadow under it, the feet.
-	bar(33, 180, 243, 7, 7);
-	bar(41, 180, 1, 1, 15);
-	bar(44, 180, 1, 1, 15);
-	bar(264, 180, 1, 1, 15);
-	bar(267, 180, 1, 1, 15);
-	bar(42, 181, 2, 1, 15);
-	bar(265, 181, 2, 1, 15);
-	bar(33, 187, 243, 1, 0);
-	bar(33, 188, 242, 1, 0);
-	for (int row = 189; row <= 190; ++row)
-	{
-		int foot = row == 189 ? 15 : 7;
-		bar(33, row, 22, 1, 3);
-		bar(55, row, 203, 1, 0);
-		bar(56, row, 9, 1, foot);
-		bar(248, row, 9, 1, foot);
-		bar(258, row, 18, 1, 3);
-	}
-}
-
 void US_DrawCards()
 {
 	// Draw the watch screen and the active card
 	if (us_currentCard->items || us_currentCard->gfxChunk)
 	{
-		VHB_DrawBitmap(0, 0, CK_CHUNKNUM(PIC_WRISTWATCH));
-		US_PlainWatchEdge(true);
+		KW_DrawWatch(true);
 		USL_DrawCard();
 	}
 
@@ -437,7 +399,7 @@ void US_DrawCards()
 
 void USL_DialogSetup(uint16_t w, uint16_t h, uint16_t *x, uint16_t *y)
 {
-	VHB_DrawMaskedBitmap(74, 48, CK_CHUNKNUM(MPIC_WRISTWATCHSCREEN));
+	VHB_Bar(68,47,172,104,us_menu_backgroundColour);
 
 	/* Calculate the position */
 	*x = 74 + (160 - w) / 2;
@@ -531,6 +493,7 @@ int USL_CtlDialog(const char *s1, const char *s2, const char *s3)
 
 	/* Wait for button1 or a key to be pressed */
 	IN_ClearKeysDown();
+	if(getenv("KW_AUTOCONFIRM")) IN_SetLastScan(IN_SC_Y);
 	do
 	{
 		k = IN_SC_None;
@@ -816,7 +779,7 @@ void USL_UpLevel()
 {
 	if (!us_cardStackIndex)
 	{
-		USL_ConfirmComm(US_Comm_Quit);
+		USL_ConfirmComm(game_in_progress ? US_Comm_ReturnToGame : US_Comm_Quit);
 		return;
 	}
 
@@ -899,16 +862,15 @@ void USL_UpdateCards(void)
 	if ( !joystick_present[0] && !joystick_present[1] )
 		configure_menu_items[6].state |= US_IS_Disabled;
 #endif
-	ck_us_mainMenuItems[4].caption = (game_in_progress) ? "RETURN TO GAME" : "RETURN TO DEMO";
-	/* Save game and end game items */
-	if (!game_in_progress)
-	{
-		ck_us_mainMenuItems[2].state |= US_IS_Disabled;
-		ck_us_mainMenuItems[5].state |= US_IS_Disabled;
-	}
-
-	/* Hilite 'return to game' or 'new game' option */
-	ck_us_mainMenu.selectedItem = (game_in_progress) ? 4 : 0;
+    ck_us_mainMenuItems[CK_MENU_RESUME].caption=game_in_progress ? "RETURN TO GAME" : "RETURN TO DEMO";
+    if (!game_in_progress)
+    {
+        ck_us_mainMenuItems[CK_MENU_SAVE].state |= US_IS_Disabled;
+        ck_us_mainMenuItems[CK_MENU_END].state |= US_IS_Disabled;
+    }
+    if (!game_in_progress || !KW_CanReturnToCabin())
+        ck_us_mainMenuItems[CK_MENU_CABIN].state |= US_IS_Disabled;
+    ck_us_mainMenu.selectedItem=game_in_progress ? CK_MENU_RESUME : CK_MENU_NEW;
 
 	/* Update the options menu */
 	CK_US_UpdateOptionsMenus();
@@ -935,13 +897,6 @@ void USL_BeginCards()
 	// Cache the tile8's
 	CA_CacheGrChunk(ca_gfxInfoE.offTiles8);
 	CA_CacheGrChunk(ca_gfxInfoE.offTiles8m);
-
-	// Cache the first few sprites for paddlewar
-	// for (int i = ca_gfxInfoE.offSprites; i < (ca_gfxInfoE.offSprites + 10); ++i)
-	for (int i = CK_CHUNKNUM(SPR_PADDLE); i <= CK_CHUNKNUM(SPR_BALL3); ++i)
-	{
-		CA_CacheGrChunk(i);
-	}
 
 	CA_LoadAllSounds();
 
@@ -1103,7 +1058,7 @@ void US_RunCards()
 {
 	int16_t controller_dy;
 	int16_t prev_controller_motion;
-	uint32_t blink_time, last_cursor_time;
+	uint32_t blink_time, last_cursor_time=SD_GetTimeCount();
 	//ControlInfo status;
 	bool action_taken;
 
@@ -1122,6 +1077,60 @@ void US_RunCards()
 	command_confirmed = 0;
 	cursor = 1;
 	action_taken = true;
+	if (getenv("KW_AUTOWATCH"))
+	{
+		int count=0;
+		while(ck_us_mainMenuItems[count].type!=US_ITEM_None) ++count;
+		for(int step=0;step<count*2;++step)
+		{
+			int index=step<count?step:count*2-step-1;
+			US_SelectItem(&ck_us_mainMenu,index,true);
+			US_CardItem *selected=&ck_us_mainMenuItems[index];
+			if((selected->state&US_IS_Hidden) || selected->x<74 || selected->x>88 || selected->y<60 || selected->y>=124)
+				Quit("Watch test: selection is outside the scrolling watch display");
+			VH_UpdateScreen();
+			char path[600];snprintf(path,sizeof(path),"%s/watch-%02d.ppm",getenv("KW_AUTOWATCH"),step);
+			void KW_DumpScreenTo(const char *path);KW_DumpScreenTo(path);
+		}
+		puts("PASS: vertical watch menu scrolls down and up with every selected item inside the display");
+		// Exercise real submenu entry/exit callbacks without changing preferences
+		// or writing saves. Paddle War runs through its opening serve.
+		US_Card *cards[]={&ck_us_newGameMenu,&ck_us_loadGameMenu,&ck_us_saveGameMenu,
+			&ck_us_configureMenu,&ck_us_optionsMenu,&ck_us_soundMenu,&ck_us_musicMenu,
+			&ck_us_voiceMenu,&ck_us_keyboardMenu,&ck_us_movementMenu,&ck_us_buttonsMenu,
+			&ck_us_paddleWarMenu};
+		const char *names[]={"new","load","save","configure","options","sound","music",
+			"voices","keyboard","movement","buttons","paddle"};
+		for(unsigned i=0;i<sizeof(cards)/sizeof(cards[0]);++i)
+		{
+			USL_DownLevel(cards[i]);
+			if(cards[i]!=&ck_us_paddleWarMenu)
+			{
+				VH_UpdateScreen();
+				char path[600];snprintf(path,sizeof(path),"%s/watch-%s.ppm",getenv("KW_AUTOWATCH"),names[i]);
+				void KW_DumpScreenTo(const char *path);KW_DumpScreenTo(path);
+				if(cards[i]==&ck_us_optionsMenu)
+				{
+					int last=0;while(cards[i]->items[last+1].type!=US_ITEM_None) ++last;
+					US_SelectItem(cards[i],last,true);
+					US_CardItem *selected=&cards[i]->items[last];
+					if((selected->state&US_IS_Hidden) || selected->y<60 || selected->y>124)
+						Quit("Watch test: final option is outside the display");
+					VH_UpdateScreen();
+					snprintf(path,sizeof(path),"%s/watch-options-bottom.ppm",getenv("KW_AUTOWATCH"));KW_DumpScreenTo(path);
+					US_SelectItem(cards[i],0,true);
+				}
+				USL_UpLevel();
+			}
+		}
+		USL_LoadSaveMessage("Saving", "Test journey");
+		char dialogPath[600];snprintf(dialogPath,sizeof(dialogPath),"%s/watch-dialog.ppm",getenv("KW_AUTOWATCH"));
+		void KW_DumpScreenTo(const char *path);KW_DumpScreenTo(dialogPath);
+		US_DrawCards();
+		if(getenv("KW_AUTOENDGAME")) USL_ConfirmComm(US_Comm_EndGame);
+		else if(getenv("KW_AUTOQUIT")) USL_ConfirmComm(US_Comm_Quit);
+		else {us_currentCommand=US_Comm_ReturnToGame;command_confirmed=true;}
+	}
 
 	while (!command_confirmed)
 	{
@@ -1220,7 +1229,7 @@ void US_RunCards()
 			{
 				controller_dy += cursor.yMotion;
 			}
-			prev_controller_motion = cursor.yMotion;
+            prev_controller_motion = cursor.yMotion;
 
 			if (cursor.button0)
 			{
@@ -1244,7 +1253,7 @@ void US_RunCards()
 				USL_UpLevel();
 				action_taken = true;
 			}
-			else if (controller_dy < -US_MENU_MOTION_SPEED)
+            else if (controller_dy < -US_MENU_MOTION_SPEED)
 			{
 				controller_dy += US_MENU_MOTION_SPEED;
 				US_SelectPrevItem();

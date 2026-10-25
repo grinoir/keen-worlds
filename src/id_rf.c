@@ -273,10 +273,9 @@ void RF_MarkTileGraphics()
 {
 	memset(rf_animTileTimers, 0, sizeof(rf_animTileTimers));
 	rf_numAnimTileTimers = 0;
-	// WARNING: As in the original codebase, the given variable is NOT initialized.
-	// This may lead to undefined behaviors in calls to RFL_MarkTileWithSound,
-	// although they aren't reproduced in vanilla Keen 6 in practice.
-	int i;
+	// An animation continuation may precede its first timer. Never form a
+	// pointer using the original engine's uninitialized timer index.
+	int i = -1;
 	for (int tileY = 0; tileY < rf_mapHeightTiles; ++tileY)
 	{
 		for (int tileX = 0; tileX < rf_mapWidthTiles; ++tileX)
@@ -328,7 +327,7 @@ void RF_MarkTileGraphics()
 						continue;
 				}
 
-				if (ck_currentEpisode->ep == EP_CK6)
+				if (ck_currentEpisode->ep == EP_CK6 && i >= 0 && i < rf_numAnimTileTimers)
 					RFL_MarkTileWithSound(&rf_animTileTimers[i], backTile);
 				// Mark all tiles in the animation loop to be cached.
 				int animLength = 0;
@@ -336,7 +335,7 @@ void RF_MarkTileGraphics()
 				int nextTile = backTile + nextTileOffset;
 				while (nextTileOffset && (nextTile != backTile))
 				{
-					if (ck_currentEpisode->ep == EP_CK6)
+					if (ck_currentEpisode->ep == EP_CK6 && i >= 0 && i < rf_numAnimTileTimers)
 						RFL_MarkTileWithSound(&rf_animTileTimers[i], nextTile);
 					CA_MarkGrChunk(ca_gfxInfoE.offTiles16 + nextTile);
 					nextTileOffset = TI_BackAnimTile(nextTile);
@@ -395,7 +394,7 @@ void RF_MarkTileGraphics()
 					else
 						continue;
 				}
-				if (ck_currentEpisode->ep == EP_CK6)
+				if (ck_currentEpisode->ep == EP_CK6 && i >= 0 && i < rf_numAnimTileTimers)
 					RFL_MarkTileWithSound(&rf_animTileTimers[i], foreTile | 0x8000);
 
 				// Mark all tiles in the animation loop to be cached.
@@ -404,7 +403,7 @@ void RF_MarkTileGraphics()
 				int nextTile = foreTile + nextTileOffset;
 				while (nextTileOffset && (nextTile != foreTile))
 				{
-					if (ck_currentEpisode->ep == EP_CK6)
+					if (ck_currentEpisode->ep == EP_CK6 && i >= 0 && i < rf_numAnimTileTimers)
 						RFL_MarkTileWithSound(&rf_animTileTimers[i], nextTile | 0x8000);
 					CA_MarkGrChunk(ca_gfxInfoE.offTiles16m + nextTile);
 					nextTileOffset = TI_ForeAnimTile(nextTile);

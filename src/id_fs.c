@@ -413,7 +413,9 @@ void FS_Startup()
 #ifdef FS_OMNI_EXEDIR_FALLBACK
 #ifdef WITH_SDL
 #if SDL_VERSION_ATLEAST(2, 0, 1)
-	if (!FSL_IsGoodOmniPath(ck_currentEpisode->ext))
+	// Filesystem startup precedes episode selection. This check looks for
+	// the bundled Keen 4 tables and does not need an episode extension.
+	if (!FSL_IsGoodOmniPath(NULL))
 	{
 		fs_omniPath = SDL_GetBasePath();
 	}

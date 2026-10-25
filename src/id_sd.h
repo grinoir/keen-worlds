@@ -65,6 +65,7 @@ void SD_StartMusicData(const uint8_t *data, uint16_t length);
 // data must stay valid while it plays). The SDL backend mixes it in.
 void SD_PlayVoice(const int16_t *data, uint32_t samples, uint32_t rate);
 void SD_StopVoice(void);
+void SD_SetVoiceVolume(int percent);
 bool SD_VoicePlaying(void);
 void SD_MixVoice(int16_t *out, int frames, int channels, int outRate);
 // KEEN WORLDS: the AdLib output's volume (music and AdLib effects), for

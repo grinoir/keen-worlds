@@ -28,6 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ck_phys.h"
 #include "ck_play.h"
 #include "kw_world.h"
+#include "kw_suburb.h"
 #include "ck4_ep.h"
 #include "ck5_ep.h"
 #include "kw_osi.h"
@@ -156,9 +157,13 @@ void CK_UpdateScoreBox(CK_object *scorebox)
 		// and four rows from the top
 		dest = spr->data;
 		dest += (planeSize = spr->sprShiftByteWidths[0] * box.height);
-		dest += box.width * 4 + 1;
+		dest += box.width * 4 + CK_INT(ck_scoreBoxScoreColumn, 1);
 
-		snprintf(buf, sizeof(buf), "%d", (int)ck_gameState.keenScore);
+		// Dreams reserves six digits. Saturate the display without changing
+		// the actual score or writing past its field.
+		int score = ck_gameState.keenScore;
+		if (KD_IsActive()) score = score < 0 ? 0 : score > 999999 ? 999999 : score;
+		snprintf(buf, sizeof(buf), "%d", score);
 		len = strlen(buf);
 
 		// Draw the leading emptiness
@@ -240,15 +245,15 @@ void CK_UpdateScoreBox(CK_object *scorebox)
 		dest += (planeSize = box.width * box.height);
 		dest += box.width * 20 + CK_INT(ck_scoreBoxLivesColumn, 3);
 
-		if (ck_gameState.numLives >= 99)
-			snprintf(buf, sizeof(buf), "99");
-		else
-			snprintf(buf, sizeof(buf), "%d", ck_gameState.numLives);
+		int digits = CK_INT(ck_scoreBoxLivesDigits, 2);
+		int maxLives = digits == 1 ? 9 : 99;
+		int lives = ck_gameState.numLives < 0 ? 0 : ck_gameState.numLives > maxLives ? maxLives : ck_gameState.numLives;
+		snprintf(buf, sizeof(buf), "%d", lives);
 
 		len = strlen(buf);
 
 		// Draw the leading emptiness
-		for (place = 2; place > len; place--)
+		for (place = digits; place > len; place--)
 		{
 			CK_ScoreBoxDrawTile8(CK_INT(ck_scoreBoxBlankTile, 0x29), dest++, box.width, planeSize);
 		}
@@ -389,7 +394,9 @@ void CK_ScanForLevelEntry(CK_object *obj)
 				// would have been changed here.
 				ck_gameState.mapPosX = obj->posX;
 				ck_gameState.mapPosY = obj->posY;
-				ck_gameState.currentLevel = infotile - 0xC000;
+				int nextLevel=infotile-0xC000;
+				if(!SS_MapEntry(&nextLevel)) return;
+				ck_gameState.currentLevel = nextLevel;
 				ck_gameState.levelState = LS_LevelComplete;
 				// KEEN WORLDS: Operation Station Infiltration's warning before its low-gravity level
 				if (OSI_IsActive() && ck_gameState.currentLevel == CK_INT(CK_PhysLowGravityLevel, -1))

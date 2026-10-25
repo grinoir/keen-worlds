@@ -66,9 +66,11 @@ typedef struct RF_SpriteDrawEntry
 #define P_T_SHIFT 4 // pixels >> ?? = tile
 
 #define RF_UnitToTile(u) ((u) >> G_T_SHIFT)
-#define RF_TileToUnit(t) ((t) << G_T_SHIFT)
+#define RF_TileToUnit(t) ((t) * (1 << G_T_SHIFT))
 #define RF_UnitToPixel(u) ((u) >> G_P_SHIFT)
-#define RF_PixelToUnit(p) ((p) << G_P_SHIFT)
+// Camera movement and sprite offsets can be negative; signed left shifts
+// are undefined in C, whereas multiplication preserves those offsets.
+#define RF_PixelToUnit(p) ((p) * (1 << G_P_SHIFT))
 #define RF_PixelToTile(p) ((p) >> P_T_SHIFT)
 #define RF_TileToPixel(t) ((t) << P_T_SHIFT)
 

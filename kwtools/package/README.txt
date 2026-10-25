@@ -59,7 +59,7 @@ choose where to fly. Walk to the hatch to go out. The bed is for sleeping.
 3. Keys
 -------
 
-  Arrow keys   move, look up and down, enter doors
+  Arrow keys   move, look up/down; Up enters doors and boards the ship
   Ctrl         jump
   Alt          pogo stick
   Space        shoot
@@ -68,10 +68,30 @@ choose where to fly. Walk to the hatch to go out. The bed is for sleeping.
   F1           the guide
   F11          full screen
 
-A voice speaks the conversations. Hold Esc for one second to skip a scene
-or move spoken dialogue on early. A small bar shows the hold. Once the
-voice finishes, a fresh key press moves the text on. Release the button
-before advancing again.
+Voices and volume: Configure > Options > Voices. Select volume to cycle
+0-100% in 10% steps. Music and effects have their own settings.
+
+Hold Esc or the controller's mapped menu button for one second to skip stories.
+Xbox defaults to Y; remapped buttons are respected. Skip progress appears
+immediately while held. Otherwise the hint stays hidden until an ordinary
+key or non-menu controller button reveals it briefly.
+Once narration finishes, a fresh press advances story pages. Popup dialogue
+uses a fresh tap (including Esc), with no hold gesture or skip hint. A tap
+can advance a spoken popup early. Release before advancing again.
+The pause menu has two columns, with journey controls and options. Use
+arrows or the controller to move between them; Esc resumes play. Return to
+Cabin leaves the Galaxy arcade remake or wakes Keen from a dream.
+
+The cabinet beside the bunk offers original Keen 1, 2 and 3. Press Up to
+use it. Add your v1.31 games under arcade/keen1, keen2 and keen3; see
+arcade/README.txt. Each keeps its own saves and scores. Exit the game to
+return to the cabinet and cabin. Arcade completion is outside the Chronicle.
+Under Keen 1, choose Original or Galaxy remake (Marooned on Mars - Galaxy).
+The remake needs its converted files in arcade/mars. It runs inside the
+current game and window, with progress in the shared save slots. Its own
+score, lives, ammunition, items and difficulty remain separate from the
+journey. New Game restarts that arcade adventure; End Game returns to the
+cabin. Original Keen 1-3 keep their separate native player and save folders.
 
 
 4. What to try
@@ -94,7 +114,6 @@ No need to report these:
     back and find it changed: people living there, an inn, someone to
     talk to. So far only one level has this, the Border Village on
     Gnosticus IV (Keen 4). More comes in later versions.
-  - The voices cannot be turned off or made quieter by themselves.
   - Inside the dream (the ship's bed) there is no menu. Save in the ship.
   - Two fan games are not in: The Prisoner's Dilemma and Send in the
     Clorts.

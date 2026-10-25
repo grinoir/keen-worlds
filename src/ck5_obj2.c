@@ -155,11 +155,11 @@ void CK5_AmptonWalk(CK_object *obj)
 {
 
 	//play tic toc sound
-	if (obj->currentAction == CK_ACTION_ALIAS(CK5_ACT_AmptonStepSound, CK5_ACT_Ampton0)) // KEEN WORLDS: redirectable
+	if (!CK_INT(CK5_AmptonSilent, 0) && obj->currentAction == CK_ACTION_ALIAS(CK5_ACT_AmptonStepSound, CK5_ACT_Ampton0)) // KEEN WORLDS: redirectable
 	{
 		SD_PlaySound(CK_SOUNDNUM(SOUND_AMPTONWALK0));
 	}
-	else if (obj->currentAction == CK_ACTION(CK5_ACT_Ampton2))
+	else if (!CK_INT(CK5_AmptonSilent, 0) && obj->currentAction == CK_ACTION(CK5_ACT_Ampton2))
 	{
 		SD_PlaySound(CK_SOUNDNUM(SOUND_AMPTONWALK1));
 	}
@@ -452,6 +452,7 @@ void CK5_SliceCol(CK_object *obj1, CK_object *obj2)
 	if (obj2->type == CT_Stunner)
 	{
 		CK_ShotHit(obj2);
+		if (CK_INT(CK5_SliceInvincible,0)) return;
 		if (--obj1->user4 == 0)
 			CK_SetAction(obj1, CK_ACTION(CK5_ACT_SliceDie0));
 	}

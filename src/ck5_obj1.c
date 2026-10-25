@@ -23,6 +23,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ck_def.h"
 #include "ck_phys.h"
 #include "ck_play.h"
+#include "kw_mars.h"
+#include "kw_suburb.h"
 
 #include <stdio.h>
 
@@ -147,6 +149,7 @@ void CK5_SpawnVolte(int tileX, int tileY)
 	new_object->posY = RF_TileToUnit(tileY);
 	new_object->clipped = CLIP_not;
 	CK_SetAction(new_object, CK_ACTION(CK5_ACT_Volte0));
+	if (MARS_IsActive() || SS_IsActive()) return; // collectibles / horizontal child have no path arrows
 
 	// Initialize Volte Direction
 	// (Vanilla keen does this with far pointer arithmetic)

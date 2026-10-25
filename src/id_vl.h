@@ -53,6 +53,8 @@ void VL_SetDefaultPalette(void);
 void VL_SetCustomColors(const uint8_t colors[16][3]);
 void VL_FadeToBlack(void);
 void VL_FadeFromBlack(void);
+void VL_FadeToBlackTimed(int stepTics);
+void VL_FadeFromBlackTimed(int stepTics);
 //void VL_FadeToWhite(void); // Unused in vanilla Keen 5
 //void VL_FadeFromWhite(void); // Unused in vanilla Keen 5
 void VL_Clip(int *src_w, int *src_h, int *dst_x, int *dst_y, int dst_w, int dst_h);

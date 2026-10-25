@@ -28,6 +28,7 @@ HATCH = 0x7702   # info value: the hatch ("up" leaves the ship)
 WAY_AFT = 0x7703 # info value: walking here takes Keen to the exit room
 WAY_FORE = 0x7704 # ... and here, back to the flight room
 AMMO = 0x7705    # info value: the box of stunners ("up" tops Keen's shots up)
+ARCADE = 0x7707  # the optional earlier adventures, outside the flight console
 BED = 0x7706     # info value: the bed ("up": Keen falls asleep, into Keen Dreams)
 SCROLL_STOP = 25 # Keen 4's own: the camera does not scroll past this row
 
@@ -47,7 +48,7 @@ ROOM = [
     "########################",
     "###########......#######",
     "#########.........######",
-    "#########CCCC..AAW######",
+    "#########..CC..AAW######",
     "########################",
     "########################",
     "########################",
@@ -61,7 +62,7 @@ ROOM = [
     "########################",
     "########........########",
     "########........########",
-    "########VHHKZZ..########",
+    "########VHHKZZ.G########",
     "########################",
     "########################",
     "########################",
@@ -116,7 +117,7 @@ def build(out):
             for ch in row:
                 back.append(BACK)
                 fore.append(WALL if ch in '#B' else LEDGE if ch == 'P' else 0)
-                info.append({'K': KEEN, 'k': KEEN_LEFT, 'C': CONSOLE, 'H': HATCH, 'W': WAY_AFT, 'V': WAY_FORE, 'B': SCROLL_STOP, 'A': AMMO, 'Z': BED}.get(ch, 0))
+                info.append({'K': KEEN, 'k': KEEN_LEFT, 'C': CONSOLE, 'H': HATCH, 'W': WAY_AFT, 'V': WAY_FORE, 'B': SCROLL_STOP, 'A': AMMO, 'Z': BED, 'G': ARCADE}.get(ch, 0))
         starts, lengths = [], []
         for plane in (back, fore, info):
             p = plane_data(plane)

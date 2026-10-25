@@ -434,9 +434,11 @@ void IN_SDL_StopJoy(int joystick)
 #if SDL_VERSION_ATLEAST(2, 0, 0)
 	if (in_controllers[joystick])
 		SDL_GameControllerClose(in_controllers[joystick]);
+	in_controllers[joystick] = NULL;
 #endif
 
 	SDL_JoystickClose(in_joysticks[joystick]);
+	in_joysticks[joystick] = NULL;
 }
 
 bool IN_SDL_JoyPresent(int joystick)
@@ -450,6 +452,15 @@ void IN_SDL_JoyGetAbs(int joystick, int *x, int *y)
 	int value_y = SDL_JoystickGetAxis(in_joysticks[joystick], 1);
 #if !defined(CK_VANILLA) && SDL_VERSION_ATLEAST(2, 0, 0)
 	static const int HAT = 32000;
+	// Standard controllers can expose the D-pad as buttons with no raw
+	// joystick hat (for example an Xbox pad through a different SDL driver).
+	if (in_controllers[joystick])
+	{
+		if (SDL_GameControllerGetButton(in_controllers[joystick], SDL_CONTROLLER_BUTTON_DPAD_UP)) value_y = -HAT;
+		else if (SDL_GameControllerGetButton(in_controllers[joystick], SDL_CONTROLLER_BUTTON_DPAD_DOWN)) value_y = HAT;
+		if (SDL_GameControllerGetButton(in_controllers[joystick], SDL_CONTROLLER_BUTTON_DPAD_LEFT)) value_x = -HAT;
+		else if (SDL_GameControllerGetButton(in_controllers[joystick], SDL_CONTROLLER_BUTTON_DPAD_RIGHT)) value_x = HAT;
+	}
 	if (in_joystickHasHat[joystick]) {
 		switch (SDL_JoystickGetHat(in_joysticks[joystick], 0)) {
 			case SDL_HAT_LEFTUP:     value_x = -HAT;  value_y = -HAT;  break;

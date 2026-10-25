@@ -1,0 +1,21 @@
+{
+  "credit": "Keen Worlds adaptation of Gridlock's The Alphamatic 3.0 opening. Original layouts remain in the player's game files.",
+  "intro": "Back in his backyard workshop, Keen examines the hard drive he salvaged from Atroxus. Somewhere inside are the secrets of the Atroxians and their creator, VitaCorp. But the files are locked with VitaCrypt. To read them, Keen needs a key from VitaCorp's own network. With Spot at his side, he calls his friends.",
+  "lines": [
+    ["Vorticon", "Keen! And Spot! What's going on?", "call"],
+    ["Keen", "The Krile survived. But VitaCorp built the Atroxians. I've brought back a hard drive, and it's encrypted.", "call"],
+    ["Elder", "Hmph... You kids never call anymore.", "call"],
+    ["Lindsey", "VitaCorp has vanished. Every facility has shut down or disappeared.", "call"],
+    ["Vorticon", "Our intelligence service found plans for a new weapon. The Alphamatic.", "blueprint"],
+    ["Keen", "Another Armageddon Machine?", "blueprint"],
+    ["Vorticon", "Built from the Omegamatic's remains. This one can target an entire solar system.", "blueprint"],
+    ["Elder", "So it's big. How do we blow it up? There's always a way to do that.", "call"],
+    ["Vorticon", "It's unfinished, so VitaCorp couldn't hide it. It's in orbit around Mars.", "mars"],
+    ["Keen", "Mars?! How long before they turn it on?", "mars"],
+    ["Vorticon", "Several more days. Probably.", "call"],
+    ["Spot", "Then disable it and use its network to steal VitaCrypt's decryption key!", "call"],
+    ["Keen", "Great idea! These Shikadi are toast. This time, burnt!", "call"],
+    ["Lindsey", "You go make them pay, Keen!", "call"]
+  ],
+  "departure": "Keen heads for Mars. Approaching the Alphamatic in stealth mode, he secures his Attach-O-Ray to an exhaust port and sneaks aboard."
+}

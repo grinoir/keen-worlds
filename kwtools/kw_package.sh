@@ -90,10 +90,19 @@ make -s -C "$REPO/src" -j"$JOBS" PLATFORM=win64 TOOLDIR="$MINGW" BUILDASCPP=1 \
 	SDL_CONFIG="$SDLWIN/x86_64-w64-mingw32/bin/sdl2-config --prefix=$SDLWIN/x86_64-w64-mingw32" \
 	"$WORK/bin-win64/omnispeak.exe" >"$WORK/win.log" 2>&1 || { tail -30 "$WORK/win.log"; exit 1; }
 
+# Native Vorticons arcade engines. No game data is copied by these builds.
+cat > "$WORK/cc-arcade" <<EOF
+#!/bin/sh
+exec "$ZIG" cc -target x86_64-linux-gnu.2.28 -Wl,--allow-shlib-undefined "\$@"
+EOF
+chmod +x "$WORK/cc-arcade"
+CC="$WORK/cc-arcade" sh "$REPO/kwtools/kw_arcade_build.sh" "$WORK/bin-linux/keen-vorticons" > "$WORK/arcade-linux.log" 2>&1 || { tail -30 "$WORK/arcade-linux.log"; exit 1; }
+sh "$REPO/kwtools/kw_arcade_build.sh" "$WORK/bin-win64/keen-vorticons.exe" windows > "$WORK/arcade-windows.log" 2>&1 || { tail -30 "$WORK/arcade-windows.log"; exit 1; }
+
 # ---- what both archives share
 fill() {
 	d=$1
-	mkdir -p "$d/megarocket" "$d/voice" "$d/mods" "$d/keen6-v1.5"
+	mkdir -p "$d/arcade/keen1" "$d/arcade/keen2" "$d/arcade/keen3" "$d/megarocket" "$d/voice" "$d/mods" "$d/keen6-v1.5"
 	cp "$REPO"/data/keen4/*.CK4 "$REPO"/data/keen5/*.CK5 "$d/"
 	# Keen 6 v1.4 is the one Keen Worlds is tested with; v1.5's tables are beside it.
 	cp "$REPO"/data/keen6e14/*.CK6 "$d/"
@@ -114,6 +123,10 @@ fill() {
 	cp -r "$REPO"/data/mods/. "$d/mods/"
 	find "$d/mods" -name .keep -delete
 	cp "$REPO/kwtools/package/MODS.txt" "$d/mods/README.txt"
+	cp -r "$REPO"/data/arcade/. "$d/arcade/"
+	cp "$REPO/kwtools/package/ARCADE.txt" "$d/arcade/README.txt"
+	cp "$REPO/third_party/chocolate-keen/COPYING" "$d/arcade/COPYING.txt"
+	cp "$REPO/third_party/chocolate-keen/UPSTREAM.md" "$d/arcade/ENGINE.txt"
 	cp "$REPO/LICENSE" "$d/LICENSE.txt"
 	cp "$REPO/AUTHORS" "$d/AUTHORS.txt"
 	echo "Keen Worlds $NUMBER ($NAMED), build $VERSION, $(date +%Y-%m-%d)" > "$d/VERSION.txt"
@@ -140,6 +153,11 @@ fill() {
 		cp "$PLAY"/*.CK4 "$PLAY"/*.CK5 "$PLAY"/*.CK6 "$d/"
 		rm -f "$d"/CONFIG.CK?
 		[ -d "$PLAY/mods" ] && cp -r "$PLAY/mods/." "$d/mods/"
+		if [ -d "$PLAY/arcade" ]; then
+			for game in keen1 keen2 keen3 mars; do
+				[ ! -d "$PLAY/arcade/$game" ] || cp -r "$PLAY/arcade/$game" "$d/arcade/"
+			done
+		fi
 		echo "This copy contains other people's games. It is for your own machines, not for handing out." > "$d/PRIVATE-COPY.txt"
 	fi
 }
@@ -151,6 +169,7 @@ mkdir -p "$DIST"
 L=$WORK/pack/$NAME-linux
 fill "$L"
 cp "$WORK/bin-linux/omnispeak" "$L/omnispeak"
+cp "$WORK/bin-linux/keen-vorticons" "$L/keen-vorticons"
 cp "$REPO/kwtools/package/keenworlds.sh" "$L/keenworlds.sh"
 chmod +x "$L/omnispeak" "$L/keenworlds.sh"
 rm -f "$DIST/$NAME-linux.tar.gz"
@@ -159,6 +178,7 @@ tar -C "$WORK/pack" -czf "$DIST/$NAME-linux.tar.gz" "$NAME-linux"
 W=$WORK/pack/$NAME-windows
 fill "$W"
 cp "$WORK/bin-win64/omnispeak.exe" "$W/omnispeak.exe"
+cp "$WORK/bin-win64/keen-vorticons.exe" "$W/keen-vorticons.exe"
 cp "$REPO/kwtools/package/KeenWorlds.cmd" "$W/KeenWorlds.cmd"
 # Windows' Notepad wants its own line ends.
 for f in "$W/README.txt" "$W/mods/README.txt" "$W/VERSION.txt" "$W/LICENSE.txt" "$W/AUTHORS.txt"; do

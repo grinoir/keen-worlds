@@ -195,7 +195,6 @@ typedef struct US_Card
 } US_Card;
 
 void US_DrawCards();
-void US_PlainWatchEdge(bool buffered); // KEEN WORLDS
 void US_RunCards();
 
 bool US_QuickSave();

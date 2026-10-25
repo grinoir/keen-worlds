@@ -19,9 +19,11 @@
 # The score box: its digits are small tiles 1-10 after a blank one
 %int ck_scoreBoxBlankTile 0
 %int ck_scoreBoxDigitOffset 47
-%int ck_scoreBoxScoreDigits 7
+%int ck_scoreBoxScoreColumn 2
+%int ck_scoreBoxLivesDigits 1
+%int ck_scoreBoxScoreDigits 6
 %int ck_scoreBoxShotsColumn 6
-%int ck_scoreBoxLivesColumn 1
+%int ck_scoreBoxLivesColumn 2
 
 %stringarray ck_str_levelNames
 	"The Land of Tuberia",

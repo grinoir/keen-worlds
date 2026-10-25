@@ -315,7 +315,9 @@ void CK5_AnimateMapElevator(int tileX, int tileY, int dir)
 	// and store X in map units in user1; Y in user 2
 	int dest_tile = CA_TileAtPos(tileX, tileY, 2);
 	ck_keenObj->user2 = dest_tile / 256 * 256;
-	ck_keenObj->user1 = RF_TileToUnit((dest_tile & 0x007F) + 1);
+	ck_keenObj->user1 = RF_TileToUnit((dest_tile & (CK_INT(CK5_ElevatorFullCoordinates,0) ? 0xFF : 0x7F)) + 1);
+	if (CK_INT(CK5_ElevatorCloseDestination,0))
+		CK5_CloseMapTeleporter(dest_tile >> 8,(dest_tile & 0xFF)-1);
 
 	// Move keen based on the relative location of the target
 	if ((uint16_t)ck_keenObj->user1 < (uint16_t)ck_keenObj->posY)

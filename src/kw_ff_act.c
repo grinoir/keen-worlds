@@ -8677,7 +8677,7 @@ void FF_SpawnCoronaPlant(int16_t tileX, int16_t tileY, int16_t dir)
 	new_object->yDirection = (dir == 0)? IN_motion_Up : IN_motion_None;
 	new_object->velX = new_object->xDirection * 64;
 	new_object->velY = new_object->yDirection * 64;
-	new_object->gfxChunk = FF_CORONAU1SPR + (dir << 1);
+	new_object->gfxChunk = FF_CORONAU1SPR + dir * 2;
 	CK_SetAction(new_object, CK_ACTION(FF_ACT_CoronaPlant));
 }
 

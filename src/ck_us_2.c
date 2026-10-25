@@ -34,6 +34,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ck_cross.h"
 #include "ck_def.h"
 #include "kw_world.h"
+#include "kw_music.h"
 #include "ck_play.h"
 
 #define US_MAX_JOYSTICK_NAME_LENGTH 28
@@ -636,6 +637,38 @@ bool CK_US_ForestKeenMenuProc(US_CardMsg msg, US_CardItem *item)
 }
 US_Card ck_us_forestKeenMenu = {0, 0, 0, 0, 0, &CK_US_ForestKeenMenuProc, 0, 0, 0};
 
+// Voices have their own submenu so the existing options remain scrollable.
+bool CK_US_VoicesMenuProc(US_CardMsg msg, US_CardItem *item)
+{
+	if (msg != US_MSG_CardEntered) return false;
+	KW_SetVoicesEnabled(!KW_VoicesEnabled());
+	CK_US_UpdateOptionsMenus();
+	return true;
+}
+US_Card ck_us_voicesToggle = {0, 0, 0, 0, 0, &CK_US_VoicesMenuProc, 0, 0, 0};
+
+bool CK_US_VoiceVolumeMenuProc(US_CardMsg msg, US_CardItem *item)
+{
+	if (msg != US_MSG_CardEntered) return false;
+	KW_SetVoiceVolume(KW_VoiceVolume() >= 100 ? 0 : (KW_VoiceVolume() / 10 + 1) * 10);
+	CK_US_UpdateOptionsMenus();
+	return true;
+}
+US_Card ck_us_voiceVolumeToggle = {0, 0, 0, 0, 0, &CK_US_VoiceVolumeMenuProc, 0, 0, 0};
+US_CardItem ck_us_voiceMenuItems[] = {
+	{US_ITEM_Submenu, 0, IN_SC_V, "", US_Comm_None, &ck_us_voicesToggle, 0, 0},
+	{US_ITEM_Submenu, 0, IN_SC_L, "", US_Comm_None, &ck_us_voiceVolumeToggle, 0, 0},
+	{US_ITEM_None, 0, IN_SC_None, 0, US_Comm_None, 0, 0, 0}};
+bool CK_US_VoiceCardProc(US_CardMsg msg, US_CardItem *item)
+{
+	if (msg == US_MSG_PostDraw)
+	{
+		KW_DrawWatchTitle("VOICES",true);
+	}
+	return false;
+}
+US_Card ck_us_voiceMenu = {8, 0, 0, 0, ck_us_voiceMenuItems, &CK_US_VoiceCardProc, 0, 0, 0};
+
 // Options menu
 US_CardItem ck_us_optionsMenuItems[] = {
 	{US_ITEM_Submenu, 0, IN_SC_S, "", US_Comm_None, &ck_us_scoreBoxMenu, 0, 0},
@@ -652,6 +685,7 @@ US_CardItem ck_us_optionsMenuItems[] = {
 #ifdef QUICKSAVE_ENABLED
 	{US_ITEM_Submenu, 0, IN_SC_Q, "", US_Comm_None, &ck_us_quickSaveMenu, 0, 0},
 #endif
+	{US_ITEM_Submenu, 0, IN_SC_O, "VOICES", US_Comm_None, &ck_us_voiceMenu, 0, 0},
 	// KEEN WORLDS: Keen's look on Gnosticus Pi (the last item; only
 	// there when that world is installed, see CK_US_UpdateOptionsMenus)
 	{US_ITEM_Submenu, 0, IN_SC_K, "", US_Comm_None, &ck_us_forestKeenMenu, 0, 0},
@@ -743,19 +777,31 @@ US_Card ck_us_configureMenu = {0, 0, CK_CHUNKID(PIC_CONFIGURECARD), 0, ck_us_con
 
 US_Card ck_us_paddleWarMenu = {0, 0, 0, 0, 0, &CK_PaddleWar, 0, 0, 0};
 
-// Main Menu
-US_CardItem ck_us_mainMenuItems[] = {
-	{US_ITEM_Submenu, 0, IN_SC_N, "NEW GAME", US_Comm_None, &ck_us_newGameMenu, 0, 0},
-	{US_ITEM_Submenu, 0, IN_SC_L, "LOAD GAME", US_Comm_None, &ck_us_loadGameMenu, 0, 0},
-	{US_ITEM_Submenu, 0, IN_SC_S, "SAVE GAME", US_Comm_None, &ck_us_saveGameMenu, 0, 0},
-	{US_ITEM_Submenu, 0, IN_SC_C, "CONFIGURE", US_Comm_None, &ck_us_configureMenu, 0, 0},
-	{US_ITEM_Normal, 0, IN_SC_R, NULL, US_Comm_ReturnToGame, 0, 0, 0},
-	{US_ITEM_Normal, 0, IN_SC_E, "END GAME", US_Comm_EndGame, 0, 0, 0},
-	{US_ITEM_Submenu, 0, IN_SC_P, "PADDLE WAR", US_Comm_None, &ck_us_paddleWarMenu, 0, 0},
-	{US_ITEM_Normal, 0, IN_SC_Q, "QUIT", US_Comm_Quit, 0, 0, 0},
-	{US_ITEM_None, 0, IN_SC_None, 0, US_Comm_None, 0, 0, 0}};
+enum { CK_MENU_NEW, CK_MENU_LOAD, CK_MENU_SAVE, CK_MENU_RESUME, CK_MENU_CABIN,
+       CK_MENU_CONFIGURE, CK_MENU_PADDLE, CK_MENU_END, CK_MENU_QUIT };
 
-US_Card ck_us_mainMenu = {32, 4, CK_CHUNKID(PIC_MENUCARD), 0, ck_us_mainMenuItems, 0, 0, 0, 0};
+bool CK_US_MainMenuProc(US_CardMsg msg, US_CardItem *item)
+{
+ if (msg != US_MSG_ItemEntered || item->command != US_Comm_None) return false;
+ KW_RequestCabinReturn();
+ USL_ConfirmComm(US_Comm_ReturnToGame);
+ return true;
+}
+
+// One vertical list in the watch; the shared menu scroller handles overflow.
+US_CardItem ck_us_mainMenuItems[] = {
+ {US_ITEM_Submenu, 0, IN_SC_N, "NEW GAME", US_Comm_None, &ck_us_newGameMenu, 0, 0},
+ {US_ITEM_Submenu, 0, IN_SC_L, "LOAD GAME", US_Comm_None, &ck_us_loadGameMenu, 0, 0},
+ {US_ITEM_Submenu, 0, IN_SC_S, "SAVE GAME", US_Comm_None, &ck_us_saveGameMenu, 0, 0},
+ {US_ITEM_Normal, 0, IN_SC_R, NULL, US_Comm_ReturnToGame, 0, 0, 0},
+ {US_ITEM_Normal, 0, IN_SC_B, "RETURN TO CABIN", US_Comm_None, 0, 0, 0},
+ {US_ITEM_Submenu, 0, IN_SC_C, "CONFIGURE", US_Comm_None, &ck_us_configureMenu, 0, 0},
+ {US_ITEM_Submenu, 0, IN_SC_P, "PADDLE WAR", US_Comm_None, &ck_us_paddleWarMenu, 0, 0},
+ {US_ITEM_Normal, 0, IN_SC_E, "END GAME", US_Comm_EndGame, 0, 0, 0},
+ {US_ITEM_Normal, 0, IN_SC_Q, "QUIT", US_Comm_Quit, 0, 0, 0},
+ {US_ITEM_None, 0, IN_SC_None, 0, US_Comm_None, 0, 0, 0}};
+
+US_Card ck_us_mainMenu = {0, 0, CK_CHUNKID(PIC_MENUCARD), 0, ck_us_mainMenuItems, &CK_US_MainMenuProc, 0, 0, 0};
 
 extern US_Card *us_currentCard;
 
@@ -1115,7 +1161,7 @@ void USL_DrawPaddleWarScore(int16_t keen_score, int16_t comp_score)
 	// exe in order to align the text and to set the proper font and color
 
 	int8_t print_color = us_menu_disabledColour;
-	int16_t print_y = 52;
+	int16_t print_y = 141;
 	uint16_t w, h;
 
 	//uint16_t old_print_font = US_GetPrintFont();
@@ -1172,6 +1218,7 @@ void USL_PlayPaddleWar(void)
 	old_ball_y = 62;
 	USL_DrawPaddleWarScore(0, 0);
 	lasttime = SD_GetTimeCount();
+	uint32_t testStart=lasttime;
 
 	do
 	{
@@ -1343,26 +1390,33 @@ void USL_PlayPaddleWar(void)
 			old_ball_x = ball_x;
 			old_ball_y = ball_y;
 
-			/* draw_sprite? */
-			// Omnispeak doesn't emulate sprite shifts properly, so paddle war
-			// (which works around this by having two sprites, one shifted one
-			// pixel over) ends up shifted an extra pixel sometimes. By ignoring
-			// the lower bit of ball_x here, we emulate the shift behaviour we need.
-			VH_DrawSprite(ball_x & ~1, ball_y, (ball_x & 1) ? CK_CHUNKNUM(SPR_BALL1) : CK_CHUNKNUM(SPR_BALL0));
+			// Mods reuse the original Paddle War sprite chunks (Foray even
+			// uses a larger score graphic). Draw our LCD pieces at court size.
+			VH_Bar(ball_x + 1, ball_y, 4, 5, us_menu_foregroundColour);
+			VH_Bar(ball_x, ball_y + 1, 6, 3, us_menu_foregroundColour);
+			VH_Bar(ball_x + 1, ball_y + 1, 2, 1, us_menu_disabledColour);
 		}
 
 		// Draw Computer Paddle
 		VH_Bar(old_comp_x - 3, 66, 16, 3, us_menu_backgroundColour);
 		old_comp_x = comp_x;
-		VH_DrawSprite(comp_x, 66, CK_CHUNKNUM(SPR_PADDLE));
+		VH_Bar(comp_x, 66, 12, 3, us_menu_foregroundColour);
+		VH_Bar(comp_x + 1, 66, 10, 1, us_menu_disabledColour);
 
 		// Draw Keen paddle
 		VH_Bar(old_keen_x - 3, 135, 16, 3, us_menu_backgroundColour);
 		old_keen_x = keen_x;
-		VH_DrawSprite(keen_x, 135, CK_CHUNKNUM(SPR_PADDLE));
+		VH_Bar(keen_x, 135, 12, 3, us_menu_foregroundColour);
+		VH_Bar(keen_x + 1, 135, 10, 1, us_menu_disabledColour);
 
 		//sub_658();
 		VL_Present();
+		if(getenv("KW_AUTOWATCH") && SD_GetTimeCount()-testStart>=100)
+		{
+			char path[600];snprintf(path,sizeof(path),"%s/watch-paddle.ppm",getenv("KW_AUTOWATCH"));
+			void KW_DumpScreenTo(const char *path);KW_DumpScreenTo(path);
+			break;
+		}
 
 	} while ((IN_GetLastScan() != IN_SC_Escape) && !done);
 
@@ -1375,17 +1429,16 @@ bool CK_PaddleWar(US_CardMsg msg, US_CardItem *item)
 		return 0;
 
 	/* Draw the watch */
-	VH_DrawBitmap(0, 0, CK_CHUNKNUM(PIC_WRISTWATCH));
-	US_PlainWatchEdge(false); // KEEN WORLDS: no "F1 for Help and Order Info" (id_us_2.c)
+	KW_DrawWatch(false);
 
 	/* Draw the PaddleWar title */
-	VH_DrawBitmap(130, 48, CK_CHUNKNUM(PIC_PADDLEWAR));
+	KW_DrawWatchTitle("PADDLE WAR",false);
 
 	/* Draw a line above the playing area */
 	VH_HLine(77, 231, 60, us_menu_foregroundColour);
 
 	/* Draw a line below the playing area */
-	VH_HLine(77, 231, 143, us_menu_foregroundColour);
+	VH_HLine(77, 231, 139, us_menu_foregroundColour);
 
 	/* Play the game */
 	USL_PlayPaddleWar();
@@ -1417,6 +1470,13 @@ void CK_US_SetJoystickName(US_CardItem *item, int joystick)
 #endif
 void CK_US_UpdateOptionsMenus(void)
 {
+	static char volumeCaption[32];
+	ck_us_voiceMenuItems[0].caption = KW_VoicesEnabled() ? "VOICES (ON)" : "VOICES (OFF)";
+	snprintf(volumeCaption, sizeof(volumeCaption), "VOICE VOLUME (%d%%)", KW_VoiceVolume());
+	ck_us_voiceMenuItems[1].caption = volumeCaption;
+	for (unsigned i = 0; i + 1 < sizeof(ck_us_optionsMenuItems) / sizeof(ck_us_optionsMenuItems[0]); ++i)
+		if (ck_us_optionsMenuItems[i].subMenu == &ck_us_voiceMenu)
+			ck_us_optionsMenuItems[i].caption = KW_VoicesEnabled() ? "VOICES (ON)" : "VOICES (OFF)";
 
 	ck_us_optionsMenuItems[0].caption = ck_scoreBoxEnabled ? "SCORE BOX (ON)" : "SCORE BOX (OFF)";
 	ck_us_optionsMenuItems[1].caption = ck_twoButtonFiring ? "TWO-BUTTON FIRING (ON)" : "TWO-BUTTON FIRING (OFF)";

@@ -41,12 +41,17 @@ typedef enum KW_World
 	KW_BOUNTY,  // Meurglys III: "Bounty Hunting Brouhaha" (fan game on Keen 4)
 	KW_SHIP,    // The Megarocket: Keen Worlds' own world, the inside of Keen's ship (on Keen 4)
 	KW_DREAM,   // Tuberia: "Keen Dreams", the dream Keen has in the ship's bed (its own code, on Keen 4's)
+	KW_MARS,    // Marooned on Mars - Galaxy: in-engine arcade adventure, never a planet
+	KW_ALPHAMATIC, // Atroxian Realm's sequel (append: retain existing save IDs)
+	KW_SUBURB, // Earth: Suburb Shenanigans (append: retain existing save IDs)
 	KW_NUM_WORLDS,
 	KW_NO_WORLD = -1,
 } KW_World;
 
 // The world currently loaded.
 int KW_CurrentWorld(void);
+// A slower reveal after falling asleep or waking; consumed once by loading.
+bool KW_FadeDreamIn(void);
 
 // Whether a world's files are installed (fan games: in play/mods/<id>/).
 bool KW_IsWorldPresent(int world);
@@ -89,14 +94,23 @@ void KW_ConstrainKeen5Dock(struct CK_object *mapKeen);
 // arrival is moved beside the Megarocket without changing ordinary entries.
 void KW_PlaceArrivalAtShip(void);
 
-// Called when Keen presses a button on the world map without standing on a
-// level entrance. Near the launch spot this asks for the travel menu.
+// On a world map, Up near the launch spot asks to board the Megarocket.
+// Other buttons continue to enter ordinary level markers.
 void KW_TryLaunch(struct CK_object *mapKeen);
 
 // Called every frame from the play loop: opens the Megarocket menu when asked
 // for, and handles the debug shortcut (on a world map, hold W and press 4, 5,
 // 6 or 7).
 void KW_PlayLoopHook(void);
+// The remake shares the running engine and saves; arcade tallies stay isolated.
+bool KW_BeginArcade(void);
+bool KW_CanReturnToCabin(void);
+void KW_TestArcadeSession(void);
+void KW_RequestCabinReturn(void);
+void KW_FinishMenuActions(void);
+bool KW_ArcadeOver(bool won);
+bool KW_RestartArcade(int difficulty);
+bool KW_FadeArcadeIn(void);
 
 // Whether the loaded level is the current world's Megarocket level.
 bool KW_IsInShipLevel(void);
@@ -140,6 +154,12 @@ void KW_WaitForButtonsUp(void);
 
 // Developer self-test, run with /KWTEST.
 void KW_SelfTest(void);
+void KW_ChronicleSelfTest(void);
+void KW_TestBoarding(void);
+void KW_TestMenuScreens(void);
+// Developer tests: real save slots, always run with an isolated USERPATH.
+bool KW_TestWriteSave(void);
+bool KW_TestReadSave(void);
 void KW_Screenshot(const char *worldId, int level, const char *path);
 
 // A new game: Keen begins inside his ship (when the Megarocket's world is

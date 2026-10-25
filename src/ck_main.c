@@ -31,6 +31,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ck_game.h"
 #include "ck_play.h"
 #include "kw_world.h"
+#include "kw_mars.h"
+#include "kw_alphamatic.h"
+#include "kw_suburb.h"
+#include "kw_watch.h"
 
 void FF_ChooseGraphics(void); // KEEN WORLDS (kw_fitf.c)
 #ifdef WITH_KEEN4
@@ -107,6 +111,7 @@ void CK_ShutdownID(void)
 	CA_Shutdown();
 
 	CFG_Shutdown();
+	KW_FreeWatchFont();
 	MM_Shutdown();
 
 #ifdef WITH_SDL
@@ -135,6 +140,7 @@ void CK_CacheCoreChunks(void)
 	CA_LockGrChunk(ca_gfxInfoE.offTiles8m);
 	CA_LockGrChunk(CK_CHUNKNUM(MPIC_STATUSLEFT));
 	CA_LockGrChunk(CK_CHUNKNUM(MPIC_STATUSRIGHT));
+	KW_CacheWatchFont();
 }
 
 /*
@@ -265,7 +271,8 @@ void CK_DemoLoop()
 			// world is chosen at the ship's controls), straight after
 			// the title and before the first demo, the title tune
 			// playing on through both
-			KW_PlayOwnStory(true);
+			if (MARS_IsActive()) CK_DrawStarWars();
+			else KW_PlayOwnStory(true);
 			break;
 		// KEEN WORLDS: no demos (they are the running episode's own, of one
 		// world of many; /KWDEMOS brings them back): the title, the story,
@@ -302,7 +309,9 @@ void CK_DemoLoop()
 			if (ck_gameState.levelState == LS_ResetGame || ck_gameState.levelState == LS_LoadedGame)
 			{
 				CK_GameLoop();
-				CK_DoHighScores();
+				// Ending a journey returns straight to the title. The episode's
+				// old high-score demo may reference maps absent from this world.
+				if(ck_gameState.levelState!=LS_AbortGame) CK_DoHighScores();
 				if (ck_gameState.levelState == LS_ResetGame || ck_gameState.levelState == LS_LoadedGame)
 					continue;
 
@@ -666,6 +675,10 @@ int main(int argc, char *argv[])
 		{
 			isFullScreen = true;
 		}
+		else if (!CK_Cross_strcasecmp(argv[i], "/WINDOWED"))
+		{
+			isFullScreen = false;
+		}
 		else if (!CK_Cross_strcasecmp(argv[i], "/FILLED"))
 		{
 			isAspectCorrected = false;
@@ -799,6 +812,50 @@ int main(int argc, char *argv[])
 			CK_PlayDemoFile(argv[i + 1]);
 			Quit(0);
 		}
+		else if (!CK_Cross_strcasecmp(argv[i], "/MARSTEST"))
+		{
+			MARS_SelfTest();
+			Quit(NULL);
+		}
+		else if (!CK_Cross_strcasecmp(argv[i], "/SUBURBTEST"))
+		{
+			SS_SelfTest();
+			Quit(NULL);
+		}
+		else if (!CK_Cross_strcasecmp(argv[i], "/BOARDTEST"))
+		{
+			KW_TestBoarding();
+			Quit(NULL);
+		}
+		else if (!CK_Cross_strcasecmp(argv[i], "/MENUTEST"))
+		{
+			KW_TestMenuScreens();
+			Quit(NULL);
+		}
+		else if (!CK_Cross_strcasecmp(argv[i], "/ALOPENING"))
+		{
+			KW_SwitchWorld(KW_ALPHAMATIC);
+			CK_NewGame();ck_gameState.difficulty=D_Normal;
+			ck_gameState.currentLevel=0;CK_LoadLevel(true,true);
+			CK_GameState before=ck_gameState;
+			int x=ck_keenObj->posX,y=ck_keenObj->posY,cacheLevel=ca_levelnum;
+			AL_PlayOpening();
+			if (memcmp(&before,&ck_gameState,sizeof(before)) || x!=ck_keenObj->posX || y!=ck_keenObj->posY || cacheLevel!=ca_levelnum)
+				Quit("Alphamatic opening changed the running game state");
+			RF_ForceRefresh();RF_Refresh();VL_FadeFromBlack();
+			if (getenv("KW_AUTOCUTSCENE"))
+			{
+				char path[600];snprintf(path,sizeof(path),"%s/20-map-return.ppm",getenv("KW_AUTOCUTSCENE"));
+				void KW_DumpScreenTo(const char *path);KW_DumpScreenTo(path);
+			}
+			puts("PASS: Alphamatic workshop opening preserves game state, position and cache level");
+			Quit(NULL);
+		}
+		else if (!CK_Cross_strcasecmp(argv[i], "/ALPHATEST"))
+		{
+			AL_SelfTest();
+			Quit(NULL);
+		}
 		else if (!CK_Cross_strcasecmp(argv[i], "/PLAYDEMO"))
 		{
 			// A bit of stuff from the usual demo loop
@@ -812,6 +869,11 @@ int main(int argc, char *argv[])
 			// KEEN WORLDS: save a picture of a level (developer tool).
 			KW_Screenshot(argv[i + 1], atoi(argv[i + 2]), argv[i + 3]);
 			Quit(0);
+		}
+		else if (!CK_Cross_strcasecmp(argv[i], "/CHRONICLETEST"))
+		{
+			KW_ChronicleSelfTest();
+			Quit(NULL);
 		}
 		else if (!CK_Cross_strcasecmp(argv[i], "/KWTEST"))
 		{

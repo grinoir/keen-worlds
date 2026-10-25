@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ck_def.h"
 #include "ck_phys.h"
 #include "ck_play.h"
+#include "kw_mars.h"
 #include "ck5_ep.h"
 
 #include <stdio.h>
@@ -34,6 +35,7 @@ int CK5_Walk(CK_object *obj, CK_Controldir dir);
 
 void CK5_SpawnMine(int tileX, int tileY)
 {
+	if (MARS_IsActive()) { MARS_SpawnMine(tileX,tileY); return; }
 	int i;
 	CK_object *obj = CK_GetNewObj(false);
 
@@ -1231,7 +1233,7 @@ void CK5_ShocksundSearch(CK_object *obj)
 	if (obj->clipRects.unitY2 != ck_keenObj->clipRects.unitY2)
 	{
 
-		obj->currentAction = CK_ACTION(CK5_ACT_ShocksundJump0);
+		obj->currentAction = CK_ACTION_ALIAS(CK5_ACT_ShocksundJumpStart, CK5_ACT_ShocksundJump0);
 		obj->velX = (obj->xDirection == IN_motion_Right ? 1 : -1) * CK_INT(CK5_ShocksundJumpXVel, 40);
 		obj->velY = CK_INT(CK5_ShocksundJumpYVel, -40);
 	}

@@ -26,7 +26,7 @@ WORLDS = {   # id: the base episode's strings file (or None), the world's own fo
     'keen4': (K4, None), 'keen5': (K5, None), 'keen6': (K6, None),
     'keen7': (K4, 'keen7'), 'keen8': (K6, 'keen8'), 'keen9': (K5, 'keen9'),
     'keen95': (K4, 'keen95'), 'bounty': (K4, 'bounty'), 'ck55': (K5, 'ck55'), 'asylum': (K5, 'asylum'),
-    'osi': (None, 'osi'), 'arealm': (None, 'arealm'), 'fitf': (None, 'fitf'),
+    'alpham': (None, 'alphamatic'), 'suburb': (None,'suburb'), 'osi': (None, 'osi'), 'arealm': (None, 'arealm'), 'fitf': (None, 'fitf'),
 }
 SAID = {'Meurglys III': 'Meurglys Three', '#': 'Pi', 'VIII': 'Eight', 'BwB': 'Bean-with-Bacon', 'doesnt': "doesn't", '&': 'and'}
 
@@ -34,6 +34,8 @@ SAID = {'Meurglys III': 'Meurglys Three', '#': 'Pi', 'VIII': 'Eight', 'BwB': 'Be
 def story(root, base, folder):
     paths = [os.path.join(root, base)] if base else []
     if folder:
+        # Converted metadata can be voiced before updating the local install.
+        paths += sorted(glob.glob(os.path.join(root,'omnispeak/data/mods',folder,'*.CK?')))
         paths += sorted(p for p in glob.glob(os.path.join(root, 'play/mods', folder, '*'))
                         if not p.lower().endswith(('.raw', '.exe', '.txt', '.pat')))
     text = None

@@ -212,6 +212,7 @@ void CAL_OptimizeNodes(ca_huffnode *table)
 
 void CAL_HuffExpand(void *src, void *dest, int expLength, ca_huffnode *table, int srcLength)
 {
+	if (expLength <= 0 || srcLength <= 0) return;
 	int headptr = 254;
 	uint8_t *srcptr = (uint8_t *)src;
 	uint8_t *dstptr = (uint8_t *)dest;
@@ -246,11 +247,13 @@ void CAL_HuffExpand(void *src, void *dest, int expLength, ca_huffnode *table, in
 		src_bit <<= 1;
 		if (src_bit == 256)
 		{
+			// Exhaustion used to be checked after reading one byte beyond
+			// the compressed chunk. Preserve the partial-output behavior
+			// while checking the boundary before touching that byte.
+			if (complen >= srcLength) break;
 			src_char = *(srcptr++);
 			src_bit = 1;
 			complen++;
-			if (complen > srcLength)
-				break;
 		}
 	}
 }
@@ -611,7 +614,7 @@ void CAL_ShiftSprite(uint8_t *srcImage, uint8_t *dstImage, int width, int height
 		for (int x = 0; x < width; ++x)
 		{
 			//uint16_t val = ~(((uint16_t)(~(*srcPtr++))) << pxShift);
-			uint16_t raw_val = ~(*srcPtr++) << 8;
+			uint16_t raw_val = (uint16_t)(uint8_t)~(*srcPtr++) << 8;
 			uint16_t val = ~((raw_val) >> pxShift);
 			*dstPtr &= val >> 8;
 			*(++dstPtr) = val & 0xFF;
@@ -1281,7 +1284,7 @@ void CA_CacheMap(int mapIndex)
 		MM_SetPurge((void **)(&CA_MapHeaders[mapIndex]), 0);
 	}
 	
-	CK_Cross_LogMessage(CK_LOG_MSG_NORMAL, "CA_CacheMap: Loading map %d (\"%s\")\n", mapIndex, CA_MapHeaders[mapIndex]->name);
+	CK_Cross_LogMessage(CK_LOG_MSG_NORMAL, "CA_CacheMap: Loading map %d (\"%.16s\")\n", mapIndex, CA_MapHeaders[mapIndex]->name);
 
 	int planeSize = CA_MapHeaders[mapIndex]->width * CA_MapHeaders[mapIndex]->height * 2;
 
@@ -1364,7 +1367,7 @@ void CA_CacheMapFromASLEV(int mapIndex, const char *fname)
 	CA_MapHeaders[ca_mapOn]->height = CK_Cross_SwapLE16(CA_MapHeaders[ca_mapOn]->height);
 	#endif
 
-	CK_Cross_LogMessage(CK_LOG_MSG_NORMAL, "CA_CacheMapFromASLEV: Loading map \"%s\" (\"%s\") as map %d.\n", fname, CA_MapHeaders[ca_mapOn]->name, ca_mapOn);
+	CK_Cross_LogMessage(CK_LOG_MSG_NORMAL, "CA_CacheMapFromASLEV: Loading map \"%s\" (\"%.16s\") as map %d.\n", fname, CA_MapHeaders[ca_mapOn]->name, ca_mapOn);
 
 	int planeSize = CA_MapHeaders[ca_mapOn]->width * CA_MapHeaders[ca_mapOn]->height * 2;
 	int decompSize = planeSize * CA_NUMMAPPLANES;

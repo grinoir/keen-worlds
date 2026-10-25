@@ -448,13 +448,13 @@ void AR_AtroxiteMove(CK_object *obj)
 	#define AR_WALL(up) (obj->xDirection == IN_motion_Right ? TI_ForeLeft(CA_TileAtPos(wallX, wallY - (up), 1)) : TI_ForeRight(CA_TileAtPos(wallX, wallY - (up), 1)))
 	if (!AR_WALL(0) && !AR_WALL(1) && (AR_WALL(2) || AR_WALL(3)))
 	{
-		obj->velX = obj->xDirection << 4;
+		obj->velX = obj->xDirection * 16;
 		obj->velY = -30;
 		return;
 	}
 	}
 
-	obj->velX = obj->xDirection << 3;
+	obj->velX = obj->xDirection * 8;
 	obj->velY = -64;
 
 }
@@ -1175,7 +1175,7 @@ void AR_KrileGuardianShoot(CK_object *obj)
 	new_object->type = AR_CT_GuardShot;
 	new_object->active = OBJ_EXISTS_ONLY_ONSCREEN;
 	new_object->zLayer = PRIORITIES - 2;
-	new_object->posX = obj->clipRects.unitXmid + (obj->xDirection << 5);
+	new_object->posX = obj->clipRects.unitXmid + obj->xDirection * 32;
 	new_object->posY = obj->posY + 0x280;
 	new_object->xDirection = obj->xDirection;
 	new_object->yDirection = IN_motion_None;

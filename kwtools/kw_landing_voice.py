@@ -24,6 +24,10 @@ VOICE = 'af_heart'        # Kokoro's "Heart", an American woman
 KOKORO_DIR = os.environ.get('KW_KOKORO_DIR', os.path.expanduser('~/Projects/ArcadiumCMS'))
 # world id: the words, a sentence each
 LANDINGS = {
+    'suburb': ["You have now landed on Earth. Your own street.",
+               "I am parked by the backyard clubhouse.", "Please try to catch the bus this time."],
+    'alpham': ["You have now docked at the Alphamatic.", "VitaCorp's bigger armageddon machine.",
+               "Please switch it off before we leave."],
     'keen4': ["You have now landed on Gnosticus Four.", "Beware of the local slugs.",
               "They are poisonous, and they will not say sorry."],
     'keen5': ["You have now docked at the Omegamatic.", "Beware of the local robots.",
@@ -54,6 +58,8 @@ LANDINGS = {
 # The Chronicle: a world has been saved and the ship has learned the course
 # to the next. world id: the place's name as it is said.
 COURSES = {
+    'suburb': 'Earth. Your own street',
+    'alpham': 'The Alphamatic',
     'keen4': 'Gnosticus Four', 'keen5': 'The Omegamatic', 'keen6': 'Fribbulus Zax', 'keen7': 'Krodacia',
     'keen8': 'Calidune', 'keen9': 'The HUB Command Center', 'arealm': 'Krizzle', 'fitf': 'Gnosticus Pi',
     'osi': 'The Shikadi Station', 'bounty': 'Meurglys Three', 'ck55': 'The Omegamatic Two', 'asylum': 'Address unknown', 'keen95': 'Aspermontis',
@@ -61,6 +67,10 @@ COURSES = {
 # A world has been saved: what the ship computer says when Keen is next in
 # the cabin. world id: the words, a sentence each.
 SAVED = {
+    'suburb': ["Earth. Your own street. The school bag is found, and Billy has caught the bus.",
+               "I will wait here until school is over."],
+    'alpham': ["The Alphamatic is disabled.", "VitaCorp has lost another armageddon machine.",
+               "I hope they kept the receipt."],
     'keen4': ["Gnosticus Four is saved.", "The Oracle is grateful.", "The slugs are not."],
     'keen5': ["The Omegamatic is switched off.", "The galaxy will not explode today.", "Well done."],
     'keen6': ["Fribbulus Xax is quiet again.", "The babysitter is safe.", "She is still cross with you."],

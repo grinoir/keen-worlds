@@ -191,24 +191,34 @@ void VL_SetPalette(uint8_t *palette)
 
 void VL_FadeToBlack(void)
 {
+	VL_FadeToBlackTimed(6);
+}
+
+void VL_FadeToBlackTimed(int stepTics)
+{
 	for (int i = 3; i >= 0; i--)
 	{
 		vl_palette[i][16] = vl_border_color;
 		VL_SetPaletteAndBorderColor(vl_palette[i]);
 		VL_Present();
-		VL_DelayTics(6);
+		VL_DelayTics(stepTics);
 	}
 	vl_screenFaded = true;
 }
 
 void VL_FadeFromBlack(void)
 {
+	VL_FadeFromBlackTimed(6);
+}
+
+void VL_FadeFromBlackTimed(int stepTics)
+{
 	for (int i = 0; i < 4; i++)
 	{
 		vl_palette[i][16] = vl_border_color;
 		VL_SetPaletteAndBorderColor(vl_palette[i]);
 		VL_Present();
-		VL_DelayTics(6);
+		VL_DelayTics(stepTics);
 	}
 	vl_screenFaded = false;
 }

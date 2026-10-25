@@ -20,6 +20,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //#inclucd "id_heads.h"
 #include "ck_play.h"
 #include "kw_world.h"
+#include "kw_suburb.h"
+#include "kw_mars.h"
 #include "kw_habitat.h"
 #include "kw_music.h"
 #include "kw_osi.h"
@@ -458,6 +460,15 @@ CK_object *CK_GetNewObj(bool nonCritical)
 
 void CK_RemoveObj(CK_object *obj)
 {
+	// Optional spawns use an unlinked temporary object when the pool is full.
+	// A rejected enemy shot may immediately remove it. It has no prev/next
+	// links to unlink and must never become part of the free-object chain.
+	if (obj == &tempObj)
+	{
+		RF_RemoveSpriteDraw(&obj->sde);
+		memset(obj,0,sizeof(*obj));
+		return;
+	}
 	if (obj == ck_keenObj)
 	{
 		Quit("RemoveObj: Tried to remove the player!");
@@ -1280,6 +1291,7 @@ void CK_CheckKeys()
 			VL_FixRefreshBuffer();
 			StopMusic();
 			US_RunCards();
+			KW_FinishMenuActions();
 
 			// RF_Reset();
 			StartMusic(ck_gameState.currentLevel);
@@ -1476,6 +1488,10 @@ void CK_HandleInput()
 	{
 		// TODO: Gravis Gamepad input handling
 	}
+
+	// Mars keeps raw pogo input for two-button firing, but cannot pogo
+	// before collecting the stick. This also covers mapped controllers.
+	MARS_FilterInput();
 
 	// KEEN WORLDS: Foray in the Forest's Keen keeps "up was held" (doors,
 	// switches): cleared once up is let go (PollControls in its CK_PLAY.C).
@@ -1727,7 +1743,7 @@ void CK_DrawStatusWindow(void)
 		US_Print(CK_STRING(ck5_str_statusKeycard));
 
 		VHB_Bar(135, 90, 10, 10, 0);
-		if (ck_gameState.ep.ck5.securityCard)
+		if (SS_IsActive()?SS_BagState()==2:ck_gameState.ep.ck5.securityCard!=0)
 			VHB_DrawTile8(136, 91, 40);
 		break;
 #endif

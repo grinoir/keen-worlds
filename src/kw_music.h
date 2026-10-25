@@ -22,6 +22,11 @@ void KW_StartEndingMusic(int volume);
 // plays under a voice: KW_Speak fades it out (waiting for the fade if asked;
 // not when the music is already off), plays the clip, and the music fades
 // back in once the clip is over.
+// Player preferences, independent of music/effects and saved-game state.
+bool KW_VoicesEnabled(void);
+int KW_VoiceVolume(void); // 0..100
+void KW_SetVoicesEnabled(bool enabled);
+void KW_SetVoiceVolume(int volume);
 void KW_Speak(const char *file, bool waitForFade);
 bool KW_VoiceSpeaking(void);
 bool KW_ClipPlaying(void); // (a clip is sounding now, not merely expected)

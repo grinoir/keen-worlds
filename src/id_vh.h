@@ -87,6 +87,9 @@ void VH_DrawShiftedSpriteMask(int x, int y, int chunk, int shift, int colour);
 void VH_DrawPropChar(int x, int y, int chunk, unsigned char c, int colour);
 void VH_MeasurePropString(const char *string, uint16_t *width, uint16_t *height, int16_t chunk);
 void VH_DrawPropString(const char *string, int x, int y, int chunk, int colour);
+// Paint glyphs in a fixed colour; unlike the legacy XOR drawing this also
+// works on detailed artwork, and colour 0 paints an actual black outline.
+void VH_DrawPropStringSolid(const char *string, int x, int y, int chunk, int colour);
 
 bool VH_MarkUpdateBlock(int x1px, int y1px, int x2px, int y2px);
 

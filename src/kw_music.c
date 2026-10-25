@@ -11,6 +11,7 @@ untouched.
 #include <string.h>
 
 #include "id_ca.h"
+#include "id_cfg.h"
 #include "id_fs.h"
 #include "id_vl.h"
 #include "ck_cross.h"
@@ -20,6 +21,7 @@ untouched.
 #include "kw_habitat.h"
 #include "kw_music.h"
 #include "kw_world.h"
+#include "kw_mars.h"
 
 // The tune: an original jig, written out by tools/kw_tavern_music.py.
 #include "kw_tavern_music.h"
@@ -42,21 +44,61 @@ static bool kw_musicHeld;          // off for a voice; comes back when it has fi
 static uint32_t kw_voiceEnd = 0;   // time count at which the clip is over
 static bool kw_voicePending;       // something is about to be said (see KW_VoiceComingUp)
 
+bool KW_VoicesEnabled(void)
+{
+	return CFG_GetConfigBool("kw_voices", true);
+}
+
+int KW_VoiceVolume(void)
+{
+	int volume = CFG_GetConfigInt("kw_voiceVolume", 100);
+	return volume < 0 ? 0 : volume > 100 ? 100 : volume;
+}
+
+static bool KW_CanSpeak(void)
+{
+	return KW_VoicesEnabled() && KW_VoiceVolume() > 0;
+}
+
+void KW_SetVoicesEnabled(bool enabled)
+{
+	CFG_SetConfigBool("kw_voices", enabled);
+	if (!enabled)
+	{
+		kw_voicePending = false;
+		KW_LinesOver();
+		KW_UpdateMusicZone();
+	}
+}
+
+void KW_SetVoiceVolume(int volume)
+{
+	volume = volume < 0 ? 0 : volume > 100 ? 100 : volume;
+	CFG_SetConfigInt("kw_voiceVolume", volume);
+	SD_SetVoiceVolume(volume);
+	if (!volume)
+	{
+		kw_voicePending = false;
+		KW_LinesOver();
+		KW_UpdateMusicZone();
+	}
+}
+
 bool KW_VoiceSpeaking(void)
 {
-	return kw_voicePending || SD_GetTimeCount() < kw_voiceEnd;
+	return KW_CanSpeak() && (kw_voicePending || SD_GetTimeCount() < kw_voiceEnd);
 }
 
 // Is a clip sounding right now? (KW_VoiceSpeaking also says yes while one
 // is only expected.)
 bool KW_ClipPlaying(void)
 {
-	return SD_GetTimeCount() < kw_voiceEnd;
+	return KW_CanSpeak() && SD_GetTimeCount() < kw_voiceEnd;
 }
 
 void KW_VoiceComingUp(bool pending)
 {
-	kw_voicePending = pending;
+	kw_voicePending = pending && KW_CanSpeak();
 }
 
 // Fade the music down; returns how many tics that takes. The caller waits,
@@ -160,7 +202,7 @@ static bool KW_LoadClip(const char *file)
 	free(kw_clip);
 	kw_clip = NULL;
 	kw_voiceEnd = 0;
-	if (SD_GetSoundMode() == sdm_Off || !file)
+	if (!KW_CanSpeak() || !file)
 		return false;
 	kw_clip = KW_ReadClip(file, &kw_clipSamples);
 	return kw_clip != NULL;
@@ -168,6 +210,7 @@ static bool KW_LoadClip(const char *file)
 
 static void KW_StartClip(void)
 {
+	SD_SetVoiceVolume(KW_VoiceVolume());
 	SD_PlayVoice(kw_clip, (uint32_t)kw_clipSamples, KW_VOICE_RATE);
 	kw_voiceEnd = SD_GetTimeCount() + (uint32_t)(kw_clipSamples * 70 / KW_VOICE_RATE) + 35;
 }
@@ -252,7 +295,7 @@ bool KW_SayWorldLine(const char *name)
 		{KW_KEEN4, "K4"}, {KW_KEEN5, "K5"}, {KW_KEEN6, "K6"}, {KW_KEEN7, "K7"}, {KW_KEEN8, "K8"}, {KW_KEEN9, "K9"},
 		{KW_KEEN95, "K95"}, {KW_BOUNTY, "BH"}, {KW_CK55, "K55"}, {KW_DREAM, "KD"}, {KW_AREALM, "AR"}, {KW_FITF, "FF"},
 		// (Keen Asylum and Operation Station Infiltration say Keen 5's words where they speak)
-		{KW_ASYLUM, "K5"}, {KW_OSI, "K5"}};
+		{KW_ASYLUM, "K5"}, {KW_OSI, "K5"}, {KW_ALPHAMATIC, "AL"}, {KW_SUBURB,"SS"}};
 	for (size_t i = 0; i < sizeof(spoken) / sizeof(spoken[0]); ++i)
 		if (spoken[i].world == KW_CurrentWorld())
 		{
@@ -274,7 +317,7 @@ bool KW_SayWorldLines(const char *const *names, int count)
 		if (spoken[i].world == KW_CurrentWorld())
 			prefix = spoken[i].prefix;
 	KW_StopVoice();
-	if (!prefix || SD_GetSoundMode() == sdm_Off)
+	if (!prefix || !KW_CanSpeak())
 		return false;
 	int16_t *all = NULL;
 	long total = 0;
@@ -345,6 +388,7 @@ static bool kw_titleTunePlaying;
 
 void KW_StartTitleMusic(void)
 {
+	if (MARS_IsActive()) { StartMusic(0); return; }
 	if (kw_titleTunePlaying)
 		return;
 	KW_StopVoice();

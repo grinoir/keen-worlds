@@ -60,6 +60,9 @@ def strip_comments(text):
 def parse_pat(path):
     """[(offset, bytes)] for every active %patch, in file order."""
     txt = strip_comments(open(path, encoding='latin1').read())
+    # CKPatch stops at %end; authors sometimes keep disabled diagnostic
+    # patches below it (e.g. The Alphamatic's memory-check replacement).
+    txt = re.split(r'(?im)^\s*%end\b', txt, maxsplit=1)[0]
     pats = []
     for m in re.finditer(r'%patch\s+\$([0-9A-Fa-f]+)((?:(?!%)[\s\S])*)', txt):
         b = bytearray()
@@ -273,7 +276,11 @@ def cmd_check(g, pats, modfile):
                 0 if f[12] == 'NULL' else int(g.lines[f[12]][0], 0))
         if g.funcname(a[8]) in g.collide_only:
             a = a[:8] + (0,) + a[9:]
-        diff = [i for i in range(12) if a[i] != want[i]]
+        # Multiple DOS entry points can share one native function (notably
+        # CK_DeadlyCol). Compare function names rather than picking one
+        # arbitrary address from that many-to-one mapping.
+        diff = [i for i in range(12)
+                if (g.funcname(a[i]) != f[i+1] if 8 <= i <= 10 else a[i] != want[i])]
         if diff:
             bad += 1
             names = ['left', 'right', 'type', 'protect', 'stick', 'timer', 'velX', 'velY',

@@ -37,6 +37,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ck_play.h"
 #include "ck_text.h"
 #include "kw_world.h"
+#include "kw_mars.h"
+#include "kw_alphamatic.h"
+#include "kw_suburb.h"
 #include "kw_habitat.h"
 #include "ck4_ep.h"
 #include "ck5_ep.h"
@@ -91,7 +94,7 @@ void CK_NewGame()
 	memset(&ck_gameState, 0, sizeof(ck_gameState));
 	ck_gameState.nextKeenAt = 20000;
 	ck_gameState.numLives = 3;
-	ck_gameState.numShots = 5;
+	ck_gameState.numShots = MARS_IsActive() ? 0 : 5;
 	ck_gameState.currentLevel = 0;
 	ck_gameState.levelState = ls;
 	KW_ResetWorlds();
@@ -563,9 +566,11 @@ bool CK_LoadGame(FS_File fp, bool fromMenu)
 
 //TODO: KillKeen
 
+extern CK_Difficulty ck_startingDifficulty;
 void CK_ExitMenu(void)
 {
-	CK_NewGame();
+	// Restarting an arcade adventure must preserve the suspended journey.
+	if (!KW_RestartArcade(ck_startingDifficulty)) CK_NewGame();
 	ca_levelnum--;
 	ca_levelbit >>= 1;
 	CA_ClearMarks();
@@ -609,6 +614,8 @@ void CK_MapLevelMarkAsDone(void)
 			{
 				/* Is this a level tile */
 				flags = w >> 8;
+				if ((MARS_IsActive() || CK_INT(CK_MapPreserveCoordinates,0)) && flags != 0xC0 && flags != 0xD0 && flags != 0xF0)
+					continue; // preserve teleporter/elevator destination coordinates
 				/* KEEN WORLDS: Habitable levels can be entered again. */
 				if (flags == 0xC0 && KW_IsHabitableLevel(level))
 					continue;
@@ -644,7 +651,7 @@ void CK_UpdateFadeDrawing(void)
 	ck_fadeDrawCounter++;
 	if (ck_fadeDrawCounter == 2)
 	{
-		VL_FadeFromBlack();
+		if (!KW_FadeDreamIn() && !KW_FadeArcadeIn()) VL_FadeFromBlack();
 		RF_SetDrawFunc(0);
 		SD_SetTimeCount(SD_GetLastTimeCount());
 	}
@@ -706,7 +713,7 @@ void CK_LoadLevel(bool doCache, bool silent)
 			CA_CacheMarks(CK_STRING(ck_str_demo));
 		}
 #ifdef WITH_KEEN5
-		else if (ck_currentEpisode->ep == EP_CK5 && ca_mapOn == 0 && ck_keenObj->clipRects.tileY1 > 100)
+		else if (ck_currentEpisode->ep == EP_CK5 && ca_mapOn == 0 && ck_keenObj->clipRects.tileY1 > CK_INT(CK5_MapMarsMinY,100))
 		{
 			/* Stepping on to korath*/
 			CA_CacheMarks(CK_STRING(ck5_str_korath3));
@@ -1022,7 +1029,9 @@ void CK_GameLoop()
 			// KEEN WORLDS: A new game begins in the start world.
 			KW_ReturnToStartWorld();
 			// Developer tool: KW_AUTOLEVEL=n in the environment starts in that level
-			if (getenv("KW_AUTOLEVEL"))
+			if (MARS_IsActive() && us_tedLevel)
+				ck_gameState.currentLevel = us_tedLevelNumber;
+			else if (getenv("KW_AUTOLEVEL") && !MARS_IsActive())
 				ck_gameState.currentLevel = atoi(getenv("KW_AUTOLEVEL"));
 			ck_gameState.difficulty = ck_startingDifficulty;
 			if (FF_IsActive())
@@ -1043,11 +1052,12 @@ void CK_GameLoop()
 		ck_scrollDisabled = false;
 		SD_WaitSoundDone();
 		CK_PlayLoop();
+		if (ck_gameState.levelState==LS_Died) AL_AfterDeath();
 
 		if (ck_gameState.levelState != LS_LoadedGame)
 		{
 			memset(ck_gameState.keyGems, 0, sizeof(ck_gameState.keyGems));
-			if (ck_currentEpisode->ep == EP_CK5)
+			if (ck_currentEpisode->ep == EP_CK5 && !MARS_IsActive() && !SS_IsActive())
 				ck_gameState.ep.ck5.securityCard = 0;
 		}
 
@@ -1100,6 +1110,11 @@ void CK_GameLoop()
 			//ck_gameState.currentLevel = ck_nextMapNumber;
 			break;
 
+		case LS_SSCheckpoint:
+		case LS_SSBag:
+			if (SS_HandleLevelState()) goto loadLevel;
+			break;
+
 		case LS_Foot:
 			if (ck_currentEpisode->ep == EP_CK6)
 			{
@@ -1148,6 +1163,11 @@ void CK_GameLoop()
 			break;
 
 		case LS_ResetGame:
+			if (KW_RestartArcade(ck_startingDifficulty))
+			{
+				ck_startingDifficulty=D_NotPlaying;
+				goto loadLevel;
+			}
 			goto resetDifficultyAndLevel;
 
 		case LS_SwitchWorld:
@@ -1160,6 +1180,7 @@ void CK_GameLoop()
 			goto replayLevel;
 
 		case LS_AbortGame:
+			if (KW_ArcadeOver(false)) goto loadLevel;
 			// Quit to Dos
 			IN_ClearKeysDown();
 			return;
@@ -1277,6 +1298,8 @@ void CK_GameLoop()
 		// KEEN WORLDS: out of lives in the dream (Keen Dreams) is no game
 		// over. Keen wakes up, and the dream starts again another night.
 		if (ck_gameState.numLives < 0 && KW_DreamOver(false))
+			goto loadLevel;
+		if (ck_gameState.numLives < 0 && KW_ArcadeOver(false))
 			goto loadLevel;
 
 		if (ck_gameState.numLives < 0)

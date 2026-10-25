@@ -20,6 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ck_act.h"
 #include "ck_def.h"
 #include "kw_habitat.h"
+#include "kw_mars.h"
 #include "ck_phys.h"
 #include "ck_play.h"
 
@@ -107,7 +108,8 @@ void CK_KeenColFunc(CK_object *a, CK_object *b)
 		}
 		else if (b->user1 == 10)
 		{
-			ck_gameState.numLives++;
+			if (MARS_IsActive()) ck_gameState.numCentilife++;
+			else ck_gameState.numLives++;
 		}
 		else if (b->user1 == 11)
 		{
@@ -319,6 +321,7 @@ void CK_KeenCheckSpecialTileInfo(CK_object *obj)
 		for (int x = obj->clipRects.tileX1; x <= obj->clipRects.tileX2; ++x)
 		{
 			int specialTileInfo = (TI_ForeMisc(CA_TileAtPos(x, y, 1)) & 0x7F);
+			if (MARS_IceTile(obj, specialTileInfo)) continue;
 			switch (specialTileInfo)
 			{
 			case 0:
@@ -837,7 +840,7 @@ void CK_HandleInputOnGround(CK_object *obj)
 	{
 		// But only if such an action exists in this episode. :/
 		// (KEEN WORLDS: not in Atroxian Realm, whose source leaves it out)
-		if (ck_currentEpisode->ep == EP_CK5 && !AR_IsActive())
+		if (ck_currentEpisode->ep == EP_CK5 && !AR_IsActive() && !MARS_IsActive())
 		{
 			obj->currentAction = CK_ACTION(CK_ACT_keenRidePlatform);
 		}
@@ -916,7 +919,7 @@ void CK_KeenStandingThink(CK_object *obj)
 	{
 		// But only if such an action exists in this episode. :/
 		// (KEEN WORLDS: not in Atroxian Realm, whose source leaves it out)
-		if (ck_currentEpisode->ep == EP_CK5 && !AR_IsActive())
+		if (ck_currentEpisode->ep == EP_CK5 && !AR_IsActive() && !MARS_IsActive())
 		{
 			obj->currentAction = CK_ACTION(CK_ACT_keenRidePlatform);
 		}

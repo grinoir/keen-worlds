@@ -17,12 +17,14 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 #include "id_us.h"
 #include "id_vh.h"
 #include "id_vl.h"
+#include "id_vl_private.h"
 #include "id_sd.h"
 #include "id_ti.h"
 #include "ck_act.h"
 #include "ck_config.h"
 #include "ck_cross.h"
 #include "ck_game.h"
+#include "ck_text.h"
 #include "ck_phys.h"
 #include "ck_play.h"
 #include "ck_def.h"
@@ -33,6 +35,10 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 #include "kw_osi.h"
 #include "ck6_ep.h"
 #include "kw_world.h"
+#include "kw_arcade.h"
+#include "kw_mars.h"
+#include "kw_alphamatic.h"
+#include "kw_suburb.h"
 #include "kw_music.h"
 #include "kw_skip.h"
 #include "kw_art.h"
@@ -40,6 +46,7 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 #include "kw_title_art.h"
 
 extern const char *ck_episodeFile;
+extern CK_Difficulty ck_startingDifficulty;
 
 // ---- The world registry ----
 
@@ -211,6 +218,20 @@ static const KW_WorldDef kw_worldDefs[KW_NUM_WORLDS] = {
 		"Programming:\nJohn Carmack, John Romero\n\nCreative director: Tom Hall\nArt: Adrian Carmack\n\n"
 		"Published by Softdisk.\nIts source code was released\nunder the GPL in 2014." KW_NOT_OURS,
 		"Keen Dreams' shareware release\n(version 1.13) is free to pass\non. Put its files in\nmods/dreams."},
+	{"mars", "Mars", 5, "arcade/mars", "MARS.CK5",
+		"Marooned on Mars - Galaxy", "A Keen 1 retelling\nby Dr. Colossus",
+		"Created by Dr. Colossus\n\nBug fixes and optimization:\nK1n9_Duk3\n\nNative arcade integration:\nKeen Worlds" KW_NOT_OURS,
+		"Install your copy of\nMarooned on Mars - Galaxy\nin arcade/mars."},
+	{"alpham", "The Alphamatic", 5, "mods/alphamatic", "ALPHAM.CK5",
+		"The Alphamatic", "Atroxian Realm's sequel\nby Gridlock, version 3.0",
+		"Created by Gridlock\n\nPatching: Levellass, Fleex,\nK1n9_Duk3\nMusic: Mr. M and Gridlock"
+		"\fTesting: Nisaba, Fleex,\nMobiethian, Levellass, Lemm\n\nFull credits in the game's Help." KW_NOT_OURS,
+		"The Alphamatic v3.0 by Gridlock.\nUnpack the original archive in\nmods/alphamatic. See the guide."},
+	{"suburb", "Earth", 5, "mods/suburb", "SUBURB.CK5",
+		"Suburb Shenanigans", "A school day on Earth\nby Bubbatom, v1.2",
+		"Created by Bubbatom\nPatching: Levellass\nMusic: thehackercat, Mr. M\n\n"
+		"Bug fixes and optimization:\nK1n9_Duk3 (2020-11-25)\n\nFull credits in the game's Help." KW_NOT_OURS,
+		"Suburb Shenanigans v1.2.\nUnpack your copy in mods/suburb.\nSee the local testing guide."},
 };
 
 static CK_EpisodeDef *KW_EpisodeDef(int episode)
@@ -296,6 +317,9 @@ static bool KW_FindWorld(int world)
 	// the base episode come from the game path.
 	if (!KW_WorldHasFile(world, def->episodeFile))
 		return false;
+	if (world == KW_MARS)
+		return KW_WorldHasFile(world, "editmaps.ck5") &&
+			KW_WorldHasFile(world, "EGAGRAPH.CK5") && KW_WorldHasFile(world, "AUDIO.CK5");
 	if (def->episode == KW_EPISODE_AREALM || def->episode == KW_EPISODE_FITF)
 	{
 		// Its support files are in its own folder too; Keen 5's variables
@@ -415,6 +439,8 @@ static const KW_Ship kw_ships[] = {
 	// level (1). Keen arrives and boards at the ship's nose; the boarding
 	// area stops short of the ship's door (x 14-17), where "up" goes inside.
 	{KW_FITF, 1, 5, 16, 4, 11, 11, 16},
+	// The original covered Megarocket in Billy's backyard clubhouse.
+	{KW_SUBURB, 10, 28, 14, 14, 11, 29, 17},
 };
 // Foray's level 1: the forest with the landed ship is the top of the map;
 // the game's own rooms of the ship start below this row.
@@ -478,6 +504,12 @@ void KW_AfterWorldEnding(void)
 	if (!ck_gameState.levelsDone[ca_mapOn])
 		ck_gameState.levelsDone[ca_mapOn] = 1;
 	ck_gameState.currentLevel = 0;
+	if (MARS_IsActive())
+	{
+		// The arcade's ending is its own; completion cannot unlock planets.
+		if (!KW_ArcadeOver(true)) ck_gameState.levelState = LS_AbortGame;
+		return;
+	}
 
 	// The debug ending (W + E) skipped the game, so the map may not let Keen
 	// reach his ship: put him at the Megarocket instead.
@@ -556,13 +588,17 @@ static int16_t kw_chronicle = 0;
 static int16_t kw_courseTold[KW_NUM_WORLDS]; // the ship computer has announced this world's course
 static int16_t kw_savedTold[KW_NUM_WORLDS];  // ... has said its piece about this world being saved
 static int16_t kw_chronicleEndTold = 0;      // the Chronicle's last card has been shown
+// Reserved save word 215 identifies the story-aware course rules. Old saves
+// are migrated once, retaining courses that were open before the reorder.
+#define KW_CHRONICLE_RULES 0x4352
+static void KW_KeepLegacyCourses(const KW_WorldState *worlds, const bool *known);
 static bool kw_crashLanding = false;      // the ship is being shot down over Krisle (see KW_CrashLanding)
 static int kw_dreamEnded = 0;             // Keen has just woken: 1 as usual, 2 the dream was lost, 3 it was won
 static bool kw_epilogueBackdrop = false;  // the last-world-saved crawl has its own sky
 // Tuberia is a dream and the ship is the ship: the rest are places to fly to.
 static bool KW_IsPlanet(int world)
 {
-	return world != KW_SHIP && world != KW_DREAM;
+	return world != KW_SHIP && world != KW_DREAM && world != KW_MARS;
 }
 static void KW_DreamLeaving(int from);
 
@@ -574,6 +610,18 @@ typedef struct KW_Tally
 } KW_Tally;
 static KW_Tally kw_awake;        // Keen's own, while he dreams
 static KW_Tally kw_dreamTally;   // the dream's, while he is awake
+typedef struct KW_ArcadeTally
+{
+	KW_Tally tally;
+	int16_t centilife, difficulty;
+} KW_ArcadeTally;
+static KW_ArcadeTally kw_journeyTally, kw_marsTally;
+static bool kw_marsLinked, kw_arcadeCabinDue, kw_arcadeFadeIn, kw_cabinReturnRequested;
+static int16_t kw_arcadeCabinX, kw_arcadeCabinY, kw_arcadeCabinDirection;
+static void KW_WakeUp(void);
+static void KW_ArcadeFadeOut(void);
+static void KW_ArcadeLeaving(int from);
+static void KW_ArcadeArriving(int to);
 static bool kw_wakeInBed = false; // the next arrival in the ship is in the bunk
 static bool kw_shipUpUsed = false; // "up" has done its one thing in the ship's rooms and is still held
 void KD_NewGame(void);
@@ -608,6 +656,7 @@ static char kw_deferredFile[FS_MAX_FILENAME_LEN];
 
 static int KW_WorldById(const char *id)
 {
+	if (!strncmp(id,"alphamatic",8)) return KW_ALPHAMATIC;
 	for (int w = 0; w < KW_NUM_WORLDS; ++w)
 		if (!strncmp(kw_worldDefs[w].id, id, KW_SAVE_ID_LEN))
 			return w;
@@ -685,6 +734,16 @@ bool KW_WriteSaveBlock(FS_File fp)
 	KW_PackTally(&kw_awake, &extra[170]);
 	KW_PackTally(&kw_dreamTally, &extra[176]);
 	KD_GetState(&extra[182]);
+	// Reserved version-7 words: the in-engine arcade keeps its own tally.
+	// A marker distinguishes these fields from old scenery/save padding.
+	KW_PackTally(&kw_journeyTally.tally, &extra[190]);
+	extra[196]=kw_journeyTally.centilife; extra[197]=kw_journeyTally.difficulty;
+	KW_PackTally(&kw_marsTally.tally, &extra[198]);
+	extra[204]=kw_marsTally.centilife; extra[205]=kw_marsTally.difficulty;
+	extra[210]=0x4152; extra[211]=kw_marsLinked;
+	extra[212]=kw_arcadeCabinX; extra[213]=kw_arcadeCabinY;
+	extra[214]=kw_arcadeCabinDirection;
+	extra[215]=KW_CHRONICLE_RULES;
 	return AR_WriteState(fp) && FF_WriteState(fp) && KW_WriteId(fp, kw_worldDefs[kw_boardedFrom].id) &&
 		FS_WriteInt16LE(extra, 261, fp) == 261;
 }
@@ -694,6 +753,7 @@ bool KW_ReadSaveBlock(FS_File fp, bool *deferred)
 	char id[4];
 	int16_t version;
 	KW_WorldState worlds[KW_NUM_WORLDS];
+	bool known[KW_NUM_WORLDS] = {0};
 	int world = KW_NO_WORLD;
 	memset(worlds, 0, sizeof(worlds));
 	*deferred = false;
@@ -702,6 +762,7 @@ bool KW_ReadSaveBlock(FS_File fp, bool *deferred)
 		FS_ReadInt16LE(&version, 1, fp) != 1)
 		return false;
 
+	if (version < 7) kw_marsLinked=false;
 	if (version == 1)
 	{
 		// Keen 4-6 only; items were shared, so every world gets the set.
@@ -737,7 +798,10 @@ bool KW_ReadSaveBlock(FS_File fp, bool *deferred)
 				return false;
 			int w = KW_WorldById(wid);
 			if (w != KW_NO_WORLD)
+			{
 				worlds[w] = state;   // worlds that are no longer known are dropped
+				known[w] = true;
+			}
 		}
 		// Version 3: Atroxian Realm's extra state
 		if (version >= 3 && !AR_ReadState(fp, version >= 4))
@@ -774,11 +838,23 @@ bool KW_ReadSaveBlock(FS_File fp, bool *deferred)
 				kw_savedTold[w] = extra[40 + w] == 1;
 			}
 			kw_chronicleEndTold = extra[80] == 1;
+			if (kw_chronicle && extra[215] != KW_CHRONICLE_RULES)
+				KW_KeepLegacyCourses(worlds, known);
 			OSI_SetState(&extra[90]);
 			FF_SetSongsHeard(&extra[100], 64);
 			KW_UnpackTally(&kw_awake, &extra[170]);
 			KW_UnpackTally(&kw_dreamTally, &extra[176]);
 			KD_SetState(&extra[182]);
+			kw_marsLinked=extra[210]==0x4152 && extra[211]==1;
+			if (kw_marsLinked)
+			{
+				KW_UnpackTally(&kw_journeyTally.tally,&extra[190]);
+				kw_journeyTally.centilife=extra[196]; kw_journeyTally.difficulty=extra[197];
+				KW_UnpackTally(&kw_marsTally.tally,&extra[198]);
+				kw_marsTally.centilife=extra[204]; kw_marsTally.difficulty=extra[205];
+				kw_arcadeCabinX=extra[212]; kw_arcadeCabinY=extra[213];
+				kw_arcadeCabinDirection=extra[214];
+			}
 		}
 	}
 	else
@@ -874,6 +950,7 @@ void KW_ReturnToStartWorld(void)
 	{
 		KW_SwitchWorld(kw_startWorld);
 		ck_gameState.currentLevel = 0; // the map, not the ship arrival
+		if (MARS_IsActive()) ck_gameState.numShots = 0;
 	}
 	KW_ResetWorlds();
 	kw_placeArrivalAtShip = false;
@@ -896,6 +973,8 @@ void KW_ResetWorlds(void)
 	kw_chronicleEndTold = 0;
 	kw_pendingWorld = KW_NO_WORLD;
 	kw_placeArrivalAtShip = false;
+	kw_marsLinked=kw_arcadeCabinDue=kw_arcadeFadeIn=kw_cabinReturnRequested=false;
+	kw_marsTally=(KW_ArcadeTally){{0,20000,3,0},0,D_Normal};
 }
 
 #define KW_SHIP_LEVEL 1 // the Megarocket's one room (see KW_ShipRoomFrame)
@@ -922,6 +1001,8 @@ void KW_SwitchWorld(int world)
 	// Remember the world Keen is leaving.
 	kw_worlds[kw_currentWorld] = KW_LiveState();
 	KW_DreamLeaving(kw_currentWorld); // out of the dream: Keen's own score, lives and shots again
+	KW_ArcadeLeaving(kw_currentWorld);
+	if (world!=KW_SHIP) kw_arcadeCabinDue=false;
 	FF_LeaveWorld(); // the standard colours again (Foray in the Forest sets its own)
 
 	// Nothing may keep playing from the old world's audio data.
@@ -983,6 +1064,7 @@ void KW_SwitchWorld(int world)
 		kw_introduced[KW_SHIP] = true; // no arrival card for Keen's own ship
 	}
 	KW_DreamArriving(world); // into the dream: its own score, lives and flower power
+	KW_ArcadeArriving(world);
 }
 
 // ---- The Megarocket ----
@@ -1087,6 +1169,7 @@ static const KW_MapShip *KW_MapShipFor(int world)
 
 void KW_SetLaunchSpot(int tileX, int tileY)
 {
+	if (MARS_IsActive()) { kw_launchSpotX = kw_launchSpotY = -1; return; }
 	if (KW_HasKeen5Dock())
 	{
 		// Replace Keen 5's unused yellow map border with a sparse starfield
@@ -1120,7 +1203,10 @@ void KW_SetLaunchSpot(int tileX, int tileY)
 	else
 	{
 		// Others: the ship waits where Keen first lands on the world map.
-		kw_launchSpotX = tileX;
+		// Alphamatic's own gangway stops Keen before the hull. Centre the
+		// hatch range two tiles east of its start so the reachable floor
+		// beside it is included; do not require standing inside the hull.
+		kw_launchSpotX = tileX + (kw_currentWorld==KW_ALPHAMATIC ? 2 : 0);
 		kw_launchSpotY = tileY;
 	}
 }
@@ -1151,6 +1237,15 @@ void KW_PlaceMapKeenAtShip(CK_object *mapKeen)
 
 void KW_PlaceArrivalAtShip(void)
 {
+	if (kw_arcadeCabinDue && kw_currentWorld==KW_SHIP && ck_keenObj)
+	{
+		kw_arcadeCabinDue=false;
+		ck_keenObj->posX=kw_arcadeCabinX; ck_keenObj->posY=kw_arcadeCabinY;
+		ck_keenObj->xDirection=kw_arcadeCabinDirection;
+		CK_SetAction(ck_keenObj,CK_ACTION(CK_ACT_keenStanding));
+		CK_ResetClipRects(ck_keenObj);
+		return;
+	}
 	// Waking from the dream: in the bunk, not at the hatch.
 	if (kw_wakeInBed && kw_currentWorld == KW_SHIP && ck_keenObj)
 	{
@@ -1202,7 +1297,7 @@ void KW_ConstrainKeen5Dock(CK_object *mapKeen)
 
 void KW_TryLaunch(CK_object *mapKeen)
 {
-	if (kw_launchSpotX < 0)
+	if (ck_inputFrame.yDirection != IN_motion_Up || kw_launchSpotX < 0)
 		return;
 	if (mapKeen->clipRects.tileX2 < kw_launchSpotX - KW_LAUNCH_RANGE || mapKeen->clipRects.tileX1 > kw_launchSpotX + KW_LAUNCH_RANGE)
 		return;
@@ -1264,7 +1359,7 @@ static void KW_ShowCard(const char *text)
 	US_CPrint(text);
 	VH_UpdateScreen();
 	KW_WaitForButtonsUp();
-	if (!getenv("KW_AUTOFINALE")) // (the scripted test of the ending has nobody to press a key)
+	if (!kw_cardsOff && !getenv("KW_AUTOFINALE")) // developer runs have nobody to press a key
 		IN_WaitButton();
 	KW_WaitForButtonsUp();
 }
@@ -1404,6 +1499,11 @@ static void KW_PlayWorldStory(void)
 	if (!chart && !*CK_STRING(ck_str_storyText))
 		return;
 	printf("KW_AUTOSTORY: the story of %s\n", kw_worldDefs[kw_currentWorld].id);
+	if (kw_currentWorld==KW_ALPHAMATIC)
+	{
+		AL_PlayOpening();
+		return;
+	}
 	KW_StopVoice();
 	SD_MusicOff();
 	SD_FadeAdLibVolume(256, 0);
@@ -1434,6 +1534,9 @@ static void KW_PlayWorldStory(void)
 
 // In a level (Keen came to a world some other way than by choosing it at
 // the ship's controls): the story, then back to the level.
+extern CK_object *ck_scoreBoxObj;
+void CK_UpdateScoreBox(CK_object *scorebox);
+
 static void KW_ShowWorldStory(void)
 {
 	if (!KW_StoryIsDue(kw_currentWorld))
@@ -1602,12 +1705,12 @@ static bool KW_AskCard(const char *text)
 // The story's order: the Mortimer line, Keen 4 to Keen 9, and the journey
 // home that follows it (The Eight Accumulators), each opened by saving the
 // one before. Off the line, a world is bound to the time of one world of it
-// or to none: the Shikadi's other works (the Shikadi Station, the
-// Omegamatic II, Address Unknown) open with the Omegamatic saved; Krisle,
-// Gnosticus Pi and Meurglys III are stories of their own, open from the
-// start. Worlds that are not installed are passed over. A world Keen has
-// been to stays open.
-static const int kw_chronicleLine[] = {KW_KEEN4, KW_KEEN5, KW_KEEN6, KW_KEEN7, KW_KEEN8, KW_KEEN9, KW_KEEN95};
+// or to none. Krisle, the Omegamatic II and Address Unknown follow Keen 5.
+// Spot's rescue on the Shikadi Station waits until the journey home, and
+// Alphamatic requires both that journey and Krisle. Gnosticus Pi and
+// Meurglys III remain free. Missing worlds are passed over; known courses
+// and places Keen has visited stay open. See STORY_SEAMS.md in the workspace.
+static const int kw_chronicleLine[] = {KW_KEEN4, KW_KEEN5, KW_KEEN6, KW_KEEN7, KW_KEEN8, KW_KEEN9, KW_KEEN95, KW_SUBURB};
 #define KW_CHRONICLE_LINE ((int)(sizeof(kw_chronicleLine) / sizeof(kw_chronicleLine[0])))
 
 static bool KW_WorldIsSaved(int world)
@@ -1615,16 +1718,43 @@ static bool KW_WorldIsSaved(int world)
 	return kw_worlds[world].completed;
 }
 
-// The world that must be saved before this one opens (KW_NO_WORLD: none).
+static int KW_LastChronicleWorld(void)
+{
+	// Later Earth chapters do not become new requirements of side adventures.
+	int end=0;
+	while(end<KW_CHRONICLE_LINE-1 && kw_chronicleLine[end]!=KW_KEEN95) ++end;
+	for (int i = end; i >= 0; --i)
+		if (KW_IsWorldPresent(kw_chronicleLine[i])) return kw_chronicleLine[i];
+	return KW_NO_WORLD;
+}
+
+static void KW_KeepLegacyCourses(const KW_WorldState *worlds, const bool *known)
+{
+	// These three courses moved. Preserve even unvisited courses in old
+	// Chronicles, without opening worlds added after that save was made.
+	if (known[KW_AREALM]) kw_courseTold[KW_AREALM] = 1;
+	if (known[KW_OSI] && (!KW_IsWorldPresent(KW_KEEN5) || worlds[KW_KEEN5].completed))
+		kw_courseTold[KW_OSI] = 1;
+	if (known[KW_ALPHAMATIC] && (!KW_IsWorldPresent(KW_AREALM) || worlds[KW_AREALM].completed))
+		kw_courseTold[KW_ALPHAMATIC] = 1;
+}
+
+// The next prerequisite (KW_NO_WORLD: none). When all are saved, retain a
+// prerequisite so the ship still announces a newly learned course.
 static int KW_ChronicleKey(int world)
 {
 	switch (world)
 	{
 	case KW_OSI:
+		return KW_LastChronicleWorld();
 	case KW_CK55:
 	case KW_ASYLUM:
-		return KW_IsWorldPresent(KW_KEEN5) ? KW_KEEN5 : KW_NO_WORLD;
 	case KW_AREALM:
+		return KW_IsWorldPresent(KW_KEEN5) ? KW_KEEN5 : KW_NO_WORLD;
+	case KW_ALPHAMATIC:
+		if (KW_IsWorldPresent(KW_AREALM) && !KW_WorldIsSaved(KW_AREALM)) return KW_AREALM;
+		return KW_LastChronicleWorld() != KW_NO_WORLD ? KW_LastChronicleWorld() :
+			KW_IsWorldPresent(KW_AREALM) ? KW_AREALM : KW_NO_WORLD;
 	case KW_FITF:
 	case KW_BOUNTY:
 		return KW_NO_WORLD;
@@ -1642,7 +1772,8 @@ static int KW_ChronicleKey(int world)
 
 static bool KW_CourseIsOpen(int world)
 {
-	if (!kw_chronicle || !KW_IsPlanet(world) || kw_worlds[world].visited || world == kw_boardedFrom)
+	if (!kw_chronicle || !KW_IsPlanet(world) || kw_worlds[world].visited ||
+		kw_worlds[world].completed || kw_courseTold[world] || world == kw_boardedFrom)
 		return true;
 	int key = KW_ChronicleKey(world);
 	return key == KW_NO_WORLD || KW_WorldIsSaved(key);
@@ -1794,12 +1925,84 @@ static void KW_ShowAboutKeenWorlds(void)
 	KW_ShowCards(text);
 }
 
+typedef struct KW_FlightEntry {int world,column,row,step;} KW_FlightEntry;
+static const struct KW_FlightGroup
+{
+	const char *title;
+	int column,count,firstStep,worlds[3];
+} kw_flightGroups[]={
+	{"Goodbye, Galaxy!",0,3,1,{KW_KEEN4,KW_KEEN5,KW_KEEN6}},
+	{"The Universe Is Toast!",0,3,4,{KW_KEEN7,KW_KEEN8,KW_KEEN9}},
+	{"Journey home",0,2,7,{KW_KEEN95,KW_SUBURB}},
+	{NULL,0,1,0,{KW_MENU_CREDITS}},
+	{"Independent trips",1,2,0,{KW_FITF,KW_BOUNTY}},
+	{"Atroxian story",1,2,1,{KW_AREALM,KW_ALPHAMATIC}},
+	{"More levels",1,2,0,{KW_CK55,KW_ASYLUM}},
+	{"Station revisit",1,1,0,{KW_OSI}},
+};
+
+static int KW_FlightLayout(KW_FlightEntry *entries,int *rows)
+{
+	int count=0;rows[0]=rows[1]=0;
+	for(unsigned g=0;g<sizeof(kw_flightGroups)/sizeof(kw_flightGroups[0]);++g)
+	{
+		const struct KW_FlightGroup *group=&kw_flightGroups[g];
+		if(group->title) ++rows[group->column];
+		for(int i=0;i<group->count;++i)
+			entries[count++]=(KW_FlightEntry){group->worlds[i],group->column,rows[group->column]++,group->firstStep?group->firstStep+i:0};
+	}
+	return count;
+}
+
+static int KW_FlightMove(const KW_FlightEntry *entries,int count,int selection,int visibleRows,
+	const int *top,IN_ScanCode scan,int dx,int dy)
+{
+	KW_FlightEntry current=entries[selection];
+	int column=current.column,target=current.row,direction=0;
+	if(scan==IN_SC_Home) target=-1000;
+	else if(scan==IN_SC_End) target=1000;
+	else if(scan==IN_SC_PgUp) {target-=visibleRows;direction=-1;}
+	else if(scan==IN_SC_PgDown) {target+=visibleRows;direction=1;}
+	else if(scan==IN_SC_UpArrow || dy==IN_motion_Up) {--target;direction=-1;}
+	else if(scan==IN_SC_DownArrow || dy==IN_motion_Down) {++target;direction=1;}
+	else if(scan==IN_SC_LeftArrow || dx==IN_motion_Left) column=0;
+	else if(scan==IN_SC_RightArrow || dx==IN_motion_Right) column=1;
+	else return selection;
+	if(column!=current.column) target=current.row-top[current.column]+top[column];
+	int best=selection,distance=10000;
+	for(int i=0;i<count;++i)
+	{
+		if(entries[i].column!=column) continue;
+		if(direction<0 && entries[i].row>=current.row) continue;
+		if(direction>0 && entries[i].row<=current.row) continue;
+		int delta=abs(entries[i].row-target);
+		if(delta<distance) {best=i;distance=delta;}
+	}
+	return best;
+}
+
+static void KW_FlightRelationship(int world,char *text,size_t size)
+{
+	for(int i=0;i<KW_CHRONICLE_LINE;++i) if(kw_chronicleLine[i]==world)
+	{
+		if(i+1<KW_CHRONICLE_LINE) snprintf(text,size,"Main story %d/%d. Next: %s",i+1,KW_CHRONICLE_LINE,KW_WorldName(kw_chronicleLine[i+1]));
+		else snprintf(text,size,"Main story %d/%d. Home after Aspermontis.",i+1,KW_CHRONICLE_LINE);
+		return;
+	}
+	const char *relationship="Story order on the left; side trips on the right.";
+	switch(world)
+	{
+	case KW_FITF:case KW_BOUNTY:relationship="Independent adventure. Choose any time.";break;
+	case KW_AREALM:relationship="After The Omegamatic. Next: The Alphamatic.";break;
+	case KW_ALPHAMATIC:relationship="After BOTH Krisle and Aspermontis.";break;
+	case KW_CK55:case KW_ASYLUM:relationship="Optional levels after The Omegamatic.";break;
+	case KW_OSI:relationship="A separate return trip after Aspermontis.";break;
+	}
+	CK_Cross_strscpy(text,relationship,size);
+}
+
 static int KW_TravelMenu(void)
 {
-	int lineY[KW_NUM_WORLDS];
-	int entries[KW_NUM_WORLDS];
-	int numEntries = 0;
-
 	if (KW_IsStranded())
 	{
 		SD_PlaySound(CK_SOUNDNUM(SOUND_NEEDKEYCARD));
@@ -1821,177 +2024,158 @@ static int KW_TravelMenu(void)
 		return (w >= 0 && KW_IsWorldPresent(w)) ? w : KW_NO_WORLD;
 	}
 
-	// The worlds, in two columns of two groups each. The world the ship
-	// stands on is in the list too: choosing it tells about it.
-	static const struct
-	{
-		const char *title;
-		int column, count, worlds[4];
-	} groups[] = {
-		{"Goodbye, Galaxy!", 0, 3, {KW_KEEN4, KW_KEEN5, KW_KEEN6}},
-		{"The Universe Is Toast!", 0, 3, {KW_KEEN7, KW_KEEN8, KW_KEEN9}},
-		{NULL, 0, 1, {KW_MENU_CREDITS}}, // (no heading: a line of its own under the left column)
-		{"Other adventures", 1, 4, {KW_FITF, KW_AREALM, KW_OSI, KW_BOUNTY}},
-		{"More levels", 1, 3, {KW_KEEN95, KW_CK55, KW_ASYLUM}},
-	};
-	enum { ROW = 12, NORMAL = 15 /* print colours: the screen's is 15 minus these */, HEADING = 11, GREY = 8, SAVED = 13, HERE = 14 };
+	// Main story and side trips retain their groups; each column scrolls.
+	KW_FlightEntry entries[KW_NUM_WORLDS+1];int rows[2];
+	const int COUNT=KW_FlightLayout(entries,rows);
+	enum { ROW = 12, VISIBLE = 6, NORMAL = 15, HEADING = 11, GREY = 8, SAVED = 13, HERE = 14 };
 	int here = kw_currentWorld == KW_SHIP ? kw_boardedFrom : kw_currentWorld;
-	int entryX[KW_NUM_WORLDS], entryCol[KW_NUM_WORLDS];
-
-	SD_PlaySound(CK_SOUNDNUM(SOUND_UNKNOWN12));
-	VL_FixRefreshBuffer();
-	US_CenterWindow(38, 21);
-	int winX = US_GetWindowX(), winW = US_GetWindowW(), colW = winW / 2 - 8;
+	int sel = 0, top[2] = {0,0}, result = KW_NO_WORLD;
+	for (int i = 0; i < COUNT; ++i) if (entries[i].world == here) sel = i;
+	if (getenv("KW_AUTOMENUITEM")) sel = atoi(getenv("KW_AUTOMENUITEM"));
+	sel = CK_Cross_max(0, CK_Cross_min(COUNT-1, sel));
+	bool allShots = getenv("KW_AUTOMENUALL") != NULL;
+	if (allShots) sel = 0;
 	int8_t oldColour = US_GetPrintColour();
-	US_SetPrintY(US_GetPrintY() + 2);
-	US_CPrint("Bean-with-Bacon Megarocket: fly to");
-	int top = US_GetPrintY() + 4, colY[2] = {top, top};
-	for (size_t g = 0; g < sizeof(groups) / sizeof(groups[0]); ++g)
+	uint16_t oldFont=US_GetPrintFont();
+	CA_CacheGrChunk(CK_CHUNKNUM(FON_WATCHFONT));
+	SD_PlaySound(CK_SOUNDNUM(SOUND_UNKNOWN12));
+	KW_WaitForButtonsUp();
+	for (;;)
 	{
-		int col = groups[g].column, x = winX + 8 + col * (winW / 2);
-		if (colY[col] != top)
-			colY[col] += 6;
-		if (groups[g].title)
+		int column=entries[sel].column;
+		if(entries[sel].row<top[column]) top[column]=entries[sel].row;
+		if(entries[sel].row>=top[column]+VISIBLE) top[column]=entries[sel].row-VISIBLE+1;
+		// Redraw the complete card, including its frame. Never erase a
+		// moving cursor with white paint over the border or adjacent text.
+		VL_FixRefreshBuffer();
+		US_CenterWindow(38, 22);
+		int x = US_GetWindowX(), y = US_GetWindowY(), width = US_GetWindowW();
+		US_SetPrintColour(NORMAL);
+		US_SetPrintY(y + 2); US_CPrint("Bean-with-Bacon Megarocket");
+		US_CPrint("FLIGHT CHART");
+		int listY = y + 40;
+		int columnWidth=(width-24)/2;
+		VHB_VLine(y+26,listY+VISIBLE*ROW-3,x+width/2,7);
+		US_SetPrintFont(1);
+		US_SetPrintColour(NORMAL);
+		US_SetPrintX(x+14);US_SetPrintY(y+26);US_Print("MAIN STORY - IN ORDER");
+		US_SetPrintX(x+14+columnWidth+8);US_SetPrintY(y+26);US_Print("OTHER ADVENTURES");
+		int headingRow[2]={0,0};
+		for(unsigned g=0;g<sizeof(kw_flightGroups)/sizeof(kw_flightGroups[0]);++g)
 		{
-			US_SetPrintColour(HEADING);
-			US_SetPrintX(x);
-			US_SetPrintY(colY[col]);
-			US_Print(groups[g].title);
-			colY[col] += ROW;
-		}
-		for (int i = 0; i < groups[g].count; ++i)
-		{
-			int w = groups[g].worlds[i];
-			bool open = w == KW_MENU_CREDITS || (KW_IsWorldPresent(w) && KW_CourseIsOpen(w));
-			US_SetPrintColour(w == here ? HERE : !open ? GREY : (w >= 0 && KW_WorldIsSaved(w)) ? SAVED : NORMAL);
-			if (w == KW_MENU_CREDITS)
+			const struct KW_FlightGroup *group=&kw_flightGroups[g];int col=group->column;
+			if(group->title)
 			{
-				// its own bar of colour, inside where the selection box goes,
-				// so that it is not taken for one more world
-				VHB_Bar(x + 6, colY[col] - 1, winW / 2 - 12, 10, 14);
-				US_SetPrintColour(NORMAL); // (on the bar's yellow these letters come out blue)
+				int row=headingRow[col]++;
+				if(row>=top[col] && row<top[col]+VISIBLE)
+				{
+					US_SetPrintColour(HEADING);US_SetPrintX(x+14+col*(columnWidth+8));
+					US_SetPrintY(listY+(row-top[col])*ROW);US_Print(group->title);
+				}
 			}
-			US_SetPrintX(x + 8);
-			US_SetPrintY(colY[col]);
-			US_Print(w == KW_MENU_CREDITS ? "About Keen Worlds" : kw_worldDefs[w].name);
-			entries[numEntries] = w;
-			entryX[numEntries] = x + 4;
-			entryCol[numEntries] = col;
-			lineY[numEntries++] = colY[col] - 2;
-			colY[col] += ROW;
+			headingRow[col]+=group->count;
 		}
+		for (int index = 0; index < COUNT; ++index)
+		{
+			KW_FlightEntry entry=entries[index];int col=entry.column,world=entry.world;
+			if(entry.row<top[col] || entry.row>=top[col]+VISIBLE) continue;
+			bool available = world == KW_MENU_CREDITS ||
+				(KW_IsWorldPresent(world) && KW_CourseIsOpen(world));
+			US_SetPrintColour(world == here ? HERE : !available ? GREY :
+				(world >= 0 && KW_WorldIsSaved(world)) ? SAVED : NORMAL);
+			US_SetPrintX(x+14+col*(columnWidth+8)); US_SetPrintY(listY+(entry.row-top[col])*ROW);
+			char name[100];const char *label=world==KW_MENU_CREDITS?"About Keen Worlds":kw_worldDefs[world].name;
+			if(entry.step) snprintf(name,sizeof(name),"%d. %s",entry.step,label);
+			else CK_Cross_strscpy(name,label,sizeof(name));
+			if(allShots)
+			{
+				uint16_t textWidth,textHeight;VH_MeasurePropString(name,&textWidth,&textHeight,US_GetPrintFont());
+				if(textWidth>columnWidth-12 || textHeight>ROW-2) QuitF("Flight chart: destination does not fit: %s",name);
+			}
+			US_Print(name);
+		}
+		US_SetPrintFont(oldFont);
+		int cursorX=x+8+column*(columnWidth+8);
+		int cursorY = listY + (entries[sel].row-top[column]) * ROW - 2;
+		int cursorColour = ((SD_GetTimeCount() >> 4) & 1) ? 12 : 1;
+		VHB_HLine(cursorX,cursorX+columnWidth-1,cursorY,cursorColour);
+		VHB_HLine(cursorX,cursorX+columnWidth-1,cursorY+11,cursorColour);
+		VHB_VLine(cursorY,cursorY+11,cursorX,cursorColour);
+		VHB_VLine(cursorY,cursorY+11,cursorX+columnWidth-1,cursorColour);
+		US_SetPrintColour(NORMAL);
+		US_SetPrintFont(1);
+		for(int col=0;col<2;++col)
+		{
+			char more[40];snprintf(more,sizeof(more),"%s More %s %s",top[col]?"^":" ",col?"trips":"story",top[col]+VISIBLE<rows[col]?"v":" ");
+			US_SetPrintX(x+14+col*(columnWidth+8));US_SetPrintY(listY+VISIBLE*ROW+4);US_Print(more);
+		}
+		char relationship[120];KW_FlightRelationship(entries[sel].world,relationship,sizeof(relationship));
+		US_SetPrintY(y+128);US_CPrint(relationship);US_SetPrintFont(oldFont);
+		int footY = y + 140;
+		VHB_HLine(x+4,x+width-5,footY-3,8);
+		int world = entries[sel].world;
+		char title[80],status[100];
+		CK_Cross_strscpy(title,world==KW_MENU_CREDITS?"Commander Keen: Worlds":kw_worldDefs[world].title,sizeof(title));
+		for (char *c=title;*c;++c) if (*c=='\n') *c=' ';
+		if (world==KW_MENU_CREDITS) snprintf(status,sizeof(status),"Who put this galaxy together.");
+		else if (world==here) snprintf(status,sizeof(status),"Keen is here. Choose to read about it.");
+		else if (!KW_IsWorldPresent(world)) snprintf(status,sizeof(status),"Not installed. Choose for instructions.");
+		else if (!KW_CourseIsOpen(world)) snprintf(status,sizeof(status),"The Chronicle: save %s first.",kw_worldDefs[KW_ChronicleKey(world)].name);
+		else if (KW_WorldIsSaved(world)) snprintf(status,sizeof(status),"Saved.");
+		else
+		{
+			int done=0;
+			for(int level=1;level<CK_LEVELS_TRACKED;++level) if(kw_worlds[world].levelsDone[level]) ++done;
+			if(done) snprintf(status,sizeof(status),"Been here: %d level%s done. Not saved yet.",done,done==1?"":"s");
+			else snprintf(status,sizeof(status),kw_worlds[world].visited?"Keen has been here. Not saved yet.":"Keen has not been here yet.");
+		}
+		US_SetPrintY(footY);US_CPrint(title);US_CPrint(status);
+		US_SetPrintY(y+164);US_CPrint("Arrows: move  Enter: choose  Esc: back");
+		VH_UpdateScreen();
+		if (allShots || getenv("KW_AUTOMENU"))
+		{
+			char path[600];
+			if (allShots) snprintf(path,sizeof(path),"%s/flight-%02d.ppm",getenv("KW_AUTOMENUALL"),sel);
+			else CK_Cross_strscpy(path,getenv("KW_AUTOMENU"),sizeof(path));
+			KW_DumpScreen(path);
+			printf("KW_AUTOMENU: grouped flight chart, item %d/%d, world %d, column %d, row %d\n",sel+1,COUNT,world,column,entries[sel].row);
+			if(allShots && sel+1<COUNT)
+			{
+				int next=KW_FlightMove(entries,COUNT,sel,VISIBLE,top,IN_SC_DownArrow,0,0);
+				if(entries[sel+1].column!=column)
+					next=KW_FlightMove(entries,COUNT,KW_FlightMove(entries,COUNT,sel,VISIBLE,top,IN_SC_RightArrow,0,0),VISIBLE,top,IN_SC_Home,0,0);
+				if(next!=sel+1) Quit("Flight chart: arrow navigation cannot reach the next destination");
+				sel=next;continue;
+			}
+			if(allShots)
+			{
+				// Return across every row, exercising Up and both column edges.
+				for(int back=sel;back>0;)
+				{
+					int previous=KW_FlightMove(entries,COUNT,back,VISIBLE,top,IN_SC_UpArrow,0,0);
+					if(entries[back-1].column!=entries[back].column)
+						previous=KW_FlightMove(entries,COUNT,KW_FlightMove(entries,COUNT,back,VISIBLE,top,IN_SC_LeftArrow,0,0),VISIBLE,top,IN_SC_End,0,0);
+					if(previous!=back-1) Quit("Flight chart: reverse arrow navigation skips a destination");
+					back=previous;
+				}
+			}
+			US_SetPrintColour(oldColour);return KW_NO_WORLD;
+		}
+		IN_PumpEvents();
+		IN_ScanCode scan=IN_GetLastScan();IN_ReadControls(0,&ck_inputFrame);
+		if(scan==IN_SC_Escape || ck_inputFrame.button3) break;
+		if(ck_inputFrame.jump || ck_inputFrame.pogo || scan==IN_SC_Enter || scan==IN_SC_Space)
+		{result=entries[sel].world;break;}
+		int next=KW_FlightMove(entries,COUNT,sel,VISIBLE,top,scan,ck_inputFrame.xDirection,ck_inputFrame.yDirection);
+		bool move=next!=sel;sel=next;
+		IN_SetLastScan(IN_SC_None);
+		if(move)
+			while(ck_inputFrame.yDirection!=IN_motion_None || ck_inputFrame.xDirection!=IN_motion_None)
+			{IN_PumpEvents();IN_ReadControls(0,&ck_inputFrame);VL_Present();}
+		US_SetPrintColour(oldColour);
+		VL_DelayTics(2);
 	}
 	US_SetPrintColour(oldColour);
-	int footY = (colY[0] > colY[1] ? colY[0] : colY[1]) + 4;
-	VHB_HLine(winX + 4, winX + winW - 4, footY - 3, 8);
-
-	KW_WaitForButtonsUp();
-
-	// Same blinking selection box as the "Try Again" menu; under the list,
-	// the game the chosen world is, and how things stand with it.
-	int sel = 0, shown = -1, result = KW_NO_WORLD;
-	for (int i = 0; i < numEntries; ++i)
-		if (entries[i] == here)
-			sel = i;
-	while (true)
-	{
-		IN_PumpEvents();
-		if (shown != sel)
-		{
-			char title[80], status[80];
-			int w = entries[sel];
-			shown = sel;
-			CK_Cross_strscpy(title, w == KW_MENU_CREDITS ? "Commander Keen: Worlds" : kw_worldDefs[w].title, sizeof(title));
-			for (char *c = title; *c; ++c)
-				if (*c == '\n')
-					*c = ' ';
-			if (w == KW_MENU_CREDITS)
-				snprintf(status, sizeof(status), "Who put this galaxy together.");
-			else if (w == here)
-				snprintf(status, sizeof(status), "Keen is here. Choose it to read about it.");
-			else if (!KW_IsWorldPresent(w))
-				snprintf(status, sizeof(status), "Not installed. Choose it to see how to get it.");
-			else if (!KW_CourseIsOpen(w))
-				snprintf(status, sizeof(status), "The Chronicle: save %s first.", kw_worldDefs[KW_ChronicleKey(w)].name);
-			else if (KW_WorldIsSaved(w))
-				snprintf(status, sizeof(status), "Saved.");
-			else
-			{
-				// Been here, but not saved it: said with how far he got.
-				// (Told by the levels done as well as by the record's own
-				// mark, which is only set when Keen leaves a world.)
-				int done = 0;
-				for (int level = 1; level < CK_LEVELS_TRACKED; ++level)
-					if (kw_worlds[w].levelsDone[level])
-						done++;
-				if (done)
-					snprintf(status, sizeof(status), "Been here: %d level%s done. Not saved yet.", done, done == 1 ? "" : "s");
-				else if (kw_worlds[w].visited)
-					snprintf(status, sizeof(status), "Keen has been here. Not saved yet.");
-				else
-					snprintf(status, sizeof(status), "Keen has not been here yet.");
-			}
-			VHB_Bar(winX, footY, winW, 22, 15);
-			US_SetPrintY(footY);
-			US_CPrint(title);
-			US_CPrint(status);
-			// Developer tool: KW_AUTOMENU=file.ppm saves a picture of the menu and leaves it
-			if (getenv("KW_AUTOMENU"))
-			{
-				VH_UpdateScreen();
-				KW_DumpScreen(getenv("KW_AUTOMENU"));
-				printf("KW_AUTOMENU: the travel menu, on %s\n", w >= 0 ? kw_worldDefs[w].id : "about");
-				US_SetPrintColour(oldColour);
-				return KW_NO_WORLD;
-			}
-		}
-		int y = lineY[sel], x1 = entryX[sel], x2 = entryX[sel] + colW;
-		int clr = ((SD_GetTimeCount() >> 4) & 1) ? 12 : 1;
-		for (int pass = 0; pass < 2; ++pass)
-		{
-			VHB_HLine(x1, x2, y, clr);
-			VHB_HLine(x1, x2, y + 11, clr);
-			VHB_VLine(y, y + 11, x1, clr);
-			VHB_VLine(y, y + 11, x2, clr);
-			if (pass == 0)
-				VH_UpdateScreen();
-			clr = 15; // Erase it again for the next frame.
-		}
-
-		IN_ScanCode scan = IN_GetLastScan();
-		IN_ReadControls(0, &ck_inputFrame);
-		if (scan == IN_SC_Escape)
-			break;
-		if (ck_inputFrame.jump || ck_inputFrame.pogo || scan == IN_SC_Enter || scan == IN_SC_Space)
-		{
-			result = entries[sel];
-			break;
-		}
-		int dy = (ck_inputFrame.yDirection == -1 || scan == IN_SC_UpArrow) ? -1 :
-			(ck_inputFrame.yDirection == 1 || scan == IN_SC_DownArrow) ? 1 : 0;
-		int dx = (ck_inputFrame.xDirection == -1 || scan == IN_SC_LeftArrow) ? -1 :
-			(ck_inputFrame.xDirection == 1 || scan == IN_SC_RightArrow) ? 1 : 0;
-		if (dy && sel + dy >= 0 && sel + dy < numEntries && entryCol[sel + dy] == entryCol[sel])
-			sel += dy;
-		else if (dx && entryCol[sel] != (dx > 0))
-		{
-			// across to the other column: the line nearest in height
-			int best = -1;
-			for (int i = 0; i < numEntries; ++i)
-				if (entryCol[i] != entryCol[sel] && (best < 0 || abs(lineY[i] - lineY[sel]) < abs(lineY[best] - lineY[sel])))
-					best = i;
-			if (best >= 0)
-				sel = best;
-		}
-		if (scan != IN_SC_None)
-			IN_SetLastScan(IN_SC_None);
-		// Don't race through the list while a direction is held.
-		while (ck_inputFrame.yDirection != 0 || ck_inputFrame.xDirection != 0)
-		{
-			IN_PumpEvents();
-			IN_ReadControls(0, &ck_inputFrame);
-		}
-	}
 
 	KW_WaitForButtonsUp();
 	if (result == KW_MENU_CREDITS)
@@ -2077,6 +2261,7 @@ static void KW_DebugEnding(void)
 #define KW_SHIP_WAY_AFT 0x7703  // walking here takes Keen to the exit room
 #define KW_SHIP_WAY_FORE 0x7704 // ... and here, back to the flight room
 #define KW_SHIP_BED 0x7706      // the bed: "up" and Keen falls asleep (Keen Dreams)
+#define KW_SHIP_ARCADE 0x7707   // optional earlier adventures, never flight destinations
 #define KW_SHIP_AMMO 0x7705     // the box of stunners: "up" tops Keen's shots up
 #define KW_SHIP_AMMO_SHOTS 20
 
@@ -2107,6 +2292,7 @@ static void KW_AnnounceLanding(int world)
 // starts in, and steps out through the hatch.
 void KW_BeginInShip(void)
 {
+	if (MARS_IsActive()) return;
 	bool tool = (us_tedLevel || getenv("KW_AUTOLEVEL")) && !getenv("KW_AUTOSHIP");
 	if (tool || kw_currentWorld == KW_SHIP || !KW_IsWorldPresent(KW_SHIP))
 		return;
@@ -2164,6 +2350,115 @@ static void KW_SetTally(const KW_Tally *t)
 	ck_gameState.numShots = t->shots;
 }
 
+static KW_ArcadeTally KW_LiveArcadeTally(void)
+{
+	KW_ArcadeTally t={KW_LiveTally(),ck_gameState.numCentilife,ck_gameState.difficulty};
+	return t;
+}
+
+static void KW_SetArcadeTally(const KW_ArcadeTally *t)
+{
+	KW_SetTally(&t->tally);
+	ck_gameState.numCentilife=t->centilife;
+	ck_gameState.difficulty=t->difficulty;
+}
+
+static void KW_ArcadeLeaving(int from)
+{
+	if (from!=KW_MARS || !kw_marsLinked) return;
+	kw_marsTally=KW_LiveArcadeTally();
+	KW_SetArcadeTally(&kw_journeyTally);
+	kw_arcadeCabinDue=kw_arcadeCabinX>0 && kw_arcadeCabinY>0;
+	kw_shipUpUsed=true;
+}
+
+static void KW_ArcadeArriving(int to)
+{
+	if (to!=KW_MARS) return;
+	kw_journeyTally=KW_LiveArcadeTally();
+	if (!kw_worlds[KW_MARS].visited)
+		kw_marsTally=(KW_ArcadeTally){{0,20000,3,0},0,D_Normal};
+	kw_marsLinked=true;
+	KW_SetArcadeTally(&kw_marsTally);
+}
+
+static void KW_ArcadeFadeOut(void)
+{
+	kw_arcadeFadeIn=!kw_cardsOff;
+	KW_LinesOver();
+	SD_MusicOff();
+	SD_StopSound();
+	if (!kw_cardsOff) VL_FadeToBlack();
+}
+
+bool KW_FadeArcadeIn(void)
+{
+	if (!kw_arcadeFadeIn) return false;
+	kw_arcadeFadeIn=false;
+	VL_FadeFromBlack();
+	return true;
+}
+
+bool KW_BeginArcade(void)
+{
+ if (kw_currentWorld!=KW_SHIP || !ck_keenObj || !KW_IsWorldPresent(KW_MARS)) return false;
+ kw_arcadeCabinX=ck_keenObj->posX; kw_arcadeCabinY=ck_keenObj->posY;
+ kw_arcadeCabinDirection=ck_keenObj->xDirection;
+ KW_ArcadeFadeOut();
+ KW_RequestWorld(KW_MARS);
+ return true;
+}
+
+bool KW_CanReturnToCabin(void)
+{
+	return (kw_currentWorld==KW_MARS || kw_currentWorld==KW_DREAM) && KW_IsWorldPresent(KW_SHIP);
+}
+
+void KW_RequestCabinReturn(void) { kw_cabinReturnRequested=KW_CanReturnToCabin(); }
+
+void KW_FinishMenuActions(void)
+{
+	if (!kw_cabinReturnRequested) return;
+	kw_cabinReturnRequested=false;
+	if (kw_currentWorld==KW_DREAM) { KW_WakeUp(); return; }
+	if (!KW_CanReturnToCabin()) return;
+	// A pre-integration Mars save has no suspended journey to restore.
+	if (!kw_marsLinked)
+	{
+		kw_journeyTally=(KW_ArcadeTally){{0,20000,3,5},0,D_Normal};
+		kw_marsLinked=true;
+		kw_arcadeCabinX=kw_arcadeCabinY=0;
+	}
+	RF_ForceRefresh(); RF_Refresh();
+	KW_ArcadeFadeOut();
+	KW_RequestWorld(KW_SHIP);
+}
+
+bool KW_RestartArcade(int difficulty)
+{
+	if (!MARS_IsActive() || !kw_marsLinked) return false;
+	memset(&kw_worlds[KW_MARS],0,sizeof(kw_worlds[KW_MARS]));
+	KW_LoadState(&kw_worlds[KW_MARS]);
+	kw_marsTally=(KW_ArcadeTally){{0,20000,3,0},0,difficulty};
+	KW_SetArcadeTally(&kw_marsTally);
+	ck_gameState.currentLevel=0;
+	ck_gameState.levelState=LS_Playing;
+	return true;
+}
+
+bool KW_ArcadeOver(bool won)
+{
+	if (!MARS_IsActive() || !kw_marsLinked) return false;
+	KW_ArcadeFadeOut();
+	KW_SwitchWorld(KW_SHIP);
+	bool completed=won || kw_worlds[KW_MARS].completed;
+	memset(&kw_worlds[KW_MARS],0,sizeof(kw_worlds[KW_MARS]));
+	kw_worlds[KW_MARS].completed=completed;
+	kw_marsTally=(KW_ArcadeTally){{0,20000,3,0},0,D_Normal};
+	ck_gameState.levelState=LS_Playing;
+	return true;
+}
+
 // A dream from its beginning (Keen Dreams' NewGame).
 static void KW_NewDream(void)
 {
@@ -2196,6 +2491,29 @@ static void KW_DreamArriving(int to)
 	kw_placeArrivalAtShip = false;
 }
 
+static bool kw_dreamFadeIn;
+
+bool KW_FadeDreamIn(void)
+{
+	if (!kw_dreamFadeIn) return false;
+	kw_dreamFadeIn = false;
+	VL_DelayTics(28);
+	VL_FadeFromBlackTimed(14);
+	return true;
+}
+
+static void KW_DreamFadeOut(void)
+{
+	kw_dreamFadeIn = !kw_cardsOff;
+	if (!kw_cardsOff)
+	{
+		KW_LinesOver();
+		KW_FadeMusicOut();
+		VL_FadeToBlackTimed(14);
+		VL_DelayTics(28);
+	}
+}
+
 static void KW_Dream(void)
 {
 	if (!KW_IsWorldPresent(KW_DREAM))
@@ -2210,10 +2528,8 @@ static void KW_Dream(void)
 	{
 		KW_ShowCards(kw_worlds[KW_DREAM].visited ? "Keen lies down on his bunk.\nJust for a minute..." :
 			"Keen lies down on his bunk.\nJust for a minute...\n\n\"Billy! No dessert until you\neat your vegetables!\"");
-		int tics = KW_FadeMusicOut();
-		VL_FadeToBlack();
-		VL_DelayTics(tics);
 	}
+	KW_DreamFadeOut();
 	KW_MusicQuiet();
 	KW_RequestWorld(KW_DREAM);
 }
@@ -2224,6 +2540,7 @@ static void KW_WakeUp(void)
 	if (kw_currentWorld != KW_DREAM)
 		return;
 	printf("KW_AUTODREAM: Keen wakes up\n");
+	KW_DreamFadeOut();
 	kw_wakeInBed = true;
 	kw_shipUpUsed = true;
 	kw_dreamEnded = 1;
@@ -2238,6 +2555,7 @@ bool KW_DreamOver(bool won)
 	if (kw_currentWorld != KW_DREAM)
 		return false;
 	printf("KW_AUTODREAM: the dream is over (%s)\n", won ? "won" : "lost");
+	KW_DreamFadeOut();
 	kw_wakeInBed = true;
 	KW_SwitchWorld(KW_SHIP);
 	bool completed = won || kw_worlds[KW_DREAM].completed;
@@ -2304,6 +2622,74 @@ static void KW_ShipChangeRoom(uint16_t from, int fromY)
 			}
 }
 
+// The cabinet is outside the world registry: its games never affect the
+// Chronicle or shared inventory. Original episodes run in a native companion.
+static void KW_ArcadeOriginal(int episode)
+{
+	KW_ArcadeStatus status = KW_PlayArcade(episode);
+	char text[256];
+	if (status == KW_ARCADE_NO_ENGINE)
+		KW_ShowCards("The arcade needs its\nnative game player.\n\nInstall the complete\nKeen Worlds download\nand try again.");
+	else if (status == KW_ARCADE_NO_DATA)
+	{
+		snprintf(text, sizeof(text), "Commander Keen %d\nBy id Software\n\nNot installed. Unpack your\noriginal v1.31 game into\narcade/keen%d, including\nKEEN%d.EXE and all .CK%d files.\n\nYour arcade saves stay\nseparate from this journey.", episode, episode, episode, episode);
+		KW_ShowCards(text);
+	}
+	else if (status == KW_ARCADE_WRONG_VERSION)
+		KW_ShowCards("This arcade game needs\nthe original v1.31 files.\n\nSee the arcade installation\nguide for the supported\nversion.");
+	else if (status == KW_ARCADE_FAILED)
+		KW_ShowCards("The arcade game could\nnot finish normally.\n\nYour journey is still here.\nSee keenworlds-log.txt\nfor the game's message.");
+	StartMusic(ca_mapOn);
+}
+
+static void KW_ShowArcade(void)
+{
+	// The original text-only introduction already set kw_arcadeIntroduced.
+	// Replay it once after installing the voiced introduction, keeping all
+	// game progress and the player's voice preferences intact.
+	if (CFG_GetConfigInt("kw_arcadeIntroductionVersion", 0) < 2)
+	{
+		KW_Speak("ARCADE_HELLO.RAW", true);
+		KW_ShowCards("Keen:\n\nHmm, don't have time to\nplay with myself.\n\nWell... maybe one game!");
+		KW_LinesOver();
+		CFG_SetConfigInt("kw_arcadeIntroductionVersion", 2);
+	}
+	for (;;)
+	{
+		char second[64], third[64];
+		snprintf(second, sizeof(second), "Keen 2%s", KW_ArcadeCheck(2) == KW_ARCADE_READY ? ": The Earth Explodes" : " (not installed)");
+		snprintf(third, sizeof(third), "Keen 3%s", KW_ArcadeCheck(3) == KW_ARCADE_READY ? ": Keen Must Die!" : " (not installed)");
+		const char *games[] = {"Keen 1: Marooned on Mars", second, third, "Back to the cabin"};
+		int game = KW_ChooseCard("Keen's arcade\nEarlier adventures", games, 4);
+		if (game < 0 || game == 3) break;
+		if (game == 0)
+		{
+			KW_Speak("ARCADE_REMAKE.RAW", true);
+			KW_ShowCards("Keen:\n\nHey! There's an updated\nversion of my first\nadventure with enhanced\ngraphics!\n\nWhich one should I play?");
+			KW_LinesOver();
+			const char *versions[] = {
+				KW_ArcadeCheck(1) == KW_ARCADE_READY ? "Original Keen 1" : "Original Keen 1 (not installed)",
+				KW_IsWorldPresent(KW_MARS) ? "Galaxy remake" : "Galaxy remake (not installed)", "Back"};
+			int version = KW_ChooseCard("Marooned on Mars", versions, 3);
+			if (version < 0 || version == 2) continue;
+			if (version == 1)
+			{
+                if (!KW_IsWorldPresent(KW_MARS))
+                {
+                    KW_ShowCards("Marooned on Mars - Galaxy\n\nInstall its converted game\nfiles in arcade/mars.\n\nSee arcade/README.txt.");
+                    continue;
+                }
+                KW_BeginArcade();
+                break;
+			}
+		}
+		KW_ArcadeOriginal(game + 1);
+	}
+	KW_StopVoice();
+	RF_ForceRefresh();
+	SD_SetLastTimeCount(SD_GetTimeCount());
+}
+
 static void KW_ShipRoomFrame(void)
 {
 	if (!ck_keenObj)
@@ -2315,11 +2701,21 @@ static void KW_ShipRoomFrame(void)
 	for (int y = ck_keenObj->clipRects.tileY1; y <= ck_keenObj->clipRects.tileY2 && !marker; ++y)
 	{
 		uint16_t info = CA_TileAtPos(x, y, 2);
-		if (info >= KW_SHIP_CONSOLE && info <= KW_SHIP_BED)
+		if (info >= KW_SHIP_CONSOLE && info <= KW_SHIP_ARCADE)
 		{
 			marker = info;
 			markerY = y;
 		}
+	}
+	// Animated foreground tiles use their info-plane word for an animation
+	// timer. The blinking Up sign therefore replaces its own console marker.
+	// Anchor this interaction to the sign's art coordinates instead.
+	if (x >= kw_shipHintArt.originX && x <= kw_shipHintArt.originX + 1 &&
+		ck_keenObj->clipRects.tileY1 <= kw_shipHintArt.originY &&
+		ck_keenObj->clipRects.tileY2 >= kw_shipHintArt.originY)
+	{
+		marker = KW_SHIP_CONSOLE;
+		markerY = kw_shipHintArt.originY;
 	}
 	if (marker == KW_SHIP_WAY_AFT || marker == KW_SHIP_WAY_FORE)
 	{
@@ -2334,6 +2730,11 @@ static void KW_ShipRoomFrame(void)
 	if (!marker || !ck_keenObj->topTI || ck_inputFrame.yDirection != IN_motion_Up || kw_shipUpUsed)
 		return;
 	kw_shipUpUsed = true;
+	if (marker == KW_SHIP_ARCADE)
+	{
+		KW_ShowArcade();
+		return;
+	}
 	if (marker == KW_SHIP_BED)
 	{
 		KW_Dream();
@@ -2480,6 +2881,7 @@ bool KW_DrawWorldTitlePicture(void)
 // The title, in place of the running episode's (ck_inter.c).
 bool KW_DrawTitlePicture(void)
 {
+	if (MARS_IsActive()) return false;
 	VL_ClearScreen(0);
 	// Address Unknown used Keen 5's title art.  Its own title must be used
 	// here too (the actual game-start screen), not only before its story.
@@ -2714,7 +3116,7 @@ static void KW_Finale(void)
 	fflush(stdout);
 
 	KW_StopVoice();
-	KW_StartEndingMusic(KW_EPILOGUE_MUSIC);
+	KW_StartEndingMusic(KW_VoicesEnabled() && KW_VoiceVolume() ? KW_EPILOGUE_MUSIC : 256);
 	IN_ClearKeysDown();
 	KW_Narrate("STORY_EPILOGUE.RAW");
 	ck_starWarsNarrated = true; // (no music of the scroll's own)
@@ -2788,6 +3190,8 @@ static void KW_CrashLanding(void)
 
 void KW_PlayLoopHook(void)
 {
+	SS_AfterLoad();
+	if (MARS_IsActive()) { MARS_MapFrame(); return; }
 	// Foray's fly-in is under way on its map: when it has landed, Keen
 	// arrives beside the ship in the next level.
 	if (kw_fitfFlyIn && kw_currentWorld == KW_FITF)
@@ -2846,13 +3250,14 @@ void KW_PlayLoopHook(void)
 			{
 				// The Chronicle counts its chapters: the worlds in the order
 				// Keen has come to them.
-				static const char *const numbers[] = {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"};
+				static const char *const numbers[] = {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen"};
 				int chapter = 0;
 				for (int w = 0; w < KW_NUM_WORLDS; ++w)
 					if (KW_IsPlanet(w) && w != world && (kw_worlds[w].visited || KW_WorldIsSaved(w)))
 						++chapter;
 				char text[160];
-				snprintf(text, sizeof(text), "The Chronicle\n\nChapter %s:\n%s", numbers[chapter < 12 ? chapter : 11], kw_worldDefs[world].name);
+				int lastChapter = (int)(sizeof(numbers) / sizeof(numbers[0])) - 1;
+				snprintf(text, sizeof(text), "The Chronicle\n\nChapter %s:\n%s", numbers[chapter <= lastChapter ? chapter : lastChapter], kw_worldDefs[world].name);
 				KW_ShowCards(text);
 			}
 			KW_AnnounceLanding(world);
@@ -2911,9 +3316,11 @@ void KW_PlayLoopHook(void)
 		return;
 	}
 	if (KW_IsShipLevel() &&
-		(ck_keenState.jumpIsPressed || ck_keenState.pogoIsPressed || ck_keenState.shootIsPressed) &&
+		ck_inputFrame.yDirection == IN_motion_Up &&
 		KW_IsAtShipHatch())
 		kw_launchRequested = true;
+	else if (ca_mapOn == 0)
+		KW_TryLaunch(ck_keenObj);
 	// Foray in the Forest: its landed ship's door goes into the Megarocket
 	// (the same ship: there is one inside to it, Keen Worlds' own, where a
 	// world is picked), not into the game's own copy of the rooms. The game
@@ -3101,7 +3508,7 @@ static void KW_TestKeen9Behaviour(void)
 
 // For /KWTEST: every creature in the loaded level has its picture in memory
 // (a fan game moves sprites between caches; a wrong cache table shows here).
-static void KW_TestLevelSpritesCached(const char *world, int level)
+void KW_TestLevelSpritesCached(const char *world, int level)
 {
 	for (CK_object *obj = ck_keenObj; obj; obj = obj->next)
 	{
@@ -3126,7 +3533,7 @@ static bool KW_TestNear(const CK_object *obj, const CK_object *focus)
 		abs(obj->clipRects.tileY2 - focus->clipRects.tileY2) <= 8;
 }
 
-static void KW_TestRunObjects(int frames)
+void KW_TestRunObjects(int frames)
 {
 	SD_SetSpriteSync(2);
 	for (CK_object *focus = ck_keenObj->next; focus && RF_NumSpriteDraws() < 30; focus = focus->next)
@@ -3182,8 +3589,6 @@ void AR_CheckpointFrame(void);
 void AR_AfterLevelLoad(void);
 void AR_ClearCheckpoint(void);
 bool AR_HasCheckpoint(void);
-
-#include "id_vl_private.h"
 
 extern CK_object *ck_scoreBoxObj;
 extern bool ck_scoreBoxEnabled;
@@ -3391,14 +3796,17 @@ void KW_DebugFrame(void)
 		RF_ForceRefresh();
 	}
 	// KW_AUTOWAKE=n: in the dream (Keen Dreams), Keen wakes up at frame n
-	if (getenv("KW_AUTOWAKE") && count + 1 == atoi(getenv("KW_AUTOWAKE")))
+	static int dreamFrames;
+	if (kw_currentWorld!=KW_DREAM) dreamFrames=0;
+	else if (getenv("KW_AUTOWAKE") && ++dreamFrames==atoi(getenv("KW_AUTOWAKE")))
 		KW_WakeUp();
 	// KW_AUTOLIVES=n: Keen has n lives from the first frame
 	if (count == 0 && getenv("KW_AUTOLIVES"))
 		ck_gameState.numLives = atoi(getenv("KW_AUTOLIVES"));
 	if (killAt && count + 1 == killAt)
 		CK_KillKeen();
-	if (!frames || ++count < frames)
+	++count;
+	if (!frames || count < frames)
 		return;
 	KW_DumpScreen(path);
 	printf("KW_AUTOSHOT: world %s level %d, Keen at tile %d,%d, sprite %d, level state %d -> %s\n",
@@ -3494,7 +3902,7 @@ void KW_Screenshot(const char *worldId, int level, const char *path)
 
 // For /KWTEST: write and read a whole saved game (header and all).
 static const char *kw_testSaveFile = "KWTEST2.SAV";
-static bool KW_TestWriteSave(void)
+bool KW_TestWriteSave(void)
 {
 	FS_File fp = FS_CreateUserFile(kw_testSaveFile);
 	US_Savefile header = {KW_SAVE_TAG, KW_SAVE_MAGIC, true, "Self-test"};
@@ -3510,7 +3918,7 @@ static bool KW_TestWriteSave(void)
 		FS_CloseFile(fp);
 	return ok;
 }
-static bool KW_TestReadSave(void)
+bool KW_TestReadSave(void)
 {
 	FS_File fp = FS_OpenUserFile(kw_testSaveFile);
 	US_Savefile header;
@@ -3525,7 +3933,104 @@ static bool KW_TestReadSave(void)
 		CK_LoadGame(fp, false);
 	if (FS_IsFileValid(fp))
 		FS_CloseFile(fp);
-	return ok && !KW_FinishDeferredLoad();
+	return ok && (kw_deferredWorld==KW_NO_WORLD || KW_FinishDeferredLoad());
+}
+
+void KW_ChronicleSelfTest(void)
+{
+#define CHRONICLE_CHECK(test) do { if (!(test)) Quit("Chronicle check failed: " #test); } while (0)
+	CK_NewGame();
+	kw_chronicle = 1;
+	kw_boardedFrom = KW_KEEN4;
+	bool full = KW_IsWorldPresent(KW_KEEN5) && KW_IsWorldPresent(KW_KEEN95) && KW_IsWorldPresent(KW_AREALM);
+	if (full)
+	{
+		CHRONICLE_CHECK(!KW_CourseIsOpen(KW_AREALM) && !KW_CourseIsOpen(KW_OSI) && !KW_CourseIsOpen(KW_ALPHAMATIC));
+		kw_worlds[KW_KEEN5].completed = true;
+		CHRONICLE_CHECK(KW_CourseIsOpen(KW_AREALM) && !KW_CourseIsOpen(KW_OSI));
+		if (KW_IsWorldPresent(KW_SUBURB)) CHRONICLE_CHECK(!KW_CourseIsOpen(KW_SUBURB));
+		kw_worlds[KW_KEEN95].completed = true;
+		CHRONICLE_CHECK(KW_CourseIsOpen(KW_OSI) && !KW_CourseIsOpen(KW_ALPHAMATIC));
+		if (KW_IsWorldPresent(KW_SUBURB)) CHRONICLE_CHECK(KW_CourseIsOpen(KW_SUBURB));
+		kw_worlds[KW_AREALM].completed = true;
+		CHRONICLE_CHECK(KW_CourseIsOpen(KW_ALPHAMATIC));
+		kw_worlds[KW_KEEN95].completed = false;
+		CHRONICLE_CHECK(!KW_CourseIsOpen(KW_ALPHAMATIC) && KW_ChronicleKey(KW_ALPHAMATIC) == KW_KEEN95);
+		kw_worlds[KW_AREALM].completed = false;
+		kw_worlds[KW_OSI].visited = true;
+		CHRONICLE_CHECK(KW_CourseIsOpen(KW_OSI));
+		kw_worlds[KW_OSI].visited = false;
+		kw_worlds[KW_OSI].completed = true;
+		CHRONICLE_CHECK(KW_CourseIsOpen(KW_OSI));
+		kw_worlds[KW_OSI].completed = false;
+		puts("PASS: story gates, both Alphamatic prerequisites and visited/completed access");
+	}
+	CHRONICLE_CHECK(KW_ChronicleKey(KW_OSI) == KW_LastChronicleWorld());
+	if (!KW_IsWorldPresent(KW_KEEN95) && KW_IsWorldPresent(KW_KEEN9))
+	{
+		CHRONICLE_CHECK(KW_ChronicleKey(KW_OSI) == KW_KEEN9 && !KW_CourseIsOpen(KW_OSI));
+		kw_worlds[KW_KEEN9].completed = true;
+		CHRONICLE_CHECK(KW_CourseIsOpen(KW_OSI));
+		kw_worlds[KW_KEEN9].completed = false;
+		puts("PASS: missing Eight Accumulators falls back to Battle of the Brains");
+	}
+	if (!KW_IsWorldPresent(KW_AREALM) && KW_IsWorldPresent(KW_KEEN95))
+	{
+		kw_worlds[KW_KEEN95].completed = false;
+		CHRONICLE_CHECK(!KW_CourseIsOpen(KW_ALPHAMATIC));
+		kw_worlds[KW_KEEN95].completed = true;
+		CHRONICLE_CHECK(KW_CourseIsOpen(KW_ALPHAMATIC));
+		kw_worlds[KW_KEEN95].completed = false;
+		puts("PASS: missing Krisle is passed over while Alphamatic retains its late-story gate");
+	}
+	kw_worlds[KW_KEEN5].completed = true;
+	// Real version-7 save blocks: new rules must not be mistaken for old
+	// ones, and old courses stay open through a second save/load.
+	for (int legacy = 0; legacy < 3; ++legacy)
+	{
+		kw_worlds[KW_AREALM].completed = legacy == 2;
+		memset(kw_courseTold, 0, sizeof(kw_courseTold));
+		FS_File fp = tmpfile();
+		CHRONICLE_CHECK(fp && KW_WriteSaveBlock(fp));
+		if (legacy)
+		{
+			long size = ftell(fp);
+			CHRONICLE_CHECK(size > 522);
+			FS_SeekTo(fp, size - (261 - 215) * 2);
+			int16_t zero = 0;
+			CHRONICLE_CHECK(FS_WriteInt16LE(&zero, 1, fp) == 1);
+		}
+		FS_SeekTo(fp, 0);
+		bool deferred;
+		CHRONICLE_CHECK(KW_ReadSaveBlock(fp, &deferred) && !deferred);
+		FS_CloseFile(fp);
+		if (full)
+		{
+			CHRONICLE_CHECK(KW_CourseIsOpen(KW_OSI) == (legacy != 0));
+			CHRONICLE_CHECK(KW_CourseIsOpen(KW_ALPHAMATIC) == (legacy == 2));
+			CHRONICLE_CHECK(kw_courseTold[KW_AREALM] == (legacy != 0));
+			if (KW_IsWorldPresent(KW_SUBURB)) CHRONICLE_CHECK(!KW_CourseIsOpen(KW_SUBURB));
+		}
+		if (legacy)
+		{
+			fp = tmpfile();
+			CHRONICLE_CHECK(fp && KW_WriteSaveBlock(fp));
+			memset(kw_courseTold, 0, sizeof(kw_courseTold));
+			FS_SeekTo(fp, 0);
+			CHRONICLE_CHECK(KW_ReadSaveBlock(fp, &deferred) && !deferred);
+			FS_CloseFile(fp);
+			CHRONICLE_CHECK(kw_courseTold[KW_AREALM] && kw_courseTold[KW_OSI]);
+		}
+	}
+	bool known[KW_NUM_WORLDS] = {0};
+	memset(kw_courseTold, 0, sizeof(kw_courseTold));
+	KW_KeepLegacyCourses(kw_worlds, known);
+	CHRONICLE_CHECK(!kw_courseTold[KW_ALPHAMATIC]);
+	kw_chronicle = 0;
+	CHRONICLE_CHECK(KW_CourseIsOpen(KW_ALPHAMATIC) && KW_CourseIsOpen(KW_OSI));
+	KW_ResetWorlds();
+	puts("PASS: legacy unvisited courses survive migration and resaving; new saves retain gates; Free Flight stays open");
+#undef CHRONICLE_CHECK
 }
 
 // Developer self-test (/KWTEST): hop between all worlds several times, loading
@@ -3730,6 +4235,7 @@ void KW_SelfTest(void)
 					CK_RunAction(ck_keenObj);
 				int nose = RF_TileToUnit(KW_KEEN5_SHIP_NOSE_X);
 				kw_launchRequested = false;
+				ck_inputFrame.yDirection = IN_motion_Up;
 				KW_TryLaunch(ck_keenObj);
 				if (ck_keenObj->clipRects.unitX2 >= nose || ck_keenObj->clipRects.unitX2 < nose - 96 || !kw_launchRequested)
 				{
@@ -4079,6 +4585,32 @@ void KW_SelfTest(void)
 		KW_SwitchWorld(KW_KEEN4);
 	}
 
+	if (KW_IsWorldPresent(KW_ALPHAMATIC))
+	{
+		KW_SwitchWorld(KW_ALPHAMATIC);
+		for (int lv=0;lv<=25;++lv)
+		{
+			ck_gameState.currentLevel=lv;
+			CK_LoadLevel(true,true);
+			KW_TestLevelSpritesCached("alpham",lv);
+			KW_TestRunObjects(90);
+		}
+		KW_SwitchWorld(KW_KEEN4);
+	}
+	if (KW_IsWorldPresent(KW_SUBURB))
+	{
+		KW_SwitchWorld(KW_SUBURB);
+		for(int lv=0;lv<=23;++lv)
+		{
+			ck_gameState.currentLevel=lv;
+			CK_LoadLevel(true,true);
+			KW_TestLevelSpritesCached("suburb",lv);
+			ck_gameState.levelState=LS_Playing;
+			KW_TestRunObjects(90);
+		}
+		KW_SwitchWorld(KW_KEEN4);
+	}
+
 	// The Megarocket, Keen Worlds' own world: its room loads with Keen in it.
 	if (!KW_IsWorldPresent(KW_SHIP))
 		Quit("KW_SelfTest: the Megarocket world (folder megarocket) is missing!");
@@ -4089,17 +4621,28 @@ void KW_SelfTest(void)
 		Quit("KW_SelfTest: the Megarocket's room has no Keen!");
 	KW_TestLevelSpritesCached("megarocket", 1);
 	{
-		bool console = false, hatch = false, aft = false, fore = false;
+		bool console = false, hatch = false, aft = false, fore = false, arcade = false;
 		for (int y = 0; y < CA_GetMapHeight(); ++y)
 			for (int x = 0; x < CA_GetMapWidth(); ++x)
 			{
 				console |= CA_TileAtPos(x, y, 2) == KW_SHIP_CONSOLE;
+				if (CA_TileAtPos(x, y, 2) == KW_SHIP_ARCADE)
+				{
+					arcade = true;
+					uint16_t tile = CA_TileAtPos(x, y, 1);
+					if (TI_ForeTop(tile) || TI_ForeBottom(tile) || TI_ForeLeft(tile) || TI_ForeRight(tile))
+						Quit("KW_SelfTest: arcade obstructs the cabin!");
+				}
 				hatch |= CA_TileAtPos(x, y, 2) == KW_SHIP_HATCH;
 				aft |= CA_TileAtPos(x, y, 2) == KW_SHIP_WAY_AFT;
 				fore |= CA_TileAtPos(x, y, 2) == KW_SHIP_WAY_FORE;
 			}
+		if (!arcade)
+			Quit("KW_SelfTest: the Megarocket has no arcade cabinet!");
 		if (!console || !hatch)
 			Quit("KW_SelfTest: the Megarocket's room has no flight console or no hatch!");
+		if (CA_TileAtPos(kw_shipHintArt.originX+1, kw_shipHintArt.originY, 2) != KW_SHIP_CONSOLE)
+			Quit("KW_SelfTest: flight controls are not under the cabin's blinking Up sign!");
 		if (!aft || !fore)
 			Quit("KW_SelfTest: the Megarocket's two rooms are not joined!");
 	}
@@ -4235,6 +4778,7 @@ void KW_SelfTest(void)
 		{
 			int shipX = RF_TileToUnit(ms->ship->originX);
 			kw_launchRequested = false;
+			ck_inputFrame.yDirection = IN_motion_Up;
 			KW_TryLaunch(ck_keenObj);
 			if (ck_keenObj->clipRects.unitX2 >= shipX || ck_keenObj->clipRects.unitX2 < shipX - 64 ||
 				ck_keenObj->clipRects.tileY2 < ms->ship->originY || ck_keenObj->clipRects.tileY1 > ms->ship->originY ||
@@ -4246,6 +4790,7 @@ void KW_SelfTest(void)
 				Quit("KW_SelfTest: Keen doesn't land right beside a fan game's parked Megarocket!");
 			}
 			kw_launchRequested = false;
+			ck_inputFrame.yDirection = IN_motion_None;
 		}
 
 	}
@@ -4370,10 +4915,205 @@ void KW_SelfTest(void)
 
 	if (!ck_gameState.ep.ck4.wetsuit)
 		Quit("KW_SelfTest: Keen 4 lost its wetsuit while Keen travelled!");
+	KW_TestBoarding();
+	if ((getenv("KW_AUTOMENU") || getenv("KW_AUTOMENUALL")) && KW_IsWorldPresent(KW_SHIP))
+	{
+		KW_SwitchWorld(KW_SHIP);
+		CK_LoadLevel(true, true);
+		KW_TravelMenu();
+	}
 	// Printed whatever the log level: which worlds were there to be tested.
 	printf("KW_SelfTest: passed. Worlds tested:");
 	for (int w = 0; w < KW_NUM_WORLDS; ++w)
 		if (KW_IsWorldPresent(w))
 			printf(" %s", kw_worldDefs[w].id);
 	printf("\n");
+}
+
+// Real watch drawing and the cabin's blinking console interaction.
+void KW_TestMenuScreens(void)
+{
+	kw_cardsOff=true;
+	KW_SwitchWorld(KW_SHIP);CK_NewGame();
+	ck_gameState.difficulty=D_Normal;ck_gameState.currentLevel=1;CK_LoadLevel(true,true);
+	const char *watchWorld=getenv("KW_WATCHWORLD");
+	if(watchWorld)
+	{
+		int world;
+		for(world=0;world<KW_NUM_WORLDS;++world)
+			if(!strcmp(watchWorld,KW_WorldId(world))) break;
+		if(world==KW_NUM_WORLDS || !KW_IsWorldPresent(world)) Quit("Menu test: requested watch world is unavailable");
+		KW_SwitchWorld(world);CK_LoadLevel(true,true);
+	}
+	CK_GameState before=ck_gameState;
+	extern int game_in_progress;
+	game_in_progress=1;
+	US_RunCards();
+	if(getenv("KW_AUTOENDGAME"))
+	{
+		extern int load_game_error;
+		if(!load_game_error) Quit("End Game test: the watch did not end the game");
+		load_game_error=0;ck_gameState.levelState=LS_AbortGame;
+		CK_GameState ended=ck_gameState;game_in_progress=0;
+		CK_DoHighScores();
+		if(memcmp(&ended,&ck_gameState,sizeof(ended))) Quit("End Game test: the high-score panel changed the journey");
+		char path[600];snprintf(path,sizeof(path),"%s/highscores.ppm",getenv("KW_AUTOWATCH"));KW_DumpScreen(path);
+		puts("PASS: End Game and the shared high-score panel avoid episode demo maps");
+		CK_ShowTitleScreen();
+		Quit("End Game test: expected the automated title capture");
+	}
+	if(memcmp(&before,&ck_gameState,sizeof(before))) Quit("Menu test: watch changed game state");
+	if(KW_CurrentWorld()!=KW_SHIP) {KW_SwitchWorld(KW_SHIP);CK_LoadLevel(true,true);}
+	ck_keenObj->posX=RF_TileToUnit(kw_shipHintArt.originX);
+	ck_keenObj->posY=RF_TileToUnit(kw_shipHintArt.originY)-241;
+	CK_SetAction(ck_keenObj,CK_ACTION(CK_ACT_keenStanding));
+	memset(&ck_inputFrame,0,sizeof(ck_inputFrame));SD_SetSpriteSync(2);
+	for(int frame=0;frame<3;++frame) CK_RunAction(ck_keenObj);
+	if(ck_keenObj->clipRects.tileXmid!=kw_shipHintArt.originX || !ck_keenObj->topTI)
+		Quit("Menu test: Keen cannot stand at the cabin's blinking console");
+	kw_shipUpUsed=false;ck_inputFrame.yDirection=IN_motion_Up;
+	KW_PlayLoopHook();
+	if(!kw_shipUpUsed) Quit("Menu test: Up at blinking console did not open flight controls");
+	ck_inputFrame.yDirection=IN_motion_None;
+	puts("PASS: cabin flight chart opens with Up under the blinking arrow; watch and chart preserve game progress");
+}
+
+// Player feedback: deliberate Up boarding on every installed destination.
+void KW_TestBoarding(void)
+{
+#define BOARD_CHECK(test) do { if (!(test)) QuitF("Boarding test %s line %d: %s", KW_WorldId(kw_currentWorld), __LINE__, #test); } while (0)
+	bool cards = kw_cardsOff;
+	kw_cardsOff = true;
+	CK_NewGame();
+	ck_gameState.difficulty = D_Normal;
+	int checked = 0;
+	for (int world = 0; world < KW_NUM_WORLDS; ++world)
+	{
+		if (!KW_IsPlanet(world) || !KW_IsWorldPresent(world)) continue;
+		KW_SwitchWorld(world);
+		kw_worlds[world].visited = kw_introduced[world] = true;
+		kw_crashLanding = false;
+		kw_arrivalCard = kw_landingToAnnounce = KW_NO_WORLD;
+		kw_fitfFlyIn = false;
+		const KW_Ship *ship = KW_ShipFor(world);
+		ck_gameState.currentLevel = ship ? ship->level : 0;
+		kw_placeArrivalAtShip = ship || KW_MapShipFor(world);
+		CK_LoadLevel(true, true);
+		ck_gameState.levelState = LS_Playing;
+		kw_pendingWorld = KW_NO_WORLD;
+		kw_launchRequested = false;
+		memset(&ck_inputFrame, 0, sizeof(ck_inputFrame));
+		ck_keenState.jumpIsPressed = ck_keenState.pogoIsPressed = ck_keenState.shootIsPressed = false;
+		if (!ship && (KW_HasKeen5Dock() || world == KW_ALPHAMATIC))
+		{
+			// These arrivals stand at the start of a short gangway. Walk to
+			// the ship's nose before testing the actual boarding controls.
+			ck_inputFrame.dir = IN_dir_East;
+			ck_inputFrame.xDirection = IN_motion_Right;
+			CK_SetAction(ck_keenObj, CK_ACTION(CK_ACT_MapKeenWalk0));
+			SD_SetSpriteSync(2);
+			for (int frame = 0; frame < 400; ++frame) CK_RunAction(ck_keenObj);
+			memset(&ck_inputFrame, 0, sizeof(ck_inputFrame));
+		}
+		CK_object parked = *ck_keenObj;
+		// The three gameplay buttons must never cause an accidental boarding.
+		bool *buttons[] = {&ck_keenState.jumpIsPressed, &ck_keenState.pogoIsPressed, &ck_keenState.shootIsPressed};
+		for (int button = 0; button < 3; ++button)
+		{
+			*buttons[button] = true;
+			KW_TryLaunch(ck_keenObj);
+			KW_PlayLoopHook();
+			BOARD_CHECK(kw_pendingWorld == KW_NO_WORLD && !kw_launchRequested);
+			*buttons[button] = false;
+		}
+		ck_inputFrame.yDirection = IN_motion_Up;
+		if (world == KW_AREALM)
+		{
+			kw_worlds[world].completed = false;
+			KW_PlayLoopHook();
+			BOARD_CHECK(kw_pendingWorld == KW_NO_WORLD); // the wreck is still stranded
+			kw_worlds[world].completed = true;
+		}
+		KW_PlayLoopHook();
+		BOARD_CHECK(kw_pendingWorld == KW_SHIP && kw_boardedFrom == world);
+		kw_pendingWorld = KW_NO_WORLD;
+		// Up elsewhere in the level/map is ordinary movement or a local door.
+		ck_keenObj->posX = RF_TileToUnit(parked.clipRects.tileXmid < CA_GetMapWidth()/2 ? CA_GetMapWidth()-3 : 3);
+		CK_ResetClipRects(ck_keenObj);
+		KW_PlayLoopHook();
+		BOARD_CHECK(kw_pendingWorld == KW_NO_WORLD);
+		*ck_keenObj = parked;
+		ck_inputFrame.yDirection = IN_motion_None;
+		if (world == KW_FITF)
+		{
+			// Foray's own Up-entered ship door still hands over to the cabin,
+			// even if the key was released during its door animation.
+			ck_keenObj->posY = RF_TileToUnit(KW_FITF_ROOMS_Y + 2);
+			CK_ResetClipRects(ck_keenObj);
+			KW_PlayLoopHook();
+			BOARD_CHECK(kw_pendingWorld == KW_SHIP);
+			kw_pendingWorld = KW_NO_WORLD;
+		}
+		++checked;
+		printf("PASS: %s boards with Up at the ship; jump/pogo/fire and distant Up do not board\n", KW_WorldId(world));
+	}
+	BOARD_CHECK(checked > 0);
+	kw_cardsOff = cards;
+	printf("PASS: boarding checked on %d destinations, including map docks, ship levels, Krisle's wreck and Foray's door when installed\n", checked);
+#undef BOARD_CHECK
+}
+
+// Real-data regression for the cabinet's in-engine remake. Developer-only.
+void KW_TestArcadeSession(void)
+{
+#define ARCADE_CHECK(test) do { if (!(test)) QuitF("Arcade session test line %d: %s",__LINE__,#test); } while (0)
+ bool cards=kw_cardsOff;kw_cardsOff=true;
+ KW_SwitchWorld(KW_SHIP);
+ CK_NewGame();ck_gameState.difficulty=D_Hard;
+ ck_gameState.keenScore=54321;ck_gameState.nextKeenAt=80000;
+ ck_gameState.numLives=7;ck_gameState.numShots=29;ck_gameState.numCentilife=67;
+ ck_gameState.currentLevel=1;CK_LoadLevel(true,true);
+ kw_worlds[KW_KEEN4].completed=true;kw_chronicle=1;kw_boardedFrom=KW_KEEN5;
+ int x=ck_keenObj->posX,y=ck_keenObj->posY;
+ ARCADE_CHECK(KW_BeginArcade() && kw_pendingWorld==KW_MARS);
+ KW_SwitchWorld(kw_pendingWorld);
+ ARCADE_CHECK(ck_gameState.numShots==0 && ck_gameState.numLives==3 && ck_gameState.keenScore==0);
+ ARCADE_CHECK(ck_gameState.numCentilife==0 && ck_gameState.difficulty==D_Normal);
+ ck_gameState.currentLevel=1;CK_LoadLevel(true,true);
+ ck_gameState.keenScore=1234;ck_gameState.numShots=9;ck_gameState.numCentilife=11;
+ ck_gameState.ep.ck5.securityCard=1;ck_gameState.levelsDone[2]=1;
+ const char *oldFile=kw_testSaveFile;kw_testSaveFile="KW-ARCADE-TEST.SAV";
+ ARCADE_CHECK(KW_TestWriteSave());
+ KW_RequestCabinReturn();KW_FinishMenuActions();
+ ARCADE_CHECK(kw_pendingWorld==KW_SHIP);
+ KW_SwitchWorld(kw_pendingWorld);CK_LoadLevel(true,true);
+ ARCADE_CHECK(ck_gameState.keenScore==54321 && ck_gameState.nextKeenAt==80000);
+ ARCADE_CHECK(ck_gameState.numLives==7 && ck_gameState.numShots==29 && ck_gameState.numCentilife==67);
+ ARCADE_CHECK(ck_gameState.difficulty==D_Hard && ck_keenObj->posX==x && ck_keenObj->posY==y);
+ // Load the remake's unified save from the cabin through the real deferred loader.
+ ck_gameState.keenScore=99999;
+ ARCADE_CHECK(KW_TestReadSave());
+ ARCADE_CHECK(KW_CurrentWorld()==KW_MARS && ck_gameState.keenScore==1234);
+ ARCADE_CHECK(ck_gameState.ep.ck5.securityCard==1 && ck_gameState.levelsDone[2]==1);
+ KW_RequestCabinReturn();KW_FinishMenuActions();
+ KW_SwitchWorld(kw_pendingWorld);CK_LoadLevel(true,true);
+ ARCADE_CHECK(ck_gameState.keenScore==54321 && ck_gameState.numShots==29 && ck_gameState.numCentilife==67);
+ ARCADE_CHECK(kw_chronicle==1 && kw_boardedFrom==KW_KEEN5 && kw_worlds[KW_KEEN4].completed);
+ ARCADE_CHECK(KW_BeginArcade());KW_SwitchWorld(kw_pendingWorld);
+ ARCADE_CHECK(ck_gameState.keenScore==1234 && ck_gameState.numShots==9 && ck_gameState.numCentilife==11);
+ ck_startingDifficulty=D_Hard;CA_UpLevel();CK_ExitMenu();CA_DownLevel();
+ ARCADE_CHECK(kw_marsLinked && kw_worlds[KW_KEEN4].completed);
+ ARCADE_CHECK(KW_RestartArcade(D_Hard));ck_startingDifficulty=D_NotPlaying;
+ ARCADE_CHECK(!ck_gameState.levelsDone[2] && !ck_gameState.ep.ck5.securityCard && ck_gameState.numLives==3);
+ ARCADE_CHECK(kw_worlds[KW_KEEN4].completed && kw_chronicle==1);
+ ARCADE_CHECK(KW_ArcadeOver(false) && KW_CurrentWorld()==KW_SHIP);
+ ARCADE_CHECK(ck_gameState.keenScore==54321 && ck_gameState.numLives==7 && ck_gameState.numShots==29);
+ ARCADE_CHECK(KW_BeginArcade());KW_SwitchWorld(kw_pendingWorld);
+ ck_gameState.currentLevel=0;CK_LoadLevel(true,true);
+ CA_UpLevel();KW_AfterWorldEnding();
+ ARCADE_CHECK(KW_CurrentWorld()==KW_SHIP && kw_worlds[KW_MARS].completed);
+ ARCADE_CHECK(kw_worlds[KW_KEEN4].completed && kw_chronicle==1 && ck_gameState.keenScore==54321);
+ kw_testSaveFile=oldFile;kw_loadingFileName=NULL;kw_cardsOff=cards;
+ puts("PASS: Mars same-window entry/return, isolated inventory/difficulty, cabinet position, shared cross-world save, restart, game over and ending");
+#undef ARCADE_CHECK
 }

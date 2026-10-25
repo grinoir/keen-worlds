@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "id_mm.h"
 #include "id_rf.h"
 #include "id_vl.h"
+#include "kw_watch.h"
 
 //TODO: Should these functions cache the bitmap tables?
 VH_BitmapTableEntry VH_GetBitmapTableEntry(int bitmapNumber)
@@ -78,10 +79,11 @@ int VH_GetShiftedSpriteWidth(VH_ShiftedSprite *shifted, int shift)
 static VH_FontChar VH_GetFontCharInfo(int chunk, unsigned char ch)
 {
 	VH_FontChar charInfo;
-	uint8_t *fntData = (uint8_t *)CA_GetGrChunk(chunk, 3, "Font", true);
+	const uint8_t *fntData=chunk==1?KW_DreamWatchFont():NULL;
+	if(!fntData) fntData=(uint8_t *)CA_GetGrChunk(chunk,3,"Font",true);
 
 	charInfo.height = fntData[0] | fntData[1] << 8;
-	charInfo.data = fntData + (fntData[ch * 2 + 2] | fntData[ch * 2 + 3] << 8);
+	charInfo.data = (uint8_t *)fntData + (fntData[ch * 2 + 2] | fntData[ch * 2 + 3] << 8);
 	charInfo.width = fntData[2 * 256 + 2 + ch];
 
 	return charInfo;
@@ -270,6 +272,16 @@ void VH_DrawPropString(const char *string, int x, int y, int chunk, int colour)
 		VH_FontChar chInfo = VH_GetFontCharInfo(chunk, (uint8_t)*string);
 		VH_DrawPropChar(x + w, y, chunk, (unsigned char)(*string), colour);
 		w += chInfo.width;
+	}
+}
+
+void VH_DrawPropStringSolid(const char *string, int x, int y, int chunk, int colour)
+{
+	for (; *string; ++string)
+	{
+		VH_FontChar chInfo = VH_GetFontCharInfo(chunk, (uint8_t)*string);
+		VL_1bppBlitToScreen(chInfo.data, x, y, chInfo.width, chInfo.height, colour);
+		x += chInfo.width;
 	}
 }
 

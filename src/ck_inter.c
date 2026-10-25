@@ -1411,10 +1411,9 @@ bool CK_ScrollSWText()
 	VL_SwapOnNextPresent();
 	VL_Present();
 	VL_FixRefreshBuffer();
-	void *footer = KW_SavePresentationFooter();
 	while (scrollDistance <= ck_starWarsTotalHeight + 400)
 	{
-		KW_RestorePresentationFooter(footer);
+		KW_ClearPresentationHint(&presentation);
 		// Update rows from the bottom.
 
 		for (int row = 199; row >= 0; --row)
@@ -1478,7 +1477,6 @@ bool CK_ScrollSWText()
 	if (presentation.accepted)
 		KW_StopVoice();
 	KW_EndPresentation(&presentation);
-	VL_DestroySurface(footer);
 	return presentation.accepted;
 }
 
@@ -1819,8 +1817,33 @@ void CK_SubmitHighScore(int score, uint16_t arg_4)
 // Play the high score level
 void CK_DoHighScores()
 {
-	ck_inHighScores = true;
+	// Keen Worlds has one shared table. An episode demo is not a safe
+	// backdrop: the cabin and native ports do not contain its demo map.
 	IN_ClearKeysDown();
-	CK_PlayDemo(CK_INT(CK_HighScoreDemo, 4));
-	ck_inHighScores = false;
+	VL_SetScrollCoords(0,0);VL_SetDefaultPalette();VL_ClearScreen(0);
+	CA_CacheGrChunk(CK_CHUNKNUM(FON_MAINFONT));US_SetPrintFont(0);
+	US_SetPrintRoutines(NULL,NULL);US_SetPrintColour(15);
+	US_CenterWindow(36,21);
+	int x=US_GetWindowX(),y=US_GetWindowY(),width=US_GetWindowW();
+	US_SetPrintY(y+4);US_CPrint("KEEN WORLDS - HIGH SCORES");
+	for(int i=0;i<8;++i)
+	{
+		char rank[8],score[24],name[sizeof(ck_highScores[i].name)];
+		snprintf(rank,sizeof(rank),"%d.",i+1);
+		snprintf(score,sizeof(score),"%d",ck_highScores[i].score);
+		CK_Cross_strscpy(name,ck_highScores[i].name,sizeof(name));
+		uint16_t sw,sh,nw,nh;VH_MeasurePropString(score,&sw,&sh,0);
+		for(size_t length=strlen(name);length;name[--length]=0)
+		{
+			VH_MeasurePropString(name,&nw,&nh,0);
+			if(nw<=width-44-sw) break;
+		}
+		US_SetPrintY(y+28+i*14);US_SetPrintX(x+8);US_Print(rank);
+		US_SetPrintX(x+28);US_Print(name);
+		US_SetPrintX(x+width-8-sw);US_Print(score);
+	}
+	US_SetPrintY(y+150);US_CPrint("Press a key for the watch");
+	VH_UpdateScreen();VL_FadeFromBlack();
+	if(getenv("KW_AUTOENDGAME")) return; // regression: inspect this real panel, then the title
+	IN_UserInput(5*70,false);CK_HandleDemoKeys();
 }

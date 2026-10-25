@@ -754,6 +754,14 @@ void SD_StartMusicData(const uint8_t *data, uint16_t length)
 static const int16_t *volatile sd_voiceData;
 static uint32_t sd_voiceLength, sd_voiceRate;
 static uint64_t sd_voicePos; // 32.32 fixed point
+static int sd_voiceVolume = 100;
+
+void SD_SetVoiceVolume(int percent)
+{
+	if (sd_backend) sd_backend->lock();
+	sd_voiceVolume = percent < 0 ? 0 : percent > 100 ? 100 : percent;
+	if (sd_backend) sd_backend->unlock();
+}
 
 void SD_PlayVoice(const int16_t *data, uint32_t length, uint32_t rate)
 {
@@ -794,7 +802,7 @@ void SD_MixVoice(int16_t *out, int frames, int channels, int outRate)
 			sd_voiceData = NULL;
 			return;
 		}
-		int sample = sd_voiceData[index] * 3 / 4;
+		int sample = sd_voiceData[index] * 3 * sd_voiceVolume / 400;
 		for (int c = 0; c < channels; ++c)
 		{
 			int mixed = out[i * channels + c] + sample;

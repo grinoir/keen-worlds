@@ -2,6 +2,8 @@
 // What the ship computer says when the Megarocket has landed: the world's id,
 // the sound clip in the voice folder, the words for the card.
 static const struct { const char *id, *file, *text; } kw_landings[] = {
+	{"suburb", "LAND_SUBURB.RAW", "Ship computer:\n\nYou have now landed on Earth.\nYour own street.\nI am parked by the backyard\nclubhouse.\nPlease try to catch the bus\nthis time."},
+	{"alpham", "LAND_ALPHAM.RAW", "Ship computer:\n\nYou have now docked at the\nAlphamatic.\nVitaCorp's bigger armageddon\nmachine.\nPlease switch it off before we\nleave."},
 	{"keen4", "LAND_KEEN4.RAW", "Ship computer:\n\nYou have now landed on\nGnosticus IV.\nBeware of the local slugs.\nThey are poisonous, and they\nwill not say sorry."},
 	{"keen5", "LAND_KEEN5.RAW", "Ship computer:\n\nYou have now docked at the\nOmegamatic.\nBeware of the local robots.\nThey have lasers, and no sense\nof humour."},
 	{"keen6", "LAND_KEEN6.RAW", "Ship computer:\n\nYou have now landed on\nFribbulus Xax.\nBeware of the local Bloogs.\nThey are big, they are green,\nand it is always lunch time."},
@@ -18,6 +20,8 @@ static const struct { const char *id, *file, *text; } kw_landings[] = {
 };
 // What it says when a world has been saved and Keen is back in the cabin.
 static const struct { const char *id, *file, *text; } kw_savedLines[] = {
+	{"suburb", "SAVED_SUBURB.RAW", "Ship computer:\n\nEarth.\nYour own street.\nThe school bag is found, and\nBilly has caught the bus.\nI will wait here until school\nis over."},
+	{"alpham", "SAVED_ALPHAM.RAW", "Ship computer:\n\nThe Alphamatic is disabled.\nVitaCorp has lost another\narmageddon machine.\nI hope they kept the receipt."},
 	{"keen4", "SAVED_KEEN4.RAW", "Ship computer:\n\nGnosticus IV is saved.\nThe Oracle is grateful.\nThe slugs are not."},
 	{"keen5", "SAVED_KEEN5.RAW", "Ship computer:\n\nThe Omegamatic is switched\noff.\nThe galaxy will not explode\ntoday.\nWell done."},
 	{"keen6", "SAVED_KEEN6.RAW", "Ship computer:\n\nFribbulus Xax is quiet again.\nThe babysitter is safe.\nShe is still cross with you."},

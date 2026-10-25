@@ -867,7 +867,7 @@ void IN_ReadControls(int player, IN_ControlFrame *controls)
 
 void IN_WaitButton()
 {
-	KW_WaitPresentation(0, true);
+	KW_WaitDialogue(0);
 }
 
 // TODO: Handle Joy/Mouse

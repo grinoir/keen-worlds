@@ -20,6 +20,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef CK5_EP_H
 #define CK5_EP_H
 
+void CK5_CloseMapTeleporter(int tileX, int tileY);
+void CK5_OpenMapTeleporter(int tileX, int tileY);
+
 #include <stdbool.h>
 #include "ck_ep.h"
 

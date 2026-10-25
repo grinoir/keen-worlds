@@ -23,6 +23,7 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 #include "ck_play.h"
 #include "kw_art.h"
 #include "kw_habitat.h"
+#include "kw_mars.h"
 #include "kw_music.h"
 #include "id_fs.h"
 #include <string.h>
@@ -37,6 +38,7 @@ bool FF_IsStoryTrigger(const CK_object *obj);
 
 
 #include "kw_world.h"
+#include "kw_suburb.h"
 
 typedef enum KW_When
 {
@@ -151,7 +153,7 @@ bool KW_IsHabitableLevel(int level)
 {
 	// Every completed level can be visited again (residents or not).
 	(void)level;
-	return true;
+	return !MARS_IsActive();
 }
 
 bool KW_IsLevelPeaceful(void)
@@ -219,6 +221,10 @@ const KW_Art kw_shipHintArt = {
 	KW_SHIPHINT_X, KW_SHIPHINT_Y, 1, 1, 2,
 	&kw_shipHintSlots[0][0][0], &kw_shipHintTiles[0][0][0][0], -1, 30, NULL,
 };
+static const KW_Art kw_shipArcadeArt = {
+	KW_SHIPARCADE_X, KW_SHIPARCADE_Y, 2, 1, 2,
+	&kw_shipArcadeSlots[0][0][0], &kw_shipArcadeTiles[0][0][0][0], -1, 35, NULL,
+};
 
 static const struct
 {
@@ -245,6 +251,7 @@ static const struct
 	{KW_SHIP, 1, &kw_shipRoomArt[1], KW_ALWAYS},
 	{KW_SHIP, 1, &kw_shipRoomArt[2], KW_ALWAYS},
 	{KW_SHIP, 1, &kw_shipHintArt, KW_ALWAYS},
+	{KW_SHIP, 1, &kw_shipArcadeArt, KW_ALWAYS},
 };
 
 static bool KW_IsShown(KW_When when, bool completed)
@@ -510,6 +517,11 @@ static void KW_PlaceRevisitStart(void)
 		kw_revisitPlacement = KW_REVISIT_SPECIAL;
 		return;
 	}
+	if (SS_RevisitStart())
+	{
+		kw_revisitPlacement = KW_REVISIT_GOAL;
+		return;
+	}
 	// Swimming (Keen 4's Well of Wishes) and the high score "level" keep
 	// their own start.
 	if (ck_keenObj->currentAction != CK_ACTION(CK_ACT_keenStanding))
@@ -666,6 +678,8 @@ static bool KW_IsHostile(CK_object *obj)
 // 6's Molly and the rope, sandwich and passcard Keen already has).
 static bool KW_IsStoryTrigger(CK_object *obj)
 {
+	if (SS_IsActive())
+		return SS_IsStoryTrigger(obj);
 	if (AR_IsActive())
 		return AR_IsStoryTrigger(obj);
 	if (FF_IsActive())
@@ -721,7 +735,7 @@ void KW_SetupLevelResidents(void)
 	KW_ChangeLevel();
 
 	// Every completed level is peaceful when Keen comes back (in every world).
-	kw_levelIsPeaceful = ca_mapOn > 0 && ca_mapOn < CK_LEVELS_TRACKED && ck_gameState.levelsDone[ca_mapOn];
+	kw_levelIsPeaceful = !MARS_IsActive() && ca_mapOn > 0 && ca_mapOn < CK_LEVELS_TRACKED && ck_gameState.levelsDone[ca_mapOn];
 	if (!kw_levelIsPeaceful)
 		return;
 

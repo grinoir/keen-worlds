@@ -20,6 +20,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef CK_TEXT_H
 #define CK_TEXT_H
 
+#include <stdbool.h>
+extern const char *ck_textPagesVoice;
+
+bool CK_UseSecretEnding(void);
+void CK_ShowTextPages(int textChunk, int song, bool blackBackground);
+
 void HelpScreens(void);
 void help_endgame(void);
 

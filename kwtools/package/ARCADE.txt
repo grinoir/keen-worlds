@@ -1,0 +1,69 @@
+KEEN'S ARCADE
+============
+
+Walk to the cabinet beside the ship's bunk and press Up. It offers the
+original Commander Keen 1, 2 and 3. Under Keen 1 choose Original or the
+Galaxy remake, Marooned on Mars - Galaxy by Dr. Colossus (2020 fixes by
+K1n9_Duk3). Both versions are playable natively.
+
+Supply your own games, using v1.31 for the originals:
+
+  arcade/keen1/   Marooned on Mars
+  arcade/keen2/   The Earth Explodes
+  arcade/keen3/   Keen Must Die!
+  arcade/mars/    Marooned on Mars - Galaxy (converted data)
+
+Include each game's KEEN1.EXE / KEEN2.EXE / KEEN3.EXE and all its .CK1 /
+.CK2 / .CK3 files. Filenames are matched regardless of case. Other versions
+and Vorticons mods have not been integrated. Missing or unsupported games
+show an explanation in the cabinet.
+
+For the Galaxy remake, unpack the K1n9_Duk3-fixed archive dated September
+2020, then convert your copy once with the source tools:
+
+  python3 kwtools/kw_mars.py MOD_FOLDER KEEN5E.EXE OUTPUT_FOLDER
+
+Use your original Keen 5 v1.4 KEEN5E.EXE and arcade/mars as OUTPUT_FOLDER.
+The executable is read only to recover its patched tables, never run.
+The converter checks the supported patch revision and all sprite actions.
+It installs the remake's maps, graphics, audio and MARS.CK5. The original
+Keen 1 files stay in arcade/keen1; the remake's data stays in arcade/mars.
+
+The originals run natively with Chocolate Keen, by NY00123, QuantumG, Lemm, James
+Mackenzie and contributors. The DOS programs are read for their data; they
+are not executed. No DOSBox is needed. The native keen-vorticons program
+must be installed beside the Keen Worlds program.
+The Galaxy remake runs inside the current Keen Worlds engine and window.
+It starts on Mars with no ammunition and must find its pogo stick. Its
+progress is included in the main save slots; its score, lives, ammunition,
+items and difficulty remain separate from the wider journey.
+
+The originals open their own window. Exit to return to the cabinet and your
+unchanged cabin. Use its original controls (Arrows, Ctrl to jump, Alt to
+pogo, Ctrl+Alt to fire; F3 redefines the keys). F5 saves on the world map.
+Screen mode follows the visible Keen Worlds window, including desktop
+fullscreen shortcuts. Fullscreen stays fullscreen on return. In the Galaxy
+remake press Escape and choose Return to cabin, Save Game or Load Game.
+
+Each game's saves, scores, controls and settings stay in its own folder
+under the Keen Worlds user path: arcade/keen1, arcade/keen2 or arcade/keen3.
+The remake uses the main save slots and settings. Return to Cabin leaves
+Keen beside the cabinet; New Game restarts the remake, and End Game or
+running out of lives returns to the cabin. Completing it also returns there.
+Old saves from its earlier separate player remain in arcade/mars.
+In a normal portable installation those are the folders listed above.
+Keep them when updating. Lives, score, ammunition and items do not transfer
+to or from Keen Worlds. Arcade completion never unlocks planets or counts
+towards the all-worlds-saved ending.
+
+The original games are by id Software. No original arcade game data is
+included in this release. The native engine's GPL license and origin are
+in COPYING.txt and ENGINE.txt; its matching source is in source.tar.gz.
+
+The cabinet's CRT has moving/blinking pixels. Entry and return fade through
+black, with fullscreen preserved. When an original game asks where to exit,
+choose (A)rcade to return; the old (D) key still works. Its DOS information
+screen is omitted. Keen Dreams uses longer fades on falling asleep/waking.
+
+The cabinet introductions use Keen's established bm_fable voice at speed 1.2.
+Voice mute/volume still apply; ordinary fresh presses advance the popups.

@@ -17,10 +17,23 @@ const [dir, jobsFile] = process.argv.slice(2);
 const root = resolve(dir);
 const load = (file) => import(pathToFileURL(join(root, 'node_modules', file)).href);
 const kokoro = await load('kokoro-js/dist/kokoro.js');
-const { env } = await load('@huggingface/transformers/dist/transformers.node.mjs');
-env.cacheDir = join(root, 'data', 'models');
+const { env, StyleTextToSpeech2Model } = await load('@huggingface/transformers/dist/transformers.node.mjs');
+// Kokoro's wrapper doesn't forward session options. Limit an explicitly
+// requested local batch to a few CPU threads, avoiding oversubscription.
+if (process.env.KW_KOKORO_THREADS) {
+  const threads = Number(process.env.KW_KOKORO_THREADS);
+  if (!Number.isInteger(threads) || threads < 1 || threads > 64) throw new Error('Invalid KW_KOKORO_THREADS');
+  const original = StyleTextToSpeech2Model.from_pretrained;
+  StyleTextToSpeech2Model.from_pretrained = function (name, options) {
+    return original.call(this, name, { ...options,
+      session_options: { intraOpNumThreads: threads, interOpNumThreads: 1 } });
+  };
+}
+// Optional cache/precision overrides allow a standalone local generation
+// job to reuse an already downloaded model without changing another app.
+env.cacheDir = process.env.KW_KOKORO_CACHE || join(root, 'data', 'models');
 env.allowRemoteModels = false; // only the model that is already there
-const tts = await kokoro.KokoroTTS.from_pretrained('onnx-community/Kokoro-82M-v1.0-ONNX', { dtype: 'fp32', device: 'cpu' });
+const tts = await kokoro.KokoroTTS.from_pretrained('onnx-community/Kokoro-82M-v1.0-ONNX', { dtype: process.env.KW_KOKORO_DTYPE || 'fp32', device: 'cpu' });
 // Kokoro hands the phonemes of a sentence to its tokenizer: step in there.
 const tokenizer = tts.tokenizer;
 let sounds = {};
