@@ -33,9 +33,15 @@ a separate native port; see `../../research/keen-dreams-gold.md`.
 Tests: all 18 native worlds, all 15 boarding destinations, 18 scrolling watch-menu
 renders, 11 submenus, the final Options entry, a save dialog, Paddle War,
 every flight-list selection, first-press skip, the workshop opening,
-Suburb and Alphamatic. Normal and sanitizer checks pass. Local install only;
-user testing and commit review are still pending. Native watch captures:
+Suburb and Alphamatic. Normal and sanitizer checks pass. Native watch captures:
 `../../art/blaze-mk8/`. Original sketches: `../../art/watch-concepts.html`.
+
+## 0.9.2 follow-up, 2026-10-26
+
+The Alphamatic opening's credit roll is shorter, and its contextual Escape
+prompt stays inside the black reading/subtitle panels instead of covering the
+illustration. On Alphamatic's map, Up at the marked shuttle now returns to the
+Megarocket, following the Keen 5 dock interaction.
 
 Current release: **0.9.2 beta**.
 Expanded world research: 2026-10-25.

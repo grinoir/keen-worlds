@@ -1074,6 +1074,8 @@ static bool kw_launchRequested = false;
 
 // How far (in tiles) from the launch spot Keen may stand to board the rocket.
 #define KW_LAUNCH_RANGE 1
+#define KW_ALPHAMATIC_DOCK_X 37
+#define KW_ALPHAMATIC_DOCK_Y 127
 
 
 // ---- Keen 5 boarding gate ----
@@ -1202,12 +1204,20 @@ void KW_SetLaunchSpot(int tileX, int tileY)
 	}
 	else
 	{
-		// Others: the ship waits where Keen first lands on the world map.
-		// Alphamatic's own gangway stops Keen before the hull. Centre the
-		// hatch range two tiles east of its start so the reachable floor
-		// beside it is included; do not require standing inside the hull.
-		kw_launchSpotX = tileX + (kw_currentWorld==KW_ALPHAMATIC ? 2 : 0);
-		kw_launchSpotY = tileY;
+		if (kw_currentWorld == KW_ALPHAMATIC)
+		{
+			// The Alphamatic's map shows its launch shuttle at this marked
+			// station dock. Up here returns to the Megarocket, like the Keen 5
+			// dock; the map spawn itself is not the exit.
+			kw_launchSpotX = KW_ALPHAMATIC_DOCK_X;
+			kw_launchSpotY = KW_ALPHAMATIC_DOCK_Y;
+		}
+		else
+		{
+			// Other worlds without a dedicated dock return to their arrival.
+			kw_launchSpotX = tileX;
+			kw_launchSpotY = tileY;
+		}
 	}
 }
 
@@ -5004,7 +5014,15 @@ void KW_TestBoarding(void)
 		kw_launchRequested = false;
 		memset(&ck_inputFrame, 0, sizeof(ck_inputFrame));
 		ck_keenState.jumpIsPressed = ck_keenState.pogoIsPressed = ck_keenState.shootIsPressed = false;
-		if (!ship && (KW_HasKeen5Dock() || world == KW_ALPHAMATIC))
+		if (!ship && world == KW_ALPHAMATIC)
+		{
+			// Test from the walkable tile beside the marked station shuttle,
+			// not the initial map spawn.
+			ck_keenObj->posX = RF_TileToUnit(KW_ALPHAMATIC_DOCK_X - 1);
+			ck_keenObj->posY = RF_TileToUnit(KW_ALPHAMATIC_DOCK_Y);
+			CK_ResetClipRects(ck_keenObj);
+		}
+		else if (!ship && KW_HasKeen5Dock())
 		{
 			// These arrivals stand at the start of a short gangway. Walk to
 			// the ship's nose before testing the actual boarding controls.

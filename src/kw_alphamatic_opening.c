@@ -26,6 +26,8 @@ typedef struct AL_Opening
  AL_Image keen[3],spot,portraits[3],machine,station,ship;
 } AL_Opening;
 
+#define AL_CRAWL_TICS (18 * 70)
+
 static void AL_Box(int x,int y,int w,int h,int color)
 {
  VH_HLine(x,x+w-1,y,color);VH_HLine(x,x+w-1,y+h-1,color);
@@ -181,6 +183,33 @@ static void AL_Subtitle(const char *name,const char *text,int color)
  for(int i=0;i<count;++i) VH_DrawPropStringSolid(lines[i],12,162+i*9,0,15);
 }
 
+// Keep the Escape prompt inside the black panels instead of painting it over
+// the workshop/ship artwork. The crawl reserves its bottom line for it.
+static void AL_PresentHint(const KW_Presentation *state,bool crawl,bool allowAdvance)
+{
+ if(!KW_PresentationHintVisible(state)) {VL_Present();return;}
+ const char *text=state->accepted?"Release to continue":
+  allowAdvance && !state->holding?"Press to continue":"Hold Esc to skip";
+ uint16_t width,height;VH_MeasurePropString(text,&width,&height,0);
+ int x,y;
+ if(crawl) {
+  x=8;y=184;
+  if(width>130) {text="Hold Esc";VH_MeasurePropString(text,&width,&height,0);}
+ } else {
+  x=308-width;y=150;
+ }
+ VH_DrawPropStringSolid(text,x,y,0,14);
+ if(state->holding) {
+  uint32_t held=SD_GetTimeCount()-state->holdStarted;
+  if(held>KW_SKIP_HOLD_TICS) held=KW_SKIP_HOLD_TICS;
+  int barWidth=crawl?130:width;
+  int barX=crawl?8:x;
+  VL_ScreenRect(barX,y+height+1,barWidth,1,8);
+  VL_ScreenRect(barX,y+height+1,barWidth*held/KW_SKIP_HOLD_TICS,1,14);
+ }
+ VL_Present();
+}
+
 static void AL_Mars(int cx,int cy,int radius)
 {
  for(int y=-radius;y<=radius;++y) for(int x=-radius;x<=radius;++x)
@@ -250,7 +279,7 @@ static void AL_Crawl(AL_Opening *scene,uint32_t elapsed,uint32_t duration)
  int offset=190-(int)((uint64_t)(elapsed>duration?duration:elapsed)*travel/duration);
  for(int i=0;i<count;++i) {
   int y=offset+i*11;
-  if(y>=26 && y<=184) {
+  if(y>=26 && y<=173) {
    VH_DrawPropStringSolid(lines[i],9,y,0,15);
   }
  }
@@ -313,10 +342,9 @@ static bool AL_PlayPart(AL_Opening *scene,int part)
  }
  bool voiced=KW_Narrate(clip);
  KW_Presentation controls;KW_BeginPresentation(&controls);
- uint32_t start=SD_GetTimeCount(),duration=connecting?140:crawl?30*70:departure?12*70:70+(uint32_t)strlen(words)*3;
+ uint32_t start=SD_GetTimeCount(),duration=connecting?140:crawl?AL_CRAWL_TICS:departure?12*70:70+(uint32_t)strlen(words)*3;
  for(;;) {
   uint32_t elapsed=SD_GetTimeCount()-start;
-  KW_ClearPresentationHint(&controls);
   if(crawl) AL_Crawl(scene,elapsed,duration);
   else if(connecting) {
    AL_Workshop(scene,-1,0,elapsed,true);
@@ -348,7 +376,7 @@ static bool AL_PlayPart(AL_Opening *scene,int part)
    break;
   }
   if(KW_PollPresentation(&controls,!crawl && !connecting)) break;
-  KW_PresentWithSkipHint(&controls,!crawl && !connecting);
+  AL_PresentHint(&controls,crawl,!crawl && !connecting);
   if(crawl || connecting || departure) {
    if(elapsed>=duration && !KW_ClipPlaying()) break;
   } else if(voiced ? !KW_ClipPlaying() && elapsed>35 : elapsed>=duration) break;
@@ -382,7 +410,7 @@ void AL_PlayOpening(void)
  scene.ship=AL_CaptureActor(al_shipPixels,AL_SHIP_W,AL_SHIP_H);
  StartMusic(27); // The mod's own opening tune, quietly under the voices.
  SD_FadeAdLibVolume(KW_VoicesEnabled() && KW_VoiceVolume()?40:128,0);
- AL_Crawl(&scene,0,30*70);VH_UpdateScreen();VL_FadeFromBlack();
+ AL_Crawl(&scene,0,AL_CRAWL_TICS);VH_UpdateScreen();VL_FadeFromBlack();
  bool skipped=AL_PlayPart(&scene,-1);
  if(!skipped) skipped=AL_PlayPart(&scene,-2);
  const int count=(int)(sizeof(al_sceneLines)/sizeof(al_sceneLines[0]));
