@@ -2360,7 +2360,7 @@ static void KW_SetArcadeTally(const KW_ArcadeTally *t)
 {
 	KW_SetTally(&t->tally);
 	ck_gameState.numCentilife=t->centilife;
-	ck_gameState.difficulty=t->difficulty;
+	ck_gameState.difficulty=(CK_Difficulty)t->difficulty;
 }
 
 static void KW_ArcadeLeaving(int from)
@@ -2439,7 +2439,7 @@ bool KW_RestartArcade(int difficulty)
 	if (!MARS_IsActive() || !kw_marsLinked) return false;
 	memset(&kw_worlds[KW_MARS],0,sizeof(kw_worlds[KW_MARS]));
 	KW_LoadState(&kw_worlds[KW_MARS]);
-	kw_marsTally=(KW_ArcadeTally){{0,20000,3,0},0,difficulty};
+	kw_marsTally=(KW_ArcadeTally){{0,20000,3,0},0,(int16_t)difficulty};
 	KW_SetArcadeTally(&kw_marsTally);
 	ck_gameState.currentLevel=0;
 	ck_gameState.levelState=LS_Playing;

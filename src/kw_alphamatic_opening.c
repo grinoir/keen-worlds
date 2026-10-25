@@ -43,7 +43,7 @@ static void *AL_Background(const uint8_t *packed)
 
 static AL_Image AL_CaptureActor(const uint8_t *pixels,int w,int h)
 {
- AL_Image image={w,h,malloc(w*h),malloc(w*h)};
+	AL_Image image={w,h,(uint8_t *)malloc(w*h),(uint8_t *)malloc(w*h)};
  if(!image.pixels || !image.mask) Quit("Alphamatic scene: no actor memory");
  for(int i=0;i<w*h;++i) {
   image.pixels[i]=pixels[i]&15;
@@ -85,7 +85,7 @@ static AL_Image AL_CapturePicture(int chunk,uint16_t backgroundColors)
  image.w=dimensions.width*8;image.h=dimensions.height;
  if(image.w<=0 || image.h<=0 || image.w>320 || image.h>200) Quit("Alphamatic scene: invalid art dimensions");
  int size=image.w*image.h;
- image.pixels=malloc(size);image.mask=calloc(size,1);
+	image.pixels=(uint8_t *)malloc(size);image.mask=(uint8_t *)calloc(size,1);
  if(!image.pixels || !image.mask) Quit("Alphamatic scene: no art memory");
  void *surface=VL_CreateSurface(336,208),*old=VL_SetScreen(surface);
  VL_ClearScreen(0);
@@ -95,7 +95,7 @@ static AL_Image AL_CapturePicture(int chunk,uint16_t backgroundColors)
  {
   // Pictures use different backing colours. Remove only edge-connected
   // backing, so enclosed details such as Spot's eye remain intact.
-  int *queue=malloc(size*sizeof(int)),head=0,tail=0;
+		int *queue=(int *)malloc(size*sizeof(int)),head=0,tail=0;
   if(!queue) Quit("Alphamatic scene: no mask memory");
   for(int y=0;y<image.h;++y) for(int x=0;x<image.w;++x) {
    int i=y*image.w+x;
