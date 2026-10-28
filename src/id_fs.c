@@ -388,8 +388,47 @@ bool FSL_IsGoodUserPath()
 
 static const char *fs_parmStrings[] = {"GAMEPATH", "USERPATH", NULL};
 
+// KEEN WORLDS: started some other way than by its own script (the program
+// double-clicked in a file manager, or from a shortcut), Keen Worlds is not
+// in the current directory; everything of it (Keen 4, mods/, voice/,
+// arcade/, the saves) is beside the program. Unless /GAMEPATH says where,
+// work in the program's folder when Keen 4 isn't where we are.
+#ifdef _WIN32
+#include <direct.h>
+#else
+#include <unistd.h>
+#endif
+static void FSL_ChangeToProgramDir(void)
+{
+#if defined(WITH_SDL) && SDL_VERSION_ATLEAST(2, 0, 1)
+	for (int i = 1; i < us_argc; ++i)
+		if (!CK_Cross_strcasecmp(us_argv[i], "/GAMEPATH"))
+			return;
+	FS_File here = FSL_OpenFileInDirCaseInsensitive(".", "GAMEMAPS.CK4", false);
+	if (FS_IsFileValid(here))
+	{
+		FS_CloseFile(here);
+		return;
+	}
+	const char *base = SDL_GetBasePath(); // (SDL 3's is its own; SDL 2's ours to free)
+	if (!base)
+		return;
+#ifdef _WIN32
+	if (_chdir(base) == 0)
+#else
+	if (chdir(base) == 0)
+#endif
+		CK_Cross_LogMessage(CK_LOG_MSG_NORMAL, "FS_Startup: working in the program's folder, \"%s\"\n", base);
+#if WITH_SDL != 3
+	SDL_free((void *)base);
+#endif
+#endif
+}
+
 void FS_Startup()
 {
+	FSL_ChangeToProgramDir();
+
 	// For now, all of the paths will be the current directory.
 
 	fs_keenPath = FS_DEFAULT_KEEN_PATH;
