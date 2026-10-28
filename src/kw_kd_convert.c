@@ -5,7 +5,7 @@ Keen Dreams (shareware version 1.13) keeps the directories and dictionaries
 of its graphics, sounds and levels inside its program, and packs its levels
 with Huffman and RLEW where Keen 4-6 use Carmack and RLEW. The engine reads
 Keen 4-6's kind of files, so the player's copy is written once more in that
-form, into the dream's own folder, the first time it is found there:
+form, into the dream's own folder, whenever any of those files is missing:
 
 	KDREAMS.EXE  ->  EGAHEAD, EGADICT, MAPHEAD, AUDIOHHD, AUDIODCT (.KDR)
 	KDREAMS.MAP  ->  GAMEMAPS.KDR
@@ -20,6 +20,7 @@ nobody needs Python to play; the two write the same files byte for byte.
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <dirent.h>
 
 #include "id_fs.h"
 #include "ck_cross.h"
@@ -81,7 +82,7 @@ static int32_t KD_Get32(const uint8_t *p)
 
 static uint8_t *KD_ReadWhole(const char *dir, const char *name, size_t *size)
 {
-	FS_File f = FS_OpenWorldFile(dir, name);
+	FS_File f = FSL_OpenFileInDirCaseInsensitive(dir, name, false);
 	if (!FS_IsFileValid(f))
 		return NULL;
 	*size = FS_GetFileSize(f);
@@ -95,11 +96,60 @@ static uint8_t *KD_ReadWhole(const char *dir, const char *name, size_t *size)
 	return data;
 }
 
+// The size of KDREAMS.EXE in dir, or 0 if it isn't there.
+static size_t KD_ExeSize(const char *dir)
+{
+	FS_File f = FSL_OpenFileInDirCaseInsensitive(dir, "KDREAMS.EXE", false);
+	if (!FS_IsFileValid(f))
+		return 0;
+	size_t size = FS_GetFileSize(f);
+	FS_CloseFile(f);
+	return size;
+}
+
+// The folder holding the game: dir, or a folder up to two below it (a
+// download often unpacks into a folder or two of its own). The four files
+// are all read from that one folder, so that two copies side by side are
+// never mixed. Otherwise the first KDREAMS.EXE of another version, so the
+// player can be told what it is; false if there is none at all.
+static bool KD_FindGame(const char *dir, int depth, char *found, size_t foundSize, size_t *otherSize)
+{
+	size_t size = KD_ExeSize(dir);
+	if (size == KD_EXE_SIZE)
+	{
+		snprintf(found, foundSize, "%s", dir);
+		return true;
+	}
+	if (size && !*otherSize)
+		*otherSize = size;
+	if (depth == 2)
+		return false;
+	DIR *d = opendir(dir);
+	if (!d)
+		return false;
+	bool ok = false;
+	for (struct dirent *entry = readdir(d); entry && !ok; entry = readdir(d))
+	{
+		if (entry->d_name[0] == '.')
+			continue;
+		char inner[512];
+		snprintf(inner, sizeof(inner), "%s/%s", dir, entry->d_name);
+		ok = KD_FindGame(inner, depth + 1, found, foundSize, otherSize);
+	}
+	closedir(d);
+	return ok;
+}
+
 static bool KD_WriteWhole(const char *dir, const char *name, const void *data, size_t size)
 {
-	char path[512];
-	snprintf(path, sizeof(path), "%s/%s", dir, name);
-	FILE *f = fopen(path, "wb");
+	// Over a file of the name in any case, so there is only ever one.
+	FILE *f = FSL_OpenFileInDirCaseInsensitive(dir, name, true);
+	if (!f)
+	{
+		char path[512];
+		snprintf(path, sizeof(path), "%s/%s", dir, name);
+		f = fopen(path, "wb");
+	}
 	if (!f)
 		return false;
 	bool ok = fwrite(data, 1, size, f) == size;
@@ -349,25 +399,55 @@ static bool KD_ConvertLevels(const uint8_t *image, const uint8_t *maps, size_t m
 	return true;
 }
 
-// Writes the engine's form of the Keen Dreams found in (or one folder
-// below) dir into dir. Returns NULL when done, or what is wrong.
+// What the engine reads in place of the game, all written into the dream's
+// folder. The dream is there when every one of them is.
+static const char *const kd_madeFiles[] = {
+	"EGAGRAPH.KDR", "EGAHEAD.KDR", "EGADICT.KDR", "AUDIO.KDR",
+	"AUDIOHHD.KDR", "AUDIODCT.KDR", "MAPHEAD.KDR", "GAMEMAPS.KDR"};
+
+bool KD_IsConverted(const char *dir)
+{
+	for (size_t i = 0; i < sizeof(kd_madeFiles) / sizeof(*kd_madeFiles); i++)
+	{
+		FS_File f = FSL_OpenFileInDirCaseInsensitive(dir, kd_madeFiles[i], false);
+		if (!FS_IsFileValid(f))
+			return false;
+		FS_CloseFile(f);
+	}
+	return true;
+}
+
+// Writes the engine's form of the Keen Dreams found in (or up to two folders
+// below) dir into dir, over whatever is there. Returns NULL when done, or
+// what is wrong, in lines short enough for a card in the game.
 const char *KD_ConvertGame(const char *dir)
 {
+	static char problemText[160];
+	char src[512];
+	size_t otherSize = 0;
+	if (!KD_FindGame(dir, 0, src, sizeof(src), &otherSize))
+	{
+		if (!otherSize)
+			return "KDREAMS.EXE is not in\nmods/dreams.";
+		snprintf(problemText, sizeof(problemText),
+			"KDREAMS.EXE is %u bytes:\nanother version. This needs\nshareware 1.13 (81619).",
+			(unsigned)otherSize);
+		return problemText;
+	}
+
 	size_t exeLen = 0, mapsLen = 0, egaLen = 0, audLen = 0;
-	uint8_t *exe = KD_ReadWhole(dir, "KDREAMS.EXE", &exeLen);
-	uint8_t *maps = KD_ReadWhole(dir, "KDREAMS.MAP", &mapsLen);
-	uint8_t *ega = KD_ReadWhole(dir, "KDREAMS.EGA", &egaLen);
-	uint8_t *aud = KD_ReadWhole(dir, "KDREAMS.AUD", &audLen);
+	uint8_t *exe = KD_ReadWhole(src, "KDREAMS.EXE", &exeLen);
+	uint8_t *maps = KD_ReadWhole(src, "KDREAMS.MAP", &mapsLen);
+	uint8_t *ega = KD_ReadWhole(src, "KDREAMS.EGA", &egaLen);
+	uint8_t *aud = KD_ReadWhole(src, "KDREAMS.AUD", &audLen);
 	uint8_t *image = (uint8_t *)calloc(KD_IMAGE_MAX, 1);
 	KD_Bytes egahead = {NULL, 0, 0}, gamemaps = {NULL, 0, 0}, maphead = {NULL, 0, 0}, audiohhd = {NULL, 0, 0};
 	const char *problem = NULL;
 
 	if (!exe || !maps || !ega || !aud)
-		problem = "KDREAMS.EXE, .MAP, .EGA and .AUD are not all there";
-	else if (exeLen != KD_EXE_SIZE)
-		problem = "this is not Keen Dreams 1.13 (shareware): KDREAMS.EXE has another size";
+		problem = "KDREAMS.MAP, .EGA or .AUD\nis missing beside\nKDREAMS.EXE.";
 	else if (KD_Unlzexe(exe, exeLen, image) < KD_AUDIODCT_AT + 1024)
-		problem = "KDREAMS.EXE could not be unpacked";
+		problem = "KDREAMS.EXE could not\nbe unpacked.";
 
 	if (!problem)
 	{
@@ -380,10 +460,10 @@ const char *KD_ConvertGame(const char *dir)
 			KD_Put(&egahead, three, 3);
 		}
 		if ((size_t)KD_Get32(image + KD_EGAHEAD_AT + KD_NUM_CHUNKS * 4) != egaLen)
-			problem = "KDREAMS.EGA does not fit this KDREAMS.EXE";
+			problem = "KDREAMS.EGA does not\nfit this KDREAMS.EXE.";
 	}
 	if (!problem && !KD_ConvertLevels(image, maps, mapsLen, &gamemaps, &maphead))
-		problem = "KDREAMS.MAP does not fit this KDREAMS.EXE";
+		problem = "KDREAMS.MAP does not\nfit this KDREAMS.EXE.";
 	if (!problem)
 	{
 		// The directory's entries for the digitized sounds the game doesn't
@@ -403,7 +483,7 @@ const char *KD_ConvertGame(const char *dir)
 			|| !KD_WriteWhole(dir, "AUDIODCT.KDR", image + KD_AUDIODCT_AT, 1024)
 			|| !KD_WriteWhole(dir, "MAPHEAD.KDR", maphead.data, maphead.size)
 			|| !KD_WriteWhole(dir, "GAMEMAPS.KDR", gamemaps.data, gamemaps.size))
-			problem = "the folder can't be written to";
+			problem = "mods/dreams can't be\nwritten to.";
 	}
 
 	free(exe);

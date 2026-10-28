@@ -11,7 +11,7 @@ episode, you start inside the Bean-with-Bacon Megarocket, walk to the flight
 console and choose where to land: Gnosticus IV, the Shikadi armada, Fribbulus
 Xax, or the worlds the Keen community has made since.
 
-> **Keen Worlds 0.9.2 beta.** Every world can be played from landing to ending, but few
+> **Keen Worlds 0.9.3 beta.** Every world can be played from landing to ending, but few
 > people have done it yet. Things may still be wrong; finding them is the point.
 > See [Reporting a problem](#reporting-a-problem).
 

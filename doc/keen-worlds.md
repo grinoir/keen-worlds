@@ -929,13 +929,15 @@ tools`), because they find the games and the play folder from there.
   a folder of their own. A world counts as installed when its folder holds
   the game itself (`KW_FindWorld`: its `EGAGRAPH`, or its levels for the
   ported games), not just our files. Keen Dreams is written in the
-  engine's form by the game the first time it is found
-  (`kw_kd_convert.c`, the same files as `kwtools/kw_dreams.py` byte for
-  byte). `kwtools/package/MODS.txt` tells the player where each game
+  engine's form by the game whenever any of the eight converted files is
+  missing (`kw_kd_convert.c`, the same files as `kwtools/kw_dreams.py`
+  byte for byte), from the one folder (the dream's or up to two below)
+  holding a 1.13 `KDREAMS.EXE`; it counts as installed only when all
+  eight are there, and the bed tells the player what is wrong otherwise. `kwtools/package/MODS.txt` tells the player where each game
   comes from.
 
 **The version** is written once, in `src/kw_version.h` (`KW_VERSION`,
-`KW_VERSION_NAME`): 0.9.2, "beta". Every world can be played from landing
+`KW_VERSION_NAME`): 0.9.3, "beta". Every world can be played from landing
 to ending, and testers are finding out whether that holds; 1.0 is the
 first release for everyone, and the last number counts fixes. More life in
 saved levels comes after 1.0 (1.1, 1.2, ...): new content, not a missing

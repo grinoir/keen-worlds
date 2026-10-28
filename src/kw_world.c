@@ -303,6 +303,8 @@ static bool KW_WorldHasFile(int world, const char *name)
 }
 
 const char *KD_ConvertGame(const char *dir);
+bool KD_IsConverted(const char *dir);
+static const char *kw_dreamProblem; // why Keen Dreams isn't here, if it was looked for
 
 static bool KW_FindWorld(int world)
 {
@@ -333,13 +335,15 @@ static bool KW_FindWorld(int world)
 		// The engine reads the game in a form of its own, written here the
 		// first time the game is found (kw_kd_convert.c). Keen 4's
 		// variables (Omnispeak's own files) are its base.
-		if (!KW_WorldHasFile(world, "GAMEMAPS.KDR") && KW_WorldHasFile(world, "KDREAMS.EXE"))
+		// Written again whenever any of them is missing, so that a part of
+		// them (or a GAMEMAPS.KDR of some other copy) is never taken for all.
+		if (!KD_IsConverted(KW_WorldPath(world)))
 		{
-			const char *problem = KD_ConvertGame(KW_WorldPath(world));
-			if (problem)
-				CK_Cross_LogMessage(CK_LOG_MSG_WARNING, "Keen Dreams in %s: %s.\n", KW_WorldPath(world), problem);
+			kw_dreamProblem = KD_ConvertGame(KW_WorldPath(world));
+			if (kw_dreamProblem)
+				CK_Cross_LogMessage(CK_LOG_MSG_WARNING, "Keen Dreams in %s: %s\n", KW_WorldPath(world), kw_dreamProblem);
 		}
-		return KW_WorldHasFile(world, "GAMEMAPS.KDR") && FS_IsOmniFilePresent("EPISODE.CK4");
+		return KD_IsConverted(KW_WorldPath(world)) && FS_IsOmniFilePresent("EPISODE.CK4");
 	}
 	if (def->episode == KW_EPISODE_OSI)
 	{
@@ -2558,7 +2562,13 @@ static void KW_Dream(void)
 	{
 		SD_PlaySound(CK_SOUNDNUM(SOUND_NEEDKEYCARD));
 		if (!kw_cardsOff)
-			KW_ShowCards("Keen lies down, but he\nis not sleepy.\n\n(Keen Dreams is not here:\nsee \"Keen Dreams\" in\ndoc/keen-worlds.md.)");
+		{
+			char text[320];
+			snprintf(text, sizeof(text), "Keen lies down, but he\nis not sleepy.\n\nKeen Dreams is not here:\n%s\f%s",
+				kw_dreamProblem ? kw_dreamProblem : "it needs Keen 4.",
+				"Put Keen Dreams' shareware\nrelease, version 1.13, in\nmods/dreams: KDREAMS.EXE,\n.MAP, .EGA and .AUD.\nSee mods/README.txt.");
+			KW_ShowCards(text);
+		}
 		return;
 	}
 	printf("KW_AUTODREAM: Keen falls asleep\n");

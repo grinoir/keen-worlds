@@ -41,8 +41,14 @@ Where each game comes from:
            Its thread on pckf.com.
 
   dreams   Tuberia              Keen Dreams, shareware version 1.13
-           Free to pass on; many DOS archives have it. This is the dream
-           Keen has in the ship's bed, not a place in the flight menu.
+           Free to pass on; many DOS archives have it (archive.org: search
+           "Keen Dreams shareware 1.13"). Four of its files are needed:
+           KDREAMS.EXE (81619 bytes), KDREAMS.MAP, .EGA and .AUD. Keen
+           Worlds makes its own .KDR files from them when it starts; you
+           never need to find those. Other versions (the 2015 Steam
+           release, the Definitive Edition) do not work. If Keen can't
+           sleep, the bed says what is missing. This is the dream Keen has
+           in the ship's bed, not a place in the flight menu.
 
 Each world needs its base game too: Keen 4 for keen7, keen95, bounty and
 dreams; Keen 5 for keen9, ck55, asylum, osi, arealm, alphamatic and fitf; Keen 6 for
