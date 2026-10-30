@@ -837,6 +837,39 @@ void CA_CacheGrChunk (int chunk)
 /*
 ======================
 =
+= CAL_MapPlane / CAL_FreeMapPlane
+=
+= Keen Worlds companion: each plane has MAPPAD empty rows above and below.
+= DOS kept a plane in its own 64K segment, so a tile row or column worked out
+= from a position that wrapped (Keen jumping off a map's edge) still read
+= inside it; here such reads land in the empty rows instead of past the end.
+=
+======================
+*/
+
+static uint16_t	*mapplanestore[3];
+
+static void CAL_MapPlane (int plane, long size)
+{
+	long	pad = (long)MAPPAD * mapheaderseg[mapon]->width * 2 + 0x20000;
+
+	free(mapplanestore[plane]);
+	mapplanestore[plane] = calloc(1, pad + size + pad);
+	if (!mapplanestore[plane])
+		Quit("CA_CacheMap: out of memory");
+	mapsegs[plane] = (uint16_t *)((byte *)mapplanestore[plane] + pad);
+}
+
+static void CAL_FreeMapPlane (int plane)
+{
+	free(mapplanestore[plane]);
+	mapplanestore[plane] = NULL;
+	mapsegs[plane] = NULL;
+}
+
+/*
+======================
+=
 = CA_CacheMap
 =
 ======================
@@ -858,7 +891,7 @@ void CA_CacheMap (int mapnum)
 		MM_SetPurge ((memptr *)&mapheaderseg[mapon],3);
 	for (plane=0;plane<3;plane++)
 		if (mapsegs[plane])
-			MM_FreePtr ((memptr *)&mapsegs[plane]);
+			CAL_FreeMapPlane (plane);
 
 	mapon = mapnum;
 
@@ -891,8 +924,8 @@ void CA_CacheMap (int mapnum)
 
 	for (plane = 0; plane<3; plane++)
 	{
+		CAL_MapPlane (plane, size);
 		dest = (memptr *)&mapsegs[plane];
-		MM_GetPtr(dest,size);
 
 		pos = mapheaderseg[mapnum]->planestart[plane];
 		compressed = mapheaderseg[mapnum]->planelength[plane];
@@ -1243,7 +1276,7 @@ void CA_SetAllPurge (void)
 
 	for (i=0;i<3;i++)
 		if (mapsegs[i])
-			MM_FreePtr ((memptr *)&mapsegs[i]);
+			CAL_FreeMapPlane (i);
 
 //
 // free sounds

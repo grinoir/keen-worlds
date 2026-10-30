@@ -134,7 +134,10 @@ extern	unsigned	originmap;
 
 extern	unsigned	mapwidth,mapheight,mapbyteswide,mapwordswide
 					,mapbytesextra,mapwordsextra;
-extern	unsigned	mapbwidthtable[MAXMAPHEIGHT];
+// Keen Worlds companion: rows from -MAPPAD to MAXMAPHEIGHT+MAPPAD-1 are valid,
+// as tile rows computed from 16-bit positions wrap (see id_ca.c CAL_MapPlane)
+#define	MAPPAD	256
+extern	int	*const mapbwidthtable;
 
 extern	unsigned	originxmin,originxmax,originymin,originymax;
 

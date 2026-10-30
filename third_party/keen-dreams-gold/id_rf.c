@@ -181,7 +181,8 @@ boolean        compatibility;            // crippled refresh for wierdo SVGAs
 
 unsigned	mapwidth,mapheight,mapbyteswide,mapwordswide
 			,mapbytesextra,mapwordsextra;
-unsigned	mapbwidthtable[MAXMAPHEIGHT];
+static int	mapbwidthstorage[MAPPAD+MAXMAPHEIGHT+MAPPAD];
+int	*const mapbwidthtable = mapbwidthstorage + MAPPAD;
 
 //
 // Global : Actor coordinates are in this, at 1/16 th of a pixel, to allow
@@ -575,12 +576,8 @@ void RF_NewMap (void)
 //
 // make a lookup table for the maps left edge
 //
-	spot = 0;
-	for (i=0;i<mapheight;i++)
-	{
-	  mapbwidthtable[i] = spot;
-	  spot += mapbyteswide;
-	}
+	for (i=-MAPPAD;i<MAXMAPHEIGHT+MAPPAD;i++)
+	  mapbwidthtable[i] = i*(int)mapbyteswide;
 
 //
 // fill in updatemapofs with the new width info
