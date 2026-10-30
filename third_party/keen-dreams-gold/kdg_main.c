@@ -70,8 +70,10 @@
 #ifdef _WIN32
 #include <direct.h>
 #define chdir _chdir
+#define mkdir _mkdir
 #else
 #include <unistd.h>
+#include <sys/stat.h>
 #endif
 
 /*
@@ -932,6 +934,11 @@ int main (int argc, char **argv)
 		return 2;
 	}
 	snprintf(ca_datapath, 1024, "%s", argv[1]);
+	mkdir(argv[2]
+#ifndef _WIN32
+		, 0755
+#endif
+		);	// (fails harmlessly if it is there)
 	if (chdir(argv[2]))
 	{
 		fprintf(stderr, "Keen Dreams Gold: can't use the save folder %s\n", argv[2]);
