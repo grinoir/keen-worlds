@@ -20,7 +20,14 @@ from kw_keen4_voice import KEEN, NARRATOR, LINDSEY, COUNCIL
 from kw_keen789_voice import BARKER, SPOT, STYLE
 from kw_landing_voice import speak_all, RATE, VOICE, LANDINGS, COURSES, SAVED
 
-VORTICON, ELDER, SHIKADI, VEO, COMPUTER = BARKER, COUNCIL, 'am_adam','am_fenrir','am_echo'
+# The Vorticon and the elder are Lt. Barker and the council, recurring
+# characters with their own voices. The others are this world's own; their
+# voices were chosen from samples on 2026-10-30 (sample 2 of each), so they
+# no longer sound like the Narln, the Grabbiter or Elvis.
+VORTICON, ELDER, SHIKADI, VEO, COMPUTER = BARKER, COUNCIL, 'am_adam','am_fenrir','af_alloy'
+STYLE = dict(STYLE)
+STYLE[SHIKADI] = dict(pitch=0.88)
+STYLE[VEO] = dict(pitch=0.8)
 PORTRAITS = {14:VORTICON,15:ELDER,16:LINDSEY,17:SPOT,18:KEEN,19:KEEN,
              21:KEEN,41:SHIKADI,47:KEEN,48:LINDSEY,49:ELDER,65:VEO}
 COMMAND = re.compile(r'\^([GT])(\d+),(\d+),(\d+)(?:,(\d+))?|\^[Ee]')
@@ -109,7 +116,8 @@ def main(source, output):
     for clip, lines in clips.items():
         segments[clip]=[]
         for i,(voice,words) in enumerate(lines):
-            digest=hashlib.sha256((voice+'\n'+words).encode()).hexdigest()[:10]
+            # The voice's settings are part of the name, so a recast remakes it.
+            digest=hashlib.sha256((voice+repr(sorted(STYLE.get(voice,{}).items()))+'\n'+words).encode()).hexdigest()[:10]
             name=f'{clip[:-4]}_{i:02d}_{digest}.RAW'
             segments[clip].append(name)
             by_voice[voice][name]=re.split(r'(?<=[.!?])\s+(?=[A-Z])',words)
