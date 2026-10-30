@@ -78,7 +78,7 @@ typedef	enum	{
 					smm_Off,smm_AdLib
 				}	SMMode;
 
-typedef	struct
+PACKED(SoundCommon)
 		{
 			longword	length;
 			word		priority;
@@ -91,7 +91,7 @@ typedef	struct
 
 #define	pcSpkBits	3
 
-typedef	struct
+PACKED(PCSound)
 		{
 			SoundCommon	common;
 			byte		data[1];
@@ -105,7 +105,7 @@ typedef	struct
 #define	sbWriteStat	0x20c
 #define	sbDataAvail	0x20e
 
-typedef	struct
+PACKED(SampledSound)
 		{
 			SoundCommon	common;
 			word		hertz;
@@ -128,7 +128,7 @@ typedef	struct
 // Global stuff
 #define	alEffects	0xbd
 
-typedef	struct
+PACKED(Instrument)
 		{
 			byte	mChar,cChar,
 					mScale,cScale,
@@ -143,7 +143,7 @@ typedef	struct
 					unused[3];
 		} Instrument;
 
-typedef	struct
+PACKED(AdLibSound)
 		{
 			SoundCommon	common;
 			Instrument	inst;
