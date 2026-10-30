@@ -33,6 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ck_config.h"
 #include "ck_cross.h"
 #include "ck_def.h"
+#include "kw_rtts.h"
 #include "ck_game.h"
 #include "ck_play.h"
 #include "ck_text.h"
@@ -1040,6 +1041,7 @@ void CK_GameLoop()
 			ck_startingDifficulty = D_NotPlaying;
 		loadLevel:
 			OSI_RememberLevelStart(); // KEEN WORLDS: what dying takes back in Operation Station Infiltration
+			RT_RememberScore(); // KEEN WORLDS: and the score, in Return to the Shadowlands
 			CK_LoadLevel(true, false);
 			AR_AfterLevelLoad(); // KEEN WORLDS: Atroxian Realm restarts from a touched checkpoint
 
@@ -1096,6 +1098,7 @@ void CK_GameLoop()
 		{
 		case LS_Died:
 			OSI_TakeBackOnDeath(); // KEEN WORLDS (Operation Station Infiltration)
+			RT_RestoreScore(); // KEEN WORLDS (Return to the Shadowlands)
 			if (KD_IsActive())
 				KD_KeenDied(); // KEEN WORLDS (Keen Dreams): keys and this level's bombs go
 			// KEEN WORLDS: Foray in the Forest's checkpoints and free restarts

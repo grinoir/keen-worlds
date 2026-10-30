@@ -1061,3 +1061,35 @@ remaining human checks. No original DOS executable runs in this port.
 that scene. See `doc/alphamatic-opening.md` for the script, assets, control
 semantics and developer test. `/ALOPENING` previews it without a normal game
 session; the local wrapper uses an isolated user path.
+
+### Return to the Shadowlands (Far Shadowlands)
+
+World id `rtts`, "Far Shadowlands": Ceilick's Return to the Shadowlands
+v1.8 (2022-12-21; programming K1n9_Duk3), the first episode of the Spot
+story. It is a GPL source mod of the reconstructed Keen 4 source, and runs
+here on Omnispeak's Keen 4 code (audit:
+`research/return-to-the-shadowlands.md` in the workspace).
+
+- `kwtools/kw_rtts.py` checks the player's v1.8 files (by hash) and writes
+  `data/mods/rtts/RTTS.CK4` and `AUDINFOE.RTT`: every graphics chunk
+  renumbered (RTTS drops Keen 4's gem-door sprite and adds 34 sprites, so
+  tiles and texts are 34 higher), its uncompressed audio, 21 levels with
+  their names and music, its story, and its dialogue read from `RTTS.EXE`.
+  The file ends `%override "EPISODE.CK4"`, so Keen 4's own actions and
+  settings fill in the rest.
+- `src/kw_rtts.c`: its new creatures (badoing, witch doctor, the walking
+  Oracle Janitor, stingaru), its Treasure Eater rules (no key gems, the
+  nearest item, turning on slopes), the scouts' own lines
+  (`RT_ScoutDialog`), the new spawn values, and the score taken back on
+  dying. Lindsey ends her level. Hooks in `ck4_misc.c`, `ck_keen.c` and
+  `ck_game.c` are behind `RT_IsActive()`.
+- The ship lands in its Megarocket level (20). The Chronicle opens it after
+  the journey home, and the Shikadi Station after it (the Oracle names the
+  station at the end).
+- Voices: `kwtools/kw_rtts_voice.py` (Keen, Lindsey and the Janitor as in
+  Keen 4; the scouts are `am_puck` at pitch 1.22, chosen provisionally).
+- Check: `tests/test-rtts.sh` (`/RTTSTEST`).
+- Not yet as in the original: flags thrown onto the map (Keen 4's waving
+  flags are used), its Star Wars intro crawl (Keen Worlds' narrated scroll
+  instead), its reading animation, and a few small marked fixes (a pole and
+  door glitch, contact after death).

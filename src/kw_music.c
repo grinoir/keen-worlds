@@ -295,7 +295,7 @@ bool KW_SayWorldLine(const char *name)
 		{KW_KEEN4, "K4"}, {KW_KEEN5, "K5"}, {KW_KEEN6, "K6"}, {KW_KEEN7, "K7"}, {KW_KEEN8, "K8"}, {KW_KEEN9, "K9"},
 		{KW_KEEN95, "K95"}, {KW_BOUNTY, "BH"}, {KW_CK55, "K55"}, {KW_DREAM, "KD"}, {KW_AREALM, "AR"}, {KW_FITF, "FF"},
 		// (Keen Asylum and Operation Station Infiltration say Keen 5's words where they speak)
-		{KW_ASYLUM, "K5"}, {KW_OSI, "K5"}, {KW_ALPHAMATIC, "AL"}, {KW_SUBURB,"SS"}};
+		{KW_ASYLUM, "K5"}, {KW_OSI, "K5"}, {KW_ALPHAMATIC, "AL"}, {KW_SUBURB,"SS"}, {KW_RTTS,"RT"}};
 	for (size_t i = 0; i < sizeof(spoken) / sizeof(spoken[0]); ++i)
 		if (spoken[i].world == KW_CurrentWorld())
 		{

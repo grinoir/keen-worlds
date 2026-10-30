@@ -50,6 +50,13 @@ Where each game comes from:
            sleep, the bed says what is missing. This is the dream Keen has
            in the ship's bed, not a place in the flight menu.
 
+  rtts     Far Shadowlands      Return to the Shadowlands v1.8, by Ceilick
+                                (programming K1n9_Duk3), 2022-12-21
+           From its KeenWiki page (l.ceilick.return_to_the_shadowlands
+           _v1.8...zip). Unpack the whole zip in mods/rtts, beside the
+           RTTS.CK4 and AUDINFOE.RTT that come with Keen Worlds. Other
+           versions are refused (the converter checks the v1.8 files).
+
   dreams-gold  (the bunk)       Keen Dreams Gold Edition, by Szemigi
            Release of 2026-05-31: KDGOLD.ZIP from its thread,
            https://pckf.com/viewtopic.php?t=18318. Unpack the whole zip in

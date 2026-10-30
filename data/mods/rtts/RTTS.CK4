@@ -1,0 +1,868 @@
+# Return to the Shadowlands v1.8, by Ceilick; programming K1n9_Duk3.
+# Written by kwtools/kw_rtts.py. Native code: src/kw_rtts.c. It runs on Keen 4.
+
+%string ca_graphHead "EGAHEAD.CK4"
+%string ca_audioInfoFile "AUDINFOE.RTT"
+%int ca_audioUncompressed 1
+%string ca_audioHead "AUDIOHED.CK4"
+%string ca_audioFile "AUDIOT.CK4"
+%string ca_mapHead "MAPHEAD.CK4"
+# (no such file: the tile info is in MAPHEAD.CK4, after the map offsets)
+%string ca_tileInfo "TILEINFO.RTT"
+%int ck_maxLevel 20
+%int ck_maxEnterLevel 20
+%int ck_maxDoneLevel 20
+%int CK_highScoreLevel 19
+%int CK4_NumCouncilsToRescue 8
+%string ck_str_levelWarp "  Warp to which level(1-20):"
+%string ck_str_exitToMap "Exit to Far Shadowlands"
+%string ck4_str_statusRescued "SCOUTS"
+
+%intarray CK_LevelMusic 6, 3, 1, 2, 1, 1, 2, 3, 1, 0, 0, 0, 3, 0, 0, 2, 1, 4, 1, 3, 5
+%int ck4_specialMusic 5
+%int CK_NumMusicLevels 21
+
+%string ck_str_storyText
+	"Return to the Shadowlands\n\nWhile working in his\nclubhouse Billy hears\na loud noise from the\nyard and decides to\ninvestigate.\n\nSomeone has kidnapped\nhis pet Yorp, Spot!\n\nRushing to Gnosticus IV\nKeen hopes to use\nthe Oracle to find\nout who took his\nbeloved pet.\n\nBut the Oracle Council\nseems to have other\nplans for our hero...\n"
+%stringarray ck_str_levelNames
+	"Far Shadowlands",
+	"Dunesville",
+	"Glacier Gate",
+	"The Ruins of Sand Yego",
+	"Backwoods Blockade",
+	"Frigid Fortress",
+	"Frozone",
+	"Bounder Town",
+	"Reflectalus",
+	"Lost Longhouse",
+	"Pyramid of Fear",
+	"Pyramid of Footsteps",
+	"Whispering Woods",
+	"Pyramid of the Sun",
+	"Isle of the Ancients",
+	"Isle of Caves",
+	"Isle of Ice",
+	"Sunken Sinkhole",
+	"Jungri-la",
+	"",
+	"The Bean-with-Bacon\nMegarocket"
+%stringarray ck_str_levelEntryText
+	"Keen returns to the\nShadowlands",
+	"Keen treads into\nDunesville",
+	"Keen skates into\nGlacier Gate",
+	"Keen may\nbe the cause of\nThe Ruins of Sand Yego",
+	"Keen assaults the\nBackwoods Blockade",
+	"Keen invades\nthe Frigid Fortress",
+	"Keen chills out\nin the Frozone",
+	"Keen bounces into\nBounder Town",
+	"Keen sees visions\nin Reflectalus",
+	"Keen discovers\nthe Lost Longhouse",
+	"Keen creeps into the\nPyramid of Fear",
+	"Keen is followed\ninto the\nPyramid of Footsteps",
+	"Keen is enchanted by\nthe Whispering Woods",
+	"Keen gazes into the\nPyramid of the Sun",
+	"Keen irreverntly tours\nthe Isle of Ancients",
+	"Keen descends\nthe Isle of Caves",
+	"Keen slips into\nthe Isle of Ice",
+	"Keen plops into\nthe Sunken Sinkhole",
+	"Keen basks in\nJungri-la",
+	"",
+	"Keen launches into the\nBean-with-Bacon\nMegarocket"
+
+%int CK4_LindseyMessage1Level 12
+%int CK4_JanitorLevel -1
+%int CK4_JanitorPic 87
+%string ck4_str_lindsaySays ""
+%string ck4_str_lindsayMessage1 "Commander Keen!\nI'm afraid I went\nlooking for the scouts\nand got into a bit of\na pinch. Thank you\nfor rescuing me!"
+%string ck4_str_lindsayMessage2 "The Oracle Janitor has\ngone to find the scouts.\nThere's trouble afoot!"
+%string ck4_str_lindsayThanks1 "Any time, your highness!\nNow, let's find the rest\nof those scouts!"
+%string ck4_str_lindsayThanks2 "Don't worry, princess,\nI'll find them!"
+%string ck4_str_janitor1 "I've searched for those\ndarn scouts for days!\nFinally someone has come\nto MY rescue!"
+%string ck4_str_janitor2 "I'll leave the rest\nto you, Captain, I'm\ngoing on vacation!"
+%string ck4_str_janitor3 "Now wait a minute,\nyou mean I have to\nclean up YOUR mess\nby myself?"
+%string ck4_str_janitor4 "Here's my mop."
+%string ck4_str_cantSwim "I don't have\nmy wetsuit!"
+%string ck4_str_gotWetsuit "I wonder who leaves\nall these wetsuits\nlying around?"
+%stringarray rtts_str_scout
+	"Commodore Keen!\nI'm so excited I don't\nknow what to do\nwith my hands.",
+	"Commodore Keen!\nI'm so excited I don't\nknow what to do\nwith my hands.",
+	"Commodore Keen!\nI'm so excited I don't\nknow what to do\nwith my hands.",
+	"Captain Keen!\nRemember me?\nIt's an honor to be\nsaved by you!",
+	"Commodore Keen!\nI'm so excited I don't\nknow what to do\nwith my hands.",
+	"Oh Comrade Keen! Can I\nhave your autograph?",
+	"Commodore Keen!\nI'm so excited I don't\nknow what to do\nwith my hands.",
+	"Commodore Keen!\nI'm so excited I don't\nknow what to do\nwith my hands.",
+	"You don't happen to\nhave any snacks with\nyou, do you, Captain?",
+	"Commodore Keen!\nI'm so excited I don't\nknow what to do\nwith my hands.",
+	"Help! I'm afraid\nof the dark!",
+	"Commodore Keen!\nI'm so excited I don't\nknow what to do\nwith my hands.",
+	"Commodore Keen!\nI'm so excited I don't\nknow what to do\nwith my hands.",
+	"Did you see it, Captain?\nIt was THIS big!\nAlmost took my hand off!",
+	"Aw schucks, I was\nhoping to be rescued\nby the princess!",
+	"Commodore Keen!\nI'm so excited I don't\nknow what to do\nwith my hands.",
+	"Oh my, Corporal Keen,\nI'm unworthy!",
+	"Commodore Keen!\nI'm so excited I don't\nknow what to do\nwith my hands.",
+	"Commodore Keen!\nI'm so excited I don't\nknow what to do\nwith my hands.",
+	"Commodore Keen!\nI'm so excited I don't\nknow what to do\nwith my hands.",
+	"Commodore Keen!\nI'm so excited I don't\nknow what to do\nwith my hands."
+%stringarray rtts_str_keenScout
+	"It's Comman-\noh forget it!",
+	"It's Comman-\noh forget it!",
+	"It's Comman-\noh forget it!",
+	"You again?\nTry to stay\nout of trouble.",
+	"It's Comman-\noh forget it!",
+	"You're even more\nobnoxious than\nthe last one...",
+	"It's Comman-\noh forget it!",
+	"It's Comman-\noh forget it!",
+	"Meet the others\nback at the Megarocket\nfor some candy.",
+	"It's Comman-\noh forget it!",
+	"How did you get\nall the way down\nhere anyway!?",
+	"It's Comman-\noh forget it!",
+	"It's Comman-\noh forget it!",
+	"You should be more\ncareful, kid.",
+	"I could just\nleave you here...",
+	"It's Comman-\noh forget it!",
+	"I can't disagree\nwith that!",
+	"It's Comman-\noh forget it!",
+	"It's Comman-\noh forget it!",
+	"It's Comman-\noh forget it!",
+	"It's Comman-\noh forget it!"
+
+%int FON_MAINFONT 3
+%int FON_WATCHFONT 4
+%int FON_STARWARSFONT 5
+%int PIC_HELPMENU 6
+%int PIC_H_LARROW 7
+%int PIC_H_RARROW 8
+%int PIC_H_ESC 9
+%int PIC_H_ENTER 10
+%int PIC_H_BOTTOMINSTR 11
+%int PIC_H_KEENRADIO 12
+%int PIC_H_NUTS 13
+%int PIC_H_NUTS2 14
+%int PIC_H_ZAP 15
+%int PIC_H_TALKING 16
+%int PIC_H_CAPTAINKEEN 17
+%int PIC_H_PEON 18
+%int PIC_H_BWBROCKET 19
+%int PIC_H_SODA 20
+%int PIC_H_GUM 21
+%int PIC_H_CANDYBAR 22
+%int PIC_H_JAWBREAKER 23
+%int PIC_H_DOUGHNUT 24
+%int PIC_H_CONE 25
+%int PIC_H_LIFEWATER 26
+%int PIC_H_STUNNER 27
+%int PIC_H_GEM 28
+%int PIC_H_ARACHNUT 29
+%int PIC_H_BERKELOID 30
+%int PIC_H_BOUNDER 31
+%int PIC_H_COUNCILMEMBER 32
+%int PIC_H_DOPEFISH 33
+%int PIC_H_INCHWORM 34
+%int PIC_H_LICK 35
+%int PIC_H_MADMUSHROOM 36
+%int PIC_H_POISONSLUG 37
+%int PIC_H_PRINCESS 38
+%int PIC_H_SCHOOLFISH 39
+%int PIC_H_SKYPEST 40
+%int PIC_H_SPRITE 41
+%int PIC_H_WORMOUTH 42
+%int PIC_H_ENDOFTEXT 43
+%int PIC_H_MASTERCARD 44
+%int PIC_HELPPOINTER 45
+%int PIC_H_VISA 46
+%int PIC_ARROWDIM 47
+%int PIC_ARROWBRIGHT 48
+%int PIC_C_KEENBYORACLE 49
+%int PIC_C_ORACLESWITCH1 50
+%int PIC_C_ORACLESWITCH2 51
+%int PIC_C_BESILENT1 52
+%int PIC_C_BESILENT2 53
+%int PIC_C_BESILENT3 54
+%int PIC_C_CHANTA1 55
+%int PIC_C_CHANTA2 56
+%int PIC_C_CHANTB1 57
+%int PIC_C_CHANTB2 58
+%int PIC_C_CHANTC1 59
+%int PIC_C_CHANTC2 60
+%int PIC_C_KEENTALK1 61
+%int PIC_C_KEENTALK2 62
+%int PIC_C_KEENTOAST 63
+%int PIC_C_EYEGLOW1 64
+%int PIC_C_EYEGLOW2 65
+%int PIC_C_ORACLESHOW 66
+%int PIC_C_KEENSEESHIKADI1 67
+%int PIC_C_KEENSEESHIKADI2 68
+%int PIC_C_KEENSEESHIKADI3 69
+%int PIC_C_KEENTHANKS 70
+%int PIC_C_MACHINE 71
+%int PIC_C_GALAXY 72
+%int PIC_C_KORATH3 73
+%int PIC_C_HOPENORAIN 74
+%int PIC_C_FROZENRENTS 75
+%int PIC_C_CLOUDS1 76
+%int PIC_C_CLOUDS2 77
+%int PIC_C_CONTINUED 78
+%int PIC_H_IDLOGO 79
+%int PIC_BORDERTOP 80
+%int PIC_BORDERLEFT 81
+%int PIC_BORDERRIGHT 82
+%int PIC_BORDERBOTTOMSTATUS 83
+%int PIC_BORDERBOTTOM 84
+%int PIC_H_BARPIC 85
+%int PIC_H_KEEN5PIC 86
+%int PIC_H_KEEN6PIC 87
+%int PIC_MENUCARD 88
+%int PIC_NEWGAMECARD 89
+%int PIC_LOADCARD 90
+%int PIC_SAVECARD 91
+%int PIC_CONFIGURECARD 92
+%int PIC_SOUNDCARD 93
+%int PIC_MUSICCARD 94
+%int PIC_KEYBOARDCARD 95
+%int PIC_MOVEMENTCARD 96
+%int PIC_BUTTONSCARD 97
+%int PIC_JOYSTICKCARD 98
+%int PIC_OPTIONSCARD 99
+%int PIC_PADDLEWAR 100
+%int PIC_QUIT 101
+%int PIC_JOYSTICK 102
+%int PIC_WRISTWATCH 103
+%int PIC_CREDIT1 104
+%int PIC_CREDIT2 105
+%int PIC_CREDIT3 106
+%int PIC_CREDIT4 107
+%int PIC_STARWARS 108
+%int PIC_TITLESCREEN 109
+%int PIC_ORACLE 110
+%int PIC_KEENTALK1 111
+%int PIC_KEENTALK2 112
+%int PIC_KEENMAD 113
+%int PIC_LINDSEY 114
+%int PIC_COUNTDOWN5 115
+%int PIC_COUNTDOWN4 116
+%int PIC_COUNTDOWN3 117
+%int PIC_COUNTDOWN2 118
+%int PIC_COUNTDOWN1 119
+%int PIC_COUNTDOWN0 120
+%int MPIC_WRISTWATCHSCREEN 121
+%int MPIC_STATUSLEFT 122
+%int MPIC_STATUSRIGHT 123
+%int SPR_PADDLE 124
+%int SPR_BALL0 125
+%int SPR_BALL1 126
+%int SPR_BALL2 127
+%int SPR_BALL3 128
+%int SPR_DEMOSIGN 129
+%int SPR_KEENSTANDR 130
+%int SPR_KEENRUNR1 131
+%int SPR_KEENRUNR2 132
+%int SPR_KEENRUNR3 133
+%int SPR_KEENRUNR4 134
+%int SPR_KEENJUMPR1 135
+%int SPR_KEENJUMPR2 136
+%int SPR_KEENJUMPR3 137
+%int SPR_KEENSTANDL 138
+%int SPR_KEENRUNL1 139
+%int SPR_KEENRUNL2 140
+%int SPR_KEENRUNL3 141
+%int SPR_KEENRUNL4 142
+%int SPR_KEENJUMPL1 143
+%int SPR_KEENJUMPL2 144
+%int SPR_KEENJUMPL3 145
+%int SPR_KEENLOOKU 146
+%int SPR_KEENWAITR1 147
+%int SPR_KEENWAITR2 148
+%int SPR_KEENWAITR3 149
+%int SPR_KEENSITREAD1 150
+%int SPR_KEENSITREAD2 151
+%int SPR_KEENSITREAD3 152
+%int SPR_KEENSITREAD4 153
+%int SPR_KEENREAD1 154
+%int SPR_KEENREAD2 155
+%int SPR_KEENREAD3 156
+%int SPR_KEENSTOPREAD1 157
+%int SPR_KEENSTOPREAD2 158
+%int SPR_KEENLOOKWRIST 159
+%int SPR_KEENLOOKD1 160
+%int SPR_KEENLOOKD2 161
+%int SPR_KEENDIE1 162
+%int SPR_KEENDIE2 163
+%int SPR_STARS1 164
+%int SPR_STARS2 165
+%int SPR_STARS3 166
+%int SPR_KEENSHOOTL 167
+%int SPR_KEENJLSHOOTL 168
+%int SPR_KEENJSHOOTD 169
+%int SPR_KEENJSHOOTU 170
+%int SPR_KEENSHOOTU 171
+%int SPR_KEENSHOOTR 172
+%int SPR_KEENJRSHOOTR 173
+%int SPR_STUN1 174
+%int SPR_STUN2 175
+%int SPR_STUN3 176
+%int SPR_STUN4 177
+%int SPR_STUNHIT1 178
+%int SPR_STUNHIT2 179
+%int SPR_KEENSHINNYR1 180
+%int SPR_KEENSHINNYR2 181
+%int SPR_KEENSHINNYR3 182
+%int SPR_KEENSLIDED1 183
+%int SPR_KEENSLIDED2 184
+%int SPR_KEENSLIDED3 185
+%int SPR_KEENSLIDED4 186
+%int SPR_KEENSHINNYL1 187
+%int SPR_KEENSHINNYL2 188
+%int SPR_KEENSHINNYL3 189
+%int SPR_KEENPLSHOOTU 190
+%int SPR_KEENPRSHOOTU 191
+%int SPR_KEENPRSHOOTD 192
+%int SPR_KEENPLSHOOTD 193
+%int SPR_KEENPSHOOTL 194
+%int SPR_KEENPSHOOTR 195
+%int SPR_KEENENTER1 196
+%int SPR_KEENENTER2 197
+%int SPR_KEENENTER3 198
+%int SPR_KEENENTER4 199
+%int SPR_KEENENTER5 200
+%int SPR_KEENHANGL 201
+%int SPR_KEENHANGR 202
+%int SPR_KEENCLIMBEDGEL1 203
+%int SPR_KEENCLIMBEDGEL2 204
+%int SPR_KEENCLIMBEDGEL3 205
+%int SPR_KEENCLIMBEDGEL4 206
+%int SPR_KEENCLIMBEDGER1 207
+%int SPR_KEENCLIMBEDGER2 208
+%int SPR_KEENCLIMBEDGER3 209
+%int SPR_KEENCLIMBEDGER4 210
+%int SPR_KEENPOGOR1 211
+%int SPR_KEENPOGOR2 212
+%int SPR_KEENPOGOL1 213
+%int SPR_KEENPOGOL2 214
+%int SPR_VIVASPLASH1 215
+%int SPR_VIVASPLASH2 216
+%int SPR_VIVASPLASH3 217
+%int SPR_BONUSRAIN1UP 218
+%int SPR_BONUS100 219
+%int SPR_BONUS200 220
+%int SPR_BONUS500 221
+%int SPR_BONUS1000 222
+%int SPR_BONUS2000 223
+%int SPR_BONUS5000 224
+%int SPR_BONUS1UP 225
+%int SPR_BONUSCLIP 226
+%int SPR_100_PTS1 227
+%int SPR_100_PTS2 228
+%int SPR_200_PTS1 229
+%int SPR_200_PTS2 230
+%int SPR_500_PTS1 231
+%int SPR_500_PTS2 232
+%int SPR_1000_PTS1 233
+%int SPR_1000_PTS2 234
+%int SPR_2000_PTS1 235
+%int SPR_2000_PTS2 236
+%int SPR_5000_PTS1 237
+%int SPR_5000_PTS2 238
+%int SPR_1UP1 239
+%int SPR_1UP2 240
+%int SPR_DOOR 241
+%int SPR_GEM_A1 241
+%int SPR_GEM_A2 242
+%int SPR_GEM_B1 243
+%int SPR_GEM_B2 244
+%int SPR_GEM_C1 245
+%int SPR_GEM_C2 246
+%int SPR_GEM_D1 247
+%int SPR_GEM_D2 248
+%int SPR_BONUSGEM 249
+%int SPR_STUNNER1 250
+%int SPR_STUNNER2 251
+%int SPR_SCOREBOX 252
+%int SPR_MAPKEEN_WALK1_W 253
+%int SPR_MAPKEEN_WALK2_W 254
+%int SPR_MAPKEEN_STAND_W 255
+%int SPR_MAPKEEN_WALK1_E 256
+%int SPR_MAPKEEN_WALK2_E 257
+%int SPR_MAPKEEN_STAND_E 258
+%int SPR_MAPKEEN_WALK1_N 259
+%int SPR_MAPKEEN_WALK2_N 260
+%int SPR_MAPKEEN_STAND_N 261
+%int SPR_MAPKEEN_WALK1_S 262
+%int SPR_MAPKEEN_WALK2_S 263
+%int SPR_MAPKEEN_STAND_S 264
+%int SPR_MAPKEEN_WALK1_SE 265
+%int SPR_MAPKEEN_WALK2_SE 266
+%int SPR_MAPKEEN_STAND_SE 267
+%int SPR_MAPKEEN_WALK1_SW 268
+%int SPR_MAPKEEN_WALK2_SW 269
+%int SPR_MAPKEEN_STAND_SW 270
+%int SPR_MAPKEEN_WALK1_NW 271
+%int SPR_MAPKEEN_WALK2_NW 272
+%int SPR_MAPKEEN_STAND_NW 273
+%int SPR_MAPKEEN_WALK1_NE 274
+%int SPR_MAPKEEN_WALK2_NE 275
+%int SPR_MAPKEEN_STAND_NE 276
+%int SPR_MAPKEEN_WAVE1 277
+%int SPR_MAPKEEN_WAVE2 278
+%int SPR_MAPKEEN_SWIM1_N 279
+%int SPR_MAPKEEN_SWIM2_N 280
+%int SPR_MAPKEEN_SWIM1_E 281
+%int SPR_MAPKEEN_SWIM2_E 282
+%int SPR_MAPKEEN_SWIM1_S 283
+%int SPR_MAPKEEN_SWIM2_S 284
+%int SPR_MAPKEEN_SWIM1_W 285
+%int SPR_MAPKEEN_SWIM2_W 286
+%int SPR_MAPKEEN_SWIM1_NE 287
+%int SPR_MAPKEEN_SWIM2_NE 288
+%int SPR_MAPKEEN_SWIM1_SE 289
+%int SPR_MAPKEEN_SWIM2_SE 290
+%int SPR_MAPKEEN_SWIM1_SW 291
+%int SPR_MAPKEEN_SWIM2_SW 292
+%int SPR_MAPKEEN_SWIM1_NW 293
+%int SPR_MAPKEEN_SWIM2_NW 294
+%int SPR_MAPKEEN_ONFOOT1 295
+%int SPR_MAPKEEN_ONFOOT2 296
+%int SPR_FLAGFLIP1 297
+%int SPR_FLAGFLIP2 298
+%int SPR_FLAGFLIP3 299
+%int SPR_FLAGFLIP4 300
+%int SPR_FLAGFLIP5 301
+%int SPR_FLAGFALL1 302
+%int SPR_FLAGFALL2 303
+%int SPR_FLAGFLAP1 304
+%int SPR_FLAGFLAP2 305
+%int SPR_FLAGFLAP3 306
+%int SPR_FLAGFLAP4 307
+%int SPR_KEENSWIML1 308
+%int SPR_KEENSWIML2 309
+%int SPR_KEENSWIMR1 310
+%int SPR_KEENSWIMR2 311
+%int SPR_KEENSUITDIE1 312
+%int SPR_KEENSUITDIE2 313
+%int SPR_SLUGR1 314
+%int SPR_SLUGR2 315
+%int SPR_SLUGSQUIRTR 316
+%int SPR_SLUGSTUN1 317
+%int SPR_SLUGSTUN2 318
+%int SPR_SLUGL1 319
+%int SPR_SLUGL2 320
+%int SPR_SLUGSQUIRTL 321
+%int SPR_SLUGSLIME1 322
+%int SPR_SLUGSLIME2 323
+%int SPR_MADMUSHROOML1 324
+%int SPR_MADMUSHROOML2 325
+%int SPR_MADMUSHROOMR1 326
+%int SPR_MADMUSHROOMR2 327
+%int SPR_LINDSEY1 328
+%int SPR_LINDSEY2 329
+%int SPR_LINDSEY3 330
+%int SPR_LINDSEY4 331
+%int SPR_INCHWORMR1 332
+%int SPR_INCHWORMR2 333
+%int SPR_INCHWORML1 334
+%int SPR_INCHWORML2 335
+%int SPR_FOOT 336
+%int SPR_EATERSTAND1 337
+%int SPR_EATERSTAND2 338
+%int SPR_EATERJUMPR1 339
+%int SPR_EATERJUMPR2 340
+%int SPR_EATERJUMPR3 341
+%int SPR_EATERJUMPL1 342
+%int SPR_EATERJUMPL2 343
+%int SPR_EATERJUMPL3 344
+%int SPR_EATERGET1 345
+%int SPR_EATERGET2 346
+%int SPR_EATERGET3 347
+%int SPR_EATERGET4 348
+%int SPR_EATERPUFF1 349
+%int SPR_EATERPUFF2 350
+%int SPR_EATERPUFF3 351
+%int SPR_EATERPUFF4 352
+%int SPR_EATERPUFF5 353
+%int SPR_EATERSTUN 354
+%int SPR_MEMBERSHUFFLER1 355
+%int SPR_MEMBERSHUFFLER2 356
+%int SPR_MEMBERSHUFFLEL1 357
+%int SPR_MEMBERSHUFFLEL2 358
+%int SPR_MEMBERTHINKL 359
+%int SPR_MEMBERTHINKR 360
+%int SPR_EGG 361
+%int SPR_BROKENEGG 362
+%int SPR_EGGCHIP1 363
+%int SPR_EGGCHIP2 364
+%int SPR_EGGCHIP3 365
+%int SPR_EGGBIRDWALKR1 366
+%int SPR_EGGBIRDWALKR2 367
+%int SPR_EGGBIRDWALKR3 368
+%int SPR_EGGBIRDWALKR4 369
+%int SPR_EGGBIRDWALKL1 370
+%int SPR_EGGBIRDWALKL2 371
+%int SPR_EGGBIRDWALKL3 372
+%int SPR_EGGBIRDWALKL4 373
+%int SPR_EGGBIRDFLY1 374
+%int SPR_EGGBIRDFLY2 375
+%int SPR_EGGBIRDFLY3 376
+%int SPR_EGGBIRDFLY4 377
+%int SPR_EGGBIRDSTUN 378
+%int SPR_DARTU1 379
+%int SPR_DARTU2 380
+%int SPR_DARTD1 381
+%int SPR_DARTD2 382
+%int SPR_DARTR1 383
+%int SPR_DARTR2 384
+%int SPR_DARTL1 385
+%int SPR_DARTL2 386
+%int SPR_MIMROCKSIT 387
+%int SPR_MIMROCKSNEAKR1 388
+%int SPR_MIMROCKSNEAKR2 389
+%int SPR_MIMROCKSNEAKR3 390
+%int SPR_MIMROCKSNEAKR4 391
+%int SPR_MIMROCKSNEAKL1 392
+%int SPR_MIMROCKSNEAKL2 393
+%int SPR_MIMROCKSNEAKL3 394
+%int SPR_MIMROCKSNEAKL4 395
+%int SPR_MIMROCKBONKR1 396
+%int SPR_MIMROCKBONKR2 397
+%int SPR_MIMROCKBONKR3 398
+%int SPR_MIMROCKBONKL1 399
+%int SPR_MIMROCKBONKL2 400
+%int SPR_MIMROCKBONKL3 401
+%int SPR_MIMROCKSTUN 402
+%int SPR_DOPEFISHR1 403
+%int SPR_DOPEFISHR2 404
+%int SPR_DOPEFISHBITER 405
+%int SPR_DOPEFISHBURP1 406
+%int SPR_DOPEFISHBURP2 407
+%int SPR_BUBBLE1 408
+%int SPR_BUBBLE2 409
+%int SPR_BUBBLE3 410
+%int SPR_BUBBLE4 411
+%int SPR_BUBBLET1 412
+%int SPR_BUBBLET2 413
+%int SPR_BUBBLET3 414
+%int SPR_BUBBLET4 415
+%int SPR_BUBBLET5 416
+%int SPR_DOPEFISHL1 417
+%int SPR_DOPEFISHL2 418
+%int SPR_DOPEFISHBITEL 419
+%int SPR_SCHOOLFISHL1 420
+%int SPR_SCHOOLFISHL2 421
+%int SPR_SCHOOLFISHR1 422
+%int SPR_SCHOOLFISHR2 423
+%int SPR_ARACHNUT1 424
+%int SPR_ARACHNUT2 425
+%int SPR_ARACHNUT3 426
+%int SPR_ARACHNUT4 427
+%int SPR_ARACHNUTSTUN 428
+%int SPR_SCUBAGEAR 429
+%int SPR_SPRITEFACE 430
+%int SPR_SPRITELOOKL 431
+%int SPR_SPRITESHOOTL 432
+%int SPR_SPRITELOOKR 433
+%int SPR_SPRITESHOOTR 434
+%int SPR_SPRITEFIRE1 435
+%int SPR_SPRITEFIRE2 436
+%int SPR_SPRITEFIRE3 437
+%int SPR_SPRITEFIRE4 438
+%int SPR_MINE 439
+%int SPR_MINEBOOM1 440
+%int SPR_MINEBOOM2 441
+%int SPR_SKYPESTL1 442
+%int SPR_SKYPESTL2 443
+%int SPR_SKYPESTR1 444
+%int SPR_SKYPESTR2 445
+%int SPR_SKYPESTPREEN1 446
+%int SPR_SKYPESTPREEN2 447
+%int SPR_SKYPESTPREEN3 448
+%int SPR_SKYPESTPREEN4 449
+%int SPR_SKYPESTPREEN5 450
+%int SPR_SKYPESTPREEN6 451
+%int SPR_SKYPESTPREEN7 452
+%int SPR_SKYPESTPREEN8 453
+%int SPR_SKYPESTREST 454
+%int SPR_SKYPESTSQUASH 455
+%int SPR_WORMOUTHHINT 456
+%int SPR_WORMOUTHPEEKR1 457
+%int SPR_WORMOUTHPEEKR2 458
+%int SPR_WORMOUTHPEEKL1 459
+%int SPR_WORMOUTHPEEKL2 460
+%int SPR_WORMOUTHBITER1 461
+%int SPR_WORMOUTHBITER2 462
+%int SPR_WORMOUTHBITER3 463
+%int SPR_WORMOUTHBITEL1 464
+%int SPR_WORMOUTHBITEL2 465
+%int SPR_WORMOUTHBITEL3 466
+%int SPR_WORMOUTHSTUN 467
+%int SPR_LICKLEAPR1 468
+%int SPR_LICKLEAPR2 469
+%int SPR_LICKLEAPR3 470
+%int SPR_LICKLEAPR4 471
+%int SPR_LICKLEAPL1 472
+%int SPR_LICKLEAPL2 473
+%int SPR_LICKLEAPL3 474
+%int SPR_LICKLEAPL4 475
+%int SPR_LICKLICKR1 476
+%int SPR_LICKLICKR2 477
+%int SPR_LICKLICKR3 478
+%int SPR_LICKLICKL1 479
+%int SPR_LICKLICKL2 480
+%int SPR_LICKLICKL3 481
+%int SPR_LICKSTUN 482
+%int SPR_PLATFORM 483
+%int SPR_SIDEJET1 484
+%int SPR_SIDEJET2 485
+%int SPR_RBOTTOMJET1 486
+%int SPR_RBOTTOMJET2 487
+%int SPR_LBOTTOMJET1 488
+%int SPR_LBOTTOMJET2 489
+%int SPR_BOUNDERL1 490
+%int SPR_BOUNDERL2 491
+%int SPR_BOUNDERR1 492
+%int SPR_BOUNDERR2 493
+%int SPR_BOUNDERFACE1 494
+%int SPR_BOUNDERFACE2 495
+%int SPR_BOUNDERSTUN 496
+%int SPR_CLOUDSTERSLEEP 497
+%int SPR_CLOUDSTERAWAKE 498
+%int SPR_CLOUDSTERMAD 499
+%int SPR_CLOUDSTERSTRIKE1 500
+%int SPR_CLOUDSTERSTRIKE2 501
+%int SPR_BERKEFLOATL1 502
+%int SPR_BERKEFLOATL2 503
+%int SPR_BERKEFLOATL3 504
+%int SPR_BERKEFLOATL4 505
+%int SPR_BERKEFLOATR1 506
+%int SPR_BERKEFLOATR2 507
+%int SPR_BERKEFLOATR3 508
+%int SPR_BERKEFLOATR4 509
+%int SPR_BERKETHROWL1 510
+%int SPR_BERKETHROWL2 511
+%int SPR_BERKETHROWR1 512
+%int SPR_BERKETHROWR2 513
+%int SPR_BERKEFIRELAND1 514
+%int SPR_BERKEFIRELAND2 515
+%int SPR_BERKEFIREBURST1 516
+%int SPR_BERKEFIREBURST2 517
+%int SPR_KEENMOON1 518
+%int SPR_KEENMOON2 519
+%int EXTERN_ORDERSCREEN 4769
+%int EXTERN_COMMANDER 4770
+%int EXTERN_KEEN 4771
+%int EXTERN_OUTOFMEM 4772
+%int TEXT_HELPMENU 4773
+%int TEXT_CONTROLS 4774
+%int TEXT_STORY 4775
+%int TEXT_ABOUTID 4776
+%int TEXT_END 4777
+%int TEXT_DEMO 4778
+%int TEXT_ORDER 4779
+%int DEMOSTART 4780
+%int SPR_BADOINGHIDDEN 520
+%int SPR_BADOINGRISE1 521
+%int SPR_BADOINGRISE2 522
+%int SPR_BADOINGRISE3 523
+%int SPR_BADOINGRISE4 524
+%int SPR_BADOINGTURNL 525
+%int SPR_BADOINGLOOKL 526
+%int SPR_BADOINGTURNR 527
+%int SPR_BADOINGLOOKR 528
+%int SPR_BADOINGSTUNNED 529
+%int SPR_WITCHDOCWALKL1 530
+%int SPR_WITCHDOCWALKL2 531
+%int SPR_WITCHDOCWALKR1 532
+%int SPR_WITCHDOCWALKR2 533
+%int SPR_JANITORWALK1R 534
+%int SPR_JANITORWALK2R 535
+%int SPR_JANITORWALK1L 536
+%int SPR_JANITORWALK2L 537
+%int SPR_JANITORTHINKL 538
+%int SPR_JANITORTHINKR 539
+%int SPR_STINGARUWALKL1 540
+%int SPR_STINGARUWALKL2 541
+%int SPR_STINGARUWALKL3 542
+%int SPR_STINGARUWALKL4 543
+%int SPR_STINGARUJUMPL1 544
+%int SPR_STINGARUJUMPL2 545
+%int SPR_STINGARUJUMPL3 546
+%int SPR_STINGARUSTUNNED 547
+%int SPR_STINGARUWALKR1 548
+%int SPR_STINGARUWALKR2 549
+%int SPR_STINGARUWALKR3 550
+%int SPR_STINGARUWALKR4 551
+%int SPR_STINGARUJUMPR1 552
+%int SPR_STINGARUJUMPR2 553
+%int SPR_STINGARUJUMPR3 554
+%int NUMLUMPS 45
+%intarray lumpStarts
+	@PIC_HELPMENU,
+	@PIC_MENUCARD,
+	@PIC_CREDIT1,
+	@PIC_ORACLE,
+	@PIC_COUNTDOWN5,
+	@SPR_PADDLE,
+	@SPR_KEENSTANDR,
+	@SPR_100_PTS1,
+	@SPR_200_PTS1,
+	@SPR_500_PTS1,
+	@SPR_1000_PTS1,
+	@SPR_2000_PTS1,
+	@SPR_5000_PTS1,
+	@SPR_1UP1,
+	@SPR_GEM_A1,
+	@SPR_STUNNER1,
+	@SPR_MAPKEEN_WALK1_W,
+	@SPR_KEENSWIML1,
+	@SPR_SLUGR1,
+	@SPR_MADMUSHROOML1,
+	@SPR_LINDSEY1,
+	@SPR_INCHWORMR1,
+	@SPR_EATERSTAND1,
+	@SPR_MEMBERSHUFFLER1,
+	@SPR_EGG,
+	@SPR_EGGBIRDWALKR1,
+	@SPR_DARTU1,
+	@SPR_MIMROCKSIT,
+	@SPR_DOPEFISHR1,
+	@SPR_SCHOOLFISHL1,
+	@SPR_ARACHNUT1,
+	@SPR_SPRITEFACE,
+	@SPR_MINE,
+	@SPR_SKYPESTL1,
+	@SPR_WORMOUTHHINT,
+	@SPR_LICKLEAPR1,
+	@SPR_PLATFORM,
+	@SPR_BOUNDERL1,
+	@SPR_CLOUDSTERSLEEP,
+	@SPR_BERKEFLOATL1,
+	@SPR_KEENMOON1,
+	@SPR_BADOINGHIDDEN,
+	@SPR_WITCHDOCWALKL1,
+	@SPR_JANITORWALK1R,
+	@SPR_STINGARUWALKL1
+%intarray lumpEnds
+	@PIC_H_KEEN6PIC,
+	@PIC_WRISTWATCH,
+	@PIC_TITLESCREEN,
+	@PIC_LINDSEY,
+	@PIC_COUNTDOWN0,
+	@SPR_BALL3,
+	@SPR_BONUSCLIP,
+	@SPR_100_PTS2,
+	@SPR_200_PTS2,
+	@SPR_500_PTS2,
+	@SPR_1000_PTS2,
+	@SPR_2000_PTS2,
+	@SPR_5000_PTS2,
+	@SPR_1UP2,
+	@SPR_BONUSGEM,
+	@SPR_STUNNER2,
+	@SPR_FLAGFLAP4,
+	@SPR_KEENSUITDIE2,
+	@SPR_SLUGSLIME2,
+	@SPR_MADMUSHROOMR2,
+	@SPR_LINDSEY4,
+	@SPR_FOOT,
+	@SPR_EATERSTUN,
+	@SPR_MEMBERTHINKR,
+	@SPR_EGGCHIP3,
+	@SPR_EGGBIRDSTUN,
+	@SPR_DARTL2,
+	@SPR_MIMROCKSTUN,
+	@SPR_DOPEFISHBITEL,
+	@SPR_SCHOOLFISHR2,
+	@SPR_ARACHNUTSTUN,
+	@SPR_SPRITEFIRE4,
+	@SPR_MINEBOOM2,
+	@SPR_SKYPESTSQUASH,
+	@SPR_WORMOUTHSTUN,
+	@SPR_LICKSTUN,
+	@SPR_LBOTTOMJET2,
+	@SPR_BOUNDERSTUN,
+	@SPR_CLOUDSTERSTRIKE2,
+	@SPR_BERKEFIREBURST2,
+	@SPR_KEENMOON2,
+	@SPR_BADOINGSTUNNED,
+	@SPR_WITCHDOCWALKR2,
+	@SPR_JANITORTHINKR,
+	@SPR_STINGARUJUMPR3
+%int LUMP_HELP 0
+%int LUMP_CONTROLS 1
+%int LUMP_ 2
+%int LUMP_KEENTALK 3
+%int LUMP_LOADING 4
+%int LUMP_PADDLE 5
+%int LUMP_KEEN 6
+%int LUMP_100PTS 7
+%int LUMP_200PTS 8
+%int LUMP_500PTS 9
+%int LUMP_1000PTS 10
+%int LUMP_2000PTS 11
+%int LUMP_5000PTS 12
+%int LUMP_ONEUP 13
+%int LUMP_KEYGEMS 14
+%int LUMP_STUNNER 15
+%int LUMP_MAPKEEN 16
+%int LUMP_SCUBAKEEN 17
+%int LUMP_SLUG 18
+%int LUMP_MUSHROOM 19
+%int LUMP_LINDSEY 20
+%int LUMP_INCHWORM 21
+%int LUMP_ANCIENT 22
+%int LUMP_ORACLEMEMBER 23
+%int LUMP_EGG 24
+%int LUMP_BLUEBIRD 25
+%int LUMP_POISONDART 26
+%int LUMP_MIMROCK 27
+%int LUMP_DOPEFISH 28
+%int LUMP_SCHOOLFISH 29
+%int LUMP_ARACHNUT 30
+%int LUMP_SPRITE 31
+%int LUMP_MINE 32
+%int LUMP_SKYPEST 33
+%int LUMP_WORMMOUTH 34
+%int LUMP_LICK 35
+%int LUMP_PLATFORM 36
+%int LUMP_BOUNDER 37
+%int LUMP_CLOUD 38
+%int LUMP_BERKELOID 39
+%int LUMP_KEENMOON 40
+%int LUMP_BADOING 41
+%int LUMP_WITCHDOC 42
+%int LUMP_JANITOR 43
+%int LUMP_STINGARU 44
+
+%int SOUND_RTWITCHDOCSEARCH 11
+%int SOUND_RTWITCHDOCCHARGE 24
+%int SOUND_RTSHOWSTATUS 34
+%int SOUND_RTBADOINGPOPUP 52
+%int SOUND_RTSTINGARUJUMP 53
+
+%action RT_ACT_Badoing 0x7000 0 0 Frame 0 0 0 0 0 RT_BadoingThink RT_BadoingCol CK_BasicDrawFunc1 NULL
+%action RT_ACT_BadoingStunned 0x701E @SPR_BADOINGSTUNNED @SPR_BADOINGSTUNNED Frame 0 0 0 0 0 CK_Fall NULL CK_BasicDrawFunc4 NULL
+%action RT_ACT_WitchDoctor 0x703C 0 0 Frame 0 1 0 0 0 RT_WitchDoctorThink RT_WitchDoctorCol RT_WitchDoctorDraw NULL
+%action RT_ACT_WitchDoctorJump 0x705A @SPR_WITCHDOCWALKL1 @SPR_WITCHDOCWALKR1 Frame 0 0 0 0 0 CK_Fall RT_WitchDoctorCol RT_WitchDoctorJumpDraw NULL
+%action RT_ACT_JanitorWalk0 0x7078 @SPR_JANITORWALK1L @SPR_JANITORWALK1R UnscaledOnce 0 1 10 64 0 RT_JanitorWalk RT_JanitorCol CK_BasicDrawFunc2 RT_ACT_JanitorWalk1
+%action RT_ACT_JanitorWalk1 0x7096 @SPR_JANITORWALK2L @SPR_JANITORWALK2R UnscaledOnce 0 1 10 64 0 RT_JanitorWalk RT_JanitorCol CK_BasicDrawFunc2 RT_ACT_JanitorWalk0
+%action RT_ACT_JanitorStand 0x70B4 @SPR_JANITORTHINKL @SPR_JANITORTHINKR UnscaledOnce 0 0 120 128 0 NULL RT_JanitorCol CK_BasicDrawFunc1 RT_ACT_JanitorWalk0
+%action RT_ACT_Stingaru 0x70D2 0 0 Frame 0 1 0 0 0 RT_StingaruThink RT_StingaruCol RT_StingaruDraw NULL
+%action RT_ACT_StingaruJump 0x70F0 @SPR_STINGARUJUMPL3 @SPR_STINGARUJUMPR3 Frame 0 0 0 0 0 CK_Fall RT_StingaruCol RT_StingaruJumpDraw NULL
+%action RT_ACT_StingaruStunned 0x710E @SPR_STINGARUSTUNNED @SPR_STINGARUSTUNNED Frame 0 0 0 0 0 CK_Fall NULL CK_BasicDrawFunc4 NULL
+%action CK4_ACT_Smirky0 0x31E2 @SPR_EATERSTAND1 @SPR_EATERSTAND1 UnscaledOnce 0 0 20 0 0 NULL RT_EaterCol CK_BasicDrawFunc1 CK4_ACT_Smirky1
+%action CK4_ACT_Smirky1 0x3200 @SPR_EATERSTAND2 @SPR_EATERSTAND2 UnscaledOnce 0 0 20 0 0 RT_EaterSearch RT_EaterCol CK_BasicDrawFunc1 NULL
+%action CK4_ACT_SmirkyTele0 0x321E @SPR_EATERPUFF1 @SPR_EATERPUFF1 UnscaledOnce 0 0 20 0 0 NULL RT_EaterCol CK_BasicDrawFunc1 CK4_ACT_SmirkyTele1
+%action CK4_ACT_SmirkyTele1 0x323C @SPR_EATERPUFF2 @SPR_EATERPUFF2 UnscaledOnce 0 0 20 0 0 NULL RT_EaterCol CK_BasicDrawFunc1 CK4_ACT_SmirkyTele2
+%action CK4_ACT_SmirkyTele2 0x325A @SPR_EATERPUFF3 @SPR_EATERPUFF3 UnscaledOnce 0 0 20 0 0 NULL RT_EaterCol CK_BasicDrawFunc1 CK4_ACT_SmirkyTele3
+%action CK4_ACT_SmirkyTele3 0x3278 @SPR_EATERPUFF4 @SPR_EATERPUFF4 UnscaledOnce 0 0 20 0 0 RT_EaterVanish RT_EaterCol CK_BasicDrawFunc1 CK4_ACT_SmirkyTele4
+%action CK4_ACT_SmirkyTele4 0x3296 @SPR_EATERPUFF4 @SPR_EATERPUFF4 UnscaledOnce 0 0 20 0 0 NULL RT_EaterCol CK_BasicDrawFunc1 CK4_ACT_SmirkyTele5
+%action CK4_ACT_SmirkyTele5 0x32B4 @SPR_EATERPUFF3 @SPR_EATERPUFF3 UnscaledOnce 0 0 20 0 0 NULL RT_EaterCol CK_BasicDrawFunc1 CK4_ACT_SmirkyTele6
+%action CK4_ACT_SmirkyTele6 0x32D2 @SPR_EATERPUFF2 @SPR_EATERPUFF2 UnscaledOnce 0 0 20 0 0 NULL RT_EaterCol CK_BasicDrawFunc1 CK4_ACT_SmirkyTele7
+%action CK4_ACT_SmirkyTele7 0x32F0 @SPR_EATERPUFF1 @SPR_EATERPUFF1 UnscaledOnce 0 0 20 0 0 NULL RT_EaterCol CK_BasicDrawFunc1 CK4_ACT_SmirkyJump0
+%action CK4_ACT_SmirkyJump0 0x330E @SPR_EATERJUMPL1 @SPR_EATERJUMPR1 UnscaledFrame 0 0 6 0 0 CK_Fall2 RT_EaterCol RT_EaterDraw CK4_ACT_SmirkyJump1
+%action CK4_ACT_SmirkyJump1 0x332C @SPR_EATERJUMPL2 @SPR_EATERJUMPR2 UnscaledFrame 0 0 6 0 0 CK_Fall2 RT_EaterCol RT_EaterDraw CK4_ACT_SmirkyJump2
+%action CK4_ACT_SmirkyJump2 0x334A @SPR_EATERJUMPL3 @SPR_EATERJUMPR3 UnscaledFrame 0 0 6 0 0 CK_Fall2 RT_EaterCol RT_EaterDraw CK4_ACT_SmirkyJump3
+%action CK4_ACT_SmirkyJump3 0x3368 @SPR_EATERJUMPL2 @SPR_EATERJUMPR2 UnscaledFrame 0 0 6 0 0 CK_Fall2 RT_EaterCol RT_EaterDraw CK4_ACT_SmirkyJump0
+%action CK4_ACT_SmirkyStunned0 0x3386 @SPR_EATERJUMPL1 @SPR_EATERJUMPL1 Frame 0 0 0 0 0 CK_Fall NULL CK_BasicDrawFunc4 CK4_ACT_SmirkyStunned1
+%action CK4_ACT_SmirkyStunned1 0x33A4 @SPR_EATERSTUN @SPR_EATERSTUN Frame 0 0 0 0 0 CK_Fall NULL CK_BasicDrawFunc4 NULL
+
+%override "EPISODE.CK4"

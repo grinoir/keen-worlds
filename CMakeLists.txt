@@ -356,6 +356,7 @@ set(OMNISPEAK_CK_SRCS
 	src/kw_mars.c
 	src/kw_alphamatic.c
 	src/kw_suburb.c
+	src/kw_rtts.c
 	src/kw_watch.c
 	src/kw_alphamatic_opening.c
 	src/kw_world.c

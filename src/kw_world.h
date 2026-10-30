@@ -44,6 +44,7 @@ typedef enum KW_World
 	KW_MARS,    // Marooned on Mars - Galaxy: in-engine arcade adventure, never a planet
 	KW_ALPHAMATIC, // Atroxian Realm's sequel (append: retain existing save IDs)
 	KW_SUBURB, // Earth: Suburb Shenanigans (append: retain existing save IDs)
+	KW_RTTS,   // Far Shadowlands: "Return to the Shadowlands" (its own code, on Keen 4's; append)
 	KW_NUM_WORLDS,
 	KW_NO_WORLD = -1,
 } KW_World;

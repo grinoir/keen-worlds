@@ -32,6 +32,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ck_phys.h"
 #include "ck_play.h"
 #include "ck4_ep.h"
+#include "kw_rtts.h"
 #include "kw_music.h" // KEEN WORLDS: the characters speak their lines
 #include "kw_world.h"
 
@@ -55,6 +56,7 @@ void CK4_SetupFunctions()
 	CK4_Obj3_SetupFunctions();
 	CK4_Map_SetupFunctions();
 	CK4_Misc_SetupFunctions();
+	RT_SetupFunctions(); // KEEN WORLDS: Return to the Shadowlands (kw_rtts.c)
 	KD_SetupFunctions(); // KEEN WORLDS: Keen Dreams' Keen and creatures (kw_kd_*.c)
 }
 
@@ -142,6 +144,7 @@ void CK4_ScanInfoLayer()
 		for (int x = 0; x < mapW; ++x)
 		{
 			int infoValue = CA_TileAtPos(x, y, 2);
+			if (RT_ScanObject(infoValue, x, y)) continue; // KEEN WORLDS: Return to the Shadowlands' own (kw_rtts.c)
 			switch (infoValue)
 			{
 			case 1:
@@ -551,7 +554,8 @@ void CK4_ShowJanitorMessage(void)
 {
 	SD_WaitSoundDone();
 	CA_UpLevel();
-	CA_MarkGrChunk(CK_CHUNKNUM(PIC_ORACLE));
+	// KEEN WORLDS: CK4_JanitorPic (Return to the Shadowlands has his own picture)
+	CA_MarkGrChunk(CK_INT(CK4_JanitorPic, CK_CHUNKNUM(PIC_ORACLE)));
 	CA_MarkGrChunk(CK_CHUNKNUM(PIC_KEENTALK1));
 	CA_MarkGrChunk(CK_CHUNKNUM(PIC_KEENMAD));
 	CA_CacheMarks(0);
@@ -560,7 +564,7 @@ void CK4_ShowJanitorMessage(void)
 	StartMusic(0xFFFF);
 
 	US_CenterWindow(26, 8);
-	VHB_DrawBitmap(US_GetWindowX(), US_GetWindowY(), CK_CHUNKNUM(PIC_ORACLE));
+	VHB_DrawBitmap(US_GetWindowX(), US_GetWindowY(), CK_INT(CK4_JanitorPic, CK_CHUNKNUM(PIC_ORACLE)));
 	US_SetPrintY(US_GetPrintY() + 6);
 	US_SetWindowW(US_GetWindowW() - 0x30);
 	US_SetWindowX(US_GetWindowX() + 0x30);
@@ -572,7 +576,7 @@ void CK4_ShowJanitorMessage(void)
 	IN_WaitButton();
 
 	US_CenterWindow(26, 8);
-	VHB_DrawBitmap(US_GetWindowX(), US_GetWindowY(), CK_CHUNKNUM(PIC_ORACLE));
+	VHB_DrawBitmap(US_GetWindowX(), US_GetWindowY(), CK_INT(CK4_JanitorPic, CK_CHUNKNUM(PIC_ORACLE)));
 	US_SetPrintY(US_GetPrintY() + 6);
 	US_SetWindowW(US_GetWindowW() - 0x30);
 	US_SetWindowX(US_GetWindowX() + 0x30);
@@ -595,7 +599,7 @@ void CK4_ShowJanitorMessage(void)
 	IN_WaitButton();
 
 	US_CenterWindow(26, 8);
-	VHB_DrawBitmap(US_GetWindowX(), US_GetWindowY(), CK_CHUNKNUM(PIC_ORACLE));
+	VHB_DrawBitmap(US_GetWindowX(), US_GetWindowY(), CK_INT(CK4_JanitorPic, CK_CHUNKNUM(PIC_ORACLE)));
 	US_SetPrintY(US_GetPrintY() + 6);
 	US_SetWindowW(US_GetWindowW() - 0x30);
 	US_SetWindowX(US_GetWindowX() + 0x30);
@@ -671,6 +675,12 @@ void CK4_ShowWetsuitMessage(void)
 
 void CK4_ShowCouncilMessage(void)
 {
+	// KEEN WORLDS: Return to the Shadowlands' scouts each say their own line
+	if (RT_IsActive())
+	{
+		RT_ScoutDialog();
+		return;
+	}
 	SD_WaitSoundDone();
 	CA_UpLevel();
 

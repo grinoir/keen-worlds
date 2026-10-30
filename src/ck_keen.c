@@ -19,6 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "ck_act.h"
 #include "ck_def.h"
+#include "kw_rtts.h"
 #include "kw_habitat.h"
 #include "kw_mars.h"
 #include "ck_phys.h"
@@ -172,6 +173,9 @@ void CK_KeenColFunc(CK_object *a, CK_object *b)
 		{
 			CK4_ShowPrincessMessage();
 			CK_RemoveObj(b);
+			// KEEN WORLDS: in Return to the Shadowlands finding her ends the level
+			if (RT_IsActive())
+				ck_gameState.levelState = LS_LevelComplete;
 			// RF_ForceRefresh();
 		}
 		else if (b->type == CT4_CouncilMember)

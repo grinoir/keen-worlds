@@ -34,6 +34,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "kw_mars.h"
 #include "kw_alphamatic.h"
 #include "kw_suburb.h"
+#include "kw_rtts.h"
 #include "kw_watch.h"
 
 void FF_ChooseGraphics(void); // KEEN WORLDS (kw_fitf.c)
@@ -815,6 +816,11 @@ int main(int argc, char *argv[])
 		else if (!CK_Cross_strcasecmp(argv[i], "/MARSTEST"))
 		{
 			MARS_SelfTest();
+			Quit(NULL);
+		}
+		else if (!CK_Cross_strcasecmp(argv[i], "/RTTSTEST"))
+		{
+			RT_SelfTest();
 			Quit(NULL);
 		}
 		else if (!CK_Cross_strcasecmp(argv[i], "/SUBURBTEST"))

@@ -233,6 +233,16 @@ static const KW_WorldDef kw_worldDefs[KW_NUM_WORLDS] = {
 		"Created by Bubbatom\nPatching: Levellass\nMusic: thehackercat, Mr. M\n\n"
 		"Bug fixes and optimization:\nK1n9_Duk3 (2020-11-25)\n\nFull credits in the game's Help." KW_NOT_OURS,
 		"Suburb Shenanigans v1.2.\nUnpack your copy in mods/suburb.\nSee the local testing guide."},
+	// Return to the Shadowlands (Ceilick; programmed by K1n9_Duk3, v1.8
+	// 2022): a source mod of the reconstructed Keen 4 source, GPL. The
+	// player's copy of its files goes in play/mods/rtts, beside our
+	// RTTS.CK4 (kwtools/kw_rtts.py); its code is in kw_rtts.c.
+	{"rtts", "Far Shadowlands", 4, "mods/rtts", "RTTS.CK4",
+		"Return to the Shadowlands",
+		"The Spot story, episode one\nA fan game by Ceilick, 2021-22",
+		"Created by Ceilick:\nlevels, story, graphics\nand sound effects\n\nProgramming: K1n9_Duk3\n\n"
+		"Built on K1n9_Duk3's\nreconstructed Keen 4 source" KW_NOT_OURS,
+		"Return to the Shadowlands v1.8\nby Ceilick (2022-12-21). Unpack\nit (see its page on\nkeenwiki.shikadi.net) in\nmods/rtts."},
 };
 
 static CK_EpisodeDef *KW_EpisodeDef(int episode)
@@ -446,6 +456,8 @@ static const KW_Ship kw_ships[] = {
 	{KW_FITF, 1, 5, 16, 4, 11, 11, 16},
 	// The original covered Megarocket in Billy's backyard clubhouse.
 	{KW_SUBURB, 10, 28, 14, 14, 11, 29, 17},
+	// Far Shadowlands: its Megarocket level (20) is Keen 4's, five rows lower.
+	{KW_RTTS, 20, 3, 17, 3, 14, 19, 19},
 };
 // Foray's level 1: the forest with the landed ship is the top of the map;
 // the game's own rooms of the ship start below this row.
@@ -1787,7 +1799,12 @@ static int KW_ChronicleKey(int world)
 {
 	switch (world)
 	{
+	case KW_RTTS:
+		return KW_LastChronicleWorld();
 	case KW_OSI:
+		// Spot's story: the Oracle names the Omegamatrix station at the end
+		// of Return to the Shadowlands, so the station follows it.
+		if (KW_IsWorldPresent(KW_RTTS) && !KW_WorldIsSaved(KW_RTTS)) return KW_RTTS;
 		return KW_LastChronicleWorld();
 	case KW_CK55:
 	case KW_ASYLUM:
@@ -1980,7 +1997,7 @@ static const struct KW_FlightGroup
 	{"Independent trips",1,2,0,{KW_FITF,KW_BOUNTY}},
 	{"Atroxian story",1,2,1,{KW_AREALM,KW_ALPHAMATIC}},
 	{"More levels",1,2,0,{KW_CK55,KW_ASYLUM}},
-	{"Station revisit",1,1,0,{KW_OSI}},
+	{"Spot's rescue",1,2,1,{KW_RTTS,KW_OSI}},
 };
 
 static int KW_FlightLayout(KW_FlightEntry *entries,int *rows)
@@ -2038,7 +2055,8 @@ static void KW_FlightRelationship(int world,char *text,size_t size)
 	case KW_AREALM:relationship="After The Omegamatic. Next: The Alphamatic.";break;
 	case KW_ALPHAMATIC:relationship="After BOTH Krisle and Aspermontis.";break;
 	case KW_CK55:case KW_ASYLUM:relationship="Optional levels after The Omegamatic.";break;
-	case KW_OSI:relationship="A separate return trip after Aspermontis.";break;
+	case KW_RTTS:relationship="Spot is missing. After Aspermontis. Next: the Shikadi Station.";break;
+	case KW_OSI:relationship="After the Far Shadowlands: the Oracle named this station.";break;
 	}
 	CK_Cross_strscpy(text,relationship,size);
 }
@@ -4036,6 +4054,13 @@ void KW_ChronicleSelfTest(void)
 		CHRONICLE_CHECK(KW_CourseIsOpen(KW_AREALM) && !KW_CourseIsOpen(KW_OSI));
 		if (KW_IsWorldPresent(KW_SUBURB)) CHRONICLE_CHECK(!KW_CourseIsOpen(KW_SUBURB));
 		kw_worlds[KW_KEEN95].completed = true;
+		// Spot's story: the Far Shadowlands first, then the station
+		if (KW_IsWorldPresent(KW_RTTS))
+		{
+			CHRONICLE_CHECK(KW_CourseIsOpen(KW_RTTS) && !KW_CourseIsOpen(KW_OSI) && KW_ChronicleKey(KW_OSI) == KW_RTTS);
+			kw_worlds[KW_RTTS].completed = true;
+			puts("PASS: the Far Shadowlands opens after the journey home, and the Shikadi Station after it");
+		}
 		CHRONICLE_CHECK(KW_CourseIsOpen(KW_OSI) && !KW_CourseIsOpen(KW_ALPHAMATIC));
 		if (KW_IsWorldPresent(KW_SUBURB)) CHRONICLE_CHECK(KW_CourseIsOpen(KW_SUBURB));
 		kw_worlds[KW_AREALM].completed = true;
@@ -4051,7 +4076,9 @@ void KW_ChronicleSelfTest(void)
 		kw_worlds[KW_OSI].completed = false;
 		puts("PASS: story gates, both Alphamatic prerequisites and visited/completed access");
 	}
-	CHRONICLE_CHECK(KW_ChronicleKey(KW_OSI) == KW_LastChronicleWorld());
+	kw_worlds[KW_RTTS].completed = false;
+	CHRONICLE_CHECK(KW_ChronicleKey(KW_OSI) == (KW_IsWorldPresent(KW_RTTS) ? KW_RTTS : KW_LastChronicleWorld()));
+	kw_worlds[KW_RTTS].completed = true; // (the checks below are about the station's other gate)
 	if (!KW_IsWorldPresent(KW_KEEN95) && KW_IsWorldPresent(KW_KEEN9))
 	{
 		CHRONICLE_CHECK(KW_ChronicleKey(KW_OSI) == KW_KEEN9 && !KW_CourseIsOpen(KW_OSI));

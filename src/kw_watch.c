@@ -91,6 +91,7 @@ static const char *KW_WatchTask(void)
  case KW_BOUNTY:return "FIND RICK ULLER";
  case KW_ALPHAMATIC:return "INVESTIGATE VITACORP";
  case KW_SUBURB:return SS_BagState()==2?"CATCH THE SCHOOL BUS":"FIND MY SCHOOL BAG";
+ case KW_RTTS:return "RESCUE THE PAGE SCOUTS";
  case KW_MARS:return "GET THE SHIP PARTS";
  case KW_DREAM:return "FIND THE BOOBUS BOMBS";
  default:return "CHECK THE FLIGHT CHART";
