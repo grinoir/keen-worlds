@@ -163,6 +163,13 @@ extern	unsigned	bufferwidth,bufferheight;	// used by font drawing stuff
 static	char *ParmStrings[] = {"HIDDENCARD", "WINDOWED", "NOASPECT", "NOCARD", "NOGLCARD", ""};
 
 void VW_GL_SetIcon(SDL_Window *wnd);
+// The pointer is held in the window only when the mouse steers Keen (Keen
+// Worlds companion: a lock left behind as Gold closes upset the desktop).
+static void VW_LockPointer (boolean lock)
+{
+	SDL_SetRelativeMouseMode(lock && Controls[0] == ctrl_Mouse);
+}
+
 void	VW_Startup (void)
 {
 	int i;
@@ -245,6 +252,7 @@ Quit ("Improper video card!  If you really have a CGA card that I am not\n"
 
 void	VW_Shutdown (void)
 {
+	SDL_SetRelativeMouseMode(SDL_FALSE);
 	VW_SetScreenMode (TEXTGR);
 #if GRMODE == EGAGR
 	VW_SetLineWidth (80);
@@ -803,12 +811,12 @@ void VW_ShowCursor (void)
 	if (cursorhw)
 	{
 		SDL_ShowCursor(cursorvisible > 0);
-		SDL_SetRelativeMouseMode(!(cursorvisible > 0));
+		VW_LockPointer(!(cursorvisible > 0));
 	}
 	else
 	{
 		SDL_ShowCursor(false);
-		SDL_SetRelativeMouseMode(true);
+		VW_LockPointer(true);
 	}
 }
 
@@ -829,12 +837,12 @@ void VW_HideCursor (void)
 	if (cursorhw)
 	{
 		SDL_ShowCursor(cursorvisible > 0);
-		SDL_SetRelativeMouseMode(!(cursorvisible > 0));
+		VW_LockPointer(!(cursorvisible > 0));
 	}
 	else
 	{
 		SDL_ShowCursor(false);
-		SDL_SetRelativeMouseMode(true);
+		VW_LockPointer(true);
 	}
 }
 
