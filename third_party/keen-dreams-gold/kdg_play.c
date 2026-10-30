@@ -1923,9 +1923,9 @@ void PushObj(objtype *ob)
 
 	ob->needtoreact = true;
 
-	if (!ob->shapenum)				// can't get a hit rect with no shape!
+	if (!ob->shapenum || ob->shapenum < STARTSPRITES || ob->shapenum >= STARTSPRITES+NUMSPRITES)
 	{
-		return;
+		return;		// can't get a hit rect with no shape (-1 included)!
 	}
 
 
@@ -2713,8 +2713,8 @@ void ClipToWalls (objtype *ob)
 
 	ob->needtoreact = true;
 
-	if (!ob->shapenum)				// can't get a hit rect with no shape!
-		return;
+	if (!ob->shapenum || ob->shapenum < STARTSPRITES || ob->shapenum >= STARTSPRITES+NUMSPRITES)
+		return;		// can't get a hit rect with no shape (-1 included)!
 
 	shape = &spritetable[ob->shapenum-STARTSPRITES];
 

@@ -1449,7 +1449,9 @@ void RF_PlaceSprite (void **user,unsigned globalx,unsigned globaly,
 	spritetabletype far *spr;
 	unsigned	shift,pixx;
 
-	if (!spritenumber)
+	// (Gold's states use -1 for "nothing to draw", as 0 is; DOS wrapped it
+	// to a harmless read, so anything that isn't a sprite is nothing here.)
+	if (!spritenumber || spritenumber < STARTSPRITES || spritenumber >= STARTSPRITES+NUMSPRITES)
 	{
 		RF_RemoveSprite (user);
 		return;
@@ -2128,7 +2130,9 @@ void RF_PlaceSprite (void **user,unsigned globalx,unsigned globaly,
 	spritetype _seg	*block;
 	unsigned	shift,pixx;
 
-	if (!spritenumber)
+	// (Gold's states use -1 for "nothing to draw", as 0 is; DOS wrapped it
+	// to a harmless read, so anything that isn't a sprite is nothing here.)
+	if (!spritenumber || spritenumber < STARTSPRITES || spritenumber >= STARTSPRITES+NUMSPRITES)
 	{
 		RF_RemoveSprite (user);
 		return;
