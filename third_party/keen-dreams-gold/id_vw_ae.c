@@ -255,12 +255,14 @@ void VW_DrawPropString(char *str)
 {
 	int oldpx = px;
 	uint8_t *screen = &vw_videomem[bufferofs + panadjust];
-	fontstruct *font = (fontstruct*)(grsegs[STARTFONT]);
-	while (*str)
+	// Gold uses a second, smaller font in its menus (fontnumber 1)
+	fontstruct *font = (fontstruct*)(grsegs[STARTFONT+fontnumber]);
+	const unsigned char *s = (const unsigned char *)str;
+	while (*s)
 	{
-		VW_1bppXorWithPAL8((uint8_t*)grsegs[STARTFONT] + font->location[*str], screen, px, py, linewidth, font->width[*str], font->height, fontcolor);
-		px += font->width[*str];
-		str++;
+		VW_1bppXorWithPAL8((uint8_t*)font + font->location[*s], screen, px, py, linewidth, font->width[*s], font->height, fontcolor);
+		px += font->width[*s];
+		s++;
 	}
 }
 

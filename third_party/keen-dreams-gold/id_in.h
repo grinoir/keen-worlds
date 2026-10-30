@@ -81,10 +81,11 @@
 #define	MaxPlayers	4
 #define	MaxKbds		2
 #define	MaxJoys		2
-#define	NumCodes	0x10000
-
+// Gold reads DOS key codes; id_in.c turns SDL's into them.
 #include <SDL.h>
-typedef	uint16_t		ScanCode;
+#define	NumCodes	128
+
+typedef	byte		ScanCode;
 #define	sc_None			0
 #define	sc_Bad			0xff
 #define sc_Return   	0x1c
@@ -121,49 +122,32 @@ typedef	uint16_t		ScanCode;
 #define	sc_F11			0x57
 #define	sc_F12			0x58
 
-#define	sc_A			SDL_SCANCODE_A
-#define	sc_B			SDL_SCANCODE_B
-#define	sc_C			SDL_SCANCODE_C
-#define	sc_D			SDL_SCANCODE_D
-#define	sc_E			SDL_SCANCODE_E
-#define	sc_F			SDL_SCANCODE_F
-#define	sc_G			SDL_SCANCODE_G
-#define	sc_H			SDL_SCANCODE_H
-#define	sc_I			SDL_SCANCODE_I
-#define	sc_J			SDL_SCANCODE_J
-#define	sc_K			SDL_SCANCODE_K
-#define	sc_L			SDL_SCANCODE_L
-#define	sc_M			SDL_SCANCODE_M
-#define	sc_N			SDL_SCANCODE_N
-#define	sc_O			SDL_SCANCODE_O
-#define	sc_P			SDL_SCANCODE_P
-#define	sc_Q			SDL_SCANCODE_Q
-#define	sc_R			SDL_SCANCODE_R
-#define	sc_S			SDL_SCANCODE_S
-#define	sc_T			SDL_SCANCODE_T
-#define	sc_U			SDL_SCANCODE_U
-#define	sc_V			SDL_SCANCODE_V
-#define	sc_W			SDL_SCANCODE_W
-#define	sc_X			SDL_SCANCODE_X
-#define	sc_Y			SDL_SCANCODE_Y
-#define	sc_Z			SDL_SCANCODE_Z
-
-#define sc_1			SDL_SCANCODE_1
-#define sc_2			SDL_SCANCODE_2
-#define sc_3			SDL_SCANCODE_3
-#define sc_4			SDL_SCANCODE_4
-#define sc_5			SDL_SCANCODE_5
-#define sc_6			SDL_SCANCODE_6
-#define sc_7			SDL_SCANCODE_7
-#define sc_8			SDL_SCANCODE_8
-#define sc_9			SDL_SCANCODE_9
-#define sc_0			SDL_SCANCODE_0
-
-#define sc_Comma		SDL_SCANCODE_COMMA
-#define sc_Fullstop		SDL_SCANCODE_PERIOD
-#define sc_Slash		SDL_SCANCODE_SLASH
-#define sc_LBracket		SDL_SCANCODE_LBRACKET
-#define sc_RBracket		SDL_SCANCODE_RBRACKET
+#define	sc_A			0x1e
+#define	sc_B			0x30
+#define	sc_C			0x2e
+#define	sc_D			0x20
+#define	sc_E			0x12
+#define	sc_F			0x21
+#define	sc_G			0x22
+#define	sc_H			0x23
+#define	sc_I			0x17
+#define	sc_J			0x24
+#define	sc_K			0x25
+#define	sc_L			0x26
+#define	sc_M			0x32
+#define	sc_N			0x31
+#define	sc_O			0x18
+#define	sc_P			0x19
+#define	sc_Q			0x10
+#define	sc_R			0x13
+#define	sc_S			0x1f
+#define	sc_T			0x14
+#define	sc_U			0x16
+#define	sc_V			0x2f
+#define	sc_W			0x11
+#define	sc_X			0x2d
+#define	sc_Y			0x15
+#define	sc_Z			0x2c
 
 #define	sc_1			0x02
 #define	sc_2			0x03
@@ -177,15 +161,12 @@ typedef	uint16_t		ScanCode;
 #define	sc_0			0x0b
 
 #define	key_None		0
-#define	key_Return		SDL_SCANCODE_KP_ENTER
-#define	key_Escape		SDL_SCANCODE_ESCAPE
-#define	key_Space		SDL_SCANCODE_KP_SPACE
-#define	key_BackSpace		SDL_SCANCODE_BACKSPACE
-#define	key_Tab			SDL_SCANCODE_KP_TAB
-#define	key_Delete		SDL_SCANCODE_DELETE
-#define key_Asterisk		SDL_SCANCODE_KP_MULTIPLY
-#define key_Plus		SDL_SCANCODE_KP_PLUS
-#define key_Minus		SDL_SCANCODE_KP_MINUS
+#define	key_Return		0x0d
+#define	key_Escape		0x1b
+#define	key_Space		0x20
+#define	key_BackSpace	0x08
+#define	key_Tab			0x09
+#define	key_Delete		0x7f
 
 typedef	enum		{
 						demo_Off,demo_Record,demo_Playback,demo_PlayDone
