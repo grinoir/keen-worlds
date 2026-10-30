@@ -19,6 +19,9 @@ void AL_PlayOpening(void);
 #define AL_SCENE_KEEN_H 64
 #define AL_SCENE_SHIP_W 64
 #define AL_SCENE_SHIP_H 28
+#define AL_SCENE_SPOT_W 32
+#define AL_SCENE_SPOT_H 44
 const uint8_t *AL_KeenPose(int pose);
 const uint8_t *AL_ShipPicture(void);
+const uint8_t *AL_SpotPicture(void); // (AL_SCENE_SPOT_W x AL_SCENE_SPOT_H)
 #endif

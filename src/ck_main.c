@@ -33,7 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "kw_world.h"
 #include "kw_mars.h"
 #include "kw_alphamatic.h"
-#include "kw_calidune_scene.h"
+#include "kw_story_scenes.h"
 #include "kw_music.h"
 #include "kw_suburb.h"
 #include "kw_rtts.h"
@@ -873,6 +873,20 @@ int main(int argc, char *argv[])
 			if (memcmp(&before,&ck_gameState,sizeof(before)) || x!=ck_keenObj->posX || y!=ck_keenObj->posY || cacheLevel!=ca_levelnum)
 				Quit("Calidune scenes changed the running game state");
 			puts("PASS: Calidune arrival and ending scenes preserve game state, position and cache level");
+			Quit(NULL);
+		}
+		else if (!CK_Cross_strcasecmp(argv[i], "/SPOTSCENE"))
+		{
+			// Spot's rescue, in the Shikadi Station's world, with the real data
+			KW_SwitchWorld(KW_OSI);
+			CK_NewGame();ck_gameState.difficulty=D_Normal;
+			ck_gameState.currentLevel=0;CK_LoadLevel(true,true);
+			CK_GameState before=ck_gameState;
+			int x=ck_keenObj->posX,y=ck_keenObj->posY,cacheLevel=ca_levelnum;
+			SP_PlayRescue();
+			if (memcmp(&before,&ck_gameState,sizeof(before)) || x!=ck_keenObj->posX || y!=ck_keenObj->posY || cacheLevel!=ca_levelnum)
+				Quit("Spot's rescue changed the running game state");
+			puts("PASS: Spot's rescue preserves game state, position and cache level");
 			Quit(NULL);
 		}
 		else if (!CK_Cross_strcasecmp(argv[i], "/ALPHATEST"))

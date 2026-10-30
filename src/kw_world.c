@@ -38,7 +38,7 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 #include "kw_arcade.h"
 #include "kw_mars.h"
 #include "kw_alphamatic.h"
-#include "kw_calidune_scene.h"
+#include "kw_story_scenes.h"
 #include "kw_suburb.h"
 #include "kw_music.h"
 #include "kw_skip.h"
@@ -524,6 +524,9 @@ void KW_AfterWorldEnding(void)
 	// ship and meets the Megarocket.
 	if (kw_currentWorld == KW_KEEN8 && !kw_worlds[KW_KEEN8].completed && !KW_CardsOff())
 		CD_PlayEnding();
+	// The Shikadi Station, the first time: on to Fribbulus Xax, and Spot.
+	if (kw_currentWorld == KW_OSI && !kw_worlds[KW_OSI].completed && !KW_CardsOff())
+		SP_PlayRescue();
 	kw_worlds[kw_currentWorld].completed = true;
 	if (!ck_gameState.levelsDone[ca_mapOn])
 		ck_gameState.levelsDone[ca_mapOn] = 1;

@@ -1,4 +1,5 @@
-/* Keen Worlds: Calidune's arrival and ending scenes. GPL-2.0-or-later.
+/* Keen Worlds: story scenes of its own, between the games. GPL-2.0-or-later.
+ * Calidune's arrival and ending, and Spot's rescue on Fribbulus Xax.
  * In the house style of the Alphamatic opening (doc/alphamatic-opening.md):
  * a staged, voiced scene with subtitles; a fresh tap advances a spoken
  * line, holding Escape (or the controller's menu button) skips it all, and
@@ -7,7 +8,7 @@
  * are Keen Worlds' own (Dead in the Desert sets Keen down on Calidune
  * "without his trusty Bean with Bacon Megarocket" and he leaves in a copy).
  */
-#include "kw_calidune_scene.h"
+#include "kw_story_scenes.h"
 #include "kw_alphamatic.h"
 #include "kw_music.h"
 #include "kw_skip.h"
@@ -23,9 +24,10 @@
 #include <string.h>
 
 typedef struct CD_Image { int w,h; uint8_t *pixels,*mask; } CD_Image;
-typedef struct CD_Scene { void *orbit,*sand; CD_Image keen[3],ship,copy; } CD_Scene;
+typedef struct CD_Scene { void *orbit,*xax,*sand,*street; CD_Image keen[3],spot,ship,copy; } CD_Scene;
 
-typedef enum CD_Stage { CD_WARN, CD_AGAIN, CD_BEAM, CD_SAND, CD_RISE, CD_COPY, CD_OFF } CD_Stage;
+typedef enum CD_Stage { CD_WARN, CD_AGAIN, CD_BEAM, CD_SAND, CD_RISE, CD_COPY, CD_OFF,
+	SP_ORBIT, SP_LAND, SP_SPOT1, SP_LOCK, SP_HOME, SP_SPOT2, SP_DEPART } CD_Stage;
 typedef struct CD_Part
 {
 	CD_Stage stage;
@@ -45,6 +47,20 @@ static const CD_Part cd_ending[] = {
 	{CD_RISE,"Calidune orbit","Keen flies up from Calidune in a strange copy of his ship. The Megarocket is waiting.",NULL,7,5*70,0},
 	{CD_COPY,"Megarocket","You found a copy of me. It is not as good.","CD_CUT_COPY.RAW",11,0,0},
 	{CD_OFF,"Keen","It got me off Calidune, didn't it?","CD_CUT_OFF.RAW",14,0,0},
+};
+
+// Spot's rescue, after the Shikadi Station: the third episode of the Spot
+// story was never released, so Keen Worlds tells its end (STORY_SEAMS.md, 5).
+static const CD_Part sp_rescue[] = {
+	{SP_ORBIT,"Fribbulus Xax","With the Shikadi shield down, the Megarocket drops through the clouds of Fribbulus Xax. "
+		"The Bloogs are holding Spot in Bloogton. Keen has been here before.","SP_CUT_ORBIT.RAW",7,0,0},
+	{SP_LAND,"Megarocket","Landing in Bloogton. I am detecting one Yorp. It is complaining loudly.","SP_CUT_LAND.RAW",11,0,40},
+	{SP_SPOT1,"Spot","Keen! I knew you would come! They kept trying to teach me to fetch.","SP_CUT_SPOT1.RAW",13,0,0},
+	{SP_LOCK,"Keen","Nobody kidnaps my Yorp. Hold still, I'll get the lock.","SP_CUT_LOCK.RAW",14,0,0},
+	{SP_HOME,"Keen","Come on, Spot. We're going home.","SP_CUT_HOME.RAW",14,0,50},
+	{SP_SPOT2,"Spot","Can we stop for snacks on the way?","SP_CUT_SPOT2.RAW",13,0,0},
+	{SP_DEPART,"Fribbulus Xax","The Bloogs watched them go. None of them tried to stop the boy with the pogo stick. Not again.",
+		"SP_CUT_DEPART.RAW",7,0,0},
 };
 
 static uint32_t CD_Noise(int x,int y,int z)
@@ -94,8 +110,10 @@ static void CD_Sparkle(int x,int y,int w,int h,int count,uint32_t t)
 	}
 }
 
-// Calidune from orbit: stars, and the desert planet's curve below.
-static void *CD_DrawOrbit(void)
+// A planet from orbit: stars, and its curve below. Colours: lit, mid, dark,
+// night, the bright rim of its air, and the air beyond the dark side.
+static const uint8_t cd_calidune[6]={14,6,4,0,12,4},cd_xax[6]={10,2,3,1,11,9};
+static void *CD_DrawOrbit(const uint8_t *c)
 {
 	void *surface=VL_CreateSurface(320,200),*old=VL_SetScreen(surface);
 	VL_ClearScreen(0);
@@ -109,15 +127,15 @@ static void *CD_DrawOrbit(void)
 			double light=dx*0.45-dy*0.9+0.03*sin(x/7.0+y/3.0);
 			bool band=sin(dy*46.0+3.0*sin(dx*8.0)+1.5*sin(dx*23.0))>0.55;
 			bool dither=(x+y)&1;
-			if(light>0.95) color=band?6:14;
-			else if(light>0.85) color=dither?(band?6:14):6;
-			else if(light>0.6) color=band?4:6;
-			else if(light>0.45) color=dither?6:4;
-			else if(light>0.25) color=4;
-			else if(light>0.15) color=dither?4:0;
-			else color=0;
-			if(d>0.985) color=light>0.6?14:light>0.25?12:4; // the bright rim of its air
-		} else if(d<=1.012) color=(x+y)&1?12:4;
+			if(light>0.95) color=band?c[1]:c[0];
+			else if(light>0.85) color=dither?(band?c[1]:c[0]):c[1];
+			else if(light>0.6) color=band?c[2]:c[1];
+			else if(light>0.45) color=dither?c[1]:c[2];
+			else if(light>0.25) color=c[2];
+			else if(light>0.15) color=dither?c[2]:c[3];
+			else color=c[3];
+			if(d>0.985) color=light>0.6?c[0]:light>0.25?c[4]:c[2]; // the bright rim of its air
+		} else if(d<=1.012) color=(x+y)&1?c[4]:c[5];
 		else {
 			uint32_t n=CD_Noise(x,y,1);
 			if(n%173==0) color=15;
@@ -170,6 +188,67 @@ static void *CD_DrawSand(void)
 	}
 	VL_SetScreen(old);
 	return surface;
+}
+
+// Bloogton: a green sky with a ringed moon, Bloog domes, a paved street.
+static void *CD_DrawStreet(void)
+{
+	void *surface=VL_CreateSurface(320,200),*old=VL_SetScreen(surface);
+	VL_ClearScreen(0);
+	for(int y=0;y<144;++y) for(int x=0;x<320;++x) {
+		bool dither=(x+y)&1;
+		int color=y<36?2:y<62?(dither?2:10):10;
+		// the moon, with its ring
+		int mx=x-62,my=y-26,md=mx*mx+my*my;
+		if(md<=11*11) color=(mx+my<-4)?15:7;
+		double ring=(mx*0.35-my)*(mx*0.35-my)/9.0+mx*mx/600.0;
+		if(ring<1.0 && ring>0.55 && !(md<=11*11 && my<0)) color=14;
+		// domes of the town on the horizon, with lit windows
+		static const int domes[][3]={{18,26,14},{70,34,20},{128,22,12},{196,40,24},{262,28,16},{306,24,13}};
+		for(int i=0;i<6;++i) {
+			int dx=x-domes[i][0],dy=y-100,r=domes[i][1],h=domes[i][2];
+			if(dy<=0 && dx*dx*h*h+dy*dy*r*r<=r*r*h*h) {
+				color=dx>r/3?(dither?5:13):dx<-r/3?5:13;
+				if(dy==-h/2 && (dx+40)%7<2) color=14;
+			}
+		}
+		if(y>=100 && y<104) color=y==100?7:8;          // the kerb
+		if(y>=104) {
+			color=dither&&y<110?8:7;                     // the paving
+			if((y-104)%9==0 || ((x+(y-104)/9*11)%22==0)) color=8;
+		}
+		VH_Plot(x,y,color);
+	}
+	VL_SetScreen(old);
+	return surface;
+}
+
+// A Bloog, drawn: a round green body, one big eye, two feet.
+static void CD_Bloog(int x,int y,uint32_t t)
+{
+	int step=(int)((t/6)%2);
+	for(int dy=-10;dy<=10;++dy) for(int dx=-9;dx<=9;++dx) {
+		int d=dx*dx*100+dy*dy*81;
+		if(d>8100) continue;
+		int color=d>6400?2:(dx>3&&dy<-2?11:10);
+		int ex=dx-1,ey=dy+3;
+		if(ex*ex+ey*ey<=10) color=ex*ex+ey*ey<=2?0:15;
+		if(x+dx>=0 && x+dx<320) VH_Plot(x+dx,y+dy-step,color);
+	}
+	VH_Bar(x-6+step*2,y+9,4,3,2);VH_Bar(x+2-step*2,y+9,4,3,2);
+}
+
+// Spot's cage, the door shut or swung open.
+static void CD_Cage(bool open)
+{
+	VH_Bar(212,58,54,4,8);VH_HLine(212,265,58,7);VH_Bar(212,118,54,3,8);
+	for(int x=214;x<=262;x+=6) {
+		bool door=x>=226 && x<=250;
+		if(door && open) continue;
+		VH_VLine(62,117,x,7);VH_VLine(62,117,x+1,8);
+	}
+	if(open) for(int i=0;i<5;++i) {VH_VLine(64+i,115-i,268+i*4,7);VH_VLine(64+i,115-i,269+i*4,8);}
+	else VH_Bar(236,86,6,8,14); // the lock
 }
 
 static int CD_Wrap(const char *text,char lines[][80],int maxLines,int width)
@@ -304,6 +383,37 @@ static void CD_Frame(CD_Scene *scene,const CD_Part *part,uint32_t t,bool talking
 		if(part->stage==CD_OFF) CD_Inset(scene,260,talking?1+(t/12)%2:0,256,talking,t);
 		break;
 	}
+	case SP_ORBIT: case SP_DEPART: {
+		VL_SurfaceToScreen(scene->xax,0,0,0,0,320,200);
+		int x,y;
+		if(part->stage==SP_ORBIT) {x=CD_Ease(t,500,-70,150);y=CD_Ease(t,500,8,92);}
+		else {x=CD_Ease(t,500,150,330);y=CD_Ease(t,500,92,-30);}
+		int length=5+(t/4)%5;
+		VH_HLine(x-length,x-1,y+17,part->stage==SP_ORBIT?9:12);VH_HLine(x-length/2,x-1,y+18,part->stage==SP_ORBIT?11:14);
+		CD_Draw(&scene->ship,x,y,256,t);
+		break;
+	}
+	default: { // SP_LAND to SP_SPOT2: the street in Bloogton
+		VL_SurfaceToScreen(scene->street,0,0,0,0,320,200);
+		CD_Draw(&scene->ship,6,92,256,t);
+		if(part->stage==SP_LAND)
+			for(int i=0;i<3;++i) CD_Bloog(150+i*34+(int)(t*(2+i)/3),110-(i%2)*4,t+i*5);
+		bool open=part->stage>SP_HOME || (part->stage==SP_HOME && t>=part->lead/2);
+		// Spot: in the cage, then out beside Keen
+		int sx=222,sy=74;
+		if(part->stage==SP_HOME) sx=t<part->lead/2?222:CD_Ease(t-part->lead/2,140,222,176);
+		if(part->stage==SP_SPOT2) sx=176;
+		bool spotTalks=talking && (part->stage==SP_SPOT1 || part->stage==SP_SPOT2);
+		sy-=spotTalks?(int)((t/12)%3):(part->stage==SP_HOME && t>part->lead?(int)((t/9)%2)*2:0);
+		CD_Draw(&scene->spot,sx,sy,256,t);
+		CD_Cage(open);
+		int kx=part->stage==SP_LAND?CD_Ease(t,120,60,118):part->stage==SP_SPOT1?118:
+			part->stage==SP_LOCK?CD_Ease(t,120,118,160):part->stage==SP_HOME?CD_Ease(t,120,160,132):132;
+		bool keenTalks=talking && (part->stage==SP_LOCK || part->stage==SP_HOME);
+		int pose=keenTalks?1+(t/14)%2:(t%300>285?1:0);
+		CD_Draw(&scene->keen[pose],kx,56,256,t);
+		break;
+	}
 	}
 	if(part->lead && t<part->lead) CD_Subtitle(NULL,NULL,0);
 	else CD_Subtitle(part->name,part->text,part->color);
@@ -327,7 +437,8 @@ static bool CD_PlayPart(CD_Scene *scene,const CD_Part *part)
 	uint32_t spokeAt=0,reading=70+(uint32_t)strlen(part->text)*3;
 	if(automatic) {
 		if(part->clip) KW_Narrate(part->clip);
-		static const char *names[]={"1-warn","2-again","3-beam","4-sand","5-rise","6-copy","7-off"};
+		static const char *names[]={"1-warn","2-again","3-beam","4-sand","5-rise","6-copy","7-off",
+			"s1-orbit","s2-land","s3-spot","s4-lock","s5-home","s6-snacks","s7-depart"};
 		char name[32];
 		CD_Frame(scene,part,part->lead/2+20,false);VH_UpdateScreen();
 		snprintf(name,sizeof(name),"%sa",names[part->stage]);CD_Shot(name);
@@ -355,23 +466,31 @@ static bool CD_PlayPart(CD_Scene *scene,const CD_Part *part)
 	return skipped;
 }
 
-static void CD_Play(const CD_Part *parts,int count,bool orbitOnly)
+static void CD_Play(const CD_Part *parts,int count)
 {
 	CD_Scene scene={0};
 	KW_LinesOver();
 	VL_FadeToBlack();VL_SetScrollCoords(0,0);VL_SetDefaultPalette();
 	CA_UpLevel();
 	CA_CacheGrChunk(CK_CHUNKNUM(FON_MAINFONT));
-	scene.orbit=CD_DrawOrbit();
-	scene.sand=orbitOnly?NULL:CD_DrawSand();
+	for(int i=0;i<count;++i) switch(parts[i].stage) {
+	case CD_SAND: if(!scene.sand) scene.sand=CD_DrawSand(); break;
+	case SP_ORBIT: case SP_DEPART: if(!scene.xax) scene.xax=CD_DrawOrbit(cd_xax); break;
+	case CD_WARN: case CD_AGAIN: case CD_BEAM: case CD_RISE: case CD_COPY: case CD_OFF:
+		if(!scene.orbit) scene.orbit=CD_DrawOrbit(cd_calidune);
+		break;
+	default: if(!scene.street) scene.street=CD_DrawStreet(); break;
+	}
 	for(int i=0;i<3;++i) scene.keen[i]=CD_Capture(AL_KeenPose(i),AL_SCENE_KEEN_W,AL_SCENE_KEEN_H,NULL,false);
+	scene.spot=CD_Capture(AL_SpotPicture(),AL_SCENE_SPOT_W,AL_SCENE_SPOT_H,NULL,false);
 	// The copy: the same ship in strange colours (green for red, purple for blue)
 	static const uint8_t strange[16]={0,5,2,3,2,13,6,7,8,13,10,11,10,13,14,15};
 	scene.ship=CD_Capture(AL_ShipPicture(),AL_SCENE_SHIP_W,AL_SCENE_SHIP_H,NULL,false);
 	scene.copy=CD_Capture(AL_ShipPicture(),AL_SCENE_SHIP_W,AL_SCENE_SHIP_H,strange,true);
 	bool skipped=false;
 	for(int i=0;i<count && !skipped;++i) {
-		bool cut=i==0 || parts[i].stage==CD_SAND;
+		CD_Stage st=parts[i].stage;
+		bool cut=i==0 || st==CD_SAND || st==SP_LAND || st==SP_DEPART;
 		if(cut) {
 			if(i) VL_FadeToBlack();
 			CD_Frame(&scene,&parts[i],0,false);VH_UpdateScreen();VL_FadeFromBlack();
@@ -379,19 +498,19 @@ static void CD_Play(const CD_Part *parts,int count,bool orbitOnly)
 		skipped=CD_PlayPart(&scene,&parts[i]);
 	}
 	VL_FadeToBlack();KW_LinesOver();
-	VL_DestroySurface(scene.orbit);
-	if(scene.sand) VL_DestroySurface(scene.sand);
+	void *surfaces[]={scene.orbit,scene.xax,scene.sand,scene.street};
+	for(int i=0;i<4;++i) if(surfaces[i]) VL_DestroySurface(surfaces[i]);
 	for(int i=0;i<3;++i) CD_Free(&scene.keen[i]);
-	CD_Free(&scene.ship);CD_Free(&scene.copy);
+	CD_Free(&scene.spot);CD_Free(&scene.ship);CD_Free(&scene.copy);
 	CA_DownLevel();
 	IN_ClearKeysDown();
-	printf("Calidune: scene %s\n",skipped?"skipped":"finished");fflush(stdout);
+	printf("Story scene %s\n",skipped?"skipped":"finished");fflush(stdout);
 }
 
 void CD_PlayArrival(void)
 {
 	printf("Calidune: arrival scene\n");fflush(stdout);
-	CD_Play(cd_arrival,(int)(sizeof(cd_arrival)/sizeof(cd_arrival[0])),false);
+	CD_Play(cd_arrival,(int)(sizeof(cd_arrival)/sizeof(cd_arrival[0])));
 }
 
 void CD_PlayEnding(void)
@@ -399,7 +518,17 @@ void CD_PlayEnding(void)
 	printf("Calidune: ending scene\n");fflush(stdout);
 	KW_StopVoice();
 	KW_StartCaliduneMusic(KW_VoicesEnabled() && KW_VoiceVolume()?64:256);
-	CD_Play(cd_ending,(int)(sizeof(cd_ending)/sizeof(cd_ending[0])),true);
+	CD_Play(cd_ending,(int)(sizeof(cd_ending)/sizeof(cd_ending[0])));
+	SD_MusicOff();
+	SD_FadeAdLibVolume(256,0);
+}
+
+void SP_PlayRescue(void)
+{
+	printf("Spot's rescue: scene\n");fflush(stdout);
+	KW_StopVoice();
+	KW_StartEndingMusic(KW_VoicesEnabled() && KW_VoiceVolume()?48:256);
+	CD_Play(sp_rescue,(int)(sizeof(sp_rescue)/sizeof(sp_rescue[0])));
 	SD_MusicOff();
 	SD_FadeAdLibVolume(256,0);
 }

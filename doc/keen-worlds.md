@@ -174,12 +174,12 @@ play-tested by eye.
 Calidune without the Megarocket (a warning card first; stranded until the
 game is saved). The first arrival plays Calidune's own tune
 (`kwtools/kw_calidune_music.py`, "filmi", chosen by ear) under the story,
-then a staged scene (`src/kw_calidune_scene.c`, in the Alphamatic opening's
+then a staged scene (`src/kw_story_scenes.c`, in the Alphamatic opening's
 house style): Mortimer's transporter locks onto the ship in orbit and sets
 Keen down on the sand. After the game's ending, a second scene shows Keen
 flying up in the strange copy to meet the Megarocket. Voices: Keen and the
 ship computer (`kwtools/kw_calidune_voice.py`, clips `CD_CUT_*`). Test:
-`sh tests/test-calidune-scene.sh BINARY PLAY_FOLDER` (`/CDSCENE`).
+`sh tests/test-story-scenes.sh BINARY PLAY_FOLDER` (`/CDSCENE`, `/SPOTSCENE`).
 
 ### Converting a CKPatch file (`kwtools/kw_patconv.py`)
 
@@ -704,6 +704,16 @@ itself (GPL source). Its own Keen 5 files are converted by
 `src/kw_osi.c` has its episode and what it added to the shared engine. The
 player copies all of the game's files to `play/mods/osi`. See
 `../research/operation-station-infiltration.md`.
+
+**Spot's rescue.** The Spot story's third episode was never released, so
+after the Shikadi Station's ending (the first time) Keen Worlds tells its
+end in a staged scene (`src/kw_story_scenes.c`, house style): the
+Megarocket drops through the open shield to Fribbulus Xax, lands in
+Bloogton, and Keen frees Spot from a Bloog cage. Voices: narrator, ship
+computer, Keen and Spot in their usual settings
+(`kwtools/kw_spot_rescue_voice.py`, clips `SP_CUT_*`); the ending's calm
+tune plays quietly under them. Test: `tests/test-story-scenes.sh`
+(`/SPOTSCENE`).
 
 ### Adding a fan game
 
