@@ -2055,8 +2055,8 @@ static void KW_FlightRelationship(int world,char *text,size_t size)
 	case KW_AREALM:relationship="After The Omegamatic. Next: The Alphamatic.";break;
 	case KW_ALPHAMATIC:relationship="After BOTH Krisle and Aspermontis.";break;
 	case KW_CK55:case KW_ASYLUM:relationship="Optional levels after The Omegamatic.";break;
-	case KW_RTTS:relationship="Spot is missing. After Aspermontis. Next: the Shikadi Station.";break;
-	case KW_OSI:relationship="After the Far Shadowlands: the Oracle named this station.";break;
+	case KW_RTTS:relationship="After Aspermontis. Next: the Station.";break;
+	case KW_OSI:relationship="After the Far Shadowlands.";break;
 	}
 	CK_Cross_strscpy(text,relationship,size);
 }
@@ -2170,6 +2170,11 @@ static int KW_TravelMenu(void)
 			US_SetPrintX(x+14+col*(columnWidth+8));US_SetPrintY(listY+VISIBLE*ROW+4);US_Print(more);
 		}
 		char relationship[120];KW_FlightRelationship(entries[sel].world,relationship,sizeof(relationship));
+		if(allShots)
+		{
+			uint16_t textWidth,textHeight;VH_MeasurePropString(relationship,&textWidth,&textHeight,US_GetPrintFont());
+			if(textWidth>width-16) QuitF("Flight chart: story line does not fit: %s",relationship);
+		}
 		US_SetPrintY(y+128);US_CPrint(relationship);US_SetPrintFont(oldFont);
 		int footY = y + 140;
 		VHB_HLine(x+4,x+width-5,footY-3,8);
@@ -2188,6 +2193,15 @@ static int KW_TravelMenu(void)
 			for(int level=1;level<CK_LEVELS_TRACKED;++level) if(kw_worlds[world].levelsDone[level]) ++done;
 			if(done) snprintf(status,sizeof(status),"Been here: %d level%s done. Not saved yet.",done,done==1?"":"s");
 			else snprintf(status,sizeof(status),kw_worlds[world].visited?"Keen has been here. Not saved yet.":"Keen has not been here yet.");
+		}
+		if(allShots)
+		{
+			const char *lines[2]={title,status};
+			for(int l=0;l<2;++l)
+			{
+				uint16_t textWidth,textHeight;VH_MeasurePropString(lines[l],&textWidth,&textHeight,US_GetPrintFont());
+				if(textWidth>width-16) QuitF("Flight chart: footer line does not fit: %s",lines[l]);
+			}
 		}
 		US_SetPrintY(footY);US_CPrint(title);US_CPrint(status);
 		US_SetPrintY(y+164);US_CPrint("Arrows: move  Enter: choose  Esc: back");
