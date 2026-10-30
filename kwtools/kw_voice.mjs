@@ -9,7 +9,7 @@
 // phonemes Kokoro has worked out for a sentence, before it speaks them: the
 // way to mend a word a voice says badly. Each clip is written as raw 32-bit
 // float mono samples, 24000 Hz.
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -31,7 +31,11 @@ if (process.env.KW_KOKORO_THREADS) {
 }
 // Optional cache/precision overrides allow a standalone local generation
 // job to reuse an already downloaded model without changing another app.
-env.cacheDir = process.env.KW_KOKORO_CACHE || join(root, 'data', 'models');
+// SignalweaveCMS keeps the model in workbench-data/models; older copies of
+// the CMS kept it in data/models.
+env.cacheDir = process.env.KW_KOKORO_CACHE
+  || [join(root, 'workbench-data', 'models'), join(root, 'data', 'models')].find((d) => existsSync(d))
+  || join(root, 'data', 'models');
 env.allowRemoteModels = false; // only the model that is already there
 const tts = await kokoro.KokoroTTS.from_pretrained('onnx-community/Kokoro-82M-v1.0-ONNX', { dtype: process.env.KW_KOKORO_DTYPE || 'fp32', device: 'cpu' });
 // Kokoro hands the phonemes of a sentence to its tokenizer: step in there.

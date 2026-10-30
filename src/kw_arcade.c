@@ -137,6 +137,70 @@ static bool KW_ArcadeFullscreen(void)
  return vl_isFullScreen;
 }
 
+// Keen Dreams Gold Edition. The companion is built from the 2026-05-31
+// source; its data must be the same release (KDGOLD.EXE identifies it).
+static bool KW_DreamsGoldPaths(char *binary, size_t bn, char *data, size_t dn)
+{
+ char *base = SDL_GetBasePath();
+ if (!base) return false;
+ int n = snprintf(binary, bn, "%skeen-dreams-gold%s", base,
+#ifdef _WIN32
+  ".exe"
+#else
+  ""
+#endif
+ );
+ SDL_free(base);
+ int m = snprintf(data, dn, "%s/mods/dreams-gold", fs_keenPath);
+ return n > 0 && (size_t)n < bn && m > 0 && (size_t)m < dn;
+}
+
+static bool KW_DreamsGoldHas(const char *dir, const char *name)
+{
+ FILE *f = FSL_OpenFileInDirCaseInsensitive(dir, name, false);
+ if (!f) return false;
+ fclose(f);
+ return true;
+}
+
+KW_ArcadeStatus KW_DreamsGoldCheck(void)
+{
+ char binary[1024], data[1024], sub[1100];
+ if (!KW_DreamsGoldPaths(binary, sizeof(binary), data, sizeof(data))) return KW_ARCADE_NO_ENGINE;
+ FILE *f = fopen(binary, "rb");
+ if (!f) return KW_ARCADE_NO_ENGINE;
+ fclose(f);
+ f = FSL_OpenFileInDirCaseInsensitive(data, "KDGOLD.EXE", false);
+ if (!f) return KW_ARCADE_NO_DATA;
+ fseek(f, 0, SEEK_END); long size = ftell(f); fclose(f);
+ if (size != 108427) return KW_ARCADE_WRONG_VERSION;
+ const char *required[] = {"KDGOLD.EGA", "KDGOLD.MAP", "KDGOLD.AUD"};
+ for (unsigned i = 0; i < sizeof(required) / sizeof(required[0]); ++i)
+  if (!KW_DreamsGoldHas(data, required[i])) return KW_ARCADE_NO_DATA;
+ // DOS links these headers into KDGOLD.EXE; the release keeps them in its
+ // source folder, which the companion reads.
+ snprintf(sub, sizeof(sub), "%s/KDGSRC/static", data);
+ const char *headers[] = {"KDGOLD.EHD", "KDGOLD.MHD", "KDGOLD.AHD"};
+ for (unsigned i = 0; i < sizeof(headers) / sizeof(headers[0]); ++i)
+  if (!KW_DreamsGoldHas(data, headers[i]) && !KW_DreamsGoldHas(sub, headers[i])) return KW_ARCADE_NO_DATA;
+ return KW_ARCADE_READY;
+}
+
+KW_ArcadeStatus KW_PlayDreamsGold(void)
+{
+ KW_ArcadeStatus status = KW_DreamsGoldCheck();
+ if (status != KW_ARCADE_READY) return status;
+ char binary[1024], data[1024], saves[1024];
+ if (!KW_DreamsGoldPaths(binary, sizeof(binary), data, sizeof(data))) return KW_ARCADE_FAILED;
+ int n = snprintf(saves, sizeof(saves), "%s/dreams-gold", fs_userPath);
+ if (n < 0 || (size_t)n >= sizeof(saves) || !KW_ArcadeMkdir(saves)) return KW_ARCADE_FAILED;
+ bool fullscreen = KW_ArcadeFullscreen();
+ const char *args[] = {binary, data, saves,
+  fullscreen ? "-fullscreen=true" : "-fullscreen=false", NULL};
+ printf("Dream: Keen Dreams Gold launching %s\n", fullscreen ? "fullscreen" : "windowed"); fflush(stdout);
+ return KW_RunArcade(binary, args);
+}
+
 KW_ArcadeStatus KW_PlayArcade(int episode)
 {
  KW_ArcadeStatus status = KW_ArcadeCheck(episode);
@@ -217,4 +281,6 @@ static KW_ArcadeStatus KW_RunArcade(const char *binary, const char *const *args)
 #else
 KW_ArcadeStatus KW_ArcadeCheck(int episode) { (void)episode; return KW_ARCADE_NO_ENGINE; }
 KW_ArcadeStatus KW_PlayArcade(int episode) { (void)episode; return KW_ARCADE_NO_ENGINE; }
+KW_ArcadeStatus KW_DreamsGoldCheck(void) { return KW_ARCADE_NO_ENGINE; }
+KW_ArcadeStatus KW_PlayDreamsGold(void) { return KW_ARCADE_NO_ENGINE; }
 #endif

@@ -1,0 +1,319 @@
+/* Keen Dreams (SDL2/Steam Port) Source Code
+ * Copyright (C) 2012 David Gow <david@davidgow.net>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
+// ID_MM: The Memory Manager
+// The Memory Manager provides a system for allocating and deallocating
+// memory. Memory blocks can be moved and removed when not in use to free
+// up memory needed.
+//
+// Memory blocks are allocated returned double-indirect pointers, and these
+// pointers are updated when a block's address changes.
+//
+
+#include "id_heads.h"
+
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#else
+#include <sys/mman.h>
+#endif
+#include <stdlib.h>
+#include <SDL.h>
+
+memptr bufferseg; // Misc buffer
+
+// Gold reads these to report memory and check MINMEMORY; a modern machine
+// has plenty, so report a full DOS machine with EMS and XMS.
+mminfotype	mminfo;
+boolean		mmerror;
+void		(* beforesort) (void);
+void		(* aftersort) (void);
+
+void MM_MapEMS(void)
+{
+}
+
+#define MM_MAXBLOCKS	16384 	//1200 in Keen5; Gold caches every tile separately
+
+typedef struct ID_MM_MemBlock
+{
+	void *ptr;
+	int length;
+	memptr *userptr;
+	boolean locked;
+	int purgelevel;
+	struct ID_MM_MemBlock *next;
+} ID_MM_MemBlock;
+
+static ID_MM_MemBlock mm_blocks[MM_MAXBLOCKS];
+
+static ID_MM_MemBlock *mm_free, *mm_purgeable;
+
+static int mm_blocksused;
+static int mm_numpurgeable;
+static int mm_memused;
+
+
+static void MML_ClearBlock()
+{
+	ID_MM_MemBlock *bestBlock = 0;
+	int i;
+	for (i = 0; i < MM_MAXBLOCKS; ++i)
+	{
+		//Is the block free?
+		if (!mm_blocks[i].ptr) continue;
+		//Can we purge it?
+		if (!mm_blocks[i].purgelevel) continue;
+		//Is it locked?
+		if (mm_blocks[i].locked) continue;
+
+		if (!bestBlock || mm_blocks[i].purgelevel > bestBlock->purgelevel)
+		{
+			bestBlock = &(mm_blocks[i]);
+			continue;
+		}
+	}
+
+	//Did we find a purgable block?
+	if (!bestBlock)
+		Quit("MML_ClearBlock(): No purgable blocks!");
+
+	//Free the sucker.
+	MM_FreePtr(bestBlock->userptr);
+}
+
+static ID_MM_MemBlock *MML_GetNewBlock()
+{
+	ID_MM_MemBlock *newBlock;
+	//If there aren't any free blocks, kick out some purgables.
+	if (!mm_free)
+		MML_ClearBlock();
+	newBlock = mm_free;
+	mm_free = mm_free->next;
+	return newBlock;
+}
+
+static void MML_UpdateUserPointer(ID_MM_MemBlock *blk)
+{
+	(*blk->userptr) = blk->ptr;
+}
+
+static ID_MM_MemBlock *MML_BlockFromUserPointer(memptr *ptr)
+{
+	int i;
+	for (i = 0; i < MM_MAXBLOCKS; ++i)
+		if (mm_blocks[i].userptr == ptr)
+			return &(mm_blocks[i]);
+
+	return (ID_MM_MemBlock*)(0);
+}
+
+void MM_Startup(void)
+{
+	int i;	
+	for (i = MM_MAXBLOCKS-1; i >= 0; --i)
+	{
+		mm_blocks[i].ptr = 0;
+		mm_blocks[i].next = (i==MM_MAXBLOCKS-1)?0:&(mm_blocks[i+1]);
+	}
+	mm_free = &(mm_blocks[0]);
+	mm_purgeable = 0;
+	mminfo.nearheap = 0x10000;
+	mminfo.farheap = 0x80000;
+	mminfo.mainmem = mminfo.nearheap + mminfo.farheap;
+	mminfo.EMSmem = 0x400000;
+	mminfo.XMSmem = 0x400000;
+	mmerror = false;
+	// Misc buffer
+	MM_GetPtr(&bufferseg,BUFFERSIZE);
+}
+
+void MM_Shutdown(void)
+{
+	int i;
+	for (i = 0; i < MM_MAXBLOCKS; ++i)
+	{
+		if (mm_blocks[i].ptr)	
+			free(mm_blocks[i].ptr);
+	}
+}
+
+void MM_GetPtr(memptr *ptr, unsigned long size)
+{
+	ID_MM_MemBlock *blk = MML_BlockFromUserPointer(ptr);
+	if (blk)
+	{
+		if (blk->length == size) return;
+		free(blk->ptr);
+	}
+	else
+	{
+		blk = MML_GetNewBlock();
+	}
+	//Try to allocate memory, freeing if we can't.
+	do {
+		blk->ptr = malloc(size);
+		if (!blk->ptr)
+		{
+			if (mm_numpurgeable)
+				MML_ClearBlock();
+			else
+				Quit("MM_GetPtr: Out of Memory!");
+		}
+	} while(!blk->ptr);
+
+	//Setup the block details (unlocked, non-purgable)
+	//#include <sys/mman.h>
+	blk->length = size;
+	blk->userptr = ptr;
+	blk->purgelevel = 0;
+	blk->locked = false;
+
+	//Update the stats
+	mm_blocksused++;
+	mm_memused += size;
+
+	MML_UpdateUserPointer(blk);
+}
+
+void MM_FreePtr(memptr *ptr)
+{
+	//Lookup the block
+	ID_MM_MemBlock *blk = MML_BlockFromUserPointer(ptr);
+	if (!blk)
+		Quit("MM_FreePtr: Block not Found!");
+
+	//Update the purgeable count.
+	if (blk->purgelevel)
+		mm_numpurgeable--;
+
+	//Update the used memory counts.
+	mm_blocksused--;
+	mm_memused -= blk->length;
+
+	//Add it to the free list
+	blk->next = mm_free;
+	mm_free = blk;
+
+	//Free its memory.
+	free(blk->ptr);
+	blk->length = 0;
+	blk->ptr = 0;
+	blk->userptr = 0;
+
+	// Set the pointer to NULL
+	// This is important, as some CA functions check ptr != NULL to see if
+	// things are loaded. Get this wrong and it will try to SetPurge on
+	// nonexistant blocks. Not fun!
+	*ptr = 0;
+}
+
+void MM_SetPurge(memptr *ptr, int level)
+{
+	//Lookup the block
+	ID_MM_MemBlock *blk = MML_BlockFromUserPointer(ptr);
+	if (!blk)
+		Quit("MM_SetPurge: Block not Found!");
+
+	//Keep track of the purgeable block count.
+	if (!blk->purgelevel && level)
+		mm_numpurgeable++;
+	else if (blk->purgelevel && !level)
+		mm_numpurgeable--;
+
+	//Set the purge level
+	blk->purgelevel = level;
+}
+
+void MM_SetLock(memptr *ptr, boolean lock)
+{
+	//Lookup the block
+	ID_MM_MemBlock *blk = MML_BlockFromUserPointer(ptr);
+	if (!blk)
+		Quit("MM_SetLock: Block not Found!");
+
+	//Lock/Unlock the block
+	blk->locked = lock;
+
+	// We'll try to lock our memory to prevent it being paged
+	// out in memory-pressured situations.
+#ifdef WIN32
+	if (lock)
+		VirtualLock(blk->ptr, blk->length);
+	else
+		VirtualUnlock(blk->ptr, blk->length);
+#else
+	if (lock)
+		mlock(blk->ptr, blk->length);
+	else
+		munlock(blk->ptr, blk->length);
+#endif
+}
+
+int MM_UsedMemory()
+{
+	return mm_memused;
+}
+
+int MM_UsedBlocks()
+{
+	return mm_blocksused;
+}
+
+int MM_PurgableBlocks()
+{
+	return mm_numpurgeable;
+}
+
+void MM_SortMem()
+{
+	// The system allocator does the sorting. Purging here would free a sound
+	// or the music that the audio thread is still playing, and there is no
+	// shortage of memory, so purgable blocks stay until they are reused.
+	if (beforesort)
+		beforesort();
+	if (aftersort)
+		aftersort();
+}
+
+void MM_ShowMemory()
+{
+	//TODO: This is a stub. I should at least add a stats dump here.
+}
+
+void MM_BombOnError(boolean bomb)
+{
+	//TODO: Add support for this here.
+}
+
+long MM_UnusedMemory()
+{
+	return mminfo.mainmem;
+}
+long MM_TotalFree()
+{
+	return MM_UnusedMemory();
+}
+long MM_SystemMegs()
+{
+	return SDL_GetSystemRAM();
+}
+
+//NOTE: Keen/Wolf3d have MML_UseSpace. This is incompatible with our use of the
+//system allocator, so it is unused for now.

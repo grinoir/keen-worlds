@@ -4,10 +4,11 @@
 //   node tools/kw_landing_voice.mjs KOKORO_DIR VOICE JOBS.json
 //
 // KOKORO_DIR: a folder that has kokoro-js installed (node_modules) and,
-// under data/models, the downloaded voice model: the user's ArcadiumCMS.
+// under workbench-data/models, the downloaded voice model: the user's
+// SignalweaveCMS.
 // Nothing is written there. JOBS.json: [{"text": ..., "out": file}, ...];
 // each clip is written as raw 32-bit float mono samples, 24000 Hz.
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -18,7 +19,9 @@ const root = resolve(dir);
 const load = (file) => import(pathToFileURL(join(root, 'node_modules', file)).href);
 const kokoro = await load('kokoro-js/dist/kokoro.js');
 const { env } = await load('@huggingface/transformers/dist/transformers.node.mjs');
-env.cacheDir = join(root, 'data', 'models');
+env.cacheDir = process.env.KW_KOKORO_CACHE
+  || [join(root, 'workbench-data', 'models'), join(root, 'data', 'models')].find((d) => existsSync(d))
+  || join(root, 'data', 'models');
 env.allowRemoteModels = false; // only the model that is already there
 const tts = await kokoro.KokoroTTS.from_pretrained('onnx-community/Kokoro-82M-v1.0-ONNX', { dtype: 'fp32', device: 'cpu' });
 if (!(voice in tts.voices)) throw new Error(`"${voice}" is not a Kokoro voice: ${Object.keys(tts.voices).join(', ')}`);

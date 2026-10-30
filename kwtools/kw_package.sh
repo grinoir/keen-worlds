@@ -98,6 +98,9 @@ EOF
 chmod +x "$WORK/cc-arcade"
 CC="$WORK/cc-arcade" sh "$REPO/kwtools/kw_arcade_build.sh" "$WORK/bin-linux/keen-vorticons" > "$WORK/arcade-linux.log" 2>&1 || { tail -30 "$WORK/arcade-linux.log"; exit 1; }
 sh "$REPO/kwtools/kw_arcade_build.sh" "$WORK/bin-win64/keen-vorticons.exe" windows > "$WORK/arcade-windows.log" 2>&1 || { tail -30 "$WORK/arcade-windows.log"; exit 1; }
+# Keen Dreams Gold Edition's native companion (offered at the bunk). No data.
+CC="$WORK/cc-arcade" sh "$REPO/kwtools/kw_dreams_gold_build.sh" "$WORK/bin-linux/keen-dreams-gold" > "$WORK/gold-linux.log" 2>&1 || { tail -30 "$WORK/gold-linux.log"; exit 1; }
+sh "$REPO/kwtools/kw_dreams_gold_build.sh" "$WORK/bin-win64/keen-dreams-gold.exe" windows > "$WORK/gold-windows.log" 2>&1 || { tail -30 "$WORK/gold-windows.log"; exit 1; }
 
 # ---- what both archives share
 fill() {
@@ -170,6 +173,7 @@ L=$WORK/pack/$NAME-linux
 fill "$L"
 cp "$WORK/bin-linux/omnispeak" "$L/omnispeak"
 cp "$WORK/bin-linux/keen-vorticons" "$L/keen-vorticons"
+cp "$WORK/bin-linux/keen-dreams-gold" "$L/keen-dreams-gold"
 cp "$REPO/kwtools/package/keenworlds.sh" "$L/keenworlds.sh"
 chmod +x "$L/omnispeak" "$L/keenworlds.sh"
 rm -f "$DIST/$NAME-linux.tar.gz"
@@ -179,6 +183,7 @@ W=$WORK/pack/$NAME-windows
 fill "$W"
 cp "$WORK/bin-win64/omnispeak.exe" "$W/omnispeak.exe"
 cp "$WORK/bin-win64/keen-vorticons.exe" "$W/keen-vorticons.exe"
+cp "$WORK/bin-win64/keen-dreams-gold.exe" "$W/keen-dreams-gold.exe"
 cp "$REPO/kwtools/package/KeenWorlds.cmd" "$W/KeenWorlds.cmd"
 # Windows' Notepad wants its own line ends.
 for f in "$W/README.txt" "$W/mods/README.txt" "$W/VERSION.txt" "$W/LICENSE.txt" "$W/AUTHORS.txt"; do

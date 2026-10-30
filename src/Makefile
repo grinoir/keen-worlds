@@ -457,6 +457,11 @@ ARCADE_SOURCES := $(shell find ../third_party/chocolate-keen -type f)
 all: $(BINDIR)/keen-vorticons$(EXE_EXT)
 $(BINDIR)/keen-vorticons$(EXE_EXT): ../kwtools/kw_arcade_build.sh $(ARCADE_SOURCES)
 	sh ../kwtools/kw_arcade_build.sh "$@" $(if $(findstring win,$(PLATFORM)),windows,native)
+# Keen Dreams Gold Edition, offered at the bunk: also its own native process.
+DREAMSGOLD_SOURCES := $(shell find ../third_party/keen-dreams-gold -type f) opl/dbopl.c
+all: $(BINDIR)/keen-dreams-gold$(EXE_EXT)
+$(BINDIR)/keen-dreams-gold$(EXE_EXT): ../kwtools/kw_dreams_gold_build.sh $(DREAMSGOLD_SOURCES)
+	sh ../kwtools/kw_dreams_gold_build.sh "$@" $(if $(findstring win,$(PLATFORM)),windows,native)
 endif
 
 help:

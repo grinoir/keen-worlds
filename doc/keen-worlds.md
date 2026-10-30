@@ -279,7 +279,7 @@ flight) the ship computer says where, with a warning about the locals: the
 same woman's voice for every world. `kwtools/kw_landing_voice.py` holds the
 words; it writes the clips (`data/voice/LAND_<ID>.RAW`) and `src/kw_landing_text.h` for the card shown with them. The voice is
 Kokoro's "Heart" (a free neural voice run locally through the kokoro-js
-copy and model in the user's ArcadiumCMS project, `kwtools/kw_landing_voice.mjs`).
+copy and model in the user's SignalweaveCMS project, `kwtools/kw_landing_voice.mjs`).
 The engine plays one voice clip at a time, mixed into the SDL sound output
 (`SD_PlayVoice` in `id_sd.c`). The ship's tune is silent while she speaks:
 it fades out with the lights before a landing and fades back in afterwards
@@ -670,6 +670,20 @@ worlds: walking up into it from its foot asks the same question. Waking puts Kee
 saved from the ship. Out of lives, he wakes with a start and the next dream
 begins again (`KW_DreamOver`); so it does after the ending. Without the
 converted files Keen "is not sleepy".
+
+#### Keen Dreams Gold Edition (also at the bed)
+
+When `keen-dreams-gold` sits beside the engine, the bunk asks which dream:
+Keen Dreams, Keen Dreams Gold Edition, or stay awake (`KW_Dream`,
+`KW_DreamGold`). Gold (Szemigi, release 2026-05-31, GPL source in its zip)
+is not a world: like the arcade's Keen 1-3 it runs in its own native process
+(`KW_PlayDreamsGold` in `kw_arcade.c`), with its own saves and settings in
+the user folder's `dreams-gold/`, and nothing carried in or out. Its files
+are the player's, unpacked from `KDGOLD.ZIP` into `mods/dreams-gold`
+(`KW_DreamsGoldCheck` pins the release by `KDGOLD.EXE`'s size and needs the
+three headers in `KDGSRC/static`). The port is `third_party/keen-dreams-gold`
+(see its `UPSTREAM.md`), built by `kwtools/kw_dreams_gold_build.sh`. Check:
+`tests/test-dreams-gold.sh`.
 
 ### Operation Station Infiltration
 

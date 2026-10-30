@@ -2556,8 +2556,46 @@ static void KW_DreamFadeOut(void)
 	}
 }
 
+// Keen Dreams Gold Edition runs in its own native companion, like the
+// arcade's originals: it is not a world, and never touches the journey.
+static void KW_DreamGold(void)
+{
+	KW_ArcadeStatus status = KW_PlayDreamsGold();
+	if (status == KW_ARCADE_NO_DATA)
+		KW_ShowCards("Keen Dreams Gold Edition\nBy Szemigi\n\nNot installed. Unpack its\nKDGOLD.ZIP (2026-05-31)\ninto mods/dreams-gold,\nincluding the KDGSRC folder.\f"
+			"Gold keeps its own saves\nand settings, separate\nfrom this journey.\n\nSee mods/README.txt.");
+	else if (status == KW_ARCADE_WRONG_VERSION)
+		KW_ShowCards("Keen Dreams Gold Edition\n\nThese files are another\nrelease. Keen Worlds plays\nthe 2026-05-31 KDGOLD.ZIP.\n\nSee mods/README.txt.");
+	else if (status == KW_ARCADE_FAILED)
+		KW_ShowCards("Keen Dreams Gold could\nnot finish normally.\n\nKeen is back in his bunk.\nSee keenworlds-log.txt\nfor the game's message.");
+	StartMusic(ca_mapOn);
+}
+
 static void KW_Dream(void)
 {
+	// With the Gold companion installed, the bunk offers both dreams.
+	if (!kw_cardsOff && KW_DreamsGoldCheck() != KW_ARCADE_NO_ENGINE)
+	{
+		const char *dreams[] = {
+			KW_IsWorldPresent(KW_DREAM) ? "Keen Dreams" : "Keen Dreams (not installed)",
+			KW_DreamsGoldCheck() == KW_ARCADE_READY ? "Keen Dreams Gold Edition" : "Gold Edition (not installed)",
+			"Stay awake"};
+		int dream = KW_ChooseCard("Keen's bunk\nWhich dream tonight?", dreams, 3);
+		IN_ClearKeysDown();
+		if (dream < 0 || dream == 2)
+		{
+			RF_ForceRefresh();
+			SD_SetLastTimeCount(SD_GetTimeCount());
+			return;
+		}
+		if (dream == 1)
+		{
+			KW_DreamGold();
+			RF_ForceRefresh();
+			SD_SetLastTimeCount(SD_GetTimeCount());
+			return;
+		}
+	}
 	if (!KW_IsWorldPresent(KW_DREAM))
 	{
 		SD_PlaySound(CK_SOUNDNUM(SOUND_NEEDKEYCARD));

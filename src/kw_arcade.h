@@ -8,4 +8,9 @@ typedef enum KW_ArcadeStatus {
 } KW_ArcadeStatus;
 KW_ArcadeStatus KW_ArcadeCheck(int episode);
 KW_ArcadeStatus KW_PlayArcade(int episode);
+// Keen Dreams Gold Edition (Szemigi, 2026-05-31 release): its own native
+// companion, offered at the bed beside the classic dream. Its files are the
+// player's, unpacked from KDGOLD.ZIP into mods/dreams-gold.
+KW_ArcadeStatus KW_DreamsGoldCheck(void);
+KW_ArcadeStatus KW_PlayDreamsGold(void);
 #endif

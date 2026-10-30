@@ -1,0 +1,191 @@
+/* Keen Dreams Gold Edition Source Code
+ * Copyright (C) 2026 Szemigi
+ * This project contains taken and modified
+ * codes/codings from these following sources:
+ *
+ * 1.
+ * Reconstructed BioMenace 1
+ * Copyright (C) 2024 lethal_guitar
+ * 
+ * 2.
+ * Foray in the Forest
+ * Copyright (C) 2022-2024 Nisaba
+ * Copyright (C) 2019-2025 K1n9_Duk3
+ *
+ * 3.
+ * Atroxian Realm
+ * Copyright (C) 2020 Gridlock
+ *
+ * 4.
+ * Reconstructed Commander Keen 4-6
+ * Copyright (C) 2021 K1n9_Duk3
+ *
+ * 5.
+ * Keen Dreams Unofficial Tech Demo
+ * Copyright (C) 2015 NY00123
+ *
+ * 6.
+ * Wolfenstein 3-D Source Code
+ * Copyright (C) 1995 Id Software
+ *
+ * 7.
+ * Keen Dreams Source Code
+ * Copyright (C) 2014 Javier M. Chavez
+ * Copyright (C) 1993-2014 Flat Rock Software
+ *
+ * 8.
+ * Catacomb 3-D Source Code
+ * Copyright (C) 1993-2014 Flat Rock Software
+ *
+ * 9.
+ * Keen Dreams SDL2/Steam Port
+ * Copyright (C) 2015 David Gow <david@davidgow.net>
+ *
+ * 10.
+ * Keen Worlds native companion changes
+ * Copyright (C) 2026 Anders Christensen
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
+// ID_RF.H
+
+#define __ID_RF__
+
+#ifndef __ID_MM__
+#include "ID_MM.H"
+#endif
+
+/*
+=============================================================================
+
+							CONSTANTS
+
+=============================================================================
+*/
+
+extern int g_minTics;
+#define	MINTICS				g_minTics
+#define	MAXTICS				5
+#define DEMOTICS			3
+
+#define	MAPBORDER			2		// map border must be at least 1
+
+#define	MAXSPRITES			100		// max tracked sprites
+#define	MAXANIMTILES		90		// max animating tiles on screen
+#define MAXANIMTYPES		50		// max different unique anim tiles on map
+
+#define	MAXMAPHEIGHT		128
+
+#define	PRIORITIES			4
+#define	MASKEDTILEPRIORITY	3		// planes go: 0,1,2,MTILES,3
+
+#define TILEGLOBAL			256
+#define PIXGLOBAL			16
+
+#define	G_T_SHIFT			8		// global >> ?? = tile
+#define	G_P_SHIFT			4		// global >> ?? = pixels
+#define P_T_SHIFT			4		// pixels >> ?? = tile
+
+#define	PORTTILESWIDE		21      // all drawing takes place inside a
+#define	PORTTILESHIGH		14		// non displayed port of this size
+
+//#define	PORTGLOBALWIDE		(21*TILEGLOBAL)
+//#define	PORTGLOBALHIGH		(14*TILEGLOBAL)
+
+#define UPDATEWIDE			(PORTTILESWIDE+1)
+#define UPDATEHIGH			PORTTILESHIGH
+
+
+//===========================================================================
+
+typedef enum {spritedraw,maskdraw} drawtype;
+
+/*
+=============================================================================
+
+						 PUBLIC VARIABLES
+
+=============================================================================
+*/
+
+
+extern	boolean		compatibility;			// crippled refresh for wierdo SVGAs
+
+extern	uint16_t	tics;
+extern	long		lasttimecount;
+
+extern	unsigned	originxglobal,originyglobal;
+extern	unsigned	originxtile,originytile;
+extern	unsigned	originxscreen,originyscreen;
+extern	unsigned	originmap;
+
+extern	unsigned	mapwidth,mapheight,mapbyteswide,mapwordswide
+					,mapbytesextra,mapwordsextra;
+extern	unsigned	mapbwidthtable[MAXMAPHEIGHT];
+
+extern	unsigned	originxmin,originxmax,originymin,originymax;
+
+extern	unsigned	masterofs;
+
+//
+// the floating update window is also used by the view manager for
+// double buffer tracking
+//
+
+extern	byte		*updateptr;				// current start of update window
+extern	byte		*updatestart[2];
+
+#if GRMODE == CGAGR
+extern	byte		*baseupdateptr;
+#endif
+
+extern unsigned blockstarts[UPDATEWIDE*UPDATEHIGH];
+extern unsigned	updatemapofs[UPDATEWIDE*UPDATEHIGH];
+extern unsigned	uwidthtable[UPDATEHIGH];		// lookup instead of multiple
+
+#define	UPDATETERMINATE	0x0301
+
+/*
+=============================================================================
+
+						 PUBLIC FUNCTIONS
+
+=============================================================================
+*/
+
+void RF_Startup (void);
+void RF_Shutdown (void);
+
+void RF_FixOfs (void);
+void RF_NewMap (void);
+void RF_MarkTileGraphics (void);
+void RF_NewPosition (unsigned x, unsigned y);
+void RF_Scroll (int x, int y);
+
+void RF_ClearBlock (int	x, int y, int width, int height);
+void RF_RedrawBlock (int x, int y, int width, int height);
+
+void RF_PlaceSprite (void **user,unsigned globalx,unsigned globaly,
+	unsigned spritenumber, drawtype draw, int priority);
+void RF_RemoveSprite (void **user);
+
+void RF_CalcTics (void);
+
+void RF_Refresh (void);
+void RF_ForceRefresh (void);
+void RF_SetRefreshHook (void (*func) (void) );
+
+

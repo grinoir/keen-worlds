@@ -11,8 +11,8 @@ the card that is shown while the clip plays (a C header).
 The voice is Kokoro (a free neural voice that runs on this computer), the
 same woman's voice for every world, with two short notes before she speaks.
 It is run through the copy of kokoro-js and its model in the user's
-ArcadiumCMS project (KW_KOKORO_DIR, default ~/Projects/ArcadiumCMS; see
-tools/kw_landing_voice.mjs), then ffmpeg. Node, that folder and ffmpeg are
+SignalweaveCMS project (KW_KOKORO_DIR, default ~/Projects/SignalweaveCMS; see
+tools/kw_voice.mjs), then ffmpeg. Node, that folder and ffmpeg are
 needed to run this tool, not to play the game.
 """
 import json, os, subprocess, sys, tempfile, textwrap
@@ -21,7 +21,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 
 RATE = 22050
 VOICE = 'af_heart'        # Kokoro's "Heart", an American woman
-KOKORO_DIR = os.environ.get('KW_KOKORO_DIR', os.path.expanduser('~/Projects/ArcadiumCMS'))
+KOKORO_DIR = os.environ.get('KW_KOKORO_DIR', os.path.expanduser('~/Projects/SignalweaveCMS'))
 # world id: the words, a sentence each
 LANDINGS = {
     'suburb': ["You have now landed on Earth. Your own street.",

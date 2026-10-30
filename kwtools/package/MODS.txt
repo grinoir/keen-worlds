@@ -50,6 +50,15 @@ Where each game comes from:
            sleep, the bed says what is missing. This is the dream Keen has
            in the ship's bed, not a place in the flight menu.
 
+  dreams-gold  (the bunk)       Keen Dreams Gold Edition, by Szemigi
+           Release of 2026-05-31: KDGOLD.ZIP from its thread,
+           https://pckf.com/viewtopic.php?t=18318. Unpack the whole zip in
+           mods/dreams-gold, keeping its KDGSRC folder (three header files
+           are read from it). Gold runs in its own native program
+           (keen-dreams-gold), like the arcade's games: the bunk asks which
+           dream, and Gold keeps its own saves and settings, apart from the
+           journey. Other Gold releases are refused by name and size.
+
 Each world needs its base game too: Keen 4 for keen7, keen95, bounty and
 dreams; Keen 5 for keen9, ck55, asylum, osi, arealm, alphamatic and fitf; Keen 6 for
 keen8.
