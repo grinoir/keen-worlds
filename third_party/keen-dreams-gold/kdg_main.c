@@ -933,7 +933,16 @@ int main (int argc, char **argv)
 		fprintf(stderr, "usage: %s DATADIR SAVEDIR [-fullscreen=true|false]\n", argv[0]);
 		return 2;
 	}
-	snprintf(ca_datapath, 1024, "%s", argv[1]);
+	// The data folder as a full path: the working folder becomes the saves'.
+#ifdef _WIN32
+	if (!_fullpath(ca_datapath, argv[1], 1024))
+#else
+	if (!realpath(argv[1], ca_datapath))
+#endif
+	{
+		fprintf(stderr, "Keen Dreams Gold: can't find the data folder %s\n", argv[1]);
+		return 2;
+	}
 	mkdir(argv[2]
 #ifndef _WIN32
 		, 0755
