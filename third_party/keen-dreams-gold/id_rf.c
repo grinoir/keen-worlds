@@ -301,7 +301,7 @@ void RFL_UpdateSprites (void);
 =====================
 */
 
-static	char *ParmStrings[] = {"comp"};
+static	char *ParmStrings[] = {"comp",nil};	// (DOS found a zero after it by luck)
 
 void RF_Startup (void)
 {

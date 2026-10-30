@@ -106,7 +106,7 @@ extern  boolean         greenball;
 //      Internal variables
 #define ConfigVersion   1
 
-static  char            *ParmStrings[] = {"COMP","NOCOMP"};
+static  char            *ParmStrings[] = {"COMP","NOCOMP",nil};	// (DOS found a zero after it by luck)
 static  boolean         US_Started;
 
 		boolean         Button0,Button1,
