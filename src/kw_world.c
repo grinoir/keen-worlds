@@ -416,6 +416,7 @@ static bool kw_fitfCardDue = false;  // its title and makers are still to be sho
 // Megarockets parked on fan games' world maps (see below).
 typedef struct KW_MapShip KW_MapShip;
 static const KW_MapShip *KW_MapShipFor(int world);
+static bool KW_TransportedAlone(int world);
 
 // Worlds with a playable BWB Megarocket level: Keen boards inside it and
 // arrives there. Keen 5 has none (its ship is docked on the world map).
@@ -1206,6 +1207,8 @@ static const KW_MapShip kw_mapShips[] = {
 
 static const KW_MapShip *KW_MapShipFor(int world)
 {
+	if (KW_TransportedAlone(world))
+		return NULL; // (the ship comes to Calidune only once Keen has left it)
 	for (int i = 0; i < (int)(sizeof(kw_mapShips) / sizeof(kw_mapShips[0])); ++i)
 		if (kw_mapShips[i].world == world)
 			return &kw_mapShips[i];
@@ -1708,7 +1711,16 @@ static bool KW_IsStranded(void)
 {
 	// (inside the ship: where the ship stands)
 	int where = kw_currentWorld == KW_SHIP ? kw_boardedFrom : kw_currentWorld;
-	return where == KW_AREALM && !kw_worlds[KW_AREALM].completed;
+	return (where == KW_AREALM || where == KW_KEEN8) && !kw_worlds[where].completed;
+}
+
+// Calidune (Dead in the Desert): Mortimer's transporter from Krodacia sets
+// Keen down there alone, "without his trusty Bean with Bacon Megarocket".
+// He leaves in the strange copy of it at the end of the game; until then
+// the Megarocket can't reach him.
+static bool KW_TransportedAlone(int world)
+{
+	return world == KW_KEEN8 && !kw_worlds[KW_KEEN8].completed;
 }
 
 // A card with a question; true if the player presses Y.
@@ -1750,6 +1762,17 @@ static bool KW_AskCard(const char *text)
 	"Keen cannot leave Krisle\nuntil he has saved it.\n\nFly there? Press Y for yes,\nany other key to stay."
 #define KW_KRISLE_WRECK \
 	"The Megarocket is a wreck.\n\nThe Krile will repair it\nonce Atroxus is defeated.\n\nUntil then Keen stays on Krisle."
+#define KW_CALIDUNE_WARNING \
+	"Calidune\n\nMortimer's transporter still has\na lock on Keen. If we go, it\nwill pull him down alone. The\nMegarocket cannot follow.\n\n" \
+	"Keen cannot leave Calidune\nuntil he finds a way off.\n\nFly there? Press Y for yes,\nany other key to stay."
+#define KW_CALIDUNE_ALONE \
+	"The Megarocket is not here.\n\nMortimer's transporter left Keen\non Calidune alone. He needs a\npower source, and a ship.\n\nUntil then Keen stays on Calidune."
+// What Keen is told when he tries to leave a world that strands him.
+static const char *KW_StrandedText(void)
+{
+	int where = kw_currentWorld == KW_SHIP ? kw_boardedFrom : kw_currentWorld;
+	return where == KW_KEEN8 ? KW_CALIDUNE_ALONE : KW_KRISLE_WRECK;
+}
 
 // Draws the destination menu and returns the chosen world, or KW_NO_WORLD to
 // stay. Every other world is listed: one that isn't installed opens a card
@@ -2066,7 +2089,7 @@ static int KW_TravelMenu(void)
 	if (KW_IsStranded())
 	{
 		SD_PlaySound(CK_SOUNDNUM(SOUND_NEEDKEYCARD));
-		KW_ShowCards(KW_KRISLE_WRECK);
+		KW_ShowCards(KW_StrandedText());
 		return KW_NO_WORLD;
 	}
 
@@ -2284,6 +2307,8 @@ static int KW_TravelMenu(void)
 	}
 	// Krisle is a one-way trip until it is saved: say so first.
 	if (result == KW_AREALM && !kw_worlds[KW_AREALM].completed && !KW_AskCard(KW_KRISLE_WARNING))
+		return KW_NO_WORLD;
+	if (KW_TransportedAlone(result) && !KW_AskCard(KW_CALIDUNE_WARNING))
 		return KW_NO_WORLD;
 	return result;
 }
@@ -2918,6 +2943,15 @@ static void KW_ShipRoomFrame(void)
 			KW_RequestWorld(destination);
 			return;
 		}
+		if (KW_TransportedAlone(destination))
+		{
+			// Calidune: the transporter takes Keen; the ship stays in orbit.
+			// Its story, then Keen on the sand at the map's own start.
+			kw_boardedFrom = destination;
+			kw_storyWorld = KW_StoryIsDue(destination) ? destination : KW_NO_WORLD;
+			KW_RequestWorld(destination);
+			return;
+		}
 		if (destination == KW_FITF && !kw_worlds[KW_FITF].visited)
 		{
 			// Gnosticus Pi, the first time: its story, then the game's own
@@ -3460,7 +3494,7 @@ void KW_PlayLoopHook(void)
 			if (KW_IsStranded())
 			{
 				SD_PlaySound(CK_SOUNDNUM(SOUND_NEEDKEYCARD));
-				KW_ShowCards(KW_KRISLE_WRECK);
+				KW_ShowCards(KW_StrandedText());
 				return;
 			}
 			kw_boardedFrom = kw_currentWorld;
@@ -4163,6 +4197,8 @@ void KW_ChronicleSelfTest(void)
 // Developer self-test (/KWTEST): hop between all worlds several times, loading
 // the world map and two levels each visit, and log memory use after every hop
 // so leaks show up as steady growth.
+static bool kw_keen8Saved;
+
 void KW_SelfTest(void)
 {
 	static const int route[] = {KW_KEEN5, KW_KEEN6, KW_KEEN4, KW_KEEN7, KW_KEEN6, KW_KEEN5, KW_KEEN7, KW_KEEN4};
@@ -4172,6 +4208,15 @@ void KW_SelfTest(void)
 	CK_MeasureMultiline(KW_KRISLE_WARNING, &askW, &askH);
 	if ((askW + 15) / 8 + 2 > KW_CARD_MAX_W || (askH + 7) / 8 + 2 > KW_CARD_MAX_H)
 		Quit("KW_SelfTest: the Krisle warning doesn't fit the screen!");
+	{
+		const char *cards[] = {KW_CALIDUNE_WARNING, KW_CALIDUNE_ALONE, KW_KRISLE_WRECK};
+		for (unsigned c = 0; c < sizeof(cards) / sizeof(cards[0]); ++c)
+		{
+			CK_MeasureMultiline(cards[c], &askW, &askH);
+			if ((askW + 15) / 8 + 2 > KW_CARD_MAX_W || (askH + 7) / 8 + 2 > KW_CARD_MAX_H)
+				QuitF("KW_SelfTest: a stranding card doesn't fit the screen: %.30s", cards[c]);
+		}
+	}
 	const char *cardProblem = KW_CheckCardsFit();
 	if (cardProblem)
 		QuitF("KW_SelfTest: a world card doesn't fit the screen: %s", cardProblem);
@@ -4889,14 +4934,28 @@ void KW_SelfTest(void)
 			continue;
 		}
 		// Otherwise its Megarocket is parked on the map, solid, with Keen's
-		// boarding spot beside it, away from level entrances.
+		// boarding spot beside it, away from level entrances. Calidune has no
+		// ship until it is saved (Mortimer's transporter left Keen alone).
 		ck_gameState.currentLevel = 0;
-		CK_LoadLevel(true, true);
+		if (fan == KW_KEEN8)
+		{
+			kw_keen8Saved = kw_worlds[fan].completed;
+			kw_worlds[fan].completed = false;
+			CK_LoadLevel(true, true);
+			if (KW_MapShipFor(fan) || KW_IsArtPlaced(&kw_keen8ShipArt) || !KW_IsStranded())
+				Quit("KW_SelfTest: Calidune should have no Megarocket before it is saved!");
+			kw_worlds[fan].completed = true; // (until the checks below are done)
+			CK_LoadLevel(true, true);
+		}
+		else
+			CK_LoadLevel(true, true);
 		const KW_MapShip *ms = KW_MapShipFor(fan);
 		if (!ms || !KW_IsArtPlaced(ms->ship) ||
 			kw_launchSpotX != ms->launchX || kw_launchSpotY != ms->launchY ||
 			!TI_ForeTop(CA_TileAtPos(ms->ship->originX, ms->ship->originY, 1)))
 			Quit("KW_SelfTest: a fan game's parked Megarocket is missing!");
+		if (fan == KW_KEEN8)
+			kw_worlds[fan].completed = kw_keen8Saved;
 		for (int y = kw_launchSpotY - KW_LAUNCH_RANGE - 1; y <= kw_launchSpotY + KW_LAUNCH_RANGE + 1; ++y)
 			for (int x = kw_launchSpotX - KW_LAUNCH_RANGE - 1; x <= kw_launchSpotX + KW_LAUNCH_RANGE + 1; ++x)
 				if ((CA_TileAtPos(x, y, 2) & 0xFF00) == 0xC000)
@@ -5122,6 +5181,8 @@ void KW_TestBoarding(void)
 		kw_crashLanding = false;
 		kw_arrivalCard = kw_landingToAnnounce = KW_NO_WORLD;
 		kw_fitfFlyIn = false;
+		if (world == KW_KEEN8)
+			kw_worlds[world].completed = true; // (Calidune's ship stands there only once it is saved)
 		const KW_Ship *ship = KW_ShipFor(world);
 		ck_gameState.currentLevel = ship ? ship->level : 0;
 		kw_placeArrivalAtShip = ship || KW_MapShipFor(world);
@@ -5155,11 +5216,11 @@ void KW_TestBoarding(void)
 			*buttons[button] = false;
 		}
 		ck_inputFrame.yDirection = IN_motion_Up;
-		if (world == KW_AREALM)
+		if (world == KW_AREALM || world == KW_KEEN8)
 		{
 			kw_worlds[world].completed = false;
 			KW_PlayLoopHook();
-			BOARD_CHECK(kw_pendingWorld == KW_NO_WORLD); // the wreck is still stranded
+			BOARD_CHECK(kw_pendingWorld == KW_NO_WORLD); // stranded: the wreck, or no ship on Calidune
 			kw_worlds[world].completed = true;
 		}
 		KW_PlayLoopHook();
