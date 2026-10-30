@@ -557,7 +557,7 @@ US_SetPrintRoutines(void (*measure)(char far *,word *,word *),void (*print)(char
 //
 ///////////////////////////////////////////////////////////////////////////
 void
-US_Print(char *s)
+US_PrintL_Writable(char *s)
 {
 	char    c,*se;
 	word    w,h;
@@ -587,6 +587,22 @@ US_Print(char *s)
 			PrintX += w;
 	}
 }
+
+// DOS let these write a zero into the text to end each line; string
+// constants are read-only now, so they print from a copy.
+void
+US_Print(char *s)
+{
+	char	local[512];
+	size_t	n = strlen(s) + 1;
+	char	*copy = n <= sizeof(local) ? local : malloc(n);
+
+	memcpy(copy, s, n);
+	US_PrintL_Writable(copy);
+	if (copy != local)
+		free(copy);
+}
+
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -681,7 +697,7 @@ US_CPrintLine(char *s)
 //
 ///////////////////////////////////////////////////////////////////////////
 void
-US_CPrint(char *s)
+US_CPrintL_Writable(char *s)
 {
 	char    c,*se;
 
@@ -702,6 +718,22 @@ US_CPrint(char *s)
 		}
 	}
 }
+
+// DOS let these write a zero into the text to end each line; string
+// constants are read-only now, so they print from a copy.
+void
+US_CPrint(char *s)
+{
+	char	local[512];
+	size_t	n = strlen(s) + 1;
+	char	*copy = n <= sizeof(local) ? local : malloc(n);
+
+	memcpy(copy, s, n);
+	US_CPrintL_Writable(copy);
+	if (copy != local)
+		free(copy);
+}
+
 
 ///////////////////////////////////////////////////////////////////////////
 //
