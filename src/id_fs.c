@@ -398,9 +398,15 @@ static const char *fs_parmStrings[] = {"GAMEPATH", "USERPATH", NULL};
 #else
 #include <unistd.h>
 #endif
+// (A build without SDL has no SDL_VERSION_ATLEAST to test.)
+#if defined(WITH_SDL)
+#define FSL_HAVE_BASE_PATH SDL_VERSION_ATLEAST(2, 0, 1)
+#else
+#define FSL_HAVE_BASE_PATH 0
+#endif
 static void FSL_ChangeToProgramDir(void)
 {
-#if defined(WITH_SDL) && SDL_VERSION_ATLEAST(2, 0, 1)
+#if FSL_HAVE_BASE_PATH
 	for (int i = 1; i < us_argc; ++i)
 		if (!CK_Cross_strcasecmp(us_argv[i], "/GAMEPATH"))
 			return;
