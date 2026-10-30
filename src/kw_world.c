@@ -1573,7 +1573,11 @@ static void KW_PlayWorldStory(void)
 	snprintf(clip, sizeof(clip), "STORY_%s.RAW", kw_worldDefs[kw_currentWorld].id);
 	for (char *c = clip; *c && *c != '.'; ++c)
 		*c = (char)toupper((unsigned char)*c);
-	ck_starWarsNarrated = KW_Narrate(clip);
+	// Calidune, the first time: its own tune, quietly under the narrator.
+	bool ownTune = kw_currentWorld == KW_KEEN8 && !kw_worlds[KW_KEEN8].completed;
+	if (ownTune)
+		KW_StartCaliduneMusic(KW_VoicesEnabled() && KW_VoiceVolume() ? 64 : 256);
+	ck_starWarsNarrated = KW_Narrate(clip) || ownTune;
 	// A chart page is Keen Worlds' own text, so it scrolls over Keen
 	// Worlds' own picture, as its own story does, not over the world's.
 	// (Bounty Hunting Brouhaha's picture for this, which its game never

@@ -415,6 +415,17 @@ void KW_StartEndingMusic(int volume)
 	kw_titleTunePlaying = false;
 }
 
+// Calidune's arrival: a film-song tune in an Indian style
+// (tools/kw_calidune_music.py, "filmi", chosen by ear), at 0 to 256.
+#include "kw_calidune_music.h"
+
+void KW_StartCaliduneMusic(int volume)
+{
+	SD_StartMusicData(kw_caliduneMusic, sizeof(kw_caliduneMusic));
+	SD_FadeAdLibVolume(volume, 0);
+	kw_titleTunePlaying = false;
+}
+
 bool KW_StartShipMusic(void)
 {
 	if (KW_CurrentWorld() != KW_SHIP)
