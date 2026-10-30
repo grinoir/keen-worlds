@@ -170,6 +170,17 @@ Keen 6 has none of them, that touching the stunned boss wins, and that the
 Bobbas' borrowed sprites are in memory in every level that has one. Not yet
 play-tested by eye.
 
+**Arriving alone, and leaving in the copy.** As in the game, Keen comes to
+Calidune without the Megarocket (a warning card first; stranded until the
+game is saved). The first arrival plays Calidune's own tune
+(`kwtools/kw_calidune_music.py`, "filmi", chosen by ear) under the story,
+then a staged scene (`src/kw_calidune_scene.c`, in the Alphamatic opening's
+house style): Mortimer's transporter locks onto the ship in orbit and sets
+Keen down on the sand. After the game's ending, a second scene shows Keen
+flying up in the strange copy to meet the Megarocket. Voices: Keen and the
+ship computer (`kwtools/kw_calidune_voice.py`, clips `CD_CUT_*`). Test:
+`sh tests/test-calidune-scene.sh BINARY PLAY_FOLDER` (`/CDSCENE`).
+
 ### Converting a CKPatch file (`kwtools/kw_patconv.py`)
 
 `python3 tools/kw_patconv.py all KEEN6.EXE PAT.PAT omnispeak/data/keen6e14`

@@ -38,6 +38,7 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 #include "kw_arcade.h"
 #include "kw_mars.h"
 #include "kw_alphamatic.h"
+#include "kw_calidune_scene.h"
 #include "kw_suburb.h"
 #include "kw_music.h"
 #include "kw_skip.h"
@@ -511,6 +512,7 @@ static bool kw_debugEnding; // the ending was started with W + E
 void AR_DebugCompleteState(void); // Atroxian Realm's part of it (kw_arealm.c)
 
 static void KW_Finale(void);
+static bool KW_CardsOff(void);
 
 void KW_AfterWorldEnding(void)
 {
@@ -518,6 +520,10 @@ void KW_AfterWorldEnding(void)
 	// pops it: the original quit to the title afterwards. Pop it here.
 	CA_DownLevel();
 
+	// Calidune, saved for the first time: Keen flies up in the copy of his
+	// ship and meets the Megarocket.
+	if (kw_currentWorld == KW_KEEN8 && !kw_worlds[KW_KEEN8].completed && !KW_CardsOff())
+		CD_PlayEnding();
 	kw_worlds[kw_currentWorld].completed = true;
 	if (!ck_gameState.levelsDone[ca_mapOn])
 		ck_gameState.levelsDone[ca_mapOn] = 1;
@@ -1400,6 +1406,7 @@ static bool KW_IsAtShipHatch(void)
 // ---- World cards: who made each world ----
 
 static bool kw_cardsOff = false;             // the self-test has nobody to press a key
+static bool KW_CardsOff(void) {return kw_cardsOff;}
 static int kw_arrivalCard = KW_NO_WORLD;     // world whose arrival card is due
 
 #define KW_CARD_MAX_W 38
@@ -1584,12 +1591,22 @@ static void KW_PlayWorldStory(void)
 	// shows, is a note to people taking the mod apart: "HEY YOU! STOP
 	// TEARING MY MOD APART! haha jk have fun".)
 	ck_starWarsTextOverride = chart;
+	extern bool ck_starWarsKeepMusic;
+	ck_starWarsKeepMusic = ownTune; // (it plays on into the arrival scene)
 	CK_DrawStarWarsEx(false);
+	ck_starWarsKeepMusic = false;
 	ck_starWarsTextOverride = NULL;
 	if (chart)
 		VL_SetCustomColors(NULL);
 	ck_starWarsNarrated = false;
 	KW_StopVoice();
+	if (ownTune)
+	{
+		// Mortimer's transporter takes Keen, alone, down to the sand.
+		CD_PlayArrival();
+		SD_MusicOff();
+		SD_FadeAdLibVolume(256, 0);
+	}
 	IN_ClearKeysDown();
 }
 

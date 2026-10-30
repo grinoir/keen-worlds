@@ -20,6 +20,12 @@ typedef struct AL_SceneLine { int speaker,view; const char *name,*text,*clip; } 
 #include "kw_alphamatic_opening_data.h"
 
 typedef struct AL_Image { int w,h; uint8_t *pixels,*mask; } AL_Image;
+
+// Keen's scene poses and the Megarocket, for Calidune's scenes too.
+typedef char al_sharedSizesMatch[AL_KEEN_W==AL_SCENE_KEEN_W && AL_KEEN_H==AL_SCENE_KEEN_H &&
+ AL_SHIP_W==AL_SCENE_SHIP_W && AL_SHIP_H==AL_SCENE_SHIP_H ? 1 : -1];
+const uint8_t *AL_KeenPose(int pose) {return al_keenPosePixels[pose];}
+const uint8_t *AL_ShipPicture(void) {return al_shipPixels;}
 typedef struct AL_Opening
 {
  void *workshop,*drive,*orbit;

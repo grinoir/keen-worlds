@@ -33,6 +33,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "kw_world.h"
 #include "kw_mars.h"
 #include "kw_alphamatic.h"
+#include "kw_calidune_scene.h"
+#include "kw_music.h"
 #include "kw_suburb.h"
 #include "kw_rtts.h"
 #include "kw_watch.h"
@@ -855,6 +857,22 @@ int main(int argc, char *argv[])
 				void KW_DumpScreenTo(const char *path);KW_DumpScreenTo(path);
 			}
 			puts("PASS: Alphamatic workshop opening preserves game state, position and cache level");
+			Quit(NULL);
+		}
+		else if (!CK_Cross_strcasecmp(argv[i], "/CDSCENE"))
+		{
+			// Calidune's arrival and ending scenes, with the real data
+			KW_SwitchWorld(KW_KEEN8);
+			CK_NewGame();ck_gameState.difficulty=D_Normal;
+			ck_gameState.currentLevel=0;CK_LoadLevel(true,true);
+			CK_GameState before=ck_gameState;
+			int x=ck_keenObj->posX,y=ck_keenObj->posY,cacheLevel=ca_levelnum;
+			KW_StartCaliduneMusic(64);
+			CD_PlayArrival();
+			CD_PlayEnding();
+			if (memcmp(&before,&ck_gameState,sizeof(before)) || x!=ck_keenObj->posX || y!=ck_keenObj->posY || cacheLevel!=ca_levelnum)
+				Quit("Calidune scenes changed the running game state");
+			puts("PASS: Calidune arrival and ending scenes preserve game state, position and cache level");
 			Quit(NULL);
 		}
 		else if (!CK_Cross_strcasecmp(argv[i], "/ALPHATEST"))

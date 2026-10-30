@@ -359,6 +359,7 @@ set(OMNISPEAK_CK_SRCS
 	src/kw_rtts.c
 	src/kw_watch.c
 	src/kw_alphamatic_opening.c
+	src/kw_calidune_scene.c
 	src/kw_world.c
 	src/kw_card.c
 	src/kw_habitat.c
