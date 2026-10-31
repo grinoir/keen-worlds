@@ -22,4 +22,7 @@ void K4_PlayShikadiSignal(void);
 void FF_PlayTimeRings(void);
 // After Suburb Shenanigans' ending: Billy home at dusk, before space again.
 void HM_PlayHomecoming(void);
+// The first time in Border Village after the outpost opens: the elder gives
+// Keen the old council hut.
+void OP_PlayOutpost(void);
 #endif

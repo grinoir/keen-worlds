@@ -591,6 +591,25 @@ bool KW_IsWorldCompleted(int world)
 	return kw_worlds[world].completed;
 }
 
+bool KW_IsWorldVisited(int world)
+{
+	if (world < 0 || world >= KW_NUM_WORLDS)
+		return false;
+	return kw_worlds[world].visited || world == kw_currentWorld;
+}
+
+// Keen's outpost in Border Village (kw_habitat.c): whether its opening
+// scene has been seen (saved from word 216 of the save block's extras).
+static bool kw_outpostShown;
+
+bool KW_TakeOutpostScene(void)
+{
+	if (kw_outpostShown)
+		return false;
+	kw_outpostShown = true;
+	return !KW_CardsOff() || getenv("KW_AUTOSTORY"); // (scripted runs: only if asked)
+}
+
 // ---- Saved games ----
 // Version 2: the current world's id, then each world's record by id (so a
 // save stays valid when fan games are added or removed). Version 1 (Keen
@@ -780,6 +799,7 @@ bool KW_WriteSaveBlock(FS_File fp)
 	extra[212]=kw_arcadeCabinX; extra[213]=kw_arcadeCabinY;
 	extra[214]=kw_arcadeCabinDirection;
 	extra[215]=KW_CHRONICLE_RULES;
+	extra[216]=kw_outpostShown;
 	return AR_WriteState(fp) && FF_WriteState(fp) && KW_WriteId(fp, kw_worldDefs[kw_boardedFrom].id) &&
 		FS_WriteInt16LE(extra, 261, fp) == 261;
 }
@@ -874,6 +894,7 @@ bool KW_ReadSaveBlock(FS_File fp, bool *deferred)
 				kw_savedTold[w] = extra[40 + w] == 1;
 			}
 			kw_chronicleEndTold = extra[80] == 1;
+			kw_outpostShown = extra[216] == 1;
 			if (kw_chronicle && extra[215] != KW_CHRONICLE_RULES)
 				KW_KeepLegacyCourses(worlds, known);
 			OSI_SetState(&extra[90]);
@@ -1007,6 +1028,7 @@ void KW_ResetWorlds(void)
 	memset(kw_courseTold, 0, sizeof(kw_courseTold));
 	memset(kw_savedTold, 0, sizeof(kw_savedTold));
 	kw_chronicleEndTold = 0;
+	kw_outpostShown = false;
 	kw_pendingWorld = KW_NO_WORLD;
 	kw_placeArrivalAtShip = false;
 	kw_marsLinked=kw_arcadeCabinDue=kw_arcadeFadeIn=kw_cabinReturnRequested=false;
@@ -2076,12 +2098,15 @@ static const struct KW_StoryScene
 	{"A mystery prize", KW_BOUNTY, false, BH_PlayBountyNotice},
 	{"Spot comes home", KW_OSI, true, SP_PlayRescue},
 	{"Home from school", KW_SUBURB, true, HM_PlayHomecoming},
+	{"Keen's hideout", KW_KEEN4, true, OP_PlayOutpost}, // (seen: see KW_StorySceneSeen)
 };
 #define KW_STORY_SCENES ((int)(sizeof(kw_storyScenes) / sizeof(kw_storyScenes[0])))
 
 static bool KW_StorySceneSeen(int i)
 {
 	const struct KW_StoryScene *scene = &kw_storyScenes[i];
+	if (scene->play == OP_PlayOutpost)
+		return kw_outpostShown;
 	return scene->afterSaving ? kw_worlds[scene->world].completed : kw_worlds[scene->world].visited;
 }
 
@@ -4143,6 +4168,22 @@ void KW_DebugFrame(void)
 	Quit(0);
 }
 
+// Developer tool (/OUTPOSTPLAY): Border Village in play, the outpost just
+// opened. The play loop starts its scene when Keen is standing; with
+// KW_AUTOCUTSCENE and KW_AUTOSHOT (tests/test-outpost.sh) it runs by itself.
+void KW_OutpostPlayTest(void)
+{
+	KW_SwitchWorld(KW_KEEN4);
+	CK_NewGame();
+	ck_gameState.difficulty = D_Normal;
+	kw_worlds[KW_IsWorldPresent(KW_KEEN95) ? KW_KEEN95 : KW_KEEN4].completed = true;
+	ck_gameState.currentLevel = 1;
+	ck_gameState.levelsDone[1] = 1;
+	CK_LoadLevel(true, true);
+	ck_gameState.levelState = LS_Playing;
+	CK_PlayLoop();
+}
+
 // For the Options menu (ck_us_2.c): Keen's look on Gnosticus Pi
 bool KW_IsForestInstalled(void)
 {
@@ -4168,9 +4209,29 @@ void KW_Screenshot(const char *worldId, int level, const char *path)
 	if (world != KW_CurrentWorld())
 		KW_SwitchWorld(world);
 	ck_gameState.currentLevel = level;
+	// KW_SHOT_SAVED=1: as if every world were saved and the level done
+	// (e.g. Border Village with the outpost open and its shelves full).
+	if (getenv("KW_SHOT_SAVED"))
+	{
+		for (int w = 0; w < KW_NUM_WORLDS; ++w)
+			kw_worlds[w].completed = kw_worlds[w].visited = KW_IsWorldPresent(w);
+		if (level > 0 && level < CK_LEVELS_TRACKED)
+			ck_gameState.levelsDone[level] = 1;
+	}
 	CK_LoadLevel(true, true);
 	ck_gameState.levelState = LS_Playing;
 	SD_SetSpriteSync(2);
+	// KW_SHOT_AT=x,y: Keen stands on that tile (his feet's row)
+	if (getenv("KW_SHOT_AT"))
+	{
+		int tx = 0, ty = 0;
+		if (sscanf(getenv("KW_SHOT_AT"), "%d,%d", &tx, &ty) == 2)
+		{
+			ck_keenObj->posX = RF_TileToUnit(tx);
+			ck_keenObj->posY = RF_TileToUnit(ty) - 241;
+			CK_ResetClipRects(ck_keenObj);
+		}
+	}
 	CK_CentreCamera(ck_keenObj);
 	for (CK_object *obj = ck_keenObj; obj; obj = obj->next)
 	{
@@ -5208,6 +5269,51 @@ void KW_SelfTest(void)
 			Quit("KW_SelfTest: the inn broke the fourth house's door after liberation!");
 		if (!TI_ForeAnimTile(CA_TileAtPos(KW_TavernBarmaidX(), roomY - 1, 1)))
 			Quit("KW_SelfTest: the barmaid is not animated!");
+
+		// Keen's outpost: the hut at the end of the street, boarded up until
+		// it opens (The Eight Accumulators saved, or Gnosticus IV without
+		// it), then a room with shelves, a keepsake per world saved, and Spot.
+		{
+			bool was95 = kw_worlds[KW_KEEN95].completed, was4 = kw_worlds[KW_KEEN4].completed;
+			int opener = KW_IsWorldPresent(KW_KEEN95) ? KW_KEEN95 : KW_KEEN4;
+			int hutStreetX, hutStreetY, hutRoomX, hutRoomY;
+			KW_OutpostDoors(&hutStreetX, &hutStreetY, &hutRoomX, &hutRoomY);
+			kw_worlds[opener].completed = false;
+			CK_LoadLevel(true, true);
+			if (KW_IsOutpostOpen() || !KW_IsArtCellPlaced(&kw_hutArt, 108, 12) || !KW_IsArtPlaced(&kw_hutMastArt) ||
+				!KW_IsArtPlaced(&kw_hutBoardsArt) || KW_IsArtCellPlaced(&kw_outpostShelvesArt, kw_outpostShelvesArt.originX,
+					kw_outpostShelvesArt.originY))
+				Quit("KW_SelfTest: before it opens, the outpost's hut should stand boarded up!");
+			if (TI_ForeMisc(CA_TileAtPos(hutStreetX, hutStreetY, 1)) || CA_TileAtPos(hutStreetX, hutStreetY, 2))
+				Quit("KW_SelfTest: the boarded-up hut can be entered!");
+			if (!TI_ForeAnimTile(CA_TileAtPos(kw_hutMastArt.originX, kw_hutMastArt.originY, 1)))
+				Quit("KW_SelfTest: the light on the hut's mast does not blink!");
+			kw_worlds[opener].completed = true;
+			CK_LoadLevel(true, true);
+			// (keepsakes stand on the shelves: check the shelves' last cell, never one's place)
+			if (!KW_IsOutpostOpen() || !KW_IsArtCellPlaced(&kw_hutArt, 108, 12) || KW_IsArtPlaced(&kw_hutBoardsArt) ||
+				!KW_IsArtCellPlaced(&kw_outpostShelvesArt, kw_outpostShelvesArt.originX + kw_outpostShelvesArt.tilesW - 1,
+					kw_outpostShelvesArt.originY + kw_outpostShelvesArt.tilesH - 1))
+				Quit("KW_SelfTest: once open, the outpost should be furnished and its door free!");
+			if ((TI_ForeMisc(CA_TileAtPos(hutStreetX, hutStreetY, 1)) & 0x7F) != MISCFLAG_DOOR ||
+				CA_TileAtPos(hutStreetX, hutStreetY, 2) != ((hutRoomX << 8) | hutRoomY) ||
+				(TI_ForeMisc(CA_TileAtPos(hutRoomX, hutRoomY - 1, 1)) & 0x7F) != MISCFLAG_DOOR ||
+				CA_TileAtPos(hutRoomX, hutRoomY, 2) != ((hutStreetX << 8) | (hutStreetY + 1)))
+				Quit("KW_SelfTest: the hut's doors don't connect the street and its room!");
+			for (int k = 0; k < KW_OUTPOST_KEEPSAKE_COUNT; ++k)
+				if (KW_IsArtPlaced(&kw_keepsakeArt[k]) != KW_IsWorldCompleted(kw_keepsakeWorld[k]))
+					QuitF("KW_SelfTest: keepsake %d is %s, but its world is %s!", k,
+						KW_IsArtPlaced(&kw_keepsakeArt[k]) ? "on the shelf" : "missing",
+						KW_IsWorldCompleted(kw_keepsakeWorld[k]) ? "saved" : "not saved");
+			// (Spot is home unless the Shadowlands' kidnappers have him)
+			bool spotAway = KW_IsWorldPresent(KW_RTTS) && KW_IsWorldPresent(KW_OSI) &&
+				KW_IsWorldVisited(KW_RTTS) && !KW_IsWorldCompleted(KW_OSI);
+			if (KW_IsArtPlaced(&kw_outpostSpotArt) == spotAway)
+				Quit("KW_SelfTest: Spot is in the outpost when he shouldn't be, or the other way round!");
+			kw_worlds[KW_KEEN95].completed = was95;
+			kw_worlds[KW_KEEN4].completed = was4;
+			CK_LoadLevel(true, true);
+		}
 
 		// A conversation pushes a cache level (the level's graphics become
 		// purgeable) and caches pictures; if memory blocks run short the

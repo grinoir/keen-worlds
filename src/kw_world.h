@@ -79,6 +79,13 @@ void KW_AfterWorldEnding(void);
 
 // Whether a world's ending has been seen in this run.
 bool KW_IsWorldCompleted(int world);
+// Whether Keen has been to a world in this run.
+bool KW_IsWorldVisited(int world);
+// Keen's outpost: true once, the first time its opening scene is due (false
+// if the player has turned the story cards off; it is not offered again).
+bool KW_TakeOutpostScene(void);
+// Developer tool: Border Village in play, the outpost just opened.
+void KW_OutpostPlayTest(void);
 
 // Forget every world's progress (called when a new game starts).
 void KW_ResetWorlds(void);

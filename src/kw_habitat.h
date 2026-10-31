@@ -61,6 +61,16 @@ struct KW_Art;
 // the bar with the barmaid, furniture and the creator's portrait (after).
 extern const struct KW_Art kw_innArt, kw_signArt, kw_tavernBoardsArt, kw_tavernBarArt, kw_tavernFurnitureArt, kw_portraitArt;
 extern const struct KW_Art kw_shipHintArt;
+// Keen's outpost (for /KWTEST): the hut and its mast (always), the boards
+// on its door (until it opens), and inside, once open, the shelves, Spot and
+// a keepsake per world saved (kw_keepsakeWorld[i] is keepsake i's world).
+extern const struct KW_Art kw_hutArt, kw_hutMastArt, kw_hutBoardsArt, kw_outpostShelvesArt, kw_outpostSpotArt;
+#define KW_OUTPOST_KEEPSAKE_COUNT 16
+extern const struct KW_Art kw_keepsakeArt[KW_OUTPOST_KEEPSAKE_COUNT];
+extern const int kw_keepsakeWorld[KW_OUTPOST_KEEPSAKE_COUNT];
+bool KW_IsOutpostOpen(void);
+// For /KWTEST: the hut's street door and the room's door (tiles Keen stands on).
+void KW_OutpostDoors(int *streetX, int *streetY, int *roomX, int *roomY);
 
 // For /KWTEST: the tavern's door positions and destinations.
 void KW_TavernDoors(int *streetX, int *streetY, int *roomX, int *roomY);

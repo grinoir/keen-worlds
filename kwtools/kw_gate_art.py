@@ -161,7 +161,7 @@ def free_slots_in(episode, count, lo, hi, d=None):
     """Masked-tile slots lo..hi with no graphics in EGAGRAPH and unused by any
     of the episode's levels. Keep a range narrow when the slots are animation
     frames, so the offsets between frames fit in an int8. d: the game folder
-    (default play/), with standard file names."""
+    (default play/), with standard file names. count None: all of them."""
     import struct, keenmap
     d = d or os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'play')
     head = open(os.path.join(d, 'EGAHEAD.CK%s' % episode), 'rb').read()
@@ -183,6 +183,8 @@ def free_slots_in(episode, count, lo, hi, d=None):
     targets = {t + anim(t) for t in range(n16m) if anim(t)}
     slots = [t for t in range(lo, min(hi, n16m - 1) + 1)
              if starts[off16m + t] == 0xFFFFFF and t not in used and t not in targets]
+    if count is None:
+        return slots
     assert len(slots) >= count, 'not enough free tile slots'
     return slots[:count]
 

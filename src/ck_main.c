@@ -906,6 +906,26 @@ int main(int argc, char *argv[])
 			puts("PASS: Spot's rescue preserves game state, position and cache level");
 			Quit(NULL);
 		}
+		else if (!CK_Cross_strcasecmp(argv[i], "/OUTPOSTSCENE"))
+		{
+			// Keen's outpost: the elder gives Keen the hut, in Border Village
+			// with the real data (tests/test-outpost.sh)
+			KW_SwitchWorld(KW_KEEN4);
+			CK_NewGame();ck_gameState.difficulty=D_Normal;
+			ck_gameState.currentLevel=1;CK_LoadLevel(true,true);
+			CK_GameState before=ck_gameState;
+			int x=ck_keenObj->posX,y=ck_keenObj->posY,cacheLevel=ca_levelnum;
+			OP_PlayOutpost();
+			if (memcmp(&before,&ck_gameState,sizeof(before)) || x!=ck_keenObj->posX || y!=ck_keenObj->posY || cacheLevel!=ca_levelnum)
+				Quit("The outpost scene changed the running game state");
+			puts("PASS: the outpost scene preserves game state, position and cache level");
+			Quit(NULL);
+		}
+		else if (!CK_Cross_strcasecmp(argv[i], "/OUTPOSTPLAY"))
+		{
+			KW_OutpostPlayTest();
+			Quit(NULL);
+		}
 		else if (!CK_Cross_strcasecmp(argv[i], "/OSIENDING"))
 		{
 			// The Shikadi Station's two endings, spoken with its own clips

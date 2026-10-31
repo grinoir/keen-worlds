@@ -2,7 +2,8 @@
  * Calidune's arrival and ending, Spot's rescue on Fribbulus Xax, Krisle's
  * new ship, the bounty on Meurglys III, the messages after the Alphamatic,
  * the Shikadi signal before Gnosticus IV, Gnosticus Pi's time-bending rings
- * and Billy home from school after Suburb Shenanigans.
+ * Billy home from school after Suburb Shenanigans, and the elder of
+ * Gnosticus IV giving Keen the old council hut for his outpost.
  * In the house style of the Alphamatic opening (doc/alphamatic-opening.md):
  * a staged, voiced scene with subtitles; a fresh tap advances a spoken
  * line, holding Escape (or the controller's menu button) skips it all, and
@@ -15,7 +16,9 @@
 #include "kw_alphamatic.h"
 #include "kw_music.h"
 #include "kw_skip.h"
+#include "kw_world.h"
 #include "ck_def.h"
+#include "ck_ep.h"
 #include "id_ca.h"
 #include "id_vh.h"
 #include "id_vl.h"
@@ -28,7 +31,7 @@
 
 typedef struct CD_Image { int w,h; uint8_t *pixels,*mask; } CD_Image;
 // The pictures behind the scenes, drawn when a scene needs them.
-typedef enum CD_Background { BG_CALIDUNE, BG_XAX, BG_MARS, BG_SAND, BG_STREET, BG_KRISLE, BG_COCKPIT, BG_YARD, BG_COUNT } CD_Background;
+typedef enum CD_Background { BG_CALIDUNE, BG_XAX, BG_MARS, BG_SAND, BG_STREET, BG_KRISLE, BG_COCKPIT, BG_YARD, BG_VILLAGE, BG_COUNT } CD_Background;
 typedef struct CD_Scene { void *bg[BG_COUNT]; CD_Image keen[3],spot,ship,copy,knockoff; } CD_Scene;
 
 typedef enum CD_Stage { CD_WARN, CD_AGAIN, CD_BEAM, CD_SAND, CD_RISE, CD_COPY, CD_OFF,
@@ -38,7 +41,8 @@ typedef enum CD_Stage { CD_WARN, CD_AGAIN, CD_BEAM, CD_SAND, CD_RISE, CD_COPY, C
 	AB_MESSAGES, AB_WORTH, AB_SELL, AB_HOME,
 	K4_SIGNAL, K4_COUNCIL, K4_WIRES,
 	FF_RINGS, FF_WHEN, FF_WORDS,
-	HM_DUSK, HM_DAY, HM_SPACE, HM_FIRST, HM_WARM, HM_SHH, CD_NUM_STAGES } CD_Stage;
+	HM_DUSK, HM_DAY, HM_SPACE, HM_FIRST, HM_WARM, HM_SHH,
+	OP_ROLL, OP_EYES, OP_SCHOOL, OP_SOUP, OP_SHELF, OP_VISIT, OP_MOP, OP_FINE, OP_TUESDAY, CD_NUM_STAGES } CD_Stage;
 typedef struct CD_Part
 {
 	CD_Stage stage;
@@ -130,6 +134,26 @@ static const CD_Part hm_homecoming[] = {
 	{HM_SHH,"Keen","Shh! Mom will hear you!","HM_CUT_SHH.RAW",14,0,0},
 };
 
+// Keen's outpost, the first time Keen is in Border Village after it opens
+// (KEENS_OUTPOST.md in the workspace root; the words the user approved,
+// 2026-10-31). The elder, Lindsey and the Janitor are seen in their Keen 4
+// pictures; Keen and Spot stand by the hut.
+static const CD_Part op_outpost[] = {
+	{OP_ROLL,"Gnosticus IV","The Council was scorched, but the village was not. The elder had been waiting by the old council hut, with a key.",
+		"OP_CUT_ROLL.RAW",7,0,160},
+	{OP_EYES,"Elder","The Council needs a pair of eyes on Gnosticus. Young eyes.","OP_CUT_EYES.RAW",13,0,0},
+	{OP_SCHOOL,"Keen","I live on Earth. I've got school.","OP_CUT_SCHOOL.RAW",14,0,0},
+	{OP_SOUP,"Elder","And a ship that can be here before your soup cools. We've seen it.","OP_CUT_SOUP.RAW",13,0,0},
+	{OP_SHELF,"Spot","It needs a roof. And a shelf. You keep everything in your bag.","OP_CUT_SHELF.RAW",13,0,0},
+	{OP_VISIT,"Princess Lindsey","I'll visit. It's quieter than a palace.","OP_CUT_VISIT.RAW",13,0,0},
+	{OP_MOP,"Janitor","I'll bring a mop.","OP_CUT_MOP.RAW",13,0,0},
+	{OP_FINE,"Keen","...Fine. But it's a hideout, not a home.","OP_CUT_FINE.RAW",14,0,0},
+	{OP_TUESDAY,"Gnosticus IV","It was a home by Tuesday.","OP_CUT_TUESDAY.RAW",7,0,90},
+};
+// (without The Eight Accumulators the outpost opens after Keen 4: no fire)
+static const CD_Part op_rollNoFire={OP_ROLL,"Gnosticus IV",
+	"Gnosticus IV was safe again. The elder had been waiting by the old council hut, with a key.","OP_CUT_ROLL2.RAW",7,0,160};
+
 static CD_Background CD_BackgroundOf(CD_Stage stage)
 {
 	switch(stage) {
@@ -141,6 +165,8 @@ static CD_Background CD_BackgroundOf(CD_Stage stage)
 	case BH_NOTICE: case BH_IN: case BH_KNOW: case BH_MYSTERY: case K4_SIGNAL: case K4_COUNCIL: case K4_WIRES:
 	case FF_RINGS: case FF_WHEN: case FF_WORDS: return BG_COCKPIT;
 	case HM_DUSK: case HM_DAY: case HM_SPACE: case HM_FIRST: case HM_WARM: case HM_SHH: return BG_YARD;
+	case OP_ROLL: case OP_EYES: case OP_SCHOOL: case OP_SOUP: case OP_SHELF: case OP_VISIT: case OP_MOP: case OP_FINE:
+	case OP_TUESDAY: return BG_VILLAGE;
 	default: return BG_CALIDUNE;
 	}
 }
@@ -448,6 +474,54 @@ static void CD_DrawLopsided(const CD_Image *image,int x,int y)
 	}
 }
 
+// Border Village: the end of the street with Keen's hut, from the level's
+// own tiles (kwtools/kw_outpost.py).
+#include "kw_outpost_scene.h"
+static void *CD_DrawVillage(void)
+{
+	void *surface=VL_CreateSurface(320,200),*old=VL_SetScreen(surface);
+	VL_ClearScreen(0);
+	for(int y=0;y<144;++y) for(int x=0;x<320;x+=2) {
+		int b=kw_outpostScenePicture[y*160+x/2];VH_Plot(x,y,b>>4);VH_Plot(x+1,y,b&15);
+	}
+	VL_SetScreen(old);
+	return surface;
+}
+
+// The hut's two windows light up (share 0-256 of their dark pixels).
+static void CD_HutWindows(int share)
+{
+	static const int windows[2][4]={{258,72,290,98},{258,102,290,124}};
+	for(int w=0;w<2;++w) for(int y=windows[w][1];y<windows[w][3];++y) for(int x=windows[w][0];x<windows[w][2];++x) {
+		int b=kw_outpostScenePicture[y*160+x/2],c=x&1?b&15:b>>4;
+		if(c==0 && (int)(CD_Noise(x,y,41)&255)<share) VH_Plot(x,y,14);
+	}
+}
+
+// A friend's Keen 4 picture in a frame, lit while they speak.
+static void CD_Friend(int x,int chunk,const char *name,bool speaking,bool mop)
+{
+	VH_Bar(x,4,52,62,0);
+	int color=speaking?14:8;
+	VH_HLine(x,x+51,4,color);VH_HLine(x,x+51,65,color);VH_VLine(4,65,x,color);VH_VLine(4,65,x+51,color);
+	if(ck_currentEpisode->ep==EP_CK4) VH_DrawBitmap(x+2,6,chunk);
+	if(mop) { // the Janitor's mop, leaning on his frame
+		VH_VLine(14,72,x+50,6);VH_VLine(14,72,x+51,4);
+		for(int i=0;i<7;++i) VH_VLine(72,78+(i%3),x+46+i,i%2?15:7);
+	}
+	uint16_t w,h;VH_MeasurePropString(name,&w,&h,0);
+	VH_Bar(x+26-w/2-2,56,w+4,9,0);
+	VH_DrawPropStringSolid(name,x+26-w/2,56,0,speaking?14:7);
+}
+
+// The key the elder gives Keen: brass, on a ring.
+static void CD_Key(int x,int y)
+{
+	for(int dy=-3;dy<=3;++dy) for(int dx=-3;dx<=3;++dx) {int d=dx*dx+dy*dy;if(d<=9 && d>=4) VH_Plot(x+dx,y+dy,14);}
+	VH_HLine(x+3,x+11,y,14);VH_HLine(x+3,x+11,y+1,6);
+	VH_VLine(y+1,y+3,x+9,14);VH_VLine(y+1,y+4,x+11,14);
+}
+
 // A line of the screen's lettering, centred on it.
 static void CD_ScreenText(const char *text,int y,int color)
 {
@@ -702,6 +776,31 @@ static void CD_Frame(CD_Scene *scene,const CD_Part *part,uint32_t t,bool talking
 		CD_Draw(&scene->keen[pose],kx,58,256,t);
 		break;
 	}
+	case OP_ROLL: case OP_EYES: case OP_SCHOOL: case OP_SOUP: case OP_SHELF: case OP_VISIT: case OP_MOP: case OP_FINE:
+	case OP_TUESDAY: {
+		VL_SurfaceToScreen(scene->bg[BG_VILLAGE],0,0,0,0,320,200);
+		if(part->stage==OP_TUESDAY) CD_HutWindows(t<part->lead?(int)(t*256/part->lead):256);
+		// the friends, in their pictures from Keen 4
+		bool speaks=talking;
+		if(part->stage!=OP_TUESDAY) {
+			int shown=part->stage==OP_ROLL?(int)(t/40):3;
+			if(shown>0) CD_Friend(6,CK_CHUNKNUM(PIC_ORACLE),"Elder",speaks && (part->stage==OP_EYES || part->stage==OP_SOUP),false);
+			if(shown>1) CD_Friend(62,CK_CHUNKNUM(PIC_LINDSEY),"Lindsey",speaks && part->stage==OP_VISIT,false);
+			if(shown>2) CD_Friend(118,CK_CHUNKNUM(PIC_ORACLE),"Janitor",speaks && part->stage==OP_MOP,true);
+		}
+		// Keen walks up to the hut with Spot; the key, then in Keen's hand
+		int kx=part->stage==OP_ROLL?CD_Ease(t,part->lead+60,-50,118):part->stage==OP_TUESDAY?CD_Ease(t,200,118,196):118;
+		int sx=part->stage==OP_ROLL?CD_Ease(t,part->lead+90,-90,80):part->stage==OP_TUESDAY?CD_Ease(t,220,80,170):80;
+		bool spotTalks=talking && part->stage==OP_SHELF;
+		int sy=92-(spotTalks?(int)((t/12)%3):0);
+		CD_Draw(&scene->spot,sx,sy,256,t);
+		bool keenTalks=talking && part->color==14;
+		int pose=keenTalks?1+(t/14)%2:(t%300>285?1:0);
+		CD_Draw(&scene->keen[pose],kx,72,256,t);
+		if(part->stage==OP_SOUP && t>40) CD_Key(32,72+(int)((t/20)%2)); // the elder holds it out
+		if(part->stage>=OP_FINE) CD_Key(kx+34,108);
+		break;
+	}
 	case AB_MESSAGES: case AB_WORTH: case AB_SELL: case AB_HOME: {
 		VL_SurfaceToScreen(scene->bg[BG_MARS],0,0,0,0,320,200);
 		int x=part->stage==AB_HOME?CD_Ease(t,400,124,340):124,y=48+(int)((t/24)%2);
@@ -755,7 +854,8 @@ static bool CD_PlayPart(CD_Scene *scene,const CD_Part *part)
 			"a1-messages","a2-worth","a3-sell","a4-home",
 			"g1-signal","g2-council","g3-wires",
 			"f1-rings","f2-when","f3-words",
-			"h1-dusk","h2-day","h3-space","h4-first","h5-warm","h6-shh"};
+			"h1-dusk","h2-day","h3-space","h4-first","h5-warm","h6-shh",
+			"o1-roll","o2-eyes","o3-school","o4-soup","o5-shelf","o6-visit","o7-mop","o8-fine","o9-tuesday"};
 		typedef char cd_everyStageNamed[sizeof(names)/sizeof(names[0])==CD_NUM_STAGES?1:-1];
 		char name[32];
 		CD_Frame(scene,part,part->lead/2+20,false);VH_UpdateScreen();
@@ -791,6 +891,9 @@ static void CD_Play(const CD_Part *parts,int count)
 	VL_FadeToBlack();VL_SetScrollCoords(0,0);VL_SetDefaultPalette();
 	CA_UpLevel();
 	CA_CacheGrChunk(CK_CHUNKNUM(FON_MAINFONT));
+	if(ck_currentEpisode->ep==EP_CK4) { // (the outpost's friends)
+		CA_CacheGrChunk(CK_CHUNKNUM(PIC_ORACLE));CA_CacheGrChunk(CK_CHUNKNUM(PIC_LINDSEY));
+	}
 	for(int i=0;i<count;++i) {
 		CD_Background bg=CD_BackgroundOf(parts[i].stage);
 		if(scene.bg[bg]) continue;
@@ -802,6 +905,7 @@ static void CD_Play(const CD_Part *parts,int count)
 		case BG_STREET: scene.bg[bg]=CD_DrawStreet(); break;
 		case BG_KRISLE: scene.bg[bg]=CD_DrawKrisle(); break;
 		case BG_YARD: scene.bg[bg]=CD_DrawYard(); break;
+		case BG_VILLAGE: scene.bg[bg]=CD_DrawVillage(); break;
 		default: scene.bg[bg]=CD_DrawCockpit(); break;
 		}
 	}
@@ -876,3 +980,11 @@ void AB_PlayMessages(void) {CD_PlayWithTune("After the Alphamatic",ab_bridge,(in
 void K4_PlayShikadiSignal(void) {CD_PlayWithTune("The Shikadi signal",k4_opening,(int)(sizeof(k4_opening)/sizeof(k4_opening[0])));}
 void FF_PlayTimeRings(void) {CD_PlayWithTune("Gnosticus Pi's rings",ff_opening,(int)(sizeof(ff_opening)/sizeof(ff_opening[0])));}
 void HM_PlayHomecoming(void) {CD_PlayWithTune("Home from school",hm_homecoming,(int)(sizeof(hm_homecoming)/sizeof(hm_homecoming[0])));}
+
+void OP_PlayOutpost(void)
+{
+	CD_Part parts[sizeof(op_outpost)/sizeof(op_outpost[0])];
+	memcpy(parts,op_outpost,sizeof(parts));
+	if(!KW_IsWorldPresent(KW_KEEN95)) parts[0]=op_rollNoFire;
+	CD_PlayWithTune("Keen's outpost",parts,(int)(sizeof(parts)/sizeof(parts[0])));
+}

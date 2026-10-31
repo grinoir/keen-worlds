@@ -39,6 +39,8 @@ bool FF_IsStoryTrigger(const CK_object *obj);
 
 #include "kw_world.h"
 #include "kw_suburb.h"
+#include "kw_alphamatic.h"
+#include "kw_story_scenes.h"
 
 typedef enum KW_When
 {
@@ -57,6 +59,7 @@ typedef struct KW_MapEdit
 } KW_MapEdit;
 
 #include "kw_tavern_art.h"
+#include "kw_outpost_art.h"
 
 // ---- Residents ----
 // Who lives where. Positions are the tile the resident stands on (as an
@@ -98,6 +101,20 @@ typedef struct KW_TalkNode
 
 // The barmaid's talk, written by tools/kw_barmaid_voice.py.
 #include "kw_barmaid_talk.h"
+// Spot's, in Keen's outpost (kwtools/kw_outpost_voice.py).
+#include "kw_outpost_talk.h"
+
+// The picture on a resident's cards (painted residents).
+typedef enum KW_Face
+{
+	KW_FACE_BARMAID = 0,
+	KW_FACE_SPOT,
+	KW_FACE_NONE, // a card of text only (e.g. the outpost's shelves)
+} KW_Face;
+
+static bool KW_OutpostOpen(void);
+static bool KW_SpotIsHome(void);
+static const char *KW_ShelfNotice(void);
 
 typedef struct KW_Resident
 {
@@ -108,6 +125,9 @@ typedef struct KW_Resident
 	KW_Choice choices[KW_MAX_CHOICES];    // Keen picks one (unused: NULL).
 	KW_ResidentKind kind;
 	const KW_TalkNode *talk;              // A longer talk instead (says and choices unused).
+	bool (*present)(void);                // NULL: always there
+	const char *(*notice)(void);          // Instead of a talk: one card of this text.
+	KW_Face face;
 } KW_Resident;
 
 static const KW_Resident kw_residents[] = {
@@ -125,6 +145,12 @@ static const KW_Resident kw_residents[] = {
 	// (drawn and animated by tools/kw_barhouse.py).
 	{KW_KEEN4, 1, KW_TAVERN_BARMAID_X + 1, KW_TAVERN_BARMAID_Y,
 		NULL, {{NULL, NULL}}, KW_PAINTED, kw_barmaidTalk},
+	// Keen 4, Border Village: in Keen's outpost (the hut at the end of the
+	// street), Spot, when he is home, and the shelves of keepsakes.
+	{KW_KEEN4, 1, KW_OUTPOST_SPOT_X, KW_OUTPOST_ROOM_STAND,
+		NULL, {{NULL, NULL}}, KW_PAINTED, kw_spotTalk, KW_SpotIsHome, NULL, KW_FACE_SPOT},
+	{KW_KEEN4, 1, KW_OUTPOST_SHELF_X, KW_OUTPOST_ROOM_STAND,
+		NULL, {{NULL, NULL}}, KW_PAINTED, NULL, KW_OutpostOpen, KW_ShelfNotice, KW_FACE_NONE},
 };
 #define KW_NUM_RESIDENTS ((int)(sizeof(kw_residents) / sizeof(kw_residents[0])))
 
@@ -259,6 +285,117 @@ static bool KW_IsShown(KW_When when, bool completed)
 	return when == KW_ALWAYS || (when == KW_AFTER) == completed;
 }
 
+// ---- Keen's outpost ----
+// The hut at the end of Border Village's street (kwtools/kw_outpost.py,
+// KEENS_OUTPOST.md in the workspace root). It is boarded up until the
+// outpost opens: when The Eight Accumulators is saved (Keen comes back to
+// Gnosticus IV with his friends and the elder gives him the old council
+// hut), or, if that world isn't installed, when Gnosticus IV is. Inside are
+// shelves with a keepsake from every world saved, a bunk, a star chart, and
+// Spot, unless the Shadowlands' kidnappers have him.
+
+#define KW_OUTPOST_ART(name, tag) { \
+	KW_##tag##_ORIGIN_X, KW_##tag##_ORIGIN_Y, KW_##tag##_TILES_W, KW_##tag##_TILES_H, KW_##tag##_FRAMES, \
+	&kw_##name##Slots[0][0][0], &kw_##name##Tiles[0][0][0][0], -1, 0, NULL, \
+}
+const KW_Art kw_hutArt = KW_OUTPOST_ART(hut, HUT);
+const KW_Art kw_hutMastArt = {
+	KW_MAST_ORIGIN_X, KW_MAST_ORIGIN_Y, KW_MAST_TILES_W, KW_MAST_TILES_H, KW_MAST_FRAMES,
+	&kw_mastSlots[0][0][0], &kw_mastTiles[0][0][0][0], -1,
+	35, // the light on top blinks
+	NULL,
+};
+const KW_Art kw_hutBoardsArt = {
+	KW_HUTBOARDS_ORIGIN_X, KW_HUTBOARDS_ORIGIN_Y, KW_HUTBOARDS_TILES_W, KW_HUTBOARDS_TILES_H, KW_HUTBOARDS_FRAMES,
+	&kw_hutboardsSlots[0][0][0], &kw_hutboardsTiles[0][0][0][0], -1, 0, NULL,
+	true, // nailed shut: the door can't be entered
+};
+const KW_Art kw_outpostShelvesArt = KW_OUTPOST_ART(shelves, SHELVES);
+static const KW_Art kw_outpostBunkArt = KW_OUTPOST_ART(bunk, BUNK);
+static const KW_Art kw_outpostChartArt = KW_OUTPOST_ART(chart, CHART);
+const KW_Art kw_outpostSpotArt = KW_OUTPOST_ART(spot, SPOT);
+// One keepsake per world, on the shelves in the Chronicle's order.
+// (kw_habitat.h's count of keepsakes must match the generated one)
+typedef char kw_keepsakeCountMatches[KW_OUTPOST_KEEPSAKES == KW_OUTPOST_KEEPSAKE_COUNT ? 1 : -1];
+const KW_Art kw_keepsakeArt[KW_OUTPOST_KEEPSAKES] = {
+	KW_OUTPOST_ART(keepkeen4, KEEPKEEN4), KW_OUTPOST_ART(keepkeen5, KEEPKEEN5),
+	KW_OUTPOST_ART(keepkeen6, KEEPKEEN6), KW_OUTPOST_ART(keepkeen7, KEEPKEEN7),
+	KW_OUTPOST_ART(keepkeen8, KEEPKEEN8), KW_OUTPOST_ART(keepkeen9, KEEPKEEN9),
+	KW_OUTPOST_ART(keepkeen95, KEEPKEEN95), KW_OUTPOST_ART(keeparealm, KEEPAREALM),
+	KW_OUTPOST_ART(keepfitf, KEEPFITF), KW_OUTPOST_ART(keepalphamatic, KEEPALPHAMATIC),
+	KW_OUTPOST_ART(keeprtts, KEEPRTTS), KW_OUTPOST_ART(keeposi, KEEPOSI),
+	KW_OUTPOST_ART(keepck55, KEEPCK55), KW_OUTPOST_ART(keepasylum, KEEPASYLUM),
+	KW_OUTPOST_ART(keepbounty, KEEPBOUNTY), KW_OUTPOST_ART(keepsuburb, KEEPSUBURB),
+};
+const int kw_keepsakeWorld[KW_OUTPOST_KEEPSAKES] = {KW_OUTPOST_KEEPSAKE_WORLDS};
+
+static bool KW_OutpostOpen(void)
+{
+	return KW_IsWorldPresent(KW_KEEN95) ? KW_IsWorldCompleted(KW_KEEN95) : KW_IsWorldCompleted(KW_KEEN4);
+}
+
+bool KW_IsOutpostOpen(void)
+{
+	return KW_OutpostOpen();
+}
+
+// Spot is taken from the yard when Return to the Shadowlands begins, and
+// freed on Fribbulus Xax after the Shikadi Station.
+static bool KW_SpotIsHome(void)
+{
+	if (!KW_OutpostOpen())
+		return false;
+	return !(KW_IsWorldPresent(KW_RTTS) && KW_IsWorldPresent(KW_OSI) &&
+		KW_IsWorldVisited(KW_RTTS) && !KW_IsWorldCompleted(KW_OSI));
+}
+
+static void KW_PlaceOutpost(void)
+{
+	if (KW_CurrentEpisode() != KW_KEEN4 || ca_mapOn != 1)
+		return;
+	bool open = KW_OutpostOpen();
+	for (int e = 0; e < (int)(sizeof(kw_outpostEdits) / sizeof(kw_outpostEdits[0])); ++e)
+	{
+		const KW_MapEdit *ed = &kw_outpostEdits[e];
+		if (ed->when == 0 || open)
+			CA_SetTileAtPos(ed->x, ed->y, ed->plane, ed->value);
+	}
+	KW_PlaceArt(&kw_hutArt);
+	KW_PlaceArt(&kw_hutMastArt);
+	if (!open)
+	{
+		KW_PlaceArt(&kw_hutBoardsArt); // (on top of the hut)
+		return;
+	}
+	KW_PlaceArt(&kw_outpostShelvesArt);
+	KW_PlaceArt(&kw_outpostBunkArt);
+	KW_PlaceArt(&kw_outpostChartArt);
+	if (KW_SpotIsHome())
+		KW_PlaceArt(&kw_outpostSpotArt);
+	for (int i = 0; i < KW_OUTPOST_KEEPSAKES; ++i) // (on the shelves)
+		if (KW_IsWorldCompleted(kw_keepsakeWorld[i]))
+			KW_PlaceArt(&kw_keepsakeArt[i]);
+}
+
+// What the shelves hold, on a card.
+static const char *KW_ShelfNotice(void)
+{
+	static char text[160];
+	int have = 0, could = 0;
+	for (int i = 0; i < KW_OUTPOST_KEEPSAKES; ++i)
+		if (KW_IsWorldPresent(kw_keepsakeWorld[i]))
+		{
+			++could;
+			have += KW_IsWorldCompleted(kw_keepsakeWorld[i]);
+		}
+	if (have >= could)
+		snprintf(text, sizeof(text), "The shelves are full:\na keepsake from every\nworld Keen has saved.\n\nThe star chart agrees.");
+	else
+		snprintf(text, sizeof(text), "%d keepsake%s on the\nshelves, one for every\nworld saved.\n\nRoom for %d more.",
+			have, have == 1 ? "" : "s", could - have);
+	return text;
+}
+
 // ---- Krisle: the Megarocket, repaired ----
 // Atroxian Realm's wreck stands whole again in its crash site level once
 // that world is completed (the Krile repair it, as its story says): Keen 4's
@@ -291,6 +428,7 @@ bool KW_KrisleShipIsPlaced(void)
 static void KW_ChangeLevel(void)
 {
 	KW_PlaceKrisleShip();
+	KW_PlaceOutpost();
 	bool completed = ca_mapOn > 0 && ca_mapOn < CK_LEVELS_TRACKED && ck_gameState.levelsDone[ca_mapOn];
 	for (int i = 0; i < (int)(sizeof(kw_levelEdits) / sizeof(kw_levelEdits[0])); ++i)
 	{
@@ -791,8 +929,28 @@ static void KW_ResidentCard(const KW_Resident *r, const char *text)
 	US_CenterWindow(26, 8);
 	if (r->kind == KW_ELDER)
 		VHB_DrawBitmap(US_GetWindowX(), US_GetWindowY(), CK_CHUNKNUM(PIC_ORACLE));
-	else
+	else if (r->face == KW_FACE_SPOT)
+	{
+		// Spot's picture from the story scenes (32x44), in the picture's place
+		const uint8_t *spot = AL_SpotPicture();
+		for (int y = 0; y < AL_SCENE_SPOT_H; ++y)
+			for (int x = 0; x < AL_SCENE_SPOT_W; ++x)
+				if (spot[y * AL_SCENE_SPOT_W + x] < 16)
+					VHB_Plot(US_GetWindowX() + 8 + x, US_GetWindowY() + 6 + y, spot[y * AL_SCENE_SPOT_W + x]);
+	}
+	else if (r->face == KW_FACE_BARMAID)
 		KW_DrawArt(&kw_barmaidFaceArt, US_GetWindowX(), US_GetWindowY());
+	if (r->face == KW_FACE_NONE && r->kind == KW_PAINTED)
+	{
+		US_SetPrintY(US_GetPrintY() + 2);
+		US_CPrint(text);
+		VH_UpdateScreen();
+		IN_ClearKeysDown();
+		if (!getenv("KW_AUTOFINALE"))
+			IN_WaitButton();
+		KW_WaitForButtonsUp();
+		return;
+	}
 	US_SetWindowW(US_GetWindowW() - 0x30);
 	US_SetWindowX(US_GetWindowX() + 0x30);
 	US_SetPrintY(US_GetPrintY() + 2);
@@ -1006,7 +1164,9 @@ static void KW_ShowConversation(const KW_Resident *r)
 	VL_FixRefreshBuffer();
 	KW_WaitForButtonsUp();
 
-	if (r->talk)
+	if (r->notice)
+		KW_ResidentCard(r, r->notice());
+	else if (r->talk)
 		KW_ShowTalk(r);
 	else
 	{
@@ -1038,15 +1198,14 @@ static bool KW_PageFits(const char *text, uint16_t *w, uint16_t *h)
 	return *w <= 26 * 8 - 0x30 - 8 && *h <= 8 * 8 - 12;
 }
 
-// For /KWTEST: every dialogue line must fit its card.
-const char *KW_CheckDialogueFits(void)
+// A longer talk (the barmaid's, Spot's): the resident's pages, Keen's
+// lines, where it goes on, and every clip.
+static const char *KW_CheckTalkFits(const KW_TalkNode *talk, int places, const char *who)
 {
 	static char problem[96];
-	// the barmaid's talk: her pages, Keen's lines, where it goes on, her clips
-	int places = (int)(sizeof(kw_barmaidTalk) / sizeof(kw_barmaidTalk[0]));
 	for (int at = 0; at < places; ++at)
 	{
-		const KW_TalkNode *node = &kw_barmaidTalk[at];
+		const KW_TalkNode *node = &talk[at];
 		const char *texts[1 + 2 * KW_MAX_TALK_CHOICES];
 		const char *voices[1 + 2 * KW_MAX_TALK_CHOICES];
 		int n = 0;
@@ -1055,7 +1214,10 @@ const char *KW_CheckDialogueFits(void)
 		for (int c = 0; c < KW_MAX_TALK_CHOICES && node->choices[c].keen; ++c)
 		{
 			if (node->choices[c].next >= places)
-				return "the barmaid's talk goes on at a place that does not exist";
+			{
+				snprintf(problem, sizeof(problem), "%s's talk goes on at a place that does not exist", who);
+				return problem;
+			}
 			// (Keen says the line he picks: its clip is named after it)
 			static char keenClips[KW_MAX_TALK_CHOICES][32];
 			KW_KeenSaysClip(node->choices[c].keen, keenClips[c], sizeof(keenClips[c]));
@@ -1074,13 +1236,16 @@ const char *KW_CheckDialogueFits(void)
 			{
 				size_t len = strcspn(p, "\f");
 				if (len >= sizeof(page))
-					return "a page of the barmaid's talk is too long";
+				{
+					snprintf(problem, sizeof(problem), "a page of %s's talk is too long", who);
+					return problem;
+				}
 				memcpy(page, p, len);
 				page[len] = 0;
 				uint16_t w, h;
 				if (!KW_PageFits(page, &w, &h))
 				{
-					snprintf(problem, sizeof(problem), "barmaid place %d line \"%.24s\" is %dx%d", at, page, w, h);
+					snprintf(problem, sizeof(problem), "%s place %d line \"%.24s\" is %dx%d", who, at, page, w, h);
 					return problem;
 				}
 				p += len + (p[len] == '\f');
@@ -1089,15 +1254,39 @@ const char *KW_CheckDialogueFits(void)
 			{
 				if (!KW_ClipIsThere(voices[t]))
 				{
-					snprintf(problem, sizeof(problem), "the barmaid's clip %s is missing", voices[t]);
+					snprintf(problem, sizeof(problem), "%s's clip %s is missing", who, voices[t]);
 					return problem;
 				}
 			}
 		}
 	}
+	return NULL;
+}
+
+// For /KWTEST: every dialogue line must fit its card.
+const char *KW_CheckDialogueFits(void)
+{
+	static char problem[96];
+	const char *talkProblem = KW_CheckTalkFits(kw_barmaidTalk, (int)(sizeof(kw_barmaidTalk) / sizeof(kw_barmaidTalk[0])), "the barmaid");
+	if (!talkProblem)
+		talkProblem = KW_CheckTalkFits(kw_spotTalk, (int)(sizeof(kw_spotTalk) / sizeof(kw_spotTalk[0])), "Spot");
+	if (talkProblem)
+		return talkProblem;
 	for (int i = 0; i < KW_NUM_RESIDENTS; ++i)
 	{
 		const KW_Resident *r = &kw_residents[i];
+		if (r->notice)
+		{
+			// (a card of text only: the whole width of the card)
+			uint16_t w, h;
+			CK_MeasureMultiline(r->notice(), &w, &h);
+			if (w > 26 * 8 - 16 || h > 8 * 8 - 12)
+			{
+				snprintf(problem, sizeof(problem), "resident %d's card \"%.24s\" is %dx%d", i, r->notice(), w, h);
+				return problem;
+			}
+			continue;
+		}
 		if (r->talk)
 			continue;
 		const char *texts[1 + 2 * KW_MAX_CHOICES];
@@ -1140,6 +1329,23 @@ void KW_CheckTalk(void)
 {
 	if (!kw_levelIsPeaceful || !ck_keenObj)
 		return;
+	// Keen's outpost has opened: the first time he is in Border Village
+	// after, the elder gives him the old council hut (a story scene), and
+	// he is left standing by its door.
+	if (KW_CurrentEpisode() == KW_KEEN4 && ca_mapOn == 1 && !kw_bragDue && ck_keenObj->topTI &&
+		KW_OutpostOpen() && KW_TakeOutpostScene())
+	{
+		OP_PlayOutpost();
+		KW_PutKeen(KW_OUTPOST_DOOR_X - 1, KW_OUTPOST_DOOR_Y + 1, IN_motion_Right);
+		CK_CentreCamera(ck_keenObj);
+		VL_SetDefaultPalette();
+		RF_ForceRefresh();
+		RF_Refresh();
+		VL_FadeFromBlack();
+		StartMusic(ca_mapOn);
+		SD_SetLastTimeCount(SD_GetTimeCount());
+		return;
+	}
 	// Every world is saved, and Keen has just been put at the bar: he
 	// starts bragging without being asked.
 	if (kw_bragDue && KW_CurrentEpisode() == KW_KEEN4 && ca_mapOn == 1 && ck_keenObj->topTI)
@@ -1181,7 +1387,8 @@ void KW_CheckTalk(void)
 	for (int i = 0; i < KW_NUM_RESIDENTS; ++i)
 	{
 		const KW_Resident *r = &kw_residents[i];
-		if (r->kind != KW_PAINTED || r->episode != KW_CurrentEpisode() || r->level != ca_mapOn)
+		if (r->kind != KW_PAINTED || r->episode != KW_CurrentEpisode() || r->level != ca_mapOn ||
+			(r->present && !r->present()))
 			continue;
 		if (ck_keenObj->clipRects.tileX2 < r->tileX - KW_TALK_RANGE ||
 			ck_keenObj->clipRects.tileX1 > r->tileX + KW_TALK_RANGE ||
@@ -1252,4 +1459,12 @@ void KW_TavernDoors(int *streetX, int *streetY, int *roomX, int *roomY)
 int KW_TavernBarmaidX(void)
 {
 	return KW_TAVERN_BARMAID_X + 1;
+}
+
+void KW_OutpostDoors(int *streetX, int *streetY, int *roomX, int *roomY)
+{
+	*streetX = KW_OUTPOST_DOOR_X;
+	*streetY = KW_OUTPOST_DOOR_Y + 1;
+	*roomX = KW_OUTPOST_ROOM_DOOR_X;
+	*roomY = KW_OUTPOST_ROOM_STAND;
 }
