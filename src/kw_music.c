@@ -296,6 +296,13 @@ bool KW_SayWorldLine(const char *name)
 		{KW_KEEN95, "K95"}, {KW_BOUNTY, "BH"}, {KW_CK55, "K55"}, {KW_DREAM, "KD"}, {KW_AREALM, "AR"}, {KW_FITF, "FF"},
 		// (Keen Asylum and Operation Station Infiltration say Keen 5's words where they speak)
 		{KW_ASYLUM, "K5"}, {KW_OSI, "K5"}, {KW_ALPHAMATIC, "AL"}, {KW_SUBURB,"SS"}, {KW_RTTS,"RT"}};
+	// ...but the station's endings are its own (kwtools/kw_osi_end_voice.py)
+	if (KW_CurrentWorld() == KW_OSI && !strncmp(name, "END", 3))
+	{
+		char file[48];
+		snprintf(file, sizeof(file), "OS_%s.RAW", name);
+		return KW_SayLine(KW_OSI, file);
+	}
 	for (size_t i = 0; i < sizeof(spoken) / sizeof(spoken[0]); ++i)
 		if (spoken[i].world == KW_CurrentWorld())
 		{

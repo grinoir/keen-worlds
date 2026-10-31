@@ -30,6 +30,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ck_def.h"
 #include "ck_game.h"
 #include "ck_play.h"
+#include "ck_text.h"
 #include "kw_world.h"
 #include "kw_mars.h"
 #include "kw_alphamatic.h"
@@ -903,6 +904,22 @@ int main(int argc, char *argv[])
 			if (memcmp(&before,&ck_gameState,sizeof(before)) || x!=ck_keenObj->posX || y!=ck_keenObj->posY || cacheLevel!=ca_levelnum)
 				Quit("Spot's rescue changed the running game state");
 			puts("PASS: Spot's rescue preserves game state, position and cache level");
+			Quit(NULL);
+		}
+		else if (!CK_Cross_strcasecmp(argv[i], "/OSIENDING"))
+		{
+			// The Shikadi Station's two endings, spoken with its own clips
+			// (with KW_AUTOFINALE and KW_AUTOTALK: tests/test-osi-ending.sh)
+			KW_SwitchWorld(KW_OSI);
+			CK_NewGame();ck_gameState.difficulty=D_Normal;
+			ck_gameState.currentLevel=0;CK_LoadLevel(true,true);
+			int fuse=CK_INT(CK5_SecretFuseLevel,13);
+			for (int secret=0;secret<2;++secret)
+			{
+				ck_gameState.levelsDone[fuse]=secret?LS_KorathFuse:0;
+				printf("OSIENDING: %s\n",secret?"after the Korath fuse":"the ending");
+				help_endgame();CA_DownLevel();
+			}
 			Quit(NULL);
 		}
 		else if (!CK_Cross_strcasecmp(argv[i], "/ALPHATEST"))
