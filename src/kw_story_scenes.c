@@ -586,8 +586,8 @@ static void CD_Inset(const CD_Scene *scene,int x,int pose,int reveal,bool speaki
 	VH_Bar(x,6,52,82,0);
 	VH_HLine(x,x+51,6,speaking?14:8);VH_HLine(x,x+51,87,speaking?14:8);
 	VH_VLine(6,87,x,speaking?14:8);VH_VLine(6,87,x+51,speaking?14:8);
-	CD_Draw(&scene->keen[pose],x+4,10,reveal,t);
-	if(reveal<256) CD_Sparkle(x+4,10,44,64,40+(256-reveal)/3,t);
+	CD_Draw(&scene->keen[pose],x+2,10,reveal,t);
+	if(reveal<256) CD_Sparkle(x+2,10,48,64,40+(256-reveal)/3,t);
 	VH_DrawPropStringSolid("Keen",x+14,76,0,speaking?14:7);
 }
 
@@ -620,7 +620,7 @@ static void CD_Frame(CD_Scene *scene,const CD_Part *part,uint32_t t,bool talking
 		}
 		CD_Draw(&scene->ship,x,y,256,t);
 		if(part->stage==CD_AGAIN)
-			CD_Inset(scene,8,talking?1+(t/12)%2:0,256-(int)(t>90?160:t*160/90),talking,t);
+			CD_Inset(scene,8,talking?1+(t/30)%2:0,256-(int)(t>90?160:t*160/90),talking,t);
 		if(part->stage==CD_BEAM) {
 			// Keen, a knot of sparkle, falls to the sand; a flash where he lands
 			uint32_t fall=150;
@@ -643,7 +643,7 @@ static void CD_Frame(CD_Scene *scene,const CD_Part *part,uint32_t t,bool talking
 			VH_Plot(gx,gy,15);
 		}
 		int reveal=t<part->lead?(int)(t*256/part->lead):256;
-		int pose=talking?1+(t/14)%2:(t%300>285?1:0);
+		int pose=talking?1+(t/30)%2:0;
 		CD_Draw(&scene->keen[pose],140,74,reveal,t);
 		if(reveal<256) CD_Sparkle(136,60+(256-reveal)/16,52,78,(256-reveal)/2,t);
 		break;
@@ -661,7 +661,7 @@ static void CD_Frame(CD_Scene *scene,const CD_Part *part,uint32_t t,bool talking
 		}
 		CD_Draw(&scene->copy,cx,cy,256,all);
 		if(part->stage==CD_COPY && (all/18)%2) VH_Bar(mx+44,my+9,2,2,10); // the computer talks
-		if(part->stage==CD_OFF) CD_Inset(scene,260,talking?1+(t/12)%2:0,256,talking,t);
+		if(part->stage==CD_OFF) CD_Inset(scene,260,talking?1+(t/30)%2:0,256,talking,t);
 		break;
 	}
 	case SP_ORBIT: case SP_DEPART: {
@@ -691,7 +691,7 @@ static void CD_Frame(CD_Scene *scene,const CD_Part *part,uint32_t t,bool talking
 		int kx=part->stage==SP_LAND?CD_Ease(t,120,60,118):part->stage==SP_SPOT1?118:
 			part->stage==SP_LOCK?CD_Ease(t,120,118,160):part->stage==SP_HOME?CD_Ease(t,120,160,132):132;
 		bool keenTalks=talking && (part->stage==SP_LOCK || part->stage==SP_HOME);
-		int pose=keenTalks?1+(t/14)%2:(t%300>285?1:0);
+		int pose=keenTalks?1+(t/30)%2:0;
 		CD_Draw(&scene->keen[pose],kx,56,256,t);
 		break;
 	}
@@ -709,7 +709,7 @@ static void CD_Frame(CD_Scene *scene,const CD_Part *part,uint32_t t,bool talking
 			if((part->stage==KR_SEATS || part->stage==KR_MOSTLY) && talking && (t/16)%2) VH_Bar(224,y+12,2,2,10);
 		}
 		bool keenTalks=talking && part->color==14;
-		int pose=keenTalks?1+(t/14)%2:(t%300>285?1:0);
+		int pose=keenTalks?1+(t/30)%2:0;
 		CD_Draw(&scene->keen[pose],96,76,256,t);
 		break;
 	}
@@ -761,7 +761,7 @@ static void CD_Frame(CD_Scene *scene,const CD_Part *part,uint32_t t,bool talking
 			if(part->stage==K4_WIRES && (t/6)%3==0) CD_Sparkle(124,100,30,14,8,t);
 		}
 		bool keenTalks=talking && part->color==14;
-		int pose=keenTalks?1+(t/14)%2:(t%300>285?1:0);
+		int pose=keenTalks?1+(t/30)%2:0;
 		CD_Draw(&scene->keen[pose],34,78,256,t);
 		break;
 	}
@@ -775,7 +775,7 @@ static void CD_Frame(CD_Scene *scene,const CD_Part *part,uint32_t t,bool talking
 		int sy=80-(spotTalks?(int)((t/12)%3):part->stage==HM_DUSK && t>200 && t<300?(int)((t/8)%2)*2:0);
 		CD_Draw(&scene->spot,sx,sy,256,t);
 		bool keenTalks=talking && part->color==14;
-		int pose=keenTalks?1+(t/14)%2:(t%300>285?1:0);
+		int pose=keenTalks?1+(t/30)%2:0;
 		CD_Draw(&scene->keen[pose],kx,58,256,t);
 		break;
 	}
@@ -798,7 +798,7 @@ static void CD_Frame(CD_Scene *scene,const CD_Part *part,uint32_t t,bool talking
 		int sy=92-(spotTalks?(int)((t/12)%3):0);
 		CD_Draw(&scene->spot,sx,sy,256,t);
 		bool keenTalks=talking && part->color==14;
-		int pose=keenTalks?1+(t/14)%2:(t%300>285?1:0);
+		int pose=keenTalks?1+(t/30)%2:0;
 		CD_Draw(&scene->keen[pose],kx,72,256,t);
 		if(part->stage==OP_SOUP && t>40) CD_Key(32,72+(int)((t/20)%2)); // the elder holds it out
 		if(part->stage>=OP_FINE) CD_Key(kx+34,108);
@@ -822,7 +822,7 @@ static void CD_Frame(CD_Scene *scene,const CD_Part *part,uint32_t t,bool talking
 				VH_DrawPropStringSolid("1,000,000,000 vitas",14,41,0,14);
 			}
 		}
-		if(part->color==14) CD_Inset(scene,260,talking?1+(t/12)%2:0,256,talking,t);
+		if(part->color==14) CD_Inset(scene,260,talking?1+(t/30)%2:0,256,talking,t);
 		break;
 	}
 	default:

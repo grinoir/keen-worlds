@@ -42,6 +42,12 @@ Holding Escape or the mapped controller menu button skips the whole opening;
 held input/release cannot leak into the next turn or gameplay. The quiet
 presentation hint follows the existing style. Voice on/off and volume apply.
 
+Since 2026-10-31 Keen is drawn from the running world's own Keen sprites
+(hands on hips; the shrug while he talks), each pixel doubled, in this and
+every story scene: the user asked for the Keen of the games instead of the
+painted one first made for this opening (its pixels are still in the data
+header, unused).
+
 Keen uses bm_fable at 1.2 speed, Spot af_nova with pitch 1.12, the Vorticon
 am_michael, Lindsey bf_emma, and the bearded caller the user-requested elder
 voice bm_george. The narrator remains bm_lewis. Sixteen new AL_CUT clips keep

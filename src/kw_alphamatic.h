@@ -10,12 +10,14 @@ void AL_AfterScan(void);
 void AL_AfterDeath(void);
 void AL_SelfTest(void);
 void AL_PlayOpening(void);
-// The opening's art, shared with Calidune's scenes: Keen's three poses
-// (AL_SCENE_KEEN_W x AL_SCENE_KEEN_H; 0 idle, 1-2 talking) and the
+// The opening's art, shared with the story scenes: Keen's three poses
+// (AL_SCENE_KEEN_W x AL_SCENE_KEEN_H; 0 idle, 1-2 talking: the running
+// world's own Keen sprites, twice their size; the user asked on 2026-10-31
+// for the Keen of the games, not a new drawing) and the
 // Megarocket facing right (AL_SCENE_SHIP_W x AL_SCENE_SHIP_H). A pixel of
 // 16 or more is see-through.
 #include <stdint.h>
-#define AL_SCENE_KEEN_W 44
+#define AL_SCENE_KEEN_W 48
 #define AL_SCENE_KEEN_H 64
 #define AL_SCENE_SHIP_W 64
 #define AL_SCENE_SHIP_H 28

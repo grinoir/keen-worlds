@@ -22,10 +22,47 @@ typedef struct AL_SceneLine { int speaker,view; const char *name,*text,*clip; } 
 typedef struct AL_Image { int w,h; uint8_t *pixels,*mask; } AL_Image;
 
 // Keen's scene poses and the Megarocket, for Calidune's scenes too.
-typedef char al_sharedSizesMatch[AL_KEEN_W==AL_SCENE_KEEN_W && AL_KEEN_H==AL_SCENE_KEEN_H &&
- AL_SHIP_W==AL_SCENE_SHIP_W && AL_SHIP_H==AL_SCENE_SHIP_H &&
+typedef char al_sharedSizesMatch[AL_SHIP_W==AL_SCENE_SHIP_W && AL_SHIP_H==AL_SCENE_SHIP_H &&
  AL_SPOT_W==AL_SCENE_SPOT_W && AL_SPOT_H==AL_SCENE_SPOT_H ? 1 : -1];
-const uint8_t *AL_KeenPose(int pose) {return al_keenPosePixels[pose];}
+// Keen as he is in the games: the running world's own sprites (facing the
+// player, hands on hips; the shrug for talking), each pixel doubled and
+// standing on the bottom of the picture. Remade on every call, since the
+// sprites are the current world's.
+const uint8_t *AL_KeenPose(int pose)
+{
+ static uint8_t pixels[3][AL_SCENE_KEEN_W*AL_SCENE_KEEN_H];
+ if(pose<0 || pose>2) pose=0;
+ uint8_t *out=pixels[pose];
+ memset(out,16,sizeof(pixels[pose]));
+ // (a world with no sprite names, as the Shikadi Station: the sprites of
+ // Keen's own waiting animation, or at least his standing one)
+ CK_action *wait=pose==2?CK_ACTION(CK_ACT_keenBored6):CK_ACTION(CK_ACT_keenBored2);
+ CK_action *stand=CK_ACTION(CK_ACT_keenStanding);
+ int candidates[3]={pose==2?(int)CK_CHUNKNUM(SPR_KEENWAITR3):(int)CK_CHUNKNUM(SPR_KEENWAITR1),
+  wait?wait->chunkRight:0,stand?stand->chunkRight:0};
+ int chunk=-1;
+ for(int i=0;i<3 && chunk<0;++i)
+  if(candidates[i]>=ca_gfxInfoE.offSprites && candidates[i]<ca_gfxInfoE.offSprites+ca_gfxInfoE.numSprites)
+   chunk=candidates[i];
+ if(chunk<0) return out;
+ CA_CacheGrChunk(chunk);
+ VH_SpriteTableEntry spr=VH_GetSpriteTableEntry(chunk-ca_gfxInfoE.offSprites);
+ VH_ShiftedSprite *shifted=VH_GetShiftedSprite(chunk);
+ if(!shifted) return out;
+ const uint8_t *data=&shifted->data[shifted->sprShiftOffset[0]];
+ int w=shifted->sprShiftByteWidths[0]*8,h=spr.height,plane=(w/8)*h;
+ int left=(AL_SCENE_KEEN_W-2*w)/2,top=AL_SCENE_KEEN_H-2*h;
+ for(int y=0;y<h;++y) for(int x=0;x<w;++x) {
+  int i=(y*w+x)>>3,bit=1<<(7-((y*w+x)&7));
+  if(data[i]&bit) continue; // (the mask: see-through)
+  int c=(data[plane+i]&bit?1:0)|(data[2*plane+i]&bit?2:0)|(data[3*plane+i]&bit?4:0)|(data[4*plane+i]&bit?8:0);
+  for(int dy=0;dy<2;++dy) for(int dx=0;dx<2;++dx) {
+   int px=left+2*x+dx,py=top+2*y+dy;
+   if(px>=0 && px<AL_SCENE_KEEN_W && py>=0 && py<AL_SCENE_KEEN_H) out[py*AL_SCENE_KEEN_W+px]=(uint8_t)c;
+  }
+ }
+ return out;
+}
 const uint8_t *AL_ShipPicture(void) {return al_shipPixels;}
 const uint8_t *AL_SpotPicture(void) {return al_spotPixels;}
 typedef struct AL_Opening
@@ -259,9 +296,9 @@ static void AL_Workshop(AL_Opening *scene,int speaker,int view,uint32_t t,bool c
    VH_Plot(109+(t/12)%4,44,15);
   }
  }
- int pose=speaker==0 ? 1+(t/18)%2 : (t%280>266 ? 1 : 0);
+ int pose=speaker==0 ? 1+(t/30)%2 : 0;
  int bob=speaker==0 ? (t/12)%2 : 0;
- AL_DrawImage(&scene->keen[pose],76,78-bob,AL_KEEN_W,AL_KEEN_H);
+ AL_DrawImage(&scene->keen[pose],74,78-bob,AL_SCENE_KEEN_W,AL_SCENE_KEEN_H);
  int spotX=connecting ? 20+98*(int)(t>140?140:t)/140 : 118;
  int spotY=98-(speaker==1 ? (t/12)%3 : connecting ? (t/8)%2 : 0);
  AL_DrawImage(&scene->spot,spotX,spotY,AL_SPOT_W,AL_SPOT_H);
@@ -377,7 +414,7 @@ static bool AL_PlayPart(AL_Opening *scene,int part)
    } else {
     char name[64];snprintf(name,sizeof(name),"%02d-%s",part+4,line->name);AL_TestShot(name);
     if(part==1) {
-     AL_Workshop(scene,line->speaker,line->view,24,false);AL_Subtitle(line->name,line->text,14);
+     AL_Workshop(scene,line->speaker,line->view,30,false);AL_Subtitle(line->name,line->text,14); // (Keen shrugs)
      AL_TestShot("05b-Keen-motion");
     }
    }
@@ -407,7 +444,7 @@ void AL_PlayOpening(void)
  if(getenv("KW_AUTOCUTSCENE")) AL_CheckSolidText();
  scene.workshop=AL_Background(al_workshopPicture);scene.drive=AL_Background(al_drivePicture);
  scene.orbit=AL_Background(al_orbitPicture);
- for(int i=0;i<3;++i) scene.keen[i]=AL_CaptureActor(al_keenPosePixels[i],AL_KEEN_W,AL_KEEN_H);
+ for(int i=0;i<3;++i) scene.keen[i]=AL_CaptureActor(AL_KeenPose(i),AL_SCENE_KEEN_W,AL_SCENE_KEEN_H);
  scene.spot=AL_CaptureActor(al_spotPixels,AL_SPOT_W,AL_SPOT_H);
  const int portraits[]={14,16,15};
  for(int i=0;i<3;++i) scene.portraits[i]=AL_CapturePicture(portraits[i],1u<<0);
