@@ -324,6 +324,8 @@ const KW_Art kw_hutBoardsArt = {
 	&kw_hutboardsSlots[0][0][0], &kw_hutboardsTiles[0][0][0][0], -1, 0, NULL,
 	true, // nailed shut: the door can't be entered
 };
+// Its windows, lit since the opening scene's "home by Tuesday", for good.
+const KW_Art kw_hutLightArt = KW_OUTPOST_ART(hutlight, HUTLIGHT);
 const KW_Art kw_outpostShelvesArt = KW_OUTPOST_ART(shelves, SHELVES);
 static const KW_Art kw_outpostBunkArt = KW_OUTPOST_ART(bunk, BUNK);
 static const KW_Art kw_outpostChartArt = KW_OUTPOST_ART(chart, CHART);
@@ -401,6 +403,7 @@ static void KW_PlaceOutpost(void)
 		KW_PlaceArt(&kw_hutBoardsArt); // (on top of the hut)
 		return;
 	}
+	KW_PlaceArt(&kw_hutLightArt); // (on top of the hut)
 	KW_PlaceArt(&kw_outpostShelvesArt);
 	KW_PlaceArt(&kw_outpostBunkArt);
 	KW_PlaceArt(&kw_outpostChartArt);

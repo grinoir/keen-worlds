@@ -5382,8 +5382,9 @@ void KW_SelfTest(void)
 			KW_OutpostDoors(&hutStreetX, &hutStreetY, &hutRoomX, &hutRoomY);
 			kw_worlds[opener].completed = false;
 			CK_LoadLevel(true, true);
-			if (KW_IsOutpostOpen() || !KW_IsArtCellPlaced(&kw_hutArt, 108, 12) || !KW_IsArtPlaced(&kw_hutMastArt) ||
-				!KW_IsArtPlaced(&kw_hutBoardsArt) || KW_IsArtCellPlaced(&kw_outpostShelvesArt, kw_outpostShelvesArt.originX,
+			if (KW_IsOutpostOpen() || !KW_IsArtCellPlaced(&kw_hutArt, 103, 12) || !KW_IsArtPlaced(&kw_hutMastArt) ||
+				!KW_IsArtPlaced(&kw_hutBoardsArt) || KW_IsArtCellPlaced(&kw_hutLightArt, kw_hutLightArt.originX, kw_hutLightArt.originY) ||
+				KW_IsArtCellPlaced(&kw_outpostShelvesArt, kw_outpostShelvesArt.originX,
 					kw_outpostShelvesArt.originY))
 				Quit("KW_SelfTest: before it opens, the outpost's hut should stand boarded up!");
 			if (TI_ForeMisc(CA_TileAtPos(hutStreetX, hutStreetY, 1)) || CA_TileAtPos(hutStreetX, hutStreetY, 2))
@@ -5393,7 +5394,8 @@ void KW_SelfTest(void)
 			kw_worlds[opener].completed = true;
 			CK_LoadLevel(true, true);
 			// (keepsakes stand on the shelves: check the shelves' last cell, never one's place)
-			if (!KW_IsOutpostOpen() || !KW_IsArtCellPlaced(&kw_hutArt, 108, 12) || KW_IsArtPlaced(&kw_hutBoardsArt) ||
+			if (!KW_IsOutpostOpen() || !KW_IsArtCellPlaced(&kw_hutArt, 103, 12) || KW_IsArtPlaced(&kw_hutBoardsArt) ||
+				!KW_IsArtCellPlaced(&kw_hutLightArt, kw_hutLightArt.originX, kw_hutLightArt.originY) || // (a lit window)
 				!KW_IsArtCellPlaced(&kw_outpostShelvesArt, kw_outpostShelvesArt.originX + kw_outpostShelvesArt.tilesW - 1,
 					kw_outpostShelvesArt.originY + kw_outpostShelvesArt.tilesH - 1))
 				Quit("KW_SelfTest: once open, the outpost should be furnished and its door free!");

@@ -140,6 +140,25 @@ def draw_mast(frame):
     return c.px
 
 
+# The hut's two windows (pixels of the hut's picture) light up at the end of
+# the opening scene ("It was a home by Tuesday") and stay lit: the dark of
+# the window holes in yellow, as the scene draws it. 3x4 tiles over the hut.
+LIGHT_X, LIGHT_TOP = HUT_X + 4, HUT_TOP + 3
+WINDOWS = [(66, 48, 98, 74), (66, 78, 98, 100)]     # in the hut's picture
+
+
+def draw_light(d=None):
+    hut = draw_hut(d)
+    c = Canvas(48, 64)
+    ox, oy = (LIGHT_X - HUT_X) * 16, (LIGHT_TOP - HUT_TOP) * 16
+    for x0, y0, x1, y1 in WINDOWS:
+        for y in range(y0, y1):
+            for x in range(x0, x1):
+                if hut[y][x] == BLACK:
+                    c.put(x - ox, y - oy, YELLOW)
+    return c.px
+
+
 def draw_shelves():
     """Three wooden shelf boards on the wall, 6x3 tiles: each tile's bottom
     rows are the board the keepsake stands on."""
@@ -326,6 +345,7 @@ def art_pieces(d=None):
     pieces = [('hut', HUT_X, HUT_TOP, [draw_hut(d)], 'always'),
               ('mast', MAST_X, MAST_TOP, [draw_mast(0), draw_mast(1)], 'always'),
               ('hutboards', DOOR_X, DOOR_ROWS[0], [kw_barhouse.draw_boards()], 'closed'),
+              ('hutlight', LIGHT_X, LIGHT_TOP, [draw_light(d)], 'lit'),
               ('shelves', SHELF_X, SHELF_TOP, [draw_shelves()], 'open'),
               ('bunk', BUNK_X, BUNK_Y, [draw_bunk()], 'open'),
               ('chart', CHART_X, CHART_Y, [draw_chart()], 'open'),
@@ -389,7 +409,7 @@ SCENE_X0, SCENE_Y0 = 90 * 16, 7 * 16 + 8
 
 def scene_picture(d=None):
     street = render(SCENE_X0 // 16, SCENE_Y0 // 16, SCENE_X0 // 16 + 20, SCENE_Y0 // 16 + 10,
-                    lambda when: when == 'open', d, 0)
+                    lambda when: when == 'open', d, 0)     # (not 'lit': the scene lights them)
     oy = SCENE_Y0 % 16
     crop = street.crop((0, oy, 320, oy + 144))
     lut = {c: k for k, c in enumerate(EGA)}

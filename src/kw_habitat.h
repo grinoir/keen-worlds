@@ -64,7 +64,7 @@ extern const struct KW_Art kw_shipHintArt;
 // Keen's outpost (for /KWTEST): the hut and its mast (always), the boards
 // on its door (until it opens), and inside, once open, the shelves, Spot and
 // a keepsake per world saved (kw_keepsakeWorld[i] is keepsake i's world).
-extern const struct KW_Art kw_hutArt, kw_hutMastArt, kw_hutBoardsArt, kw_outpostShelvesArt, kw_outpostSpotArt;
+extern const struct KW_Art kw_hutArt, kw_hutMastArt, kw_hutBoardsArt, kw_hutLightArt, kw_outpostShelvesArt, kw_outpostSpotArt;
 #define KW_OUTPOST_KEEPSAKE_COUNT 16
 extern const struct KW_Art kw_keepsakeArt[KW_OUTPOST_KEEPSAKE_COUNT];
 extern const int kw_keepsakeWorld[KW_OUTPOST_KEEPSAKE_COUNT];
