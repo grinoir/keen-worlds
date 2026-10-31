@@ -406,6 +406,16 @@ def scene_source(srcdir, d=None):
     for i in range(0, len(packed), 40):
         lines.append('\t' + ','.join(str(b) for b in packed[i:i + 40]) + ',')
     lines.append('};')
+    # Spot as he is in the hut (draw_spot), for the scene at the level's size
+    # (a pixel of 16: see-through)
+    spot = draw_spot()
+    ys = [y for y in range(32) if any(c is not None for c in spot[y])]
+    xs = [x for x in range(32) if any(spot[y][x] is not None for y in range(32))]
+    w, h = xs[-1] - xs[0] + 1, ys[-1] - ys[0] + 1
+    lines += ['#define KW_OUTPOST_SPOT_W %d' % w, '#define KW_OUTPOST_SPOT_H %d' % h,
+              'static const uint8_t kw_outpostSpotPixels[%d] = {' % (w * h),
+              '\t' + ','.join(str(16 if spot[y][x] is None else spot[y][x])
+                              for y in range(ys[0], ys[-1] + 1) for x in range(xs[0], xs[-1] + 1)) + ',', '};']
     out = os.path.join(srcdir, 'kw_outpost_scene.h')
     open(out, 'w').write('\n'.join(lines) + '\n')
     print('wrote', out)

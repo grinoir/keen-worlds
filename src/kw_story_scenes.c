@@ -32,7 +32,7 @@
 typedef struct CD_Image { int w,h; uint8_t *pixels,*mask; } CD_Image;
 // The pictures behind the scenes, drawn when a scene needs them.
 typedef enum CD_Background { BG_CALIDUNE, BG_XAX, BG_MARS, BG_SAND, BG_STREET, BG_KRISLE, BG_COCKPIT, BG_YARD, BG_VILLAGE, BG_COUNT } CD_Background;
-typedef struct CD_Scene { void *bg[BG_COUNT]; CD_Image keen[3],spot,ship,copy,knockoff; } CD_Scene;
+typedef struct CD_Scene { void *bg[BG_COUNT]; CD_Image keen[3],spot,ship,copy,knockoff,smallKeen[3],smallSpot; } CD_Scene;
 
 typedef enum CD_Stage { CD_WARN, CD_AGAIN, CD_BEAM, CD_SAND, CD_RISE, CD_COPY, CD_OFF,
 	SP_ORBIT, SP_LAND, SP_SPOT1, SP_LOCK, SP_HOME, SP_SPOT2, SP_DEPART,
@@ -194,6 +194,20 @@ static CD_Image CD_Capture(const uint8_t *pixels,int w,int h,const uint8_t *reco
 }
 
 static void CD_Free(CD_Image *image) {free(image->pixels);free(image->mask);}
+
+// Half the size (every other pixel): Keen as big as he is in a level (his
+// scene poses are his sprites doubled), for a scene in front of a level's
+// own picture (the outpost).
+static CD_Image CD_Half(const CD_Image *big)
+{
+	CD_Image image={big->w/2,big->h/2,(uint8_t *)malloc((big->w/2)*(big->h/2)),(uint8_t *)malloc((big->w/2)*(big->h/2))};
+	if(!image.pixels || !image.mask) Quit("Story scene: no actor memory");
+	for(int y=0;y<image.h;++y) for(int x=0;x<image.w;++x) {
+		int i=(2*y+1)*big->w+2*x; // (the lower row of each pair: the feet's)
+		image.pixels[y*image.w+x]=big->pixels[i];image.mask[y*image.w+x]=big->mask[i];
+	}
+	return image;
+}
 
 // Drawn at its own size; "reveal" (0-256) shows that share of its pixels,
 // the rest are the transporter's sparkle.
@@ -517,9 +531,15 @@ static void CD_Friend(int x,int chunk,const char *name,bool speaking,bool mop)
 	VH_DrawPropStringSolid(name,x+26-w/2,56,0,speaking?14:7);
 }
 
-// The key the elder gives Keen: brass, on a ring.
-static void CD_Key(int x,int y)
+// The key the elder gives Keen: brass, on a ring. small: at the level's
+// size, in Keen's hand.
+static void CD_Key(int x,int y,bool small)
 {
+	if(small) {
+		VH_Bar(x,y-1,3,3,14);VH_Plot(x+1,y,6);
+		VH_HLine(x+3,x+7,y,14);VH_Plot(x+6,y+1,14);VH_Plot(x+7,y+1,14);
+		return;
+	}
 	for(int dy=-3;dy<=3;++dy) for(int dx=-3;dx<=3;++dx) {int d=dx*dx+dy*dy;if(d<=9 && d>=4) VH_Plot(x+dx,y+dy,14);}
 	VH_HLine(x+3,x+11,y,14);VH_HLine(x+3,x+11,y+1,6);
 	VH_VLine(y+1,y+3,x+9,14);VH_VLine(y+1,y+4,x+11,14);
@@ -792,17 +812,18 @@ static void CD_Frame(CD_Scene *scene,const CD_Part *part,uint32_t t,bool talking
 			if(shown>2) CD_Friend(118,CK_CHUNKNUM(PIC_ORACLE),"Janitor",speaks && part->stage==OP_MOP,true);
 		}
 		// Keen and Spot come in from the right, past the hut, and stand on the
-		// flat ground at its door (not on the hill); the key, then in Keen's hand
-		int kx=part->stage==OP_ROLL?CD_Ease(t,part->lead+60,330,214):214;
-		int sx=part->stage==OP_ROLL?CD_Ease(t,part->lead+90,370,170):170;
+		// flat ground at its door (not on the hill), as big as they are in the
+		// level; the key, then in Keen's hand
+		int kx=part->stage==OP_ROLL?CD_Ease(t,part->lead+60,330,226):226;
+		int sx=part->stage==OP_ROLL?CD_Ease(t,part->lead+90,360,204):204;
 		bool spotTalks=talking && part->stage==OP_SHELF;
-		int sy=92-(spotTalks?(int)((t/12)%3):0);
-		CD_Draw(&scene->spot,sx,sy,256,t);
+		int sy=136-scene->smallSpot.h-(spotTalks?(int)((t/12)%2):0);
+		CD_Draw(&scene->smallSpot,sx,sy,256,t);
 		bool keenTalks=talking && part->color==14;
 		int pose=keenTalks?1+(t/30)%2:0;
-		CD_Draw(&scene->keen[pose],kx,72,256,t);
-		if(part->stage==OP_SOUP && t>40) CD_Key(32,72+(int)((t/20)%2)); // the elder holds it out
-		if(part->stage>=OP_FINE) CD_Key(kx+34,108);
+		CD_Draw(&scene->smallKeen[pose],kx,136-scene->smallKeen[pose].h,256,t);
+		if(part->stage==OP_SOUP && t>40) CD_Key(32,72+(int)((t/20)%2),false); // the elder holds it out
+		if(part->stage>=OP_FINE) CD_Key(kx+19,122,true);
 		break;
 	}
 	case AB_MESSAGES: case AB_WORTH: case AB_SELL: case AB_HOME: {
@@ -915,6 +936,8 @@ static void CD_Play(const CD_Part *parts,int count)
 	}
 	for(int i=0;i<3;++i) scene.keen[i]=CD_Capture(AL_KeenPose(i),AL_SCENE_KEEN_W,AL_SCENE_KEEN_H,NULL,false);
 	scene.spot=CD_Capture(AL_SpotPicture(),AL_SCENE_SPOT_W,AL_SCENE_SPOT_H,NULL,false);
+	for(int i=0;i<3;++i) scene.smallKeen[i]=CD_Half(&scene.keen[i]);
+	scene.smallSpot=CD_Capture(kw_outpostSpotPixels,KW_OUTPOST_SPOT_W,KW_OUTPOST_SPOT_H,NULL,false); // (as in the hut)
 	// The copy: the same ship in strange colours (green for red, purple for blue)
 	static const uint8_t strange[16]={0,5,2,3,2,13,6,7,8,13,10,11,10,13,14,15};
 	scene.ship=CD_Capture(AL_ShipPicture(),AL_SCENE_SHIP_W,AL_SCENE_SHIP_H,NULL,false);
@@ -936,6 +959,8 @@ static void CD_Play(const CD_Part *parts,int count)
 	for(int i=0;i<BG_COUNT;++i) if(scene.bg[i]) VL_DestroySurface(scene.bg[i]);
 	for(int i=0;i<3;++i) CD_Free(&scene.keen[i]);
 	CD_Free(&scene.spot);CD_Free(&scene.ship);CD_Free(&scene.copy);CD_Free(&scene.knockoff);
+	for(int i=0;i<3;++i) CD_Free(&scene.smallKeen[i]);
+	CD_Free(&scene.smallSpot);
 	CA_DownLevel();
 	IN_ClearKeysDown();
 	printf("Story scene %s\n",skipped?"skipped":"finished");fflush(stdout);
