@@ -46,6 +46,7 @@ CLIPS = {
                                     'When we land, it may be last year.', 'Or next week.']),
     'FF_CUT_WHEN.RAW': (KEEN, ['So my plush friends could be anywhere...', 'and any-when!']),
     'FF_CUT_WORDS.RAW': (COMPUTER, ['Please do not invent words in my cockpit.']),
+    'FF_CUT_BREAKFAST.RAW': (KEEN, ['Wait...', "so that's how you always get me home by breakfast!"]),
     # after Suburb Shenanigans: home from school
     'HM_CUT_DUSK.RAW': (NARRATOR, ['The school day ended, eventually.',
                                    "Mortimer's dummies were dealt with, at least until tomorrow."]),

@@ -36,6 +36,6 @@ check('CDSCENE',2,14,5,'CD_CUT_',('4-sanda.ppm','4-sandb.ppm'))     # Keen mater
 check('SPOTSCENE',1,14,7,'SP_CUT_',('s5-homea.ppm','s5-homeb.ppm'))  # the cage opens
 for prefix in ('KR_CUT_','BH_CUT_','AB_CUT_','K4_CUT_','FF_CUT_','HM_CUT_'):
  assert (root/'BRIDGESCENES'/'result.log').read_text(errors='replace').count('KW_AUTOTALK: '+prefix)>0,prefix
-check('BRIDGESCENES',6,50,25,'',('k2-samea.ppm','k2-sameb.ppm'))  # the knock-off lands
-print('PASS: Calidune, Spot rescue and bridge scenes (Krisle, bounty, Alphamatic, Shikadi signal, Gnosticus Pi, home): frames, 37 real speech clips and preserved game state')
+check('BRIDGESCENES',6,52,26,'',('k2-samea.ppm','k2-sameb.ppm'))  # the knock-off lands
+print('PASS: Calidune, Spot rescue and bridge scenes (Krisle, bounty, Alphamatic, Shikadi signal, Gnosticus Pi, home): frames, 38 real speech clips and preserved game state')
 PY

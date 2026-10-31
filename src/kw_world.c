@@ -3370,7 +3370,8 @@ static const char kw_epilogue[] =
 	"medal. Nobody on\n"
 	"Earth knows he was\n"
 	"away. His parents\n"
-	"think he slept well.\n"
+	"think he sleeps very\n"
+	"well.\n"
 	"\n"
 	"That is how he\n"
 	"likes it.\n"
@@ -5305,6 +5306,14 @@ void KW_SelfTest(void)
 					QuitF("KW_SelfTest: keepsake %d is %s, but its world is %s!", k,
 						KW_IsArtPlaced(&kw_keepsakeArt[k]) ? "on the shelf" : "missing",
 						KW_IsWorldCompleted(kw_keepsakeWorld[k]) ? "saved" : "not saved");
+			// The Janitor is always there; Lindsey after every other world saved.
+			{
+				int hostiles, residents;
+				CK_object *first;
+				KW_CountLevelPeople(&hostiles, &residents, &first);
+				if (KW_OutpostVisitorsPresent() < 1 || residents != 1 + KW_OutpostVisitorsPresent())
+					Quit("KW_SelfTest: the outpost's Janitor (or Lindsey) is missing!");
+			}
 			// (Spot is home unless the Shadowlands' kidnappers have him)
 			bool spotAway = KW_IsWorldPresent(KW_RTTS) && KW_IsWorldPresent(KW_OSI) &&
 				KW_IsWorldVisited(KW_RTTS) && !KW_IsWorldCompleted(KW_OSI);
@@ -5355,7 +5364,8 @@ void KW_SelfTest(void)
 			Quit("KW_SelfTest: a peaceful Border Village can't be left through the right end!");
 		ck_gameState.levelState = LS_Playing;
 		ck_inputFrame.xDirection = IN_motion_None;
-		if (hostiles || residents != 1 || !KW_IsLevelPeaceful() ||
+		// (the elder, and whoever is at Keen's outpost)
+		if (hostiles || residents != 1 + KW_OutpostVisitorsPresent() || !KW_IsLevelPeaceful() ||
 			RF_UnitToTile(elder->posX) != 4 || RF_UnitToTile(elder->posY) < 46 || RF_UnitToTile(elder->posY) > 48)
 			Quit("KW_SelfTest: a completed Border Village should be peaceful with one elder in the house!");
 

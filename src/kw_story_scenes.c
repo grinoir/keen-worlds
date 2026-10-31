@@ -40,7 +40,7 @@ typedef enum CD_Stage { CD_WARN, CD_AGAIN, CD_BEAM, CD_SAND, CD_RISE, CD_COPY, C
 	BH_NOTICE, BH_IN, BH_KNOW, BH_MYSTERY,
 	AB_MESSAGES, AB_WORTH, AB_SELL, AB_HOME,
 	K4_SIGNAL, K4_COUNCIL, K4_WIRES,
-	FF_RINGS, FF_WHEN, FF_WORDS,
+	FF_RINGS, FF_WHEN, FF_WORDS, FF_BREAKFAST,
 	HM_DUSK, HM_DAY, HM_SPACE, HM_FIRST, HM_WARM, HM_SHH,
 	OP_ROLL, OP_EYES, OP_SCHOOL, OP_SOUP, OP_SHELF, OP_VISIT, OP_MOP, OP_FINE, OP_TUESDAY, CD_NUM_STAGES } CD_Stage;
 typedef struct CD_Part
@@ -121,6 +121,9 @@ static const CD_Part ff_opening[] = {
 		"FF_CUT_RINGS.RAW",11,0,40},
 	{FF_WHEN,"Keen","So my plush friends could be anywhere... and any-when!","FF_CUT_WHEN.RAW",14,0,0},
 	{FF_WORDS,"Megarocket","Please do not invent words in my cockpit.","FF_CUT_WORDS.RAW",11,0,0},
+	// (and why every trip, however long, ends the same night on Earth:
+	// KEENS_OUTPOST.md in the workspace root)
+	{FF_BREAKFAST,"Keen","Wait... so that's how you always get me home by breakfast!","FF_CUT_BREAKFAST.RAW",14,0,0},
 };
 // After Suburb Shenanigans: Billy home from school before the next trip,
 // without deciding the IQ test (its sequel was never released).
@@ -163,7 +166,7 @@ static CD_Background CD_BackgroundOf(CD_Stage stage)
 	case KR_ELDER: case KR_SAME: case KR_SEATS: case KR_FLY: case KR_MOSTLY: return BG_KRISLE;
 	case AB_MESSAGES: case AB_WORTH: case AB_SELL: case AB_HOME: return BG_MARS;
 	case BH_NOTICE: case BH_IN: case BH_KNOW: case BH_MYSTERY: case K4_SIGNAL: case K4_COUNCIL: case K4_WIRES:
-	case FF_RINGS: case FF_WHEN: case FF_WORDS: return BG_COCKPIT;
+	case FF_RINGS: case FF_WHEN: case FF_WORDS: case FF_BREAKFAST: return BG_COCKPIT;
 	case HM_DUSK: case HM_DAY: case HM_SPACE: case HM_FIRST: case HM_WARM: case HM_SHH: return BG_YARD;
 	case OP_ROLL: case OP_EYES: case OP_SCHOOL: case OP_SOUP: case OP_SHELF: case OP_VISIT: case OP_MOP: case OP_FINE:
 	case OP_TUESDAY: return BG_VILLAGE;
@@ -711,7 +714,7 @@ static void CD_Frame(CD_Scene *scene,const CD_Part *part,uint32_t t,bool talking
 		break;
 	}
 	case BH_NOTICE: case BH_IN: case BH_KNOW: case BH_MYSTERY: case K4_SIGNAL: case K4_COUNCIL: case K4_WIRES:
-	case FF_RINGS: case FF_WHEN: case FF_WORDS: {
+	case FF_RINGS: case FF_WHEN: case FF_WORDS: case FF_BREAKFAST: {
 		VL_SurfaceToScreen(scene->bg[BG_COCKPIT],0,0,0,0,320,200);
 		bool bounty=part->stage<=BH_MYSTERY,foray=part->stage>=FF_RINGS;
 		if(foray) {
@@ -853,7 +856,7 @@ static bool CD_PlayPart(CD_Scene *scene,const CD_Part *part)
 			"b1-notice","b2-in","b3-know","b4-mystery",
 			"a1-messages","a2-worth","a3-sell","a4-home",
 			"g1-signal","g2-council","g3-wires",
-			"f1-rings","f2-when","f3-words",
+			"f1-rings","f2-when","f3-words","f4-breakfast",
 			"h1-dusk","h2-day","h3-space","h4-first","h5-warm","h6-shh",
 			"o1-roll","o2-eyes","o3-school","o4-soup","o5-shelf","o6-visit","o7-mop","o8-fine","o9-tuesday"};
 		typedef char cd_everyStageNamed[sizeof(names)/sizeof(names[0])==CD_NUM_STAGES?1:-1];

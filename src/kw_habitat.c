@@ -69,6 +69,7 @@ typedef enum KW_ResidentKind
 {
 	KW_ELDER,   // A Keen 4 Oracle Council elder, spawned as a character.
 	KW_PAINTED, // Drawn into level art (e.g. the barmaid); just a talk spot.
+	KW_LINDSEY, // Princess Lindsey, floating as in Keen 4.
 } KW_ResidentKind;
 
 // What Keen can say, and the resident's answer.
@@ -114,6 +115,7 @@ typedef enum KW_Face
 
 static bool KW_OutpostOpen(void);
 static bool KW_SpotIsHome(void);
+static bool KW_LindseyVisits(void);
 static const char *KW_ShelfNotice(void);
 
 typedef struct KW_Resident
@@ -151,6 +153,12 @@ static const KW_Resident kw_residents[] = {
 		NULL, {{NULL, NULL}}, KW_PAINTED, kw_spotTalk, KW_SpotIsHome, NULL, KW_FACE_SPOT},
 	{KW_KEEN4, 1, KW_OUTPOST_SHELF_X, KW_OUTPOST_ROOM_STAND,
 		NULL, {{NULL, NULL}}, KW_PAINTED, NULL, KW_OutpostOpen, KW_ShelfNotice, KW_FACE_NONE},
+	// ...the Janitor, who keeps it clean (he walks about, as the elder does),
+	// and Princess Lindsey, visiting after every other world saved.
+	{KW_KEEN4, 1, KW_OUTPOST_ROOM_DOOR_X - 3, KW_OUTPOST_ROOM_STAND,
+		NULL, {{NULL, NULL}}, KW_ELDER, kw_janitorTalk, KW_OutpostOpen},
+	{KW_KEEN4, 1, KW_OUTPOST_SHELF_X + 1, KW_OUTPOST_ROOM_STAND - 1,
+		NULL, {{NULL, NULL}}, KW_LINDSEY, kw_lindseyTalk, KW_LindseyVisits},
 };
 #define KW_NUM_RESIDENTS ((int)(sizeof(kw_residents) / sizeof(kw_residents[0])))
 
@@ -347,6 +355,26 @@ static bool KW_SpotIsHome(void)
 		return false;
 	return !(KW_IsWorldPresent(KW_RTTS) && KW_IsWorldPresent(KW_OSI) &&
 		KW_IsWorldVisited(KW_RTTS) && !KW_IsWorldCompleted(KW_OSI));
+}
+
+// Lindsey drops by after every other world Keen saves.
+static bool KW_LindseyVisits(void)
+{
+	int saved = 0;
+	for (int i = 0; i < KW_OUTPOST_KEEPSAKES; ++i)
+		saved += KW_IsWorldCompleted(kw_keepsakeWorld[i]);
+	return KW_OutpostOpen() && saved % 2 == 0;
+}
+
+// For /KWTEST: how many of the outpost's people who walk or float about
+// (not painted) are there now.
+int KW_OutpostVisitorsPresent(void)
+{
+	int n = 0;
+	for (int i = 0; i < KW_NUM_RESIDENTS; ++i)
+		if (kw_residents[i].kind != KW_PAINTED && kw_residents[i].present && kw_residents[i].present())
+			++n;
+	return n;
 }
 
 static void KW_PlaceOutpost(void)
@@ -865,6 +893,20 @@ static void KW_SpawnResident(int index)
 		CK_SetAction(obj, CK_ACTION(CK4_ACT_CouncilWalk0));
 		CA_MARKLUMP(LUMP_ORACLEMEMBER);
 	}
+	else if (r->kind == KW_LINDSEY)
+	{
+		// As CK4_SpawnLindsey, but "friendly": touching her is not a rescue.
+		CK_object *obj = CK_GetNewObj(false);
+		obj->type = CT_Friendly;
+		obj->active = OBJ_ACTIVE;
+		obj->zLayer = PRIORITIES - 4;
+		obj->posX = RF_TileToUnit(r->tileX);
+		obj->user1 = obj->posY = RF_TileToUnit(r->tileY) + CK_INT(CK4_LindseySpawnYOffset, -0x100);
+		obj->yDirection = IN_motion_Down;
+		obj->user4 = KW_RESIDENT_TAG | index;
+		CK_SetAction(obj, CK_ACTION(CK4_ACT_Lindsey0));
+		CA_MARKLUMP(LUMP_LINDSEY);
+	}
 #endif
 }
 
@@ -909,7 +951,8 @@ void KW_SetupLevelResidents(void)
 
 	// ...and the residents have moved in.
 	for (int i = 0; i < KW_NUM_RESIDENTS; ++i)
-		if (kw_residents[i].episode == KW_CurrentEpisode() && kw_residents[i].level == ca_mapOn)
+		if (kw_residents[i].episode == KW_CurrentEpisode() && kw_residents[i].level == ca_mapOn &&
+			(!kw_residents[i].present || kw_residents[i].present()))
 			KW_SpawnResident(i);
 	CA_MarkAllLumps();
 }
@@ -929,6 +972,8 @@ static void KW_ResidentCard(const KW_Resident *r, const char *text)
 	US_CenterWindow(26, 8);
 	if (r->kind == KW_ELDER)
 		VHB_DrawBitmap(US_GetWindowX(), US_GetWindowY(), CK_CHUNKNUM(PIC_ORACLE));
+	else if (r->kind == KW_LINDSEY)
+		VHB_DrawBitmap(US_GetWindowX(), US_GetWindowY(), CK_CHUNKNUM(PIC_LINDSEY));
 	else if (r->face == KW_FACE_SPOT)
 	{
 		// Spot's picture from the story scenes (32x44), in the picture's place
@@ -1156,6 +1201,7 @@ static void KW_ShowConversation(const KW_Resident *r)
 	SD_WaitSoundDone();
 	CA_UpLevel();
 	CA_MarkGrChunk(CK_CHUNKNUM(PIC_ORACLE));
+	CA_MarkGrChunk(CK_CHUNKNUM(PIC_LINDSEY));
 	CA_MarkGrChunk(CK_CHUNKNUM(PIC_KEENTALK1));
 	CA_MarkGrChunk(CK_CHUNKNUM(PIC_KEENTALK2));
 	CA_CacheMarks(0);
@@ -1270,6 +1316,10 @@ const char *KW_CheckDialogueFits(void)
 	const char *talkProblem = KW_CheckTalkFits(kw_barmaidTalk, (int)(sizeof(kw_barmaidTalk) / sizeof(kw_barmaidTalk[0])), "the barmaid");
 	if (!talkProblem)
 		talkProblem = KW_CheckTalkFits(kw_spotTalk, (int)(sizeof(kw_spotTalk) / sizeof(kw_spotTalk[0])), "Spot");
+	if (!talkProblem)
+		talkProblem = KW_CheckTalkFits(kw_janitorTalk, (int)(sizeof(kw_janitorTalk) / sizeof(kw_janitorTalk[0])), "the Janitor");
+	if (!talkProblem)
+		talkProblem = KW_CheckTalkFits(kw_lindseyTalk, (int)(sizeof(kw_lindseyTalk) / sizeof(kw_lindseyTalk[0])), "Lindsey");
 	if (talkProblem)
 		return talkProblem;
 	for (int i = 0; i < KW_NUM_RESIDENTS; ++i)
