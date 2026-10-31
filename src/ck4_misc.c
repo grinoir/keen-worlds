@@ -492,7 +492,11 @@ void CK4_ScanInfoLayer()
 void CK4_ShowPrincessMessage(void)
 {
 	SD_WaitSoundDone();
-	StopMusic();
+	// KEEN WORLDS: Aurora Bliss plays a level's song while they talk
+	if (CK_INT(CK4_TalkMusicLevel, -1) >= 0)
+		StartMusic(CK_INT(CK4_TalkMusicLevel, -1));
+	else
+		StopMusic();
 	CA_UpLevel();
 
 	CA_MarkGrChunk(CK_CHUNKNUM(PIC_LINDSEY));
@@ -688,7 +692,7 @@ void CK4_ShowCouncilMessage(void)
 	CA_MarkGrChunk(CK_CHUNKNUM(PIC_KEENTALK1));
 	CA_MarkGrChunk(CK_CHUNKNUM(PIC_KEENTALK2));
 	CA_CacheMarks(0);
-	StartMusic(-1);
+	StartMusic(CK_INT(CK4_TalkMusicLevel, -1)); // KEEN WORLDS: variable (Aurora Bliss)
 
 	VL_FixRefreshBuffer();
 

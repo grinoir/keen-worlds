@@ -229,6 +229,12 @@ void CK4_SpawnBird(int tileX, int tileY)
 
 void CK4_EggCol(CK_object *a, CK_object *b)
 {
+	// KEEN WORLDS: Aurora Bliss: a shot pops on the egg; only Keen hatches it
+	if (b->type == CT_Stunner && CK_INT(CK4_EggHatchesOnlyForKeen, 0))
+	{
+		CK_ShotHit(b);
+		return;
+	}
 	if (b->type == CT_Player || b->type == CT_Stunner)
 	{
 		if (b->type == CT_Stunner)
@@ -281,6 +287,8 @@ void CK4_EggCol(CK_object *a, CK_object *b)
 void CK4_BirdWalk(CK_object *obj)
 {
 	obj->xDirection = obj->posX < ck_keenObj->posX ? IN_motion_Right : IN_motion_Left;
+	if (CK_INT(CK4_BirdNeverFlies, 0)) // KEEN WORLDS: Aurora Bliss
+		return;
 	if (obj->clipRects.unitY2 >= ck_keenObj->clipRects.unitY2 + CK_INT(CK4_BirdWalkKeenYHeight, 0x300) &&
 		ck_keenObj->topTI &&
 		CK_PreviewClipRects(obj, CK_ACTION(CK4_ACT_BirdFly0)))
@@ -321,6 +329,11 @@ void CK4_BirdCol(CK_object *a, CK_object *b)
 
 void CK4_BirdHatchedCol(CK_object *a, CK_object *b)
 {
+	if (b->type == CT_Stunner && CK_INT(CK4_BirdShotProof, 0)) // KEEN WORLDS: Aurora Bliss: the shot just pops
+	{
+		CK_ShotHit(b);
+		return;
+	}
 	if (b->type == CT_Stunner)
 	{
 		a->velX = 0;

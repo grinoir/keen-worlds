@@ -536,8 +536,8 @@ void CK_PhysFullClipToWalls(CK_object *obj)
 	case EP_CK4:
 		if (obj->type == CT4_Schoolfish)
 		{
-			delX = 0x100;
-			delY = 0x80;
+			delX = CK_INT(CK4_SchoolfishClipX, 0x100); // KEEN WORLDS: variable (Aurora Bliss)
+			delY = CK_INT(CK4_SchoolfishClipY, 0x80);
 		}
 		else if (obj->type == CT4_Dopefish)
 		{

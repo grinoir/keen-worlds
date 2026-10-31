@@ -83,7 +83,7 @@ void CK4_SmirkySearch(CK_object *obj)
 	}
 
 	// Decide to teleport for some reason
-	if (obj->user1 >= CK_INT(CK4_SmirkyTeleCycle, 2))
+	if (obj->user1 >= CK_INT(CK4_SmirkyTeleCycle, 2) && !CK_INT(CK4_SmirkyNoTeleport, 0)) // KEEN WORLDS: Aurora Bliss
 	{
 		obj->currentAction = CK_ACTION(CK4_ACT_SmirkyTele0);
 		return;
@@ -104,7 +104,7 @@ void CK4_SmirkySearch(CK_object *obj)
 	}
 
 	// Decide to teleport if counter hits threshold
-	if (++obj->user1 == CK_INT(CK4_SmirkyTeleCycle, 2))
+	if (++obj->user1 == CK_INT(CK4_SmirkyTeleCycle, 2) && !CK_INT(CK4_SmirkyNoTeleport, 0)) // KEEN WORLDS: Aurora Bliss
 	{
 		SD_PlaySound(CK_SOUNDNUM(SOUND_SMIRKYTELE));
 		obj->currentAction = CK_ACTION(CK4_ACT_SmirkyTele0);
@@ -462,7 +462,8 @@ void CK4_DopefishBurp(CK_object *obj)
 	bubble->velY = CK_INT(CK4_DopefishBurpBubbleYVelocity, -20);
 	bubble->velX = CK_INT(CK4_DopefishBurpBubbleXVelocity, 4);
 	CK_SetAction(bubble, CK_ACTION(CK4_ACT_DopeBubble0));
-	SD_PlaySound(CK_SOUNDNUM(SOUND_DOPEFISHBURP));
+	if (!CK_INT(CK4_DopefishQuiet, 0)) // KEEN WORLDS: Aurora Bliss: no burp
+		SD_PlaySound(CK_SOUNDNUM(SOUND_DOPEFISHBURP));
 }
 
 void CK4_Bubbles(CK_object *obj)
@@ -480,6 +481,12 @@ void CK4_DopefishCol(CK_object *a, CK_object *b)
 	if (b->type == CT4_Schoolfish)
 	{
 		CK_SetAction2(b, CK_ACTION(CK4_ACT_SchoolfishEaten0));
+	}
+	else if (b->type == CT_Player && !ck_godMode && CK_INT(CK4_DopefishKillsAtOnce, 0)) // KEEN WORLDS: Aurora Bliss
+	{
+		// a hungry Dopefish kills Keen outright (no swallowing)
+		CK_KillKeen();
+		return;
 	}
 	else if (b->type == CT_Player && !ck_godMode && !CK_INT(CK4_DopefishIgnoresKeen, 0)) // KEEN WORLDS: variable
 	{

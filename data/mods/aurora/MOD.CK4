@@ -1,0 +1,164 @@
+# Aurora Bliss (Dave216, 2022-23, v1.2) as a Keen Worlds world.
+# Written by kwtools/kw_aurora.py from the mod's CKPatch file; the data
+# files beside it are the player's copy of the mod. It runs on Keen 4.
+
+%string ca_tileInfo "KEEN4.TLI"
+
+%stringarray ck_str_levelNames
+	"Aurora Bliss",
+	"Den of Madness",
+	"Hidden Cavern",
+	"Crimson Lake",
+	"Temple of Wisdom",
+	"Starbug",
+	"Pass the bridge",
+	"Aqua Temple",
+	"Canyon Hurt",
+	"Caged Gardens",
+	"Infested Mine",
+	"Temple of Doors",
+	"Astra Temple",
+	"Echo Cave",
+	"Overgrown City",
+	"Rose Elysium",
+	"Ancel Caves",
+	"Hall Of Colors",
+	"Bean-with-Bacon\nMegarocket"
+
+%stringarray ck_str_levelEntryText
+	"Keen explores\\n Aurora Bliss",
+	"Keen passes through\\n Den of Madness",
+	"Keen finds\\n the Hidden Cavern",
+	"Keen wades through\\n the Crimson Lake",
+	"Keen is daunted \\n by the Temple of Wisdom",
+	"Keen enters the \\n smegging Starbug",
+	"Keen encounters\\n Craig Canmore",
+	"Keen runs \\n through Aqua Temple",
+	"Keen wonders why\\n it's called Canyon Hurt",
+	"Keen enters \\n the Caged Gardens",
+	"Keen sneaks\\n in the Infested Mine",
+	"Keen walks in\\n the Temple of Doors",
+	"Keen listlessly\\n enters the Astra Temple",
+	"Keen woefully\\n enters the Echo Cave",
+	"Keen is amazed by\\n the Overgrown City",
+	"Keen bravely steps in\\n Rose Elysium",
+	"Keen regrets entering\\n Ancel Caves",
+	"Keen examines\\n the Hall of Colors",
+	"Keen launches into the\nBean-with-Bacon\nMegarocket"
+
+%intarray CK_LevelMusic 7, 10, 5, 4, 5, 6, 11, 0, 10, 8, 4, 0, 8, 2, 9, 9, 10, 3, 4, 12
+
+%string ck4_str_cantSwim "Air is toxic!"
+%string ck4_str_councilThanks "HEY THERE, HUMAN!     \nDO YOU WANT TO BE\nMY NEW FRIEND??  \nI WANT TO BE  \nYOUR BFF.  "
+%string ck4_str_councilThanks2 "Sorry, buddy. I am    \nhere to scrap you\n for parts.      \n              \n                         "
+%string ck4_str_gotWetsuit "I can tranverse the \ntoxic cloud now!"
+%string ck4_str_janitor1 "HEY THERE FRIEND! DID  \nYOU KNOW THAT THERE  \nIS A SECRET MAP IN THE  \nDOOR TEMPLE? "
+%string ck4_str_janitor2 "PLEASE DON'T SCRAP \nME LIKE THE OTHERS!  \nI WANT TO JOIN YOU!    "
+%string ck4_str_janitor3 "You can't join \nme, sorry."
+%string ck4_str_janitor4 "I LIKE HAIRDRYERS!\nTHEY GO WOOM!"
+%string ck4_str_lindsayMessage1 "I've found this cool\nblack hole that's \nfull of riches       \n dude.  \n"
+%string ck4_str_lindsayMessage2 "I am so danged bored. \nHave you like found  \nthe things for the  \nthing?\n"
+%string ck4_str_lindsaySays "What's up, Keen-dude?\n"
+%string ck4_str_lindsayThanks1 "Cram it, Craig.       "
+%string ck4_str_lindsayThanks2 "Craig, just go\nback inside BwB.\nAlright? \n"
+%string ck4_str_statusRescued "SCRAPS "
+%string ck4_str_statusWetsuit "  RAD  "
+%string ck_str_exitToMap "Exit to Aurora"
+%string ck_str_statusCentilives "ORBS "
+%string ck_str_storyText "After a long adventure,\nKeen returns home and\nhides his Megarocket\nbefore his folks get\nhome. His quirky\nneighbor Craig sees our\nspace hero exiting the\nMegarocket and\nexcitingly asks Keen if\nhe can take the rocket\nfor a ride. Keen agrees\nunder the condition\nthat Craig keeps his\nmouth shut.After a few\nspins in uncharted\ngalaxies Keen decides\nit's time to go home,\nbut Craig spills Keen's\nVorta Cola over the\nNavi-Com. Now, they\nneed to look for spare\nparts on Aurora\nBliss...   \n      \n\n"
+%stringarray ck4_str_councilMessage
+	"Guess again, pal.    \n          ",
+	"Nope. Just need    \nyour chips. ",
+	"Well..      ",
+	"I want *you* to be my\nmy new Navi-Com.   \nSorry, bot.          ",
+	"I need your RAM.  ",
+	"This isn't your  \nday, Joy Bot.     \nI'm sorry.",
+	"This should do it.  \nLet's go home.   ",
+	"You're the last one,\nfella. Let's both\nget back to the\nOracle chamber!"
+%stringarray ck_defaultHighScoreNames
+	"Dave216          ",
+	"Tom Hall         ",
+	"Ceilick          ",
+	"Fleexy           ",
+	"Levellass        ",
+	"Toombree         ",
+	"Douglas Uppity   ",
+	"1st Recon Agent  "
+
+# The mod's changes to the program's rules, as settings
+# its own sound and music
+%string ca_audioHead "AUDIOHED.CK4"
+%string ca_audioDict "AUDIODCT.CK4"
+%int ca_audStartMusic 149
+%int ca_audNumSongs 13
+# no underwater level (the Well of Wishes exits and scrolls normally)
+%int CK4_UnderwaterDeathLevel 99
+%int CK4_UnderwaterCameraLevel 99
+# seven council members (key carriers) to rescue
+%int CK4_NumCouncilsToRescue 7
+# Lindsey's Miragia hint is in level 6
+%int CK4_LindseyMessage1Level 6
+# finding the janitor ends the level
+%int CK4_JanitorEndsLevel 1
+# a hungry Dopefish kills Keen at once
+%int CK4_DopefishKillsAtOnce 1
+# the Dopefish does not burp aloud
+%int CK4_DopefishQuiet 1
+# the Berkeloid does not harm Keen (on poles either)
+%int CK4_BerkeloidHarmless 1
+# its flame goes out when it lands
+%int CK4_FireballVanishes 1
+# the Berkeloid walks instead of floating
+%int CK4_BerkeloidNoHover 1
+# the Treasure Eater never teleports
+%int CK4_SmirkyNoTeleport 1
+# a shot only makes a bounder hop
+%int CK4_BounderUnstunnable 1
+# bounders make no sound
+%int CK4_BounderQuiet 1
+# bounders slide (a hop of 1)
+%int CK4_BounderBounceYVelocity -1
+# bounders go where Keen is
+%int CK4_BounderFollowsKeen 1
+# bounders slide at 16
+%int CK4_BounderBounceXVel 16
+%int CK4_BounderRideXVel 16
+# the blue bird never flies
+%int CK4_BirdNeverFlies 1
+# a shot pops on the egg; only Keen hatches it
+%int CK4_EggHatchesOnlyForKeen 1
+# a shot just pops on the hatched bird
+%int CK4_BirdShotProof 1
+# the Mad Mushroom always makes its big jump
+%int CK4_MushroomNumJumps 1
+# the schoolfish's hitbox for walls
+%int CK4_SchoolfishClipX 0x200
+%int CK4_SchoolfishClipY 0x150
+# the story scrolls to song 7
+%int CK_StarWarsMusicLevel 7
+# the ending plays song 2
+%int CK_EndingMusicLevel 2
+# the world map's song while Lindsey and the Ancients talk
+%int CK4_TalkMusicLevel 0
+
+%override "EPISODE.CK4"
+
+# The sprite actions the patches change (the blue bird walks and kills like
+# the Mad Mushroom, the schoolfish swim, the Dopefish, the stunned bounder
+# recovers, the air-door fix)
+%action CK_ACT_keenEnterDoor4 0x0ED2 @SPR_KEENENTER5 @SPR_KEENENTER5 UnscaledOnce 0 0 9 0 -64 CK_KeenEnterDoor NULL CK_BasicDrawFunc1 CK_ACT_keenLookUp1
+%action CK4_ACT_BirdHatched0 0x21B6 @SPR_EGGBIRDWALKL1 @SPR_EGGBIRDWALKR1 UnscaledOnce 0 1 120 256 0 NULL CK4_BirdHatchedCol CK_BasicDrawFunc2 CK4_ACT_BirdWalk1
+%action CK4_ACT_BirdWalk0 0x21D4 @SPR_EGGBIRDWALKL1 @SPR_EGGBIRDWALKR1 UnscaledOnce 0 1 7 256 0 NULL CK4_MushroomCol CK_BasicDrawFunc2 CK4_ACT_BirdWalk1
+%action CK4_ACT_BirdWalk1 0x21F2 @SPR_EGGBIRDWALKL2 @SPR_EGGBIRDWALKR2 256 0 1 7 0x80 0 NULL CK4_MushroomCol CK_BasicDrawFunc2 CK4_ACT_BirdWalk2
+%action CK4_ACT_BirdWalk2 0x2210 @SPR_EGGBIRDWALKL3 @SPR_EGGBIRDWALKR3 UnscaledOnce 0 1 7 256 0 NULL CK4_MushroomCol CK_BasicDrawFunc2 CK4_ACT_BirdWalk3
+%action CK4_ACT_BirdWalk3 0x222E @SPR_EGGBIRDWALKL4 @SPR_EGGBIRDWALKR4 UnscaledOnce 0 1 7 256 0 CK4_BirdWalk CK4_MushroomCol CK_BasicDrawFunc2 CK4_ACT_BirdWalk0
+%action CK4_ACT_BirdFly0 0x224C @SPR_EGGBIRDFLY1 @SPR_EGGBIRDFLY1 ScaledFrame 0 0 8 0 0 CK4_BirdFly CK4_MushroomCol CK4_BirdFlyingDraw CK4_ACT_BirdFly1
+%action CK4_ACT_BirdFly1 0x226A @SPR_EGGBIRDFLY2 @SPR_EGGBIRDFLY2 ScaledFrame 0 0 8 0 0 CK4_BirdFly CK4_MushroomCol CK4_BirdFlyingDraw CK4_ACT_BirdFly2
+%action CK4_ACT_BirdFly2 0x2288 @SPR_EGGBIRDFLY3 @SPR_EGGBIRDFLY3 ScaledFrame 0 0 8 0 0 CK4_BirdFly CK4_MushroomCol CK4_BirdFlyingDraw CK4_ACT_BirdFly3
+%action CK4_ACT_BirdFly3 0x22A6 @SPR_EGGBIRDFLY4 @SPR_EGGBIRDFLY4 ScaledFrame 0 0 8 0 0 CK4_BirdFly CK4_MushroomCol CK4_BirdFlyingDraw CK4_ACT_BirdFly0
+%action CK4_ACT_BirdLand0 0x22C4 @SPR_EGGBIRDFLY4 @SPR_EGGBIRDFLY4 Frame 0 0 8 128 0 CK_Fall2 CK4_MushroomCol CK4_BirdLandingDraw NULL
+%action CK4_ACT_BounderStunned1 0x2FA8 @SPR_BOUNDERSTUN @SPR_BOUNDERSTUN Frame 0 0 0 0 0 CK_Fall NULL CK_BasicDrawFunc4 CK4_ACT_Bounder0
+%action CK4_ACT_DopefishSwim0 0x35C0 @SPR_DOPEFISHL1 @SPR_DOPEFISHR1 UnscaledFrame 0 0 33 0 0 CK4_DopefishMove CK4_DopefishCol CK4_FishDraw CK4_ACT_DopefishSwim1
+%action CK4_ACT_DopefishSwim1 0x35DE @SPR_DOPEFISHL2 @SPR_DOPEFISHR2 UnscaledFrame 0 0 33 0 0 CK4_DopefishMove CK4_DopefishCol CK4_FishDraw CK4_ACT_DopefishSwim0
+%action CK4_ACT_SchoolfishSwim0 0x3764 @SPR_SCHOOLFISHL1 @SPR_SCHOOLFISHR1 UnscaledFrame 0 0 6 0 0 CK4_SchoolfishMove NULL CK4_FishDraw CK4_ACT_SchoolfishSwim1
+%action CK4_ACT_SchoolfishSwim1 0x3782 @SPR_SCHOOLFISHL2 @SPR_SCHOOLFISHR2 UnscaledFrame 0 0 6 0 0 CK4_SchoolfishMove NULL CK4_FishDraw CK4_ACT_SchoolfishSwim0

@@ -45,6 +45,7 @@ typedef enum KW_World
 	KW_ALPHAMATIC, // Atroxian Realm's sequel (append: retain existing save IDs)
 	KW_SUBURB, // Earth: Suburb Shenanigans (append: retain existing save IDs)
 	KW_RTTS,   // Far Shadowlands: "Return to the Shadowlands" (its own code, on Keen 4's; append)
+	KW_AURORA, // Aurora Bliss: "Aurora Bliss" (fan game on Keen 4, Craig's story part one; append)
 	KW_NUM_WORLDS,
 	KW_NO_WORLD = -1,
 } KW_World;

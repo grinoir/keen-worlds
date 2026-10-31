@@ -244,6 +244,14 @@ static const KW_WorldDef kw_worldDefs[KW_NUM_WORLDS] = {
 		"Created by Ceilick:\nlevels, story, graphics\nand sound effects\n\nProgramming: K1n9_Duk3\n\n"
 		"Built on K1n9_Duk3's\nreconstructed Keen 4 source" KW_NOT_OURS,
 		"Return to the Shadowlands v1.8\nby Ceilick (2022-12-21). Unpack\nit (see its page on\nkeenwiki.shikadi.net) in\nmods/rtts."},
+	// Aurora Bliss (Dave216, v1.2 2023): a Keen 4 patch mod. The player's
+	// copy of its files in play/mods/aurora, with our MOD.CK4
+	// (kwtools/kw_aurora.py); its rule changes are settings in the Keen 4 code.
+	{"aurora", "Aurora Bliss", 4, "mods/aurora", "MOD.CK4",
+		"Aurora Bliss",
+		"Craig's story, part one\nA fan game by Dave216, 2022-23",
+		"Created by David Novosel\n(Dave216)\n\nPatches: Ceilick, Levellass,\nNisaba, K1n9_Duk3 (v1.2 fixes)" KW_NOT_OURS,
+		"Aurora Bliss v1.2 by Dave216\n(2023-08-23). Get it from\nkeenwiki.shikadi.net and put\nits files in mods/aurora."},
 };
 
 static CK_EpisodeDef *KW_EpisodeDef(int episode)
@@ -1919,6 +1927,7 @@ static int KW_ChronicleKey(int world)
 	switch (world)
 	{
 	case KW_RTTS:
+	case KW_AURORA: // ("After a long adventure, Keen returns home": after the journey home)
 		return KW_LastChronicleWorld();
 	case KW_OSI:
 		// Spot's story: the Oracle names the Omegamatrix station at the end
@@ -2243,6 +2252,7 @@ static const struct KW_FlightGroup
 	{"Atroxian story",1,2,1,{KW_AREALM,KW_ALPHAMATIC}},
 	{"More levels",1,2,0,{KW_CK55,KW_ASYLUM}},
 	{"Spot's rescue",1,2,1,{KW_RTTS,KW_OSI}},
+	{"Craig's story",1,1,1,{KW_AURORA}},
 	{NULL,1,1,0,{KW_MENU_SCENES}},
 };
 
@@ -2304,6 +2314,7 @@ static void KW_FlightRelationship(int world,char *text,size_t size)
 	case KW_CK55:case KW_ASYLUM:relationship="Optional levels after The Omegamatic.";break;
 	case KW_RTTS:relationship="After Aspermontis. Next: the Station.";break;
 	case KW_OSI:relationship="After the Far Shadowlands.";break;
+	case KW_AURORA:relationship="After Aspermontis. Craig comes along.";break;
 	}
 	CK_Cross_strscpy(text,relationship,size);
 }

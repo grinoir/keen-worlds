@@ -186,7 +186,10 @@ void CK_KeenColFunc(CK_object *a, CK_object *b)
 				{
 					CK4_ShowJanitorMessage();
 					//RF_ForceRefresh();
-					CK_RemoveObj(b);
+					if (CK_INT(CK4_JanitorEndsLevel, 0)) // KEEN WORLDS: Aurora Bliss: finding him ends the level
+						ck_gameState.levelState = LS_LevelComplete;
+					else
+						CK_RemoveObj(b);
 				}
 				else
 				{
@@ -1638,7 +1641,8 @@ void CK_KeenSpecialColFunc(CK_object *obj, CK_object *other)
 	}
 #ifdef WITH_KEEN4
 	else if ((ck_currentEpisode->ep == EP_CK4) &&
-		((other->type == CT4_Mushroom) || (other->type == CT4_Arachnut) || (other->type == CT4_Berkeloid)))
+		((other->type == CT4_Mushroom) || (other->type == CT4_Arachnut) ||
+			(other->type == CT4_Berkeloid && !CK_INT(CK4_BerkeloidHarmless, 0)))) // KEEN WORLDS: Aurora Bliss
 	{
 		CK_KillKeen();
 	}

@@ -273,7 +273,7 @@ void CK4_BerkeloidCol(CK_object *a, CK_object *b)
 	{
 		CK_ShotHit(b);
 	}
-	else if (b->type == CT_Player)
+	else if (b->type == CT_Player && !CK_INT(CK4_BerkeloidHarmless, 0)) // KEEN WORLDS: Aurora Bliss
 	{
 		CK_KillKeen();
 	}
@@ -287,6 +287,11 @@ void CK4_FireballDraw(CK_object *obj)
 	if (obj->topTI)
 	{
 		SD_PlaySound(CK_SOUNDNUM(SOUND_FIREBALLLAND));
+		if (CK_INT(CK4_FireballVanishes, 0)) // KEEN WORLDS: Aurora Bliss: no flame on the ground
+		{
+			CK_RemoveObj(obj);
+			return;
+		}
 		CK_SetAction2(obj, CK_ACTION(CK4_ACT_FireballGround0));
 	}
 
@@ -307,6 +312,8 @@ void CK4_BerkeloidHover(CK_object *obj)
 		obj->user2 = CK_INT(CK4_BerkeloidHoverYVelocity, 8);
 	}
 
+	if (CK_INT(CK4_BerkeloidNoHover, 0)) // KEEN WORLDS: Aurora Bliss: it walks instead of floating
+		obj->user1 = 0;
 	RF_AddSpriteDraw(&(obj->sde), obj->posX, obj->posY + obj->user1, obj->gfxChunk, false, obj->zLayer);
 }
 
@@ -455,8 +462,13 @@ void CK4_BounderCheckShot(CK_object *a, CK_object *b)
 		a->user1 = a->user2 = a->user3 = 0;
 		a->user4 = a->type;
 		CK_ShotHit(b);
-		CK_SetAction2(a, CK_ACTION(CK4_ACT_BounderStunned0));
-		a->type = CT4_StunnedCreature;
+		if (CK_INT(CK4_BounderUnstunnable, 0)) // KEEN WORLDS: Aurora Bliss: a shot only makes it hop
+			CK_SetAction2(a, CK_ACTION(CK4_ACT_Bounder0));
+		else
+		{
+			CK_SetAction2(a, CK_ACTION(CK4_ACT_BounderStunned0));
+			a->type = CT4_StunnedCreature;
+		}
 		a->velY += CK_INT(CK4_BounderDeathHopVelocity, -32);
 	}
 }
@@ -469,12 +481,13 @@ void CK4_BounderDraw(CK_object *obj)
 	if (obj->topTI)
 	{
 		obj->user2++;
-		if (CK_ObjectVisible(obj))
+		if (CK_ObjectVisible(obj) && !CK_INT(CK4_BounderQuiet, 0)) // KEEN WORLDS: Aurora Bliss
 			SD_PlaySound(CK_SOUNDNUM(SOUND_MUSHROOMLEAP));
 
 		obj->velY = CK_INT(CK4_BounderBounceYVelocity, -50);
 
-		if (ck_keenState.platform == obj)
+		// (Aurora Bliss: bounders always go where Keen is, as when he rides one)
+		if (ck_keenState.platform == obj || CK_INT(CK4_BounderFollowsKeen, 0))
 		{
 			obj->user2 = 0;
 			if (ck_keenObj->clipRects.unitX1 < obj->clipRects.unitX1 - CK_INT(CK4_BounderRideRadius, 0x40))
