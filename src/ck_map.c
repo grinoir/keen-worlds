@@ -334,7 +334,9 @@ void CK_SpawnMapKeen(int tileX, int tileY)
 		ck_keenObj->xDirection = ck_keenObj->yDirection = IN_motion_None;
 
 		// KEEN WORLDS: where the foot flies from and to are variables
-		if (ck_gameState.mapPosX < CK_INT(CK4_FootThresholdX, 0x1400))
+		// (Operation Ocflore: where it flies depends on whether a level is done)
+		if (CK_INT(CK4_FootByLevelDone, 0) ? !ck_gameState.levelsDone[CK_INT(CK4_FootByLevelDone, 0)] :
+			ck_gameState.mapPosX < CK_INT(CK4_FootThresholdX, 0x1400))
 		{
 			// Going to pyramid of forbidden at 1E, 37
 			ck_keenObj->user1 = 280;

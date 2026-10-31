@@ -253,6 +253,15 @@ static const KW_WorldDef kw_worldDefs[KW_NUM_WORLDS] = {
 		"Craig's story, part one\nA fan game by Dave216, 2022-23",
 		"Created by David Novosel\n(Dave216)\n\nPatches: Ceilick, Levellass,\nNisaba, K1n9_Duk3 (v1.2 fixes)" KW_NOT_OURS,
 		"Aurora Bliss v1.2 by Dave216\n(2023-08-23). Get it from\nkeenwiki.shikadi.net and put\nits files in mods/aurora."},
+	// Operation Ocflore (Bubbatom, v1.3 2020): a Keen 4 patch mod. The
+	// player's copy of its files in play/mods/ocflore, with our MOD.CK4
+	// (kwtools/kw_ocflore.py); its rule changes are settings in the Keen 4
+	// code, its own routines in kw_ocflore.c.
+	{"ocflore", "Ocflore V", 4, "mods/ocflore", "MOD.CK4",
+		"Operation Ocflore",
+		"A fan game by Bubbatom, 2020",
+		"Created by Bubbatom\n\nPatches: Levellass, K1n9_Duk3\n(screen, palette and slope\nfixes), Lemm\nMusic: 55Aavenue and others" KW_NOT_OURS,
+		"Operation Ocflore v1.3 by\nBubbatom (2020-02-18). Get it\nfrom keenwiki.shikadi.net and\nput its files in mods/ocflore."},
 };
 
 static CK_EpisodeDef *KW_EpisodeDef(int episode)
@@ -1602,9 +1611,46 @@ static const char kw_chartAsylum[] =
 	"\n"
 	"Mostly.\n";
 
+// Operation Ocflore switches its story screen off; this is its premise, as
+// KeenWiki tells it, without the twist.
+static const char kw_chartOcflore[] =
+	"Ocflore V\n"
+	"\n"
+	"From the ship's chart\n"
+	"\n"
+	"A sea planet, nearly\n"
+	"all water.\n"
+	"\n"
+	"A message came from the\n"
+	"Ormch, who run the\n"
+	"\"Ocflore Project\" there.\n"
+	"Their project is\n"
+	"failing, they say, and\n"
+	"they will pay well for\n"
+	"help with the natives.\n"
+	"\n"
+	"Keen has questions.\n"
+	"\n"
+	"He is going anyway.\n";
+
 static const char *KW_ChartStory(int world)
 {
-	return world == KW_BOUNTY ? kw_chartBounty : world == KW_ASYLUM ? kw_chartAsylum : NULL;
+	return world == KW_BOUNTY ? kw_chartBounty : world == KW_ASYLUM ? kw_chartAsylum :
+		world == KW_OCFLORE ? kw_chartOcflore : NULL;
+}
+
+// A world's own colours, where it has them (Foray in the Forest: per level,
+// in kw_fitf.c). Operation Ocflore: K1n9_Duk3's palette patch, a darker
+// green and a light orange in place of dark cyan.
+void KW_WorldPalette(void)
+{
+	static const uint8_t ocflore[16][3] = {
+		{0x00, 0x00, 0x00}, {0x00, 0x00, 0xaa}, {0x00, 0x98, 0x00}, {0xfc, 0x80, 0x40},
+		{0xaa, 0x00, 0x00}, {0xaa, 0x00, 0xaa}, {0xaa, 0x55, 0x00}, {0xaa, 0xaa, 0xaa},
+		{0x55, 0x55, 0x55}, {0x55, 0x55, 0xff}, {0x55, 0xff, 0x55}, {0x55, 0xff, 0xff},
+		{0xff, 0x55, 0x55}, {0xff, 0x55, 0xff}, {0xff, 0xff, 0x55}, {0xff, 0xff, 0xff}};
+	if (kw_currentWorld == KW_OCFLORE)
+		VL_SetCustomColors(ocflore);
 }
 
 // The scroll itself, for the current world (whose graphics must be loaded).
@@ -1713,6 +1759,7 @@ static void KW_ShowWorldStory(void)
 	VL_FadeToBlack();
 	if (FF_IsActive())
 		FF_LevelPalette();
+	KW_WorldPalette();
 	RF_ForceRefresh();
 	RF_Refresh();
 	VL_FadeFromBlack();
@@ -1944,6 +1991,7 @@ static int KW_ChronicleKey(int world)
 	{
 	case KW_RTTS:
 	case KW_AURORA: // ("After a long adventure, Keen returns home": after the journey home)
+	case KW_OCFLORE: // (a standalone trip, from the journey home on)
 		return KW_LastChronicleWorld();
 	case KW_OSI:
 		// Spot's story: the Oracle names the Omegamatrix station at the end
@@ -2269,6 +2317,7 @@ static const struct KW_FlightGroup
 	{"More levels",1,2,0,{KW_CK55,KW_ASYLUM}},
 	{"Spot's rescue",1,2,1,{KW_RTTS,KW_OSI}},
 	{"Craig's story",1,1,1,{KW_AURORA}},
+	{"Further trips",1,1,0,{KW_OCFLORE}},
 	{NULL,1,1,0,{KW_MENU_SCENES}},
 };
 
@@ -2331,6 +2380,7 @@ static void KW_FlightRelationship(int world,char *text,size_t size)
 	case KW_RTTS:relationship="After Aspermontis. Next: the Station.";break;
 	case KW_OSI:relationship="After the Far Shadowlands.";break;
 	case KW_AURORA:relationship="After Aspermontis. Craig comes along.";break;
+	case KW_OCFLORE:relationship="A trip of its own, after Aspermontis.";break;
 	}
 	CK_Cross_strscpy(text,relationship,size);
 }
@@ -4156,7 +4206,7 @@ void KW_DebugFrame(void)
 	}
 	// KW_AUTOTALK=n: at frame n, everyone in Keen 4 says their lines (the
 	// windows of its dialogues, one after another)
-	if (getenv("KW_AUTOTALK") && count + 1 == atoi(getenv("KW_AUTOTALK")) && (kw_currentWorld == KW_KEEN4 || kw_currentWorld == KW_KEEN7 || kw_currentWorld == KW_KEEN95 || kw_currentWorld == KW_BOUNTY || kw_currentWorld == KW_AURORA))
+	if (getenv("KW_AUTOTALK") && count + 1 == atoi(getenv("KW_AUTOTALK")) && (kw_currentWorld == KW_KEEN4 || kw_currentWorld == KW_KEEN7 || kw_currentWorld == KW_KEEN95 || kw_currentWorld == KW_BOUNTY || kw_currentWorld == KW_AURORA || kw_currentWorld == KW_OCFLORE))
 	{
 		void CK4_ShowCouncilMessage(void);
 		void CK4_ShowPrincessMessage(void);
@@ -5235,6 +5285,55 @@ void KW_SelfTest(void)
 	// loads with its sprites in memory and its creatures run, as vegetables
 	// and as the flowers that flower power makes of them; and a lost dream
 	// begins again.
+	// Aurora Bliss and Operation Ocflore (when installed): their creatures,
+	// with the patches' rules and routines, run in every level, and each is
+	// hit by a shot once (Keen can't die meanwhile).
+	{
+		static const int patchWorlds[] = {KW_AURORA, KW_OCFLORE};
+		for (int p = 0; p < 2; ++p)
+		{
+			int w = patchWorlds[p];
+			if (!KW_IsWorldPresent(w))
+				continue;
+			KW_SwitchWorld(w);
+			bool god = ck_godMode;
+			ck_godMode = true;
+			int ran = 0;
+			for (int lv = 1; lv <= 18; ++lv)
+			{
+				if (!CA_MapExists(lv))
+					continue;
+				ck_gameState.currentLevel = lv;
+				ck_gameState.levelsDone[lv] = 0;
+				CK_LoadLevel(true, true);
+				ck_gameState.levelState = LS_Playing;
+				KW_TestRunObjects(150);
+				for (CK_object *obj = ck_keenObj->next, *next; obj; obj = next)
+				{
+					next = obj->next;
+					if (!obj->currentAction || !obj->currentAction->collide || obj->type == CT_Stunner ||
+						obj->type == CT_Friendly || obj->type == CT_Nothing)
+						continue;
+					CK_object *shot = CK_GetNewObj(true);
+					shot->type = CT_Stunner;
+					shot->active = OBJ_ALWAYS_ACTIVE;
+					shot->posX = obj->posX;
+					shot->posY = obj->posY;
+					CK_SetAction(shot, CK_ACTION(CK_ACT_keenShot1));
+					obj->currentAction->collide(obj, shot);
+				}
+				KW_TestRunObjects(60);
+				KW_TestLevelSpritesCached(kw_worldDefs[w].id, lv);
+				ck_gameState.levelState = LS_Playing;
+				++ran;
+			}
+			ck_godMode = god;
+			memset(ck_gameState.levelsDone, 0, sizeof(ck_gameState.levelsDone));
+			printf("PASS: %s's creatures run and take a shot in %d levels\n", kw_worldDefs[w].id, ran);
+			KW_SwitchWorld(KW_KEEN4);
+		}
+	}
+
 	if (KW_IsWorldPresent(KW_DREAM))
 	{
 		KW_Tally mine = KW_LiveTally(), test = {4321, 60000, 5, 7};

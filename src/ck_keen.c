@@ -413,7 +413,7 @@ void CK_KeenPressSwitchThink(CK_object *obj)
 
 	if (switchMisc == MISCFLAG_SWITCHBRIDGE)
 	{
-		for (int tileY = switchTargetY; tileY < switchTargetY + 2; ++tileY)
+		for (int tileY = switchTargetY; tileY < switchTargetY + CK_INT(CK_BridgeThickness, 2); ++tileY) // KEEN WORLDS: variable (Operation Ocflore)
 		{
 			for (int tileX = switchTargetX - ((tileY == switchTargetY) ? 0 : 1); tileX < CA_GetMapWidth(); ++tileX)
 			{

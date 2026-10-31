@@ -337,7 +337,13 @@ void CK4_BerkeloidDraw(CK_object *obj)
 	}
 	else if (obj->topTI == 0)
 	{
-		obj->posX -= obj->deltaPosX * 2;
+		if (CK_INT(CK_WalkTurnUndoesY, 0)) // KEEN WORLDS: variable (Operation Ocflore)
+		{
+			obj->posX -= obj->deltaPosX;
+			obj->posY -= obj->deltaPosY;
+		}
+		else
+			obj->posX -= obj->deltaPosX * 2;
 		obj->xDirection = -obj->xDirection;
 		obj->timeUntillThink = US_RndT() / CK_INT(CK4_BerkeloidThinkTimeDivisor, 32);
 		CK_SetAction2(obj, obj->currentAction);
@@ -352,7 +358,7 @@ void CK4_SpawnInchworm(int tileX, int tileY)
 	CK_object *obj = CK_GetNewObj(false);
 	obj->type = CT4_Inchworm;
 	obj->active = OBJ_ACTIVE;
-	obj->zLayer = PRIORITIES - 2;
+	obj->zLayer = CK_INT(CK4_InchwormZLayer, PRIORITIES - 2); // KEEN WORLDS: variable (Operation Ocflore)
 	obj->posX = RF_TileToUnit(tileX);
 	obj->posY = RF_TileToUnit(tileY);
 	obj->xDirection = US_RndT() < 0x80 ? IN_motion_Right : IN_motion_Left;
@@ -553,7 +559,7 @@ void CK4_SpawnLick(int tileX, int tileY)
 	CK_object *obj = CK_GetNewObj(false);
 	obj->type = CT4_Lick;
 	obj->active = OBJ_ACTIVE;
-	obj->zLayer = PRIORITIES - 2;
+	obj->zLayer = CK_INT(CK4_LickZLayer, PRIORITIES - 2); // KEEN WORLDS: variable (Operation Ocflore)
 	obj->posX = RF_TileToUnit(tileX);
 	obj->posY = RF_TileToUnit(tileY);
 	obj->xDirection = US_RndT() < 0x80 ? IN_motion_Right : IN_motion_Left;

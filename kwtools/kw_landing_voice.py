@@ -24,6 +24,8 @@ VOICE = 'af_heart'        # Kokoro's "Heart", an American woman
 KOKORO_DIR = os.environ.get('KW_KOKORO_DIR', os.path.expanduser('~/Projects/SignalweaveCMS'))
 # world id: the words, a sentence each
 LANDINGS = {
+    'ocflore': ["You have now landed on Ocflore Five.", "Beware of the local water. There is a lot of it.",
+                "The Ormch are waiting to meet you. I do not trust them."],
     'aurora': ["You have now landed on Aurora Bliss.", "And here we stay.",
                "My Navi-Com is sticky with Vorta Cola, and I cannot take off.",
                "Please find the spare parts, and do not let Craig touch anything."],
@@ -63,6 +65,7 @@ LANDINGS = {
 # The Chronicle: a world has been saved and the ship has learned the course
 # to the next. world id: the place's name as it is said.
 COURSES = {
+    'ocflore': 'Ocflore Five',
     'aurora': 'Aurora Bliss',
     'rtts': 'The far Shadowlands',
     'suburb': 'Earth. Your own street',
@@ -74,6 +77,7 @@ COURSES = {
 # A world has been saved: what the ship computer says when Keen is next in
 # the cabin. world id: the words, a sentence each.
 SAVED = {
+    'ocflore': ["Ocflore Five is free.", "The Ormch have packed up their project.", "The Dorsal say thank you. In bubbles."],
     'aurora': ["Aurora Bliss is behind us.", "The Navi-Com works again.", "It still smells of Vorta Cola."],
     'rtts': ["The page scouts are home, and the Oracle has spoken.", "The Bloogs took Spot.",
              "Next stop: the Shikadi Station."],
@@ -96,7 +100,7 @@ SAVED = {
     'osi': ["The Shikadi Station is offline.", "The shield is down.", "Fribbulus Xax, here we come."],
 }
 # How the words are written on the card, where that differs from how they are said.
-WRITTEN = {'I Q': 'IQ', 'Gnosticus Four': 'Gnosticus IV', 'Omegamatic Two': 'Omegamatic II', 'Meurglys Three': 'Meurglys III'}
+WRITTEN = {'Ocflore Five': 'Ocflore V', 'I Q': 'IQ', 'Gnosticus Four': 'Gnosticus IV', 'Omegamatic Two': 'Omegamatic II', 'Meurglys Three': 'Meurglys III'}
 
 
 def speak_all(clips, voice, folder, speed=1.0, pitch=1.0, sounds=None):

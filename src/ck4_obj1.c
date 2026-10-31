@@ -92,7 +92,7 @@ void CK4_SpawnSlug(int tileX, int tileY)
 	CK_object *obj = CK_GetNewObj(false);
 	obj->type = CT4_Slug;
 	obj->active = OBJ_ACTIVE;
-	obj->zLayer = PRIORITIES - 2;
+	obj->zLayer = CK_INT(CK4_SlugZLayer, PRIORITIES - 2); // KEEN WORLDS: variable (Operation Ocflore)
 	obj->posX = RF_TileToUnit(tileX);
 	obj->posY = RF_TileToUnit(tileY) - CK_INT(CK4_SlugSpawnYOffset, 0x71);
 	obj->xDirection = US_RndT() < 0x80 ? IN_motion_Right : IN_motion_Left;
@@ -201,7 +201,7 @@ void CK4_SpawnEgg(int tileX, int tileY)
 	CK_object *obj = CK_GetNewObj(false);
 	obj->type = CT4_Egg;
 	obj->active = OBJ_ACTIVE;
-	obj->zLayer = PRIORITIES - 2;
+	obj->zLayer = CK_INT(CK4_EggZLayer, PRIORITIES - 2); // KEEN WORLDS: variable (Operation Ocflore)
 	obj->posX = RF_TileToUnit(tileX);
 	obj->posY = RF_TileToUnit(tileY) - CK_INT(CK4_EggSpawnYOffset, 0x71);
 	obj->xDirection = IN_motion_Right;
@@ -372,7 +372,7 @@ void CK4_BirdDraw(CK_object *obj)
 
 void CK4_BirdLandingDraw(CK_object *obj)
 {
-	if (obj->topTI)
+	if (obj->topTI && !CK_INT(CK4_BirdNeverLands, 0)) // KEEN WORLDS: variable (Operation Ocflore)
 		CK_SetAction2(obj, CK_ACTION(CK4_ACT_BirdWalk0));
 
 	RF_AddSpriteDraw(&(obj->sde), obj->posX, obj->posY, obj->gfxChunk, false, obj->zLayer);
@@ -398,7 +398,8 @@ void CK4_BirdFlyingDraw(CK_object *obj)
 		obj->xDirection = -obj->xDirection;
 	}
 
-	if (obj->topTI == 1 && ck_keenObj->clipRects.unitY2 - obj->clipRects.unitY2 < CK_INT(CK4_BirdLandYOffset, 0x80))
+	if (obj->topTI == 1 && ck_keenObj->clipRects.unitY2 - obj->clipRects.unitY2 < CK_INT(CK4_BirdLandYOffset, 0x80) &&
+		!CK_INT(CK4_BirdNeverLands, 0)) // KEEN WORLDS: variable (Operation Ocflore)
 	{
 		// Attempt to land, and remain flying if can't
 		CK_action *act = obj->currentAction;
@@ -542,7 +543,8 @@ void CK4_SkypestDraw(CK_object *obj)
 		obj->yDirection = IN_motion_Down;
 	}
 
-	if (obj->topTI && !obj->rightTI && !obj->leftTI)
+	// (Operation Ocflore: it never lands, only slides along the ground)
+	if (obj->topTI && !obj->rightTI && !obj->leftTI && (!CK_INT(CK4_SkypestNeverLands, 0) || obj->bottomTI))
 	{
 		obj->posY += CK_INT(CK4_SkypestPreenYOffset, 0x80);
 		CK_SetAction2(obj, CK_ACTION(CK4_ACT_SkypestPreen0));

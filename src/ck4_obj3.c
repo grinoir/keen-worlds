@@ -35,7 +35,7 @@ void CK4_SpawnSmirky(int tileX, int tileY)
 	CK_object *obj = CK_GetNewObj(false);
 	obj->type = CT4_Smirky;
 	obj->active = OBJ_ACTIVE;
-	obj->zLayer = PRIORITIES - 1;
+	obj->zLayer = CK_INT(CK4_SmirkyZLayer, PRIORITIES - 1); // KEEN WORLDS: variable (Operation Ocflore)
 	obj->posX = RF_TileToUnit(tileX);
 	obj->posY = RF_TileToUnit(tileY) + CK_INT(CK4_SmirkySpawnYOffset, -0x180);
 	obj->xDirection = US_RndT() < 0x80 ? IN_motion_Right : IN_motion_Left;
@@ -211,7 +211,7 @@ void CK4_SpawnMimrock(int tileX, int tileY)
 	CK_object *obj = CK_GetNewObj(false);
 	obj->type = CT4_Mimrock;
 	obj->active = OBJ_ACTIVE;
-	obj->zLayer = PRIORITIES - 1;
+	obj->zLayer = CK_INT(CK4_MimrockZLayer, PRIORITIES - 1); // KEEN WORLDS: variable (Operation Ocflore)
 	obj->posX = RF_TileToUnit(tileX);
 	obj->posY = RF_TileToUnit(tileY) - CK_INT(CK4_MimrockSpawnYOffset, 0xD0);
 	obj->xDirection = IN_motion_Right;
@@ -352,10 +352,12 @@ void CK4_DopefishMove(CK_object *obj)
 
 	CK_PhysAccelHorz2(obj, obj->xDirection, CK_INT(CK4_DopefishXAccel, 10));
 
+	// (Operation Ocflore: it seeks Keen upside down)
+	int seek = CK_INT(CK4_DopefishSeekReversed, 0) ? -1 : 1;
 	if (obj->posY < ck_keenObj->posY)
-		CK_PhysAccelVert1(obj, 1, CK_INT(CK4_DopefishYAccel, 10));
+		CK_PhysAccelVert1(obj, seek, CK_INT(CK4_DopefishYAccel, 10));
 	else
-		CK_PhysAccelVert1(obj, -1, CK_INT(CK4_DopefishYAccel, 10));
+		CK_PhysAccelVert1(obj, -seek, CK_INT(CK4_DopefishYAccel, 10));
 }
 
 void CK4_DopefishEat(CK_object *obj)
@@ -608,7 +610,8 @@ void CK4_SpriteShoot(CK_object *obj)
 	shot->active = OBJ_EXISTS_ONLY_ONSCREEN;
 	SD_PlaySound(CK_SOUNDNUM(SOUND_KEENSHOOT));
 	shot->xDirection = obj->xDirection;
-	CK_SetAction(shot, CK_ACTION(CK4_ACT_SpriteBullet0));
+	// (Operation Ocflore: the first frame is its stunned Sprite; the shot has three)
+	CK_SetAction(shot, CK_INT(CK4_SpriteShotSkipFirst, 0) ? CK_ACTION(CK4_ACT_SpriteBullet1) : CK_ACTION(CK4_ACT_SpriteBullet0));
 	SD_PlaySound(CK_SOUNDNUM(SOUND_SPRITESHOOT));
 }
 

@@ -59,6 +59,7 @@ static const char *const kw_keepsakeText[] = {
 	"Rick Uller's wanted\nposter. Wanted no\nmore.",
 	"Mortimer's dummy\nhead. It still\nsparks sometimes.",
 	"The can of Vorta\nCola Craig spilled\non the Navi-Com.\nEmpty now.",
+	"A vial of Ostrum\nfrom Ocflore V. The\nOrmch wanted it. It\nglows.",
 };
 static const char *const kw_spotNewText[][2] = {
 	{"A shiny gem! I'll\nput it where the\nsun hits it.", "OP_SPNEW_KEEN4.RAW"},
@@ -78,4 +79,5 @@ static const char *const kw_spotNewText[][2] = {
 	{"Rick Uller! Wanted\nno more. You got\nhim!", "OP_SPNEW_BOUNTY.RAW"},
 	{"Mortimer's head?!\nIs it... is it off?", "OP_SPNEW_SUBURB.RAW"},
 	{"Vorta Cola! Who\ndrank it? ...Craig\ndrank it.", "OP_SPNEW_AURORA.RAW"},
+	{"It glows! Is it\nsupposed to glow?\nI'm not touching\nit.", "OP_SPNEW_OCFLORE.RAW"},
 };

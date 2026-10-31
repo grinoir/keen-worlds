@@ -1729,10 +1729,11 @@ void CK_DrawStatusWindow(void)
 		US_SetWindowW(64);
 		US_CPrint(CK_STRING(ck4_str_statusRescued));
 
-		VHB_Bar(79, 95, 66, 10, 0);
+		// KEEN WORLDS: the box's place and width are variables (Operation Ocflore: three relics)
+		VHB_Bar(CK_INT(CK4_StatusCouncilBoxX, 79), 95, CK_INT(CK4_StatusCouncilBoxW, 66), 10, 0);
 		for (int i = 0; i < ck_gameState.ep.ck4.membersRescued; i++)
 		{
-			VHB_DrawTile8(80 + 8 * i, 96, 40);
+			VHB_DrawTile8(CK_INT(CK4_StatusCouncilX, 80) + 8 * i, 96, 40);
 		}
 		break;
 #endif
@@ -2594,7 +2595,15 @@ void CK_PlayLoop()
 			KD_ScrollScreen(); // KEEN WORLDS (kw_dreams.c): also how its levels end
 		else
 		if (ca_mapOn == 0 || (ck_currentEpisode->ep == EP_CK4 && ca_mapOn == CK_INT(CK4_UnderwaterCameraLevel, 17)))
+		{
 			CK_MapCamera(ck_keenObj);
+			// KEEN WORLDS (Operation Ocflore): its underwater level ends where
+			// Keen swims off its left or right side
+			if (ca_mapOn != 0 && CK_INT(CK4_UnderwaterExitsAtSides, 0) &&
+				(ck_keenObj->clipRects.unitX1 < rf_scrollXMinUnit ||
+					ck_keenObj->clipRects.unitX2 > rf_scrollXMaxUnit + RF_PixelToUnit(320)))
+				ck_gameState.levelState = LS_LevelComplete;
+		}
 		else
 			CK_NormalCamera(ck_keenObj);
 

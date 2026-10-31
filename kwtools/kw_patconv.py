@@ -183,7 +183,7 @@ class Game:
                 continue
             for k in range(0, len(b), ACTION_SIZE):
                 a = self.unpack(img, d + k)
-                if d + k not in self.byoff and all(p in self.funcs for p in a[8:11]):
+                if d + k not in self.byoff and all(p == 0 or p in self.funcs for p in a[8:11]):
                     new[d + k] = 'KW_ACT_New%04X' % (d + k)
         return new
 

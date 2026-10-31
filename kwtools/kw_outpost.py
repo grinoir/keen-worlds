@@ -68,7 +68,7 @@ CHART_X, CHART_Y = ROOM_DOOR_X - 1, ROOM_TOP + 2  # 1x2, between window and door
 # top to bottom on the shelves. The names are KW_World's.
 KEEPSAKES = ['KEEN4', 'KEEN5', 'KEEN6', 'KEEN7', 'KEEN8', 'KEEN9',
              'KEEN95', 'AREALM', 'FITF', 'ALPHAMATIC', 'RTTS', 'OSI',
-             'CK55', 'ASYLUM', 'BOUNTY', 'SUBURB', 'AURORA']
+             'CK55', 'ASYLUM', 'BOUNTY', 'SUBURB', 'AURORA', 'OCFLORE']
 
 
 def level(d=None):
@@ -318,6 +318,12 @@ def keepsake(name):
         c.put(7, B - 5, RED); c.put(8, B - 5, RED)
         c.rect(6, B - 9, 9, B - 9, LGREY)
         c.put(11, B, BROWN); c.put(12, B, BROWN)     # a drop on the shelf
+    elif name == 'OCFLORE':    # a vial of Ostrum, glowing
+        c.box(6, B - 10, 9, B - 9, LGREY)
+        c.box(5, B - 8, 10, B, LCYAN)
+        c.rect(6, B - 6, 9, B - 1, LMAGENTA)
+        c.put(7, B - 5, WHITE); c.put(8, B - 3, WHITE)
+        c.put(4, B - 7, LMAGENTA); c.put(11, B - 4, LMAGENTA)   # the glow
     elif name == 'SUBURB':     # Mortimer's dummy head
         c.box(4, B - 9, 11, B - 2, YELLOW)
         c.rect(5, B - 10, 10, B - 10, BLACK)            # hair

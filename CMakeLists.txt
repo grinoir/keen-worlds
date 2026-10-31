@@ -366,6 +366,7 @@ set(OMNISPEAK_CK_SRCS
 	src/kw_music.c
 	src/kw_skip.c
 	src/kw_keen9.c
+	src/kw_ocflore.c
 	src/kw_arealm.c
 	src/kw_ar_act1.c
 	src/kw_ar_act2.c

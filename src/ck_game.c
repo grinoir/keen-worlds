@@ -691,6 +691,7 @@ void CK_LoadLevel(bool doCache, bool silent)
 	ck_currentEpisode->scanInfoLayer();
 	// KEEN WORLDS: Completed levels with residents become peaceful.
 	KW_SetupLevelResidents();
+	KW_WorldPalette(); // KEEN WORLDS: a world's own colours (Operation Ocflore)
 	KW_PlaceArrivalAtShip();
 
 	if (ca_mapOn == 0)

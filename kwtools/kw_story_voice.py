@@ -28,7 +28,7 @@ WORLDS = {   # id: the base episode's strings file (or None), the world's own fo
     'keen95': (K4, 'keen95'), 'bounty': (K4, 'bounty'), 'ck55': (K5, 'ck55'), 'asylum': (K5, 'asylum'),
     'rtts': (K4, 'rtts'), 'aurora': (K4, 'aurora'), 'alpham': (None, 'alphamatic'), 'suburb': (None,'suburb'), 'osi': (None, 'osi'), 'arealm': (None, 'arealm'), 'fitf': (None, 'fitf'),
 }
-SAID = {'Meurglys III': 'Meurglys Three', '#': 'Pi', 'VIII': 'Eight', 'BwB': 'Bean-with-Bacon', 'doesnt': "doesn't", '&': 'and'}
+SAID = {'Meurglys III': 'Meurglys Three', 'Ocflore V': 'Ocflore Five', '#': 'Pi', 'VIII': 'Eight', 'BwB': 'Bean-with-Bacon', 'doesnt': "doesn't", '&': 'and'}
 
 
 def story(root, base, folder):
@@ -86,6 +86,7 @@ def main(root, folder, only=None):
     clips['STORY_EPILOGUE.RAW'] = spoken(own_story(root, 'kw_epilogue'))   # when every world is saved
     clips['STORY_BOUNTY.RAW'] = spoken(own_story(root, 'kw_chartBounty'))
     clips['STORY_ASYLUM.RAW'] = spoken(own_story(root, 'kw_chartAsylum'))
+    clips['STORY_OCFLORE.RAW'] = spoken(own_story(root, 'kw_chartOcflore'))
     if only:
         clips = {name: lines for name, lines in clips.items() if name[6:-4].lower() in only}
     os.makedirs(folder, exist_ok=True)

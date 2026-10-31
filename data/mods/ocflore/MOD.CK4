@@ -1,0 +1,225 @@
+# Operation Ocflore (Bubbatom, 2020, v1.3) as a Keen Worlds world.
+# Written by kwtools/kw_ocflore.py from the mod's CKPatch file; the data
+# files beside it are the player's copy of the mod. It runs on Keen 4.
+
+%string ca_tileInfo "KEEN4.TLI"
+
+%stringarray ck_str_levelNames
+	"Ocflore V",
+	"Ocflore Airport",
+	"Imber Inlet",
+	"The Enkri Borough",
+	"Jungle Crags",
+	"Frigid Quarry",
+	"Enkri Sanctuary",
+	"Pelagic Pillars",
+	"Ostrum Absorbor",
+	"Mount Amnis",
+	"Dorsal Obelisk",
+	"Ancient Observatory",
+	"The Enkri Shanty",
+	"Savanak Temple",
+	"The Dorsal Battleship",
+	"Swallowed Spire",
+	"Evergreen Gate",
+	"Sunken Sanctum",
+	"The Thicket Steeple"
+
+%stringarray ck_str_levelEntryText
+	"Keen navigates\nplanet Ocflore",
+	"Keen splashes down at\nthe Ocflore Airport",
+	"Keen paddles to the\nImber Inlet",
+	"Keen cuts through\nthe Enkri Borough",
+	"Keen plunges down\nthe Jungle Crags",
+	"Keen cascades into\nthe Frigid Quarry",
+	"Keen beholds the\nEnkri Sanctuary",
+	"Keen dangles on\nPelagic Pillars",
+	"Keen burrows his way to\nthe Ostrum Absorbor",
+	"Keen conquers\nMount Amnis",
+	"Keen filters through \nthe Dorsal Obelisk",
+	"Keen reveals\nthe Ancient Observatory",
+	"Keen cracks into \nthe Enkri Shanty",
+	"Keen delves into \nthe Savanak Temple",
+	"Keen teleports aboard\nthe Dorsal Battleship",
+	"Keen subsides into \nthe Swallowed Spire",
+	"Keen passes through\nthe Evergreen Gate",
+	"Keen plunges into \nthe Sunken Sanctum",
+	"Keen catapults up \nthe Thicket Steeple"
+
+%intarray CK_LevelMusic 8, 6, 3, 5, 7, 9, 9, 1, 6, 9, 11, 2, 0, 10, 7, 5, 11, 3, 0, 4
+
+%string ck4_str_councilThanks "Keen comes across an\nartifact the old\n Dorsal spoke of. \n An eleborate \n   relic.   "
+%string ck4_str_gotWetsuit "  This is mine now! \n  Let's swim!   "
+%string ck4_str_lindsayMessage1 " It's dangerous to  \nstumble in teleporters \n  at the Swallowed   \n Spire. \n"
+%string ck4_str_lindsayMessage2 " Keep an eye out for a\n  purple key hidden  \ninside a coral wall.\n      \n"
+%string ck4_str_lindsaySays "   The Dorsal says:   \n"
+%string ck4_str_lindsayThanks1 "   Don't you worry!   "
+%string ck4_str_lindsayThanks2 "Alright, I'll \n     keep my eyes peeled! \n"
+%string ck4_str_statusRescued "RELICS"
+%string ck4_str_statusWetsuit ""
+%string ck_str_exitToMap "  Exit to Ocflore  "
+%string ck_str_statusCentilives "OSTRUM"
+%stringarray ck4_str_councilMessage
+	"Such an intricate bit\n of gear! ",
+	"I wonder how these \nthings work.",
+	" What now?  ",
+	"Great.  You known, you\nlook a lot like the\nlast guy I rescued...",
+	"Good idea, Gramps.",
+	"May the road rise\nto meet your feet,\nMr. Member.",
+	"Wise plan of action,\nyour ancientness.",
+	"You're the last one,\nfella. Let's both\nget back to the\nOracle chamber!"
+%stringarray ck_defaultHighScoreNames
+	"Bubbatom         ",
+	"                 ",
+	"55Aavenue        ",
+	"Kohntarkosz      ",
+	"Levellass        ",
+	"lemm             ",
+	"K1n9_Duk3        ",
+	"Id Software - '91"
+
+# The mod's changes to the program's rules, as settings
+# its own sound and music: 12 songs
+%string ca_audioHead "AUDIOHED.CK4"
+%string ca_audioDict "AUDIODCT.CK4"
+%int ca_audStartMusic 150
+%int ca_audNumSongs 12
+# three relics (council members) win the game
+%int CK4_NumCouncilsToRescue 3
+# music: none for the story, the ending plays level 13's, level 19's while the Ancient talks
+%int CK_StarWarsMusicLevel 0
+%int CK_EndingMusicLevel 13
+%int CK4_CouncilTalkMusicLevel 19
+# the relics' box in the status window
+%int CK4_StatusCouncilBoxX 95
+%int CK4_StatusCouncilBoxW 32
+%int CK4_StatusCouncilX 96
+# levels 18 and up are its ship levels
+%int ck_maxDoneLevel 17
+# the foot: where it flies, chosen by level 14 being done
+%int CK4_FootByLevelDone 14
+%int CK4_FootThereX 0x3300
+%int CK4_FootThereY 0x5000
+%int CK4_FootBackX 0x3000
+%int CK4_FootBackY 0x1700
+# the underwater level ends at its left or right side
+%int CK4_UnderwaterExitsAtSides 1
+# the swimming Keen clips normally
+%int CK4_SwimKeenClipNormal 1
+# bridges four tiles thick
+%int CK_BridgeThickness 4
+# the schoolfish's hitbox for walls
+%int CK4_SchoolfishClipX 0x180
+%int CK4_SchoolfishClipY 0x100
+# clouds move faster
+%int CK4_CloudXAccel 20
+# the Dopefish seeks Keen upside down
+%int CK4_DopefishSeekReversed 1
+# the Mad Mushroom's hops
+%int CK4_MushroomNumJumps 2
+%int CK4_MushroomHopYVel -0x18
+%int CK4_MushroomJumpYVel -0x4A
+# the bounder's jump
+%int CK4_BounderBounceYVelocity -0x28
+# the bounder's ride
+%int CK4_BounderRideXVel 16
+# bounders chase Keen
+%int CK4_BounderFollowsKeen 1
+# the Sprite's shot starts on its second frame
+%int CK4_SpriteShotSkipFirst 1
+# skypests never land; they slide along the ground
+%int CK4_SkypestNeverLands 1
+# the Mimrock's attack jump
+%int CK4_MimrockJumpYVelocity -0x20
+# flying birds never land
+%int CK4_BirdNeverLands 1
+# the walking bird stands on the ground
+%int CK4_BirdSpawnYOffset 0xE1
+# the flying bird's acceleration
+%int CK4_BirdFlyXAccel 32
+# markers 36-38: flying birds on easy, normal, hard
+%int OC_FlyingBirdMarkers 1
+# which creatures Keen is drawn in front of
+%int CK4_LickZLayer 0
+%int CK4_MimrockZLayer 0
+%int CK4_InchwormZLayer 0
+%int CK4_SmirkyZLayer 1
+%int CK4_SlugZLayer 0
+%int CK4_EggZLayer 1
+# where the stun stars are
+%int CK4_SkypestStarsX 0x40
+%int CK4_SkypestStarsY -0x80
+%int CK4_LickStarsX 0x40
+%int CK4_LickStarsY -0x15E
+%int CK4_SlugStarsX -0x80
+%int CK4_SlugStarsY -0x80
+%int CK4_InchwormStarsX -0x80
+%int CK4_BounderStarsX 0xC0
+%int CK4_BounderStarsY -0x80
+%int CK4_SmirkyStarsX 0xC0
+%int CK4_SmirkyStarsY -0x80
+# walkers turning round undo their step's height too (no sticking at slope edges)
+%int CK_WalkTurnUndoesY 1
+
+%override "EPISODE.CK4"
+
+# Its sprite actions, as the patches leave them (our routines named as in
+# kwtools/kw_ocflore.py STAND_INS)
+%action CK_ACT_keenEnterDoor4 0x0ED2 @SPR_KEENENTER5 @SPR_KEENENTER5 UnscaledOnce 0 0 9 0 -64 CK_KeenEnterDoor NULL CK_BasicDrawFunc1 CK_ACT_keenLookUp1
+%action CK_ACT_keenPogo1 0x110C @SPR_KEENPOGOL2 @SPR_KEENPOGOR2 UnscaledOnce 1 0 1 0 0 CK_KeenPogoBounceThink OC_KeenSquishCol CK_KeenPogoDrawFunc CK_ACT_keenPogo2
+%action CK_ACT_keenPogo2 0x112A @SPR_KEENPOGOL2 @SPR_KEENPOGOR2 Frame 1 0 0 0 0 CK_KeenPogoThink OC_KeenSquishCol CK_KeenPogoDrawFunc CK_ACT_keenPogo3
+%action CK_ACT_keenPogo3 0x1148 @SPR_KEENPOGOL1 @SPR_KEENPOGOR1 Frame 1 0 0 0 0 CK_KeenPogoThink OC_KeenSquishCol CK_KeenPogoDrawFunc NULL
+%action CK4_ACT_CouncilWalk0 0x1FB8 356 @SPR_MEMBERSHUFFLER1 UnscaledOnce 0 0 30000 0 0 NULL NULL NULL CK4_ACT_CouncilWalk0
+%action CK4_ACT_SlugMove0 0x2012 @SPR_SLUGL1 @SPR_SLUGR1 UnscaledOnce 0 1 8 128 0 NULL OC_SlugCol CK_BasicDrawFunc3 CK4_ACT_SlugMove1
+%action CK4_ACT_SlugMove1 0x2030 @SPR_SLUGL2 @SPR_SLUGR2 UnscaledOnce 0 1 8 128 0 CK4_SlugMove OC_SlugCol CK_BasicDrawFunc3 CK4_ACT_SlugMove0
+%action CK4_ACT_SlugSliming0 0x204E @SPR_SLUGSQUIRTL @SPR_SLUGSQUIRTR UnscaledOnce 0 1 60 0x40 0 CK4_SlugSlime OC_SlugCol CK_BasicDrawFunc3 CK4_ACT_SlugMove0
+%action CK4_ACT_SlugSlimeEvap0 0x20C6 319 319 UnscaledOnce 0 0 60 0 0 NULL NULL CK_BasicDrawFunc1 NULL
+%action CK4_ACT_BirdHatched0 0x21B6 @SPR_EGGBIRDWALKL1 @SPR_EGGBIRDWALKR1 UnscaledOnce 0 1 120 0x80 0 NULL CK4_MushroomCol CK_BasicDrawFunc2 CK4_ACT_BirdWalk1
+%action CK4_ACT_BirdWalk0 0x21D4 @SPR_EGGBIRDWALKL1 @SPR_EGGBIRDWALKR1 UnscaledOnce 0 1 7 96 96 NULL CK4_MushroomCol CK_BasicDrawFunc2 CK4_ACT_BirdWalk1
+%action CK4_ACT_BirdWalk1 0x21F2 @SPR_EGGBIRDWALKL2 @SPR_EGGBIRDWALKR2 UnscaledOnce 0 1 7 96 96 NULL CK4_MushroomCol CK_BasicDrawFunc2 CK4_ACT_BirdWalk2
+%action CK4_ACT_BirdWalk2 0x2210 @SPR_EGGBIRDWALKL3 @SPR_EGGBIRDWALKR3 UnscaledOnce 0 1 7 96 96 NULL CK4_MushroomCol CK_BasicDrawFunc2 CK4_ACT_BirdWalk3
+%action CK4_ACT_BirdWalk3 0x222E @SPR_EGGBIRDWALKL4 @SPR_EGGBIRDWALKR4 UnscaledOnce 0 1 7 96 96 OC_InchwormAway CK4_MushroomCol CK_BasicDrawFunc2 CK4_ACT_BirdWalk0
+%action CK4_ACT_BirdStunned0 0x22E2 @SPR_EGGBIRDSTUN @SPR_EGGBIRDSTUN Frame 0 0 0 0 0 CK_Fall NULL CK_BasicDrawFunc4 NULL
+%action CK4_ACT_BirdRecover3 0x235A @SPR_EGGBIRDSTUN @SPR_EGGBIRDSTUN UnscaledOnce 0 1 20 0 0 CK4_BirdRecover CK4_BirdHatchedCol CK_BasicDrawFunc1 CK4_ACT_BirdFly0
+%action CK4_ACT_SkypestFly0 0x2486 @SPR_SKYPESTL1 @SPR_SKYPESTR1 UnscaledFrame 1 0 5 0 0 CK4_SkypestFly OC_SkypestCol CK4_SkypestDraw CK4_ACT_SkypestFly1
+%action CK4_ACT_SkypestFly1 0x24A4 @SPR_SKYPESTL2 @SPR_SKYPESTR2 UnscaledFrame 1 0 5 0 0 CK4_SkypestFly OC_SkypestCol CK4_SkypestDraw CK4_ACT_SkypestFly0
+%action CK4_ACT_SkypestSquish0 0x24C2 447 447 Frame 0 0 0 0 0 CK_Fall NULL CK_BasicDrawFunc4 NULL
+%action CK4_ACT_SkypestPreen0 0x24E0 337 337 UnscaledOnce 0 0 30000 0 0 NULL NULL CK_BasicDrawFunc1 CK4_ACT_SkypestPreen0
+%action CK4_ACT_CloudStrike8 0x2A26 @SPR_CLOUDSTERMAD @SPR_CLOUDSTERMAD UnscaledOnce 0 0 1 0 0 NULL NULL CK_BasicDrawFunc1 CK4_ACT_CloudMoveB0
+%action CK4_ACT_FireballAir0 0x2CD8 @SPR_BERKEFIRELAND1 @SPR_BERKEFIRELAND1 ScaledOnce 0 0 6 64 0 NULL CK_LethalCol OC_FireballDraw CK4_ACT_FireballAir1
+%action CK4_ACT_FireballAir1 0x2CF6 @SPR_BERKEFIRELAND2 @SPR_BERKEFIRELAND2 ScaledOnce 0 0 6 64 0 NULL CK_LethalCol OC_FireballDraw CK4_ACT_FireballAir0
+%action CK4_ACT_Inchworm0 0x2E9A @SPR_INCHWORML1 @SPR_INCHWORMR1 UnscaledOnce 0 1 30 256 0 OC_InchwormAway OC_InchwormMeet CK_BasicDrawFunc2 CK4_ACT_Inchworm1
+%action CK4_ACT_Inchworm1 0x2EB8 @SPR_INCHWORML2 @SPR_INCHWORMR2 UnscaledOnce 0 1 30 256 0 OC_InchwormAway OC_InchwormCol CK_BasicDrawFunc2 CK4_ACT_Inchworm0
+%action CK4_ACT_Foot1 0x2EF4 520 520 Frame 0 0 30000 0 0 NULL CK4_FootCol NULL NULL
+%action CK4_ACT_Bounder0 0x2F12 @SPR_BOUNDERFACE1 @SPR_BOUNDERFACE1 UnscaledFrame 0 0 20 0 0 CK_Fall OC_BounderCol CK4_BounderDraw CK4_ACT_Bounder1
+%action CK4_ACT_Bounder1 0x2F30 @SPR_BOUNDERFACE2 @SPR_BOUNDERFACE2 UnscaledFrame 0 0 20 0 0 CK_Fall OC_BounderCol CK4_BounderDraw CK4_ACT_Bounder0
+%action CK4_ACT_BounderMoveHorz0 0x2F4E @SPR_BOUNDERL1 @SPR_BOUNDERR1 UnscaledFrame 0 0 20 0 0 CK_Fall OC_BounderCol CK4_BounderDraw CK4_ACT_BounderMoveHorz1
+%action CK4_ACT_BounderMoveHorz1 0x2F6C @SPR_BOUNDERL2 @SPR_BOUNDERR2 UnscaledFrame 0 0 20 0 0 CK_Fall OC_BounderCol CK4_BounderDraw CK4_ACT_BounderMoveHorz0
+%action CK4_ACT_LickHop0 0x2FC6 @SPR_LICKLEAPL1 @SPR_LICKLEAPR1 UnscaledOnce 0 0 10 0 0 OC_LickMove OC_LickCol CK_BasicDrawFunc1 CK4_ACT_LickHop1
+%action CK4_ACT_LickHop1 0x2FE4 @SPR_LICKLEAPL2 @SPR_LICKLEAPR2 Frame 0 0 0 0 0 CK_Fall OC_LickCol CK4_LickDraw CK4_ACT_LickHop2
+%action CK4_ACT_LickHop2 0x3002 @SPR_LICKLEAPL3 @SPR_LICKLEAPR3 Frame 0 0 0 0 0 CK_Fall OC_LickCol CK4_LickDraw NULL
+%action CK4_ACT_LickHop3 0x3020 @SPR_LICKLEAPL4 @SPR_LICKLEAPR4 UnscaledOnce 0 0 10 0 0 NULL OC_LickCol CK_BasicDrawFunc1 CK4_ACT_LickHop0
+%action CK4_ACT_LickFlame0 0x303E @SPR_LICKLICKL1 @SPR_LICKLICKR1 UnscaledOnce 1 0 4 0 0 NULL OC_LickCol CK_BasicDrawFunc1 CK4_ACT_LickFlame1
+%action CK4_ACT_LickFlame1 0x305C @SPR_LICKLICKL2 @SPR_LICKLICKR2 UnscaledOnce 1 0 4 0 0 NULL OC_LickCol CK_BasicDrawFunc1 CK4_ACT_LickFlame2
+%action CK4_ACT_LickFlame2 0x307A @SPR_LICKLICKL3 @SPR_LICKLICKR3 UnscaledOnce 1 0 4 0 0 NULL OC_LickCol CK_BasicDrawFunc1 CK4_ACT_LickFlame3
+%action CK4_ACT_LickFlame3 0x3098 @SPR_LICKLICKL2 @SPR_LICKLICKR2 UnscaledOnce 1 0 4 0 0 NULL OC_LickCol CK_BasicDrawFunc1 CK4_ACT_LickFlame4
+%action CK4_ACT_LickFlame4 0x30B6 @SPR_LICKLICKL1 @SPR_LICKLICKR1 UnscaledOnce 1 0 4 0 0 NULL OC_LickCol CK_BasicDrawFunc1 CK4_ACT_LickFlame5
+%action CK4_ACT_LickFlame5 0x30D4 @SPR_LICKLICKL2 @SPR_LICKLICKR2 UnscaledOnce 1 0 4 0 0 NULL OC_LickCol CK_BasicDrawFunc1 CK4_ACT_LickFlame6
+%action CK4_ACT_LickFlame6 0x30F2 @SPR_LICKLICKL3 @SPR_LICKLICKR3 UnscaledOnce 1 0 4 0 0 NULL OC_LickCol CK_BasicDrawFunc1 CK4_ACT_LickFlame7
+%action CK4_ACT_LickFlame7 0x3110 @SPR_LICKLICKL2 @SPR_LICKLICKR2 UnscaledOnce 1 0 4 0 0 NULL OC_LickCol CK_BasicDrawFunc1 CK4_ACT_LickHop2
+%action CK4_ACT_LickStunned0 0x312E 477 477 Frame 0 0 0 0 0 CK_Fall NULL CK_BasicDrawFunc4 CK4_ACT_LickStunned1
+%action CK4_ACT_LickStunned1 0x314C 477 477 Frame 0 0 0 0 0 CK_Fall NULL CK_BasicDrawFunc4 NULL
+%action CK4_ACT_MimrockJump0 0x350C @SPR_MIMROCKBONKL1 @SPR_MIMROCKBONKR1 UnscaledFrame 0 0 24 0 0 CK_Fall2 CK4_MushroomCol CK4_MimrockJumpDraw CK4_ACT_MimrockJump1
+%action CK4_ACT_MimrockJump1 0x352A @SPR_MIMROCKBONKL2 @SPR_MIMROCKBONKR2 UnscaledFrame 0 0 10 0 0 CK_Fall2 CK4_MushroomCol CK4_MimrockJumpDraw CK4_ACT_MimrockJump2
+%action CK4_ACT_MimrockJump2 0x3548 @SPR_MIMROCKBONKL3 @SPR_MIMROCKBONKR3 Frame 0 0 10 0 0 CK_Fall2 CK4_MushroomCol CK4_MimrockJumpDraw CK4_ACT_MimrockJump1
+%action CK4_ACT_MimrockBounce0 0x3566 @SPR_MIMROCKBONKL3 @SPR_MIMROCKBONKR3 Frame 0 0 10 0 0 CK_Fall CK4_MushroomCol CK4_MimrockBounceDraw NULL
+%action CK4_ACT_Sprite0 0x37A0 @SPR_SPRITEFACE @SPR_SPRITEFACE Frame 0 0 10 0 0 CK4_SpritePatrol OC_SpriteCol CK_BasicDrawFunc1 CK4_ACT_Sprite0
+%action CK4_ACT_SpriteAiming0 0x37BE @SPR_SPRITELOOKL @SPR_SPRITELOOKR UnscaledOnce 0 0 40 0 0 CK4_SpriteAim OC_SpriteCol CK_BasicDrawFunc1 CK4_ACT_Sprite0
+%action CK4_ACT_SpriteShooting0 0x37DC @SPR_SPRITESHOOTL @SPR_SPRITESHOOTR UnscaledOnce 0 0 40 0 0 CK4_SpriteShoot OC_SpriteCol CK_BasicDrawFunc1 CK4_ACT_SpriteShooting1
+%action CK4_ACT_SpriteShooting1 0x37FA @SPR_SPRITESHOOTL @SPR_SPRITESHOOTR UnscaledOnce 0 0 30 0 0 NULL OC_SpriteCol CK_BasicDrawFunc1 CK4_ACT_Sprite0
+%action CK4_ACT_SpriteBullet0 0x3818 @SPR_SPRITEFIRE1 @SPR_SPRITEFIRE1 Frame 0 0 240 0 0 CK_Fall NULL CK_BasicDrawFunc1 CK4_ACT_SpriteBullet0
+%action CK4_ACT_SpriteBullet3 0x3872 @SPR_SPRITEFIRE4 @SPR_SPRITEFIRE4 ScaledOnce 0 0 10 0x40 0 NULL CK_LethalCol CK4_ProjectileDraw CK4_ACT_SpriteBullet1
+%action CK4_ACT_Lindsey0 0x38EA @SPR_LINDSEY1 @SPR_LINDSEY1 UnscaledOnce 0 0 30000 0 0 NULL NULL NULL CK4_ACT_Lindsey0
+%action KW_ACT_New011F 0x011F 0 0 UnscaledOnce 0 0 8 0 0 OC_WormRevert NULL CK_BasicDrawFunc1 CK4_ACT_Inchworm0
+# eggs hatch into flying birds
+%action CK4_EggHatchAction = CK4_ACT_BirdFly0

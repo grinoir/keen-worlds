@@ -84,6 +84,7 @@ KEEPSAKE_TEXT = {
     'BOUNTY': "Rick Uller's wanted poster. Wanted no more.",
     'SUBURB': "Mortimer's dummy head. It still sparks sometimes.",
     'AURORA': "The can of Vorta Cola Craig spilled on the Navi-Com. Empty now.",
+    'OCFLORE': "A vial of Ostrum from Ocflore V. The Ormch wanted it. It glows.",
 }
 SPOT_NEW = {
     'KEEN4': "A shiny gem! I'll put it where the sun hits it.",
@@ -103,6 +104,7 @@ SPOT_NEW = {
     'BOUNTY': "Rick Uller! Wanted no more. You got him!",
     'SUBURB': "Mortimer's head?! Is it... is it off?",
     'AURORA': "Vorta Cola! Who drank it? ...Craig drank it.",
+    'OCFLORE': "It glows! Is it supposed to glow? I'm not touching it.",
 }
 
 # (the C array, the clips' prefix, the voice)

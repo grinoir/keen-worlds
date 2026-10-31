@@ -46,6 +46,7 @@ typedef enum KW_World
 	KW_SUBURB, // Earth: Suburb Shenanigans (append: retain existing save IDs)
 	KW_RTTS,   // Far Shadowlands: "Return to the Shadowlands" (its own code, on Keen 4's; append)
 	KW_AURORA, // Aurora Bliss: "Aurora Bliss" (fan game on Keen 4, Craig's story part one; append)
+	KW_OCFLORE, // Ocflore V: "Operation Ocflore" (fan game on Keen 4; append)
 	KW_NUM_WORLDS,
 	KW_NO_WORLD = -1,
 } KW_World;
@@ -82,6 +83,8 @@ void KW_AfterWorldEnding(void);
 bool KW_IsWorldCompleted(int world);
 // Whether Keen has been to a world in this run.
 bool KW_IsWorldVisited(int world);
+// A world's own colours for its levels (Operation Ocflore).
+void KW_WorldPalette(void);
 // Aurora Bliss, not yet saved, with Keen in the ship: Vorta Cola on the
 // Navi-Com, and the ship can't take off.
 bool KW_ColaOnConsole(void);

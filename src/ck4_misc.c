@@ -49,11 +49,15 @@ CK_EpisodeDef ck4_episode = {
 // Level Ending Object Spawn
 void KD_SetupFunctions(void);
 
+bool OC_SpawnFlyingBird(int info, int tileX, int tileY);
+void OC_SetupFunctions(void);
+
 void CK4_SetupFunctions()
 {
 	CK4_Obj1_SetupFunctions();
 	CK4_Obj2_SetupFunctions();
 	CK4_Obj3_SetupFunctions();
+	OC_SetupFunctions(); // KEEN WORLDS: Operation Ocflore's routines (kw_ocflore.c)
 	CK4_Map_SetupFunctions();
 	CK4_Misc_SetupFunctions();
 	RT_SetupFunctions(); // KEEN WORLDS: Return to the Shadowlands (kw_rtts.c)
@@ -472,6 +476,13 @@ void CK4_ScanInfoLayer()
 				CA_MarkLumpNeeded(CK_INTELEMENT(ck_itemLumps, infoValue - 57));
 				break;
 
+			// KEEN WORLDS: Operation Ocflore's flying blue birds (kw_ocflore.c)
+			case 36:
+			case 37:
+			case 38:
+				OC_SpawnFlyingBird(infoValue, x, y);
+				break;
+
 			default:
 				break;
 			}
@@ -692,7 +703,8 @@ void CK4_ShowCouncilMessage(void)
 	CA_MarkGrChunk(CK_CHUNKNUM(PIC_KEENTALK1));
 	CA_MarkGrChunk(CK_CHUNKNUM(PIC_KEENTALK2));
 	CA_CacheMarks(0);
-	StartMusic(CK_INT(CK4_TalkMusicLevel, -1)); // KEEN WORLDS: variable (Aurora Bliss)
+	// KEEN WORLDS: variables (Aurora Bliss: both talks; Operation Ocflore: the council's)
+	StartMusic(CK_INT(CK4_CouncilTalkMusicLevel, CK_INT(CK4_TalkMusicLevel, -1)));
 
 	VL_FixRefreshBuffer();
 
@@ -756,7 +768,7 @@ void CK4_SpawnScubaKeen(int tileX, int tileY)
 	ck_keenObj->posY = RF_TileToUnit(tileY);
 	ck_keenObj->xDirection = IN_motion_Right;
 	ck_keenObj->yDirection = IN_motion_Down;
-	ck_keenObj->clipped = CLIP_simple;
+	ck_keenObj->clipped = CK_INT(CK4_SwimKeenClipNormal, 0) ? CLIP_normal : CLIP_simple; // KEEN WORLDS: variable (Operation Ocflore)
 	CK_SetAction(ck_keenObj, CK_ACTION(CK4_ACT_KeenSwim0));
 }
 

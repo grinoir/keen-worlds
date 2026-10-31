@@ -68,6 +68,7 @@ void CK_BasicDrawFunc2(CK_object *obj)
 	if (obj->xDirection == IN_motion_Right && obj->leftTI != 0)
 	{
 		obj->posX -= obj->deltaPosX;
+		if (CK_INT(CK_WalkTurnUndoesY, 0)) obj->posY -= obj->deltaPosY; // KEEN WORLDS (Operation Ocflore: no sticking at slope edges)
 		obj->xDirection = IN_motion_Left;
 		obj->timeUntillThink = US_RndT() / 32;
 		CK_SetAction2(obj, obj->currentAction);
@@ -76,6 +77,7 @@ void CK_BasicDrawFunc2(CK_object *obj)
 	else if (obj->xDirection == IN_motion_Left && obj->rightTI != 0)
 	{
 		obj->posX -= obj->deltaPosX;
+		if (CK_INT(CK_WalkTurnUndoesY, 0)) obj->posY -= obj->deltaPosY; // KEEN WORLDS (Operation Ocflore: no sticking at slope edges)
 		obj->xDirection = IN_motion_Right;
 		obj->timeUntillThink = US_RndT() / 32;
 		CK_SetAction2(obj, obj->currentAction);
@@ -84,6 +86,7 @@ void CK_BasicDrawFunc2(CK_object *obj)
 	else if (obj->topTI == 0)
 	{
 		obj->posX -= obj->deltaPosX;
+		if (CK_INT(CK_WalkTurnUndoesY, 0)) obj->posY -= obj->deltaPosY; // KEEN WORLDS (Operation Ocflore: no sticking at slope edges)
 		obj->xDirection = -obj->xDirection;
 		obj->timeUntillThink = US_RndT() / 32;
 		CK_SetAction2(obj, obj->currentAction);
@@ -101,6 +104,7 @@ void CK_BasicDrawFunc3(CK_object *obj)
 	if (obj->xDirection == IN_motion_Right && obj->leftTI != 0)
 	{
 		obj->posX -= obj->deltaPosX;
+		if (CK_INT(CK_WalkTurnUndoesY, 0)) obj->posY -= obj->deltaPosY; // KEEN WORLDS (Operation Ocflore)
 		obj->xDirection = IN_motion_Left;
 		obj->timeUntillThink = US_RndT() / 32;
 		CK_SetAction2(obj, obj->currentAction);
@@ -109,6 +113,7 @@ void CK_BasicDrawFunc3(CK_object *obj)
 	else if (obj->xDirection == IN_motion_Left && obj->rightTI != 0)
 	{
 		obj->posX -= obj->deltaPosX;
+		if (CK_INT(CK_WalkTurnUndoesY, 0)) obj->posY -= obj->deltaPosY; // KEEN WORLDS (Operation Ocflore)
 		obj->xDirection = IN_motion_Right;
 		obj->timeUntillThink = US_RndT() / 32;
 		CK_SetAction2(obj, obj->currentAction);
@@ -118,7 +123,13 @@ void CK_BasicDrawFunc3(CK_object *obj)
 	// hole a pole goes through is not an edge to turn round at
 	else if ((obj->topTI == 0 || (obj->topTI & ~SLOPEMASK)) && !(CK_INT(CK_BDF3SolidPoleHole, 0) && obj->topTI == 0x11))
 	{
-		obj->posX -= obj->deltaPosX * 2;
+		if (CK_INT(CK_WalkTurnUndoesY, 0)) // KEEN WORLDS (Operation Ocflore: one step back, also in height)
+		{
+			obj->posX -= obj->deltaPosX;
+			obj->posY -= obj->deltaPosY;
+		}
+		else
+			obj->posX -= obj->deltaPosX * 2;
 		obj->xDirection = -obj->xDirection;
 		obj->timeUntillThink = US_RndT() / 32;
 		CK_SetAction2(obj, obj->currentAction);
@@ -191,8 +202,15 @@ void CK_BasicDrawFunc4(CK_object *obj)
 		switch (obj->user4)
 		{
 
+		// KEEN WORLDS: some offsets are variables (Operation Ocflore)
 		case CT4_Slug:
-			starsY = -0x80;
+			starsX = CK_INT(CK4_SlugStarsX, 0);
+			starsY = CK_INT(CK4_SlugStarsY, -0x80);
+			break;
+
+		case CT4_Skypest:
+			starsX = CK_INT(CK4_SkypestStarsX, 0);
+			starsY = CK_INT(CK4_SkypestStarsY, 0);
 			break;
 
 		case CT4_Egg:
@@ -206,21 +224,23 @@ void CK_BasicDrawFunc4(CK_object *obj)
 			break;
 
 		case CT4_Bounder:
-			starsX = 0x40;
-			starsY = -0x80;
+			starsX = CK_INT(CK4_BounderStarsX, 0x40);
+			starsY = CK_INT(CK4_BounderStarsY, -0x80);
 			break;
 
 		case CT4_Inchworm:
-			starsX = -0x40;
-			starsY = -0x80;
+			starsX = CK_INT(CK4_InchwormStarsX, -0x40);
+			starsY = CK_INT(CK4_InchwormStarsY, -0x80);
 			break;
 
 		case CT4_Lick:
-			starsY = -0x80;
+			starsX = CK_INT(CK4_LickStarsX, 0);
+			starsY = CK_INT(CK4_LickStarsY, -0x80);
 			break;
 
 		case CT4_Smirky:
-			starsX = 0x80;
+			starsX = CK_INT(CK4_SmirkyStarsX, 0x80);
+			starsY = CK_INT(CK4_SmirkyStarsY, 0);
 			break;
 		}
 	}
