@@ -1814,11 +1814,22 @@ static const char *KW_CheckCardsFit(void)
 // Krile repair it once Atroxus is defeated. So Keen can't leave that world
 // before its ending, and the menu says so before he flies there.
 
+bool KW_ColaOnConsole(void);
 static bool KW_IsStranded(void)
 {
 	// (inside the ship: where the ship stands)
 	int where = kw_currentWorld == KW_SHIP ? kw_boardedFrom : kw_currentWorld;
+	if (KW_ColaOnConsole())
+		return true; // (Keen can go aboard; the ship can't take off)
 	return (where == KW_AREALM || where == KW_KEEN8) && !kw_worlds[where].completed;
+}
+
+// Aurora Bliss: Craig spilled Vorta Cola over the Navi-Com, and the ship
+// can't take off until Keen has found the spare parts (the world is saved).
+// Inside the ship, the cola is on its navigation screen (kw_habitat.c).
+bool KW_ColaOnConsole(void)
+{
+	return kw_currentWorld == KW_SHIP && kw_boardedFrom == KW_AURORA && !kw_worlds[KW_AURORA].completed;
 }
 
 // Calidune (Dead in the Desert): Mortimer's transporter from Krodacia sets
@@ -1872,13 +1883,15 @@ static bool KW_AskCard(const char *text)
 #define KW_CALIDUNE_WARNING \
 	"Calidune\n\nMortimer's transporter still has\na lock on Keen. If we go, it\nwill pull him down alone. The\nMegarocket cannot follow.\n\n" \
 	"Keen cannot leave Calidune\nuntil he finds a way off.\n\nFly there? Press Y for yes,\nany other key to stay."
+#define KW_AURORA_STICKY \
+	"The Navi-Com is sticky with\nVorta Cola, and the Megarocket\ncannot take off.\n\nKeen needs spare parts from\nAurora Bliss first."
 #define KW_CALIDUNE_ALONE \
 	"The Megarocket is not here.\n\nMortimer's transporter left Keen\non Calidune alone. He needs a\npower source, and a ship.\n\nUntil then Keen stays on Calidune."
 // What Keen is told when he tries to leave a world that strands him.
 static const char *KW_StrandedText(void)
 {
 	int where = kw_currentWorld == KW_SHIP ? kw_boardedFrom : kw_currentWorld;
-	return where == KW_KEEN8 ? KW_CALIDUNE_ALONE : KW_KRISLE_WRECK;
+	return where == KW_KEEN8 ? KW_CALIDUNE_ALONE : where == KW_AURORA ? KW_AURORA_STICKY : KW_KRISLE_WRECK;
 }
 
 // Draws the destination menu and returns the chosen world, or KW_NO_WORLD to
@@ -4338,6 +4351,9 @@ void KW_Screenshot(const char *worldId, int level, const char *path)
 	if (world != KW_CurrentWorld())
 		KW_SwitchWorld(world);
 	ck_gameState.currentLevel = level;
+	// KW_SHOT_BOARDED=id: inside the ship, it stands on that world
+	if (getenv("KW_SHOT_BOARDED") && KW_WorldById(getenv("KW_SHOT_BOARDED")) != KW_NO_WORLD)
+		kw_boardedFrom = KW_WorldById(getenv("KW_SHOT_BOARDED"));
 	// KW_SHOT_SAVED=1: as if every world were saved and the level done
 	// (e.g. Border Village with the outpost open and its shelves full).
 	if (getenv("KW_SHOT_SAVED"))
@@ -5051,6 +5067,33 @@ void KW_SelfTest(void)
 		KW_TestLevelSpritesCached("arealm", arShip->level);
 		kw_worlds[KW_AREALM].completed = false;
 		KW_SwitchWorld(KW_KEEN4);
+	}
+
+	// Aurora Bliss (when installed): Keen can go aboard, but with Vorta Cola
+	// on the Navi-Com the ship can't take off until the world is saved.
+	if (KW_IsWorldPresent(KW_AURORA) && KW_IsWorldPresent(KW_SHIP))
+	{
+		bool wasDone = kw_worlds[KW_AURORA].completed;
+		int boarded = kw_boardedFrom;
+		KW_SwitchWorld(KW_AURORA);
+		kw_worlds[KW_AURORA].completed = false;
+		if (KW_IsStranded())
+			Quit("KW_SelfTest: on Aurora Bliss Keen should still be able to go aboard!");
+		kw_boardedFrom = KW_AURORA;
+		KW_SwitchWorld(KW_SHIP);
+		CK_LoadLevel(true, true);
+		if (!KW_IsStranded() || !KW_ColaOnConsole() ||
+			!KW_IsArtCellPlaced(&kw_colaArt, kw_colaArt.originX + 1, kw_colaArt.originY + 1))
+			Quit("KW_SelfTest: the Megarocket should be grounded, Vorta Cola on its Navi-Com!");
+		kw_worlds[KW_AURORA].completed = true;
+		CK_LoadLevel(true, true);
+		if (KW_IsStranded() || KW_ColaOnConsole() ||
+			KW_IsArtCellPlaced(&kw_colaArt, kw_colaArt.originX + 1, kw_colaArt.originY + 1))
+			Quit("KW_SelfTest: once Aurora Bliss is saved, the Navi-Com should be clean and the ship fly!");
+		kw_worlds[KW_AURORA].completed = wasDone;
+		kw_boardedFrom = boarded;
+		KW_SwitchWorld(KW_KEEN4);
+		puts("PASS: Aurora Bliss grounds the Megarocket (Vorta Cola on the Navi-Com) until it is saved");
 	}
 
 	// Foray in the Forest (when installed): every map of the game loads, with

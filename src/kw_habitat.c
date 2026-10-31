@@ -261,6 +261,13 @@ const KW_Art kw_shipHintArt = {
 	KW_SHIPHINT_X, KW_SHIPHINT_Y, 1, 1, 2,
 	&kw_shipHintSlots[0][0][0], &kw_shipHintTiles[0][0][0][0], -1, 30, NULL,
 };
+// Vorta Cola on the navigation screen (kwtools/kw_cola_art.py), while the
+// ship stands on Aurora Bliss and that world isn't saved.
+#include "kw_cola_art.h"
+const KW_Art kw_colaArt = {
+	KW_COLA_ORIGIN_X, KW_COLA_ORIGIN_Y, KW_COLA_TILES_W, KW_COLA_TILES_H, KW_COLA_FRAMES,
+	&kw_colaSlots[0][0][0], &kw_colaTiles[0][0][0][0], -1, 0, NULL,
+};
 static const KW_Art kw_shipArcadeArt = {
 	KW_SHIPARCADE_X, KW_SHIPARCADE_Y, 2, 1, 2,
 	&kw_shipArcadeSlots[0][0][0], &kw_shipArcadeTiles[0][0][0][0], -1, 35, NULL,
@@ -486,6 +493,9 @@ static void KW_ChangeLevel(void)
 		if (KW_IsShown(kw_levelArt[i].when, completed))
 			KW_PlaceArt(kw_levelArt[i].art);
 	}
+	// (on top of the cabin's own art)
+	if (KW_CurrentEpisode() == KW_SHIP && ca_mapOn == 1 && KW_ColaOnConsole())
+		KW_PlaceArt(&kw_colaArt);
 }
 
 // ---- Coming back ----

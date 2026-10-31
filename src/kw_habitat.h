@@ -61,6 +61,8 @@ struct KW_Art;
 // the bar with the barmaid, furniture and the creator's portrait (after).
 extern const struct KW_Art kw_innArt, kw_signArt, kw_tavernBoardsArt, kw_tavernBarArt, kw_tavernFurnitureArt, kw_portraitArt;
 extern const struct KW_Art kw_shipHintArt;
+// Vorta Cola on the cabin's navigation screen (Aurora Bliss; for /KWTEST).
+extern const struct KW_Art kw_colaArt;
 // Keen's outpost (for /KWTEST): the hut and its mast (always), the boards
 // on its door (until it opens), and inside, once open, the shelves, Spot and
 // a keepsake per world saved (kw_keepsakeWorld[i] is keepsake i's world).

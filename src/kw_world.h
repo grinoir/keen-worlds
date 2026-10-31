@@ -82,6 +82,9 @@ void KW_AfterWorldEnding(void);
 bool KW_IsWorldCompleted(int world);
 // Whether Keen has been to a world in this run.
 bool KW_IsWorldVisited(int world);
+// Aurora Bliss, not yet saved, with Keen in the ship: Vorta Cola on the
+// Navi-Com, and the ship can't take off.
+bool KW_ColaOnConsole(void);
 // Keen's outpost: true once, the first time its opening scene is due (false
 // if the player has turned the story cards off; it is not offered again).
 bool KW_TakeOutpostScene(void);

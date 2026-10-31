@@ -24,7 +24,8 @@ VOICE = 'af_heart'        # Kokoro's "Heart", an American woman
 KOKORO_DIR = os.environ.get('KW_KOKORO_DIR', os.path.expanduser('~/Projects/SignalweaveCMS'))
 # world id: the words, a sentence each
 LANDINGS = {
-    'aurora': ["You have now landed on Aurora Bliss.", "My Navi-Com is sticky with Vorta Cola.",
+    'aurora': ["You have now landed on Aurora Bliss.", "And here we stay.",
+               "My Navi-Com is sticky with Vorta Cola, and I cannot take off.",
                "Please find the spare parts, and do not let Craig touch anything."],
     'rtts': ["You have now landed in the far Shadowlands.", "Beware of the local scouts.",
              "They are lost, they are hungry, and they all want your autograph."],

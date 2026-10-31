@@ -782,7 +782,7 @@ static void CD_Frame(CD_Scene *scene,const CD_Part *part,uint32_t t,bool talking
 		}
 		bool keenTalks=talking && part->color==14;
 		int pose=keenTalks?1+(t/30)%2:0;
-		CD_Draw(&scene->keen[pose],34,78,256,t);
+		CD_Draw(&scene->keen[pose],34,80,256,t); // (his feet on the cockpit floor)
 		break;
 	}
 	case HM_DUSK: case HM_DAY: case HM_SPACE: case HM_FIRST: case HM_WARM: case HM_SHH: {
