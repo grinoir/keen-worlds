@@ -1137,7 +1137,7 @@ here on Omnispeak's Keen 4 code (audit:
   the journey home, and the Shikadi Station after it (the Oracle names the
   station at the end).
 - Voices: `kwtools/kw_rtts_voice.py` (Keen, Lindsey and the Janitor as in
-  Keen 4; the scouts are `am_puck` at pitch 1.22, chosen provisionally).
+  Keen 4; the scouts are `af_aoede` at pitch 1.12, chosen by ear).
 - Check: `tests/test-rtts.sh` (`/RTTSTEST`).
 - Not yet as in the original: flags thrown onto the map (Keen 4's waving
   flags are used), its Star Wars intro crawl (Keen Worlds' narrated scroll
