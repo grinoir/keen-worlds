@@ -69,6 +69,8 @@ extern const struct KW_Art kw_hutArt, kw_hutMastArt, kw_hutBoardsArt, kw_outpost
 extern const struct KW_Art kw_keepsakeArt[KW_OUTPOST_KEEPSAKE_COUNT];
 extern const int kw_keepsakeWorld[KW_OUTPOST_KEEPSAKE_COUNT];
 bool KW_IsOutpostOpen(void);
+// Where Keen wakes in the outpost's bunk (his feet's tile).
+void KW_OutpostBunk(int *tileX, int *tileY);
 // For /KWTEST: how many of the outpost's walking or floating visitors are there.
 int KW_OutpostVisitorsPresent(void);
 // For /KWTEST: the hut's street door and the room's door (tiles Keen stands on).

@@ -117,6 +117,8 @@ static bool KW_OutpostOpen(void);
 static bool KW_SpotIsHome(void);
 static bool KW_LindseyVisits(void);
 static const char *KW_ShelfNotice(void);
+static void KW_ShowShelves(const struct KW_Resident *r);
+static void KW_UseBunk(const struct KW_Resident *r);
 
 typedef struct KW_Resident
 {
@@ -130,6 +132,7 @@ typedef struct KW_Resident
 	bool (*present)(void);                // NULL: always there
 	const char *(*notice)(void);          // Instead of a talk: one card of this text.
 	KW_Face face;
+	void (*use)(const struct KW_Resident *r); // Instead of a talk: this (painted only).
 } KW_Resident;
 
 static const KW_Resident kw_residents[] = {
@@ -152,12 +155,15 @@ static const KW_Resident kw_residents[] = {
 	{KW_KEEN4, 1, KW_OUTPOST_SPOT_X, KW_OUTPOST_ROOM_STAND,
 		NULL, {{NULL, NULL}}, KW_PAINTED, kw_spotTalk, KW_SpotIsHome, NULL, KW_FACE_SPOT},
 	{KW_KEEN4, 1, KW_OUTPOST_SHELF_X, KW_OUTPOST_ROOM_STAND,
-		NULL, {{NULL, NULL}}, KW_PAINTED, NULL, KW_OutpostOpen, KW_ShelfNotice, KW_FACE_NONE},
+		NULL, {{NULL, NULL}}, KW_PAINTED, NULL, KW_OutpostOpen, KW_ShelfNotice, KW_FACE_NONE, KW_ShowShelves},
+	// ...and the bunk: up there, Keen dreams (and wakes there again).
+	{KW_KEEN4, 1, KW_OUTPOST_BUNK_X, KW_OUTPOST_ROOM_STAND,
+		NULL, {{NULL, NULL}}, KW_PAINTED, NULL, KW_OutpostOpen, NULL, KW_FACE_NONE, KW_UseBunk},
 	// ...the Janitor, who keeps it clean (he walks about, as the elder does),
 	// and Princess Lindsey, visiting after every other world saved.
-	{KW_KEEN4, 1, KW_OUTPOST_ROOM_DOOR_X - 3, KW_OUTPOST_ROOM_STAND,
+	{KW_KEEN4, 1, KW_OUTPOST_BUNK_X - 2, KW_OUTPOST_ROOM_STAND,
 		NULL, {{NULL, NULL}}, KW_ELDER, kw_janitorTalk, KW_OutpostOpen},
-	{KW_KEEN4, 1, KW_OUTPOST_SHELF_X + 1, KW_OUTPOST_ROOM_STAND - 1,
+	{KW_KEEN4, 1, KW_OUTPOST_ROOM_DOOR_X - 3, KW_OUTPOST_ROOM_STAND - 1,
 		NULL, {{NULL, NULL}}, KW_LINDSEY, kw_lindseyTalk, KW_LindseyVisits},
 };
 #define KW_NUM_RESIDENTS ((int)(sizeof(kw_residents) / sizeof(kw_residents[0])))
@@ -1196,6 +1202,52 @@ static void KW_ShowTalk(const KW_Resident *r)
 	}
 }
 
+// The bunk: the ship's dreams (kw_world.c), waking up here again.
+static void KW_UseBunk(const KW_Resident *r)
+{
+	(void)r;
+	KW_SleepInOutpost();
+}
+
+void KW_OutpostBunk(int *tileX, int *tileY)
+{
+	*tileX = KW_OUTPOST_BUNK_X - 1;
+	*tileY = KW_OUTPOST_ROOM_STAND;
+}
+
+// The shelves: how many keepsakes, then, if Keen wants, a card for each,
+// with its picture (Esc puts them back).
+static void KW_ShowShelves(const KW_Resident *r)
+{
+	KW_ResidentCard(r, KW_ShelfNotice());
+	bool any = false;
+	for (int i = 0; i < KW_OUTPOST_KEEPSAKES; ++i)
+		any |= KW_IsWorldCompleted(kw_keepsakeWorld[i]);
+	static const char *const lines[] = {"Look at them.", "Leave them be."};
+	if (!any || KW_ChooseLine(lines, 2) != 0)
+		return;
+	for (int i = 0; i < KW_OUTPOST_KEEPSAKES; ++i)
+	{
+		if (!KW_IsWorldCompleted(kw_keepsakeWorld[i]))
+			continue;
+		US_CenterWindow(26, 8);
+		KW_DrawArt(&kw_keepsakeArt[i], US_GetWindowX() + 16, US_GetWindowY() + 20);
+		US_SetWindowW(US_GetWindowW() - 0x30);
+		US_SetWindowX(US_GetWindowX() + 0x30);
+		US_SetPrintY(US_GetPrintY() + 2);
+		US_CPrint(kw_keepsakeText[i]);
+		VH_UpdateScreen();
+		IN_ClearKeysDown();
+		if (getenv("KW_AUTOFINALE"))
+			continue;
+		IN_WaitButton();
+		bool stop = IN_GetLastScan() == IN_SC_Escape;
+		KW_WaitForButtonsUp();
+		if (stop)
+			return;
+	}
+}
+
 static void KW_ShowConversation(const KW_Resident *r)
 {
 	SD_WaitSoundDone();
@@ -1210,10 +1262,22 @@ static void KW_ShowConversation(const KW_Resident *r)
 	VL_FixRefreshBuffer();
 	KW_WaitForButtonsUp();
 
-	if (r->notice)
+	if (r->use)
+		r->use(r);
+	else if (r->notice)
 		KW_ResidentCard(r, r->notice());
 	else if (r->talk)
+	{
+		// Spot remarks on each keepsake he hasn't seen yet, first.
+		if (r->talk == kw_spotTalk)
+			for (int i = 0; i < KW_OUTPOST_KEEPSAKES; ++i)
+				if (KW_IsWorldCompleted(kw_keepsakeWorld[i]) && !(KW_SpotKeepsakesSeen() & 1u << i))
+				{
+					KW_ResidentSays(r, kw_spotNewText[i][0], kw_spotNewText[i][1]);
+					KW_SetSpotKeepsakesSeen(KW_SpotKeepsakesSeen() | 1u << i);
+				}
 		KW_ShowTalk(r);
+	}
 	else
 	{
 		// The resident greets Keen, Keen picks what to say, the resident answers.
@@ -1322,6 +1386,25 @@ const char *KW_CheckDialogueFits(void)
 		talkProblem = KW_CheckTalkFits(kw_lindseyTalk, (int)(sizeof(kw_lindseyTalk) / sizeof(kw_lindseyTalk[0])), "Lindsey");
 	if (talkProblem)
 		return talkProblem;
+	// the keepsakes' cards, and what Spot says when he first sees each
+	for (int i = 0; i < KW_OUTPOST_KEEPSAKES; ++i)
+	{
+		const char *texts[2] = {kw_keepsakeText[i], kw_spotNewText[i][0]};
+		for (int t = 0; t < 2; ++t)
+		{
+			uint16_t w, h;
+			if (strchr(texts[t], '\f') || !KW_PageFits(texts[t], &w, &h))
+			{
+				snprintf(problem, sizeof(problem), "keepsake %d's line \"%.24s\" doesn't fit one card", i, texts[t]);
+				return problem;
+			}
+		}
+		if (!KW_ClipIsThere(kw_spotNewText[i][1]))
+		{
+			snprintf(problem, sizeof(problem), "Spot's clip %s is missing", kw_spotNewText[i][1]);
+			return problem;
+		}
+	}
 	for (int i = 0; i < KW_NUM_RESIDENTS; ++i)
 	{
 		const KW_Resident *r = &kw_residents[i];
@@ -1386,6 +1469,10 @@ void KW_CheckTalk(void)
 		KW_OutpostOpen() && KW_TakeOutpostScene())
 	{
 		OP_PlayOutpost();
+		// (Spot remarks only on keepsakes that come after the move)
+		for (int i = 0; i < KW_OUTPOST_KEEPSAKES; ++i)
+			if (KW_IsWorldCompleted(kw_keepsakeWorld[i]))
+				KW_SetSpotKeepsakesSeen(KW_SpotKeepsakesSeen() | 1u << i);
 		KW_PutKeen(KW_OUTPOST_DOOR_X - 1, KW_OUTPOST_DOOR_Y + 1, IN_motion_Right);
 		CK_CentreCamera(ck_keenObj);
 		VL_SetDefaultPalette();
@@ -1419,20 +1506,6 @@ void KW_CheckTalk(void)
 	if (ck_inputFrame.yDirection != IN_motion_Up || !ck_keenObj->topTI)
 		return;
 
-	for (CK_object *npc = ck_keenObj->next; npc; npc = npc->next)
-	{
-		if (npc->type != CT_Friendly || (npc->user4 & KW_RESIDENT_TAG_MASK) != KW_RESIDENT_TAG ||
-			(npc->user4 & 0xFF) >= KW_NUM_RESIDENTS)
-			continue;
-		if (ck_keenObj->clipRects.tileX2 + KW_TALK_RANGE < npc->clipRects.tileX1 ||
-			ck_keenObj->clipRects.tileX1 - KW_TALK_RANGE > npc->clipRects.tileX2 ||
-			ck_keenObj->clipRects.tileY2 < npc->clipRects.tileY1 ||
-			ck_keenObj->clipRects.tileY1 > npc->clipRects.tileY2)
-			continue;
-		KW_ShowConversation(&kw_residents[npc->user4 & 0xFF]);
-		return;
-	}
-
 	// Painted residents: Keen stands at their spot.
 	for (int i = 0; i < KW_NUM_RESIDENTS; ++i)
 	{
@@ -1445,6 +1518,21 @@ void KW_CheckTalk(void)
 			ck_keenObj->clipRects.tileY2 < r->tileY || ck_keenObj->clipRects.tileY1 > r->tileY)
 			continue;
 		KW_ShowConversation(r);
+		return;
+	}
+
+	// Residents who walk or float about.
+	for (CK_object *npc = ck_keenObj->next; npc; npc = npc->next)
+	{
+		if (npc->type != CT_Friendly || (npc->user4 & KW_RESIDENT_TAG_MASK) != KW_RESIDENT_TAG ||
+			(npc->user4 & 0xFF) >= KW_NUM_RESIDENTS)
+			continue;
+		if (ck_keenObj->clipRects.tileX2 + KW_TALK_RANGE < npc->clipRects.tileX1 ||
+			ck_keenObj->clipRects.tileX1 - KW_TALK_RANGE > npc->clipRects.tileX2 ||
+			ck_keenObj->clipRects.tileY2 < npc->clipRects.tileY1 ||
+			ck_keenObj->clipRects.tileY1 > npc->clipRects.tileY2)
+			continue;
+		KW_ShowConversation(&kw_residents[npc->user4 & 0xFF]);
 		return;
 	}
 }

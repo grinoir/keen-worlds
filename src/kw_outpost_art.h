@@ -355,7 +355,8 @@ static const KW_MapEdit kw_outpostEdits[] = {
 #define KW_OUTPOST_ROOM_DOOR_X 98
 #define KW_OUTPOST_ROOM_STAND 48
 #define KW_OUTPOST_SPOT_X 101
-#define KW_OUTPOST_SHELF_X 105
+#define KW_OUTPOST_SHELF_X 103
+#define KW_OUTPOST_BUNK_X 106
 #define KW_OUTPOST_KEEPSAKES 16
 
 #define KW_HUT_TILES_W 8

@@ -452,9 +452,10 @@ def csource(srcdir, d=None):
     lines += ['};',
               '#define KW_OUTPOST_DOOR_X %d' % DOOR_X, '#define KW_OUTPOST_DOOR_Y %d' % DOOR_ROWS[0],
               '#define KW_OUTPOST_ROOM_DOOR_X %d' % ROOM_DOOR_X, '#define KW_OUTPOST_ROOM_STAND %d' % ROOM_STAND,
-              # where Keen talks to Spot and looks at the shelves (apart, so
-              # he never does both; the chart beside the door is only a picture)
-              '#define KW_OUTPOST_SPOT_X %d' % SPOT_X, '#define KW_OUTPOST_SHELF_X %d' % (SHELF_X + SHELF_W - 1),
+              # where Keen talks to Spot, looks at the shelves and lies down
+              # on the bunk (apart; the chart beside the door is only a picture)
+              '#define KW_OUTPOST_SPOT_X %d' % SPOT_X, '#define KW_OUTPOST_SHELF_X %d' % (SHELF_X + 3),
+              '#define KW_OUTPOST_BUNK_X %d' % (BUNK_X + 2),
               '#define KW_OUTPOST_KEEPSAKES %d' % len(KEEPSAKES), '']
     k = 0
     for name, x, y, frames, when in pieces:

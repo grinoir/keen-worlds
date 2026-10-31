@@ -599,8 +599,13 @@ bool KW_IsWorldVisited(int world)
 }
 
 // Keen's outpost in Border Village (kw_habitat.c): whether its opening
-// scene has been seen (saved from word 216 of the save block's extras).
+// scene has been seen (saved from word 216 of the save block's extras), and
+// which keepsakes Spot has already remarked on (one bit each, word 217).
 static bool kw_outpostShown;
+static uint16_t kw_spotSeen;
+
+unsigned KW_SpotKeepsakesSeen(void) {return kw_spotSeen;}
+void KW_SetSpotKeepsakesSeen(unsigned bits) {kw_spotSeen = (uint16_t)bits;}
 
 bool KW_TakeOutpostScene(void)
 {
@@ -678,6 +683,10 @@ static void KW_ArcadeFadeOut(void);
 static void KW_ArcadeLeaving(int from);
 static void KW_ArcadeArriving(int to);
 static bool kw_wakeInBed = false; // the next arrival in the ship is in the bunk
+// Where Keen fell asleep: the ship's bunk, or the one in his outpost in
+// Border Village (Keen 4 level 1), where he then wakes.
+static bool kw_dreamInOutpost = false;
+static bool kw_wakeInOutpost = false; // the next arrival on Gnosticus IV is in the hut's bunk
 static bool kw_shipUpUsed = false; // "up" has done its one thing in the ship's rooms and is still held
 void KD_NewGame(void);
 void KD_GetState(int16_t *out);
@@ -800,6 +809,7 @@ bool KW_WriteSaveBlock(FS_File fp)
 	extra[214]=kw_arcadeCabinDirection;
 	extra[215]=KW_CHRONICLE_RULES;
 	extra[216]=kw_outpostShown;
+	extra[217]=(int16_t)kw_spotSeen;
 	return AR_WriteState(fp) && FF_WriteState(fp) && KW_WriteId(fp, kw_worldDefs[kw_boardedFrom].id) &&
 		FS_WriteInt16LE(extra, 261, fp) == 261;
 }
@@ -895,6 +905,7 @@ bool KW_ReadSaveBlock(FS_File fp, bool *deferred)
 			}
 			kw_chronicleEndTold = extra[80] == 1;
 			kw_outpostShown = extra[216] == 1;
+			kw_spotSeen = kw_outpostShown ? (uint16_t)extra[217] : 0;
 			if (kw_chronicle && extra[215] != KW_CHRONICLE_RULES)
 				KW_KeepLegacyCourses(worlds, known);
 			OSI_SetState(&extra[90]);
@@ -1029,6 +1040,7 @@ void KW_ResetWorlds(void)
 	memset(kw_savedTold, 0, sizeof(kw_savedTold));
 	kw_chronicleEndTold = 0;
 	kw_outpostShown = false;
+	kw_spotSeen = 0;
 	kw_pendingWorld = KW_NO_WORLD;
 	kw_placeArrivalAtShip = false;
 	kw_marsLinked=kw_arcadeCabinDue=kw_arcadeFadeIn=kw_cabinReturnRequested=false;
@@ -1120,6 +1132,12 @@ void KW_SwitchWorld(int world)
 		ck_gameState.currentLevel = KW_SHIP_LEVEL;
 		kw_placeArrivalAtShip = false;
 		kw_introduced[KW_SHIP] = true; // no arrival card for Keen's own ship
+	}
+	// Waking in the outpost: Border Village, not the Megarocket.
+	if (world == KW_KEEN4 && kw_wakeInOutpost)
+	{
+		ck_gameState.currentLevel = 1;
+		kw_placeArrivalAtShip = false;
 	}
 	KW_DreamArriving(world); // into the dream: its own score, lives and flower power
 	KW_ArcadeArriving(world);
@@ -1340,6 +1358,20 @@ void KW_PlaceArrivalAtShip(void)
 		ck_keenObj->posX=kw_arcadeCabinX; ck_keenObj->posY=kw_arcadeCabinY;
 		ck_keenObj->xDirection=kw_arcadeCabinDirection;
 		CK_SetAction(ck_keenObj,CK_ACTION(CK_ACT_keenStanding));
+		CK_ResetClipRects(ck_keenObj);
+		return;
+	}
+	// Waking from the dream in the outpost: in the hut's bunk.
+	if (kw_wakeInOutpost && kw_currentWorld == KW_KEEN4 && ca_mapOn == 1 && ck_keenObj)
+	{
+		kw_wakeInOutpost = false;
+		kw_dreamInOutpost = false;
+		int x, y;
+		KW_OutpostBunk(&x, &y);
+		ck_keenObj->posX = RF_TileToUnit(x);
+		ck_keenObj->posY = RF_TileToUnit(y) - 241;
+		ck_keenObj->xDirection = IN_motion_Left;
+		CK_SetAction(ck_keenObj, CK_ACTION(CK_ACT_keenStanding));
 		CK_ResetClipRects(ck_keenObj);
 		return;
 	}
@@ -2877,6 +2909,15 @@ static void KW_Dream(void)
 	KW_RequestWorld(KW_DREAM);
 }
 
+// The bunk in Keen's outpost (kw_habitat.c): the same dreams as the ship's.
+void KW_SleepInOutpost(void)
+{
+	kw_dreamInOutpost = true;
+	KW_Dream();
+	if (kw_pendingWorld != KW_DREAM)
+		kw_dreamInOutpost = false; // (he stayed awake, or dreamt Gold's dream)
+}
+
 // Keen wakes: back to the ship, in his bunk. The dream is kept as it is.
 static void KW_WakeUp(void)
 {
@@ -2884,9 +2925,15 @@ static void KW_WakeUp(void)
 		return;
 	printf("KW_AUTODREAM: Keen wakes up\n");
 	KW_DreamFadeOut();
-	kw_wakeInBed = true;
 	kw_shipUpUsed = true;
 	kw_dreamEnded = 1;
+	if (kw_dreamInOutpost)
+	{
+		kw_wakeInOutpost = true;
+		KW_RequestWorld(KW_KEEN4);
+		return;
+	}
+	kw_wakeInBed = true;
 	KW_RequestWorld(KW_SHIP);
 }
 
@@ -2899,8 +2946,16 @@ bool KW_DreamOver(bool won)
 		return false;
 	printf("KW_AUTODREAM: the dream is over (%s)\n", won ? "won" : "lost");
 	KW_DreamFadeOut();
-	kw_wakeInBed = true;
-	KW_SwitchWorld(KW_SHIP);
+	if (kw_dreamInOutpost)
+	{
+		kw_wakeInOutpost = true;
+		KW_SwitchWorld(KW_KEEN4);
+	}
+	else
+	{
+		kw_wakeInBed = true;
+		KW_SwitchWorld(KW_SHIP);
+	}
 	bool completed = won || kw_worlds[KW_DREAM].completed;
 	KW_NewDream();
 	kw_worlds[KW_DREAM].completed = completed;
@@ -3080,6 +3135,7 @@ static void KW_ShipRoomFrame(void)
 	}
 	if (marker == KW_SHIP_BED)
 	{
+		kw_dreamInOutpost = false;
 		KW_Dream();
 		return;
 	}
@@ -3577,6 +3633,18 @@ void KW_PlayLoopHook(void)
 		kw_fitfCardDue = false;
 		KW_ShowWorldStory();
 		KW_ShowArrivalCard(kw_currentWorld);
+	}
+
+	// Awake again in the outpost's bunk (Keen Dreams).
+	if (kw_currentWorld == KW_KEEN4 && kw_dreamEnded && !vl_screenFaded && IN_DemoGetMode() == IN_Demo_Off)
+	{
+		int how = kw_dreamEnded;
+		kw_dreamEnded = 0;
+		if (!kw_cardsOff)
+			KW_ShowCards(how == 3 ? "Keen wakes up in the hut,\nwell rested.\n\nSpot is snoring.\nWas it all just a dream?" :
+				how == 2 ? "Keen wakes with a start.\n\nOnly a dream! And it is\ngone: next time it will\nbegin all over again." :
+				"Keen wakes up in the hut.\n\nWhat a dream! It will be\nthere when he sleeps again.");
+		SD_SetLastTimeCount(SD_GetTimeCount());
 	}
 
 	// Inside the Megarocket: the flight console and the hatch.
@@ -5112,6 +5180,39 @@ void KW_SelfTest(void)
 			Quit("KW_SelfTest: a lost dream doesn't end with Keen awake in the ship and a new dream to come!");
 		kw_dreamEnded = 0;
 		kw_wakeInBed = false;
+		// ...and dreamt in the outpost's bunk, he wakes up there.
+		KW_SwitchWorld(KW_DREAM);
+		kw_dreamInOutpost = true;
+		ck_gameState.numLives = -1;
+		if (!KW_DreamOver(false) || kw_currentWorld != KW_KEEN4 || ck_gameState.currentLevel != 1 || !kw_wakeInOutpost)
+			Quit("KW_SelfTest: a dream in the outpost's bunk doesn't end in Border Village!");
+		CK_LoadLevel(true, true);
+		{
+			int bunkX, bunkY;
+			KW_OutpostBunk(&bunkX, &bunkY);
+			if (kw_wakeInOutpost || kw_dreamInOutpost || RF_UnitToTile(ck_keenObj->posX) != bunkX)
+				Quit("KW_SelfTest: Keen doesn't wake up in the outpost's bunk!");
+		}
+		// (the same after waking up in the usual way, through the game loop's
+		// world switch)
+		KW_SwitchWorld(KW_DREAM);
+		kw_dreamInOutpost = true;
+		KW_WakeUp();
+		if (kw_pendingWorld != KW_KEEN4 || !kw_wakeInOutpost)
+			Quit("KW_SelfTest: waking from a dream in the outpost's bunk doesn't head for Border Village!");
+		KW_SwitchWorld(kw_pendingWorld);
+		ck_gameState.levelState = LS_Playing;
+		if (ck_gameState.currentLevel != 1)
+			Quit("KW_SelfTest: waking in the outpost doesn't load Border Village!");
+		CK_LoadLevel(true, true);
+		{
+			int bunkX, bunkY;
+			KW_OutpostBunk(&bunkX, &bunkY);
+			if (kw_wakeInOutpost || kw_dreamInOutpost || RF_UnitToTile(ck_keenObj->posX) != bunkX)
+				Quit("KW_SelfTest: Keen doesn't wake up in the outpost's bunk after a dream!");
+		}
+		kw_dreamEnded = 0;
+		kw_shipUpUsed = false;
 		KW_SwitchWorld(KW_KEEN4);
 		kw_worlds[KW_DREAM] = dream;
 		kw_dreamTally = dreamWas;

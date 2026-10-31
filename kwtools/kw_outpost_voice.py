@@ -64,6 +64,45 @@ LINDSEY_TALK = {
         ("Bye, Lindsey!", "Goodbye, Commander. Fly safe.", END),
     ]),
 }
+# The shelves (one card per keepsake; not spoken) and what Spot says the
+# first time he sees each (spoken), by world, as kw_outpost.py's KEEPSAKES.
+KEEPSAKE_TEXT = {
+    'KEEN4': "A red gem from the Shadowlands. It opened a door once.",
+    'KEEN5': "A fuse from the Omegamatic. It won't blow up the galaxy any more.",
+    'KEEN6': "A can of Bloog soda from Fribbulus Xax. Unopened. Nobody dares.",
+    'KEEN7': "A key from Krodacia. Nobody knows which door it fits.",
+    'KEEN8': "A jar of Calidune sand. It gets everywhere anyway.",
+    'KEEN9': "A brain in a jar, from the Battle of the Brains. It is thinking about it.",
+    'KEEN95': "One of the eight accumulators of Aspermontis. Still warm.",
+    'AREALM': "A Krile crystal: a thank-you for saving Krisle.",
+    'FITF': "The cryptic note that led Keen to Gnosticus Pi.",
+    'ALPHAMATIC': "VitaCorp's decryption key, on a floppy disk. Label: DO NOT COPY.",
+    'RTTS': "A lantern from the Shadowlands. Spot says it's creepy.",
+    'OSI': "A pass for the Shikadi Station. Expired.",
+    'CK55': "A gear from the Omegamatic II. It still turns, slowly.",
+    'ASYLUM': "A letter with no address. Keen delivered it anyway.",
+    'BOUNTY': "Rick Uller's wanted poster. Wanted no more.",
+    'SUBURB': "Mortimer's dummy head. It still sparks sometimes.",
+}
+SPOT_NEW = {
+    'KEEN4': "A shiny gem! I'll put it where the sun hits it.",
+    'KEEN5': "A fuse? Is it going to explode? ...Good.",
+    'KEEN6': "Bloog soda! Don't open it. I've seen what it does.",
+    'KEEN7': "A key! What does it open? Nothing? Perfect.",
+    'KEEN8': "Sand. You brought me sand. ...I love it.",
+    'KEEN9': "Is that a brain? It's looking at me.",
+    'KEEN95': "An accumulator! It's warm. I'm sitting on it.",
+    'AREALM': "A crystal from Krisle! It hums when I sing.",
+    'FITF': "That's the note! Who wrote it? ...Don't tell me.",
+    'ALPHAMATIC': "A floppy disk! Can I play games on it?",
+    'RTTS': "A lantern from the Shadowlands. I'm never going back there.",
+    'OSI': "A station pass. I'm keeping it, so they can't come back.",
+    'CK55': "A gear! Look, it spins! ...It stopped.",
+    'ASYLUM': "A letter with no address? That's the saddest letter.",
+    'BOUNTY': "Rick Uller! Wanted no more. You got him!",
+    'SUBURB': "Mortimer's head?! Is it... is it off?",
+}
+
 # (the C array, the clips' prefix, the voice)
 TALKS = [('kw_spotTalk', SPOT_TALK, 'OP_SPOT_', SPOT),
          ('kw_janitorTalk', JANITOR_TALK, 'OP_JAN_', JANITOR),
@@ -101,7 +140,21 @@ def main(folder, header):
         total += len(clips)
         if folder != '-':
             speak_all(clips, voice, folder, **STYLE.get(voice, {}))
+    import kw_outpost
+    assert set(KEEPSAKE_TEXT) == set(SPOT_NEW) == set(kw_outpost.KEEPSAKES)
+    lines.append('// In shelf order (kw_outpost.py): a card for each keepsake, and what Spot says')
+    lines.append('// the first time he sees it, with its clip.')
+    lines.append('static const char *const kw_keepsakeText[] = {')
+    for world in kw_outpost.KEEPSAKES:
+        lines.append('\t%s,' % bar.c_string(bar.pages(KEEPSAKE_TEXT[world])))
+    lines += ['};', 'static const char *const kw_spotNewText[][2] = {']
+    news = {}
+    for world in kw_outpost.KEEPSAKES:
+        news['OP_SPNEW_%s.RAW' % world] = bar.spoken(SPOT_NEW[world])
+        lines.append('\t{%s, "OP_SPNEW_%s.RAW"},' % (bar.c_string(bar.pages(SPOT_NEW[world])), world))
+    lines.append('};')
     if folder != '-':
+        speak_all(news, SPOT, folder, **STYLE.get(SPOT, {}))
         speak_all({keen_says_file(p): bar.spoken(p) for p in dict.fromkeys(picks)}, KEEN, folder, **STYLE[KEEN])
         by_voice = {}
         for name, (voice, words) in CLIPS.items():

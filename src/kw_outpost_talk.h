@@ -39,3 +39,41 @@ static const KW_TalkNode kw_lindseyTalk[] = {
 		},
 	},
 };
+// In shelf order (kw_outpost.py): a card for each keepsake, and what Spot says
+// the first time he sees it, with its clip.
+static const char *const kw_keepsakeText[] = {
+	"A red gem from the\nShadowlands. It\nopened a door once.",
+	"A fuse from the\nOmegamatic. It\nwon't blow up the\ngalaxy any more.",
+	"A can of Bloog soda\nfrom Fribbulus Xax.\nUnopened. Nobody\ndares.",
+	"A key from\nKrodacia. Nobody\nknows which door it\nfits.",
+	"A jar of Calidune\nsand. It gets\neverywhere anyway.",
+	"A brain in a jar,\nfrom the Battle of\nthe Brains. It is\nthinking about it.",
+	"One of the eight\naccumulators of\nAspermontis. Still\nwarm.",
+	"A Krile crystal: a\nthank-you for\nsaving Krisle.",
+	"The cryptic note\nthat led Keen to\nGnosticus Pi.",
+	"VitaCorp's\ndecryption key, on\na floppy disk.\nLabel: DO NOT COPY.",
+	"A lantern from the\nShadowlands. Spot\nsays it's creepy.",
+	"A pass for the\nShikadi Station.\nExpired.",
+	"A gear from the\nOmegamatic II. It\nstill turns,\nslowly.",
+	"A letter with no\naddress. Keen\ndelivered it\nanyway.",
+	"Rick Uller's wanted\nposter. Wanted no\nmore.",
+	"Mortimer's dummy\nhead. It still\nsparks sometimes.",
+};
+static const char *const kw_spotNewText[][2] = {
+	{"A shiny gem! I'll\nput it where the\nsun hits it.", "OP_SPNEW_KEEN4.RAW"},
+	{"A fuse? Is it going\nto explode?\n...Good.", "OP_SPNEW_KEEN5.RAW"},
+	{"Bloog soda! Don't\nopen it. I've seen\nwhat it does.", "OP_SPNEW_KEEN6.RAW"},
+	{"A key! What does it\nopen? Nothing?\nPerfect.", "OP_SPNEW_KEEN7.RAW"},
+	{"Sand. You brought\nme sand. ...I love\nit.", "OP_SPNEW_KEEN8.RAW"},
+	{"Is that a brain?\nIt's looking at me.", "OP_SPNEW_KEEN9.RAW"},
+	{"An accumulator!\nIt's warm. I'm\nsitting on it.", "OP_SPNEW_KEEN95.RAW"},
+	{"A crystal from\nKrisle! It hums\nwhen I sing.", "OP_SPNEW_AREALM.RAW"},
+	{"That's the note!\nWho wrote it?\n...Don't tell me.", "OP_SPNEW_FITF.RAW"},
+	{"A floppy disk! Can\nI play games on it?", "OP_SPNEW_ALPHAMATIC.RAW"},
+	{"A lantern from the\nShadowlands. I'm\nnever going back\nthere.", "OP_SPNEW_RTTS.RAW"},
+	{"A station pass. I'm\nkeeping it, so they\ncan't come back.", "OP_SPNEW_OSI.RAW"},
+	{"A gear! Look, it\nspins! ...It\nstopped.", "OP_SPNEW_CK55.RAW"},
+	{"A letter with no\naddress? That's the\nsaddest letter.", "OP_SPNEW_ASYLUM.RAW"},
+	{"Rick Uller! Wanted\nno more. You got\nhim!", "OP_SPNEW_BOUNTY.RAW"},
+	{"Mortimer's head?!\nIs it... is it off?", "OP_SPNEW_SUBURB.RAW"},
+};

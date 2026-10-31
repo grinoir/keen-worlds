@@ -84,6 +84,11 @@ bool KW_IsWorldVisited(int world);
 // Keen's outpost: true once, the first time its opening scene is due (false
 // if the player has turned the story cards off; it is not offered again).
 bool KW_TakeOutpostScene(void);
+// Up at the outpost's bunk: Keen Dreams, waking up there again.
+void KW_SleepInOutpost(void);
+// Which of the outpost's keepsakes Spot has remarked on (bit i: keepsake i).
+unsigned KW_SpotKeepsakesSeen(void);
+void KW_SetSpotKeepsakesSeen(unsigned bits);
 // Developer tool: Border Village in play, the outpost just opened.
 void KW_OutpostPlayTest(void);
 
