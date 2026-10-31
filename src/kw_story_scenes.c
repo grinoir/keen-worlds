@@ -791,9 +791,10 @@ static void CD_Frame(CD_Scene *scene,const CD_Part *part,uint32_t t,bool talking
 			if(shown>1) CD_Friend(62,CK_CHUNKNUM(PIC_LINDSEY),"Lindsey",speaks && part->stage==OP_VISIT,false);
 			if(shown>2) CD_Friend(118,CK_CHUNKNUM(PIC_ORACLE),"Janitor",speaks && part->stage==OP_MOP,true);
 		}
-		// Keen walks up to the hut with Spot; the key, then in Keen's hand
-		int kx=part->stage==OP_ROLL?CD_Ease(t,part->lead+60,-50,118):part->stage==OP_TUESDAY?CD_Ease(t,200,118,196):118;
-		int sx=part->stage==OP_ROLL?CD_Ease(t,part->lead+90,-90,80):part->stage==OP_TUESDAY?CD_Ease(t,220,80,170):80;
+		// Keen and Spot come in from the right, past the hut, and stand on the
+		// flat ground at its door (not on the hill); the key, then in Keen's hand
+		int kx=part->stage==OP_ROLL?CD_Ease(t,part->lead+60,330,214):214;
+		int sx=part->stage==OP_ROLL?CD_Ease(t,part->lead+90,370,170):170;
 		bool spotTalks=talking && part->stage==OP_SHELF;
 		int sy=92-(spotTalks?(int)((t/12)%3):0);
 		CD_Draw(&scene->spot,sx,sy,256,t);
