@@ -875,6 +875,21 @@ int main(int argc, char *argv[])
 			puts("PASS: Calidune arrival and ending scenes preserve game state, position and cache level");
 			Quit(NULL);
 		}
+		else if (!CK_Cross_strcasecmp(argv[i], "/BRIDGESCENES"))
+		{
+			// Krisle's new ship, the bounty notice, the Alphamatic's messages
+			// and the Shikadi signal, with the real data
+			KW_SwitchWorld(KW_KEEN4);
+			CK_NewGame();ck_gameState.difficulty=D_Normal;
+			ck_gameState.currentLevel=0;CK_LoadLevel(true,true);
+			CK_GameState before=ck_gameState;
+			int x=ck_keenObj->posX,y=ck_keenObj->posY,cacheLevel=ca_levelnum;
+			KR_PlayNewShip();BH_PlayBountyNotice();AB_PlayMessages();K4_PlayShikadiSignal();
+			if (memcmp(&before,&ck_gameState,sizeof(before)) || x!=ck_keenObj->posX || y!=ck_keenObj->posY || cacheLevel!=ca_levelnum)
+				Quit("Bridge scenes changed the running game state");
+			puts("PASS: bridge scenes preserve game state, position and cache level");
+			Quit(NULL);
+		}
 		else if (!CK_Cross_strcasecmp(argv[i], "/SPOTSCENE"))
 		{
 			// Spot's rescue, in the Shikadi Station's world, with the real data

@@ -527,6 +527,12 @@ void KW_AfterWorldEnding(void)
 	// The Shikadi Station, the first time: on to Fribbulus Xax, and Spot.
 	if (kw_currentWorld == KW_OSI && !kw_worlds[KW_OSI].completed && !KW_CardsOff())
 		SP_PlayRescue();
+	// Krisle: the Krile's knock-off ship. The Alphamatic: the messages that
+	// lead on to Gnosticus IV and home.
+	if (kw_currentWorld == KW_AREALM && !kw_worlds[KW_AREALM].completed && !KW_CardsOff())
+		KR_PlayNewShip();
+	if (kw_currentWorld == KW_ALPHAMATIC && !kw_worlds[KW_ALPHAMATIC].completed && !KW_CardsOff())
+		AB_PlayMessages();
 	kw_worlds[kw_currentWorld].completed = true;
 	if (!ck_gameState.levelsDone[ca_mapOn])
 		ck_gameState.levelsDone[ca_mapOn] = 1;
@@ -1603,6 +1609,13 @@ static void KW_PlayWorldStory(void)
 		VL_SetCustomColors(NULL);
 	ck_starWarsNarrated = false;
 	KW_StopVoice();
+	// Keen Worlds' own scenes after a story: why Keen hunts Rick Uller, and
+	// the Shikadi signal that sends him to Gnosticus IV (Keen 4's story
+	// has it on his radio at home; here he is already in the ship).
+	if (kw_currentWorld == KW_BOUNTY)
+		BH_PlayBountyNotice();
+	if (kw_currentWorld == KW_KEEN4)
+		K4_PlayShikadiSignal();
 	if (ownTune)
 	{
 		// Mortimer's transporter takes Keen, alone, down to the sand.

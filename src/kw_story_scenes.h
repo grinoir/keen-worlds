@@ -10,4 +10,12 @@ void CD_PlayEnding(void);
 // After the Shikadi Station: Keen lands in Bloogton and frees Spot. Plays
 // the ending's calm tune itself.
 void SP_PlayRescue(void);
+// After Atroxian Realm's ending: the Krile's knock-off Megarocket.
+void KR_PlayNewShip(void);
+// Before Meurglys III, the first time: the bounty notice for Rick Uller.
+void BH_PlayBountyNotice(void);
+// After the Alphamatic's ending: the council's summons, VitaCorp's bounty.
+void AB_PlayMessages(void);
+// Before Gnosticus IV, the first time: the Shikadi signal in the cockpit.
+void K4_PlayShikadiSignal(void);
 #endif

@@ -715,6 +715,28 @@ computer, Keen and Spot in their usual settings
 tune plays quietly under them. Test: `tests/test-story-scenes.sh`
 (`/SPOTSCENE`).
 
+### Keen Worlds' own story scenes (`src/kw_story_scenes.c`)
+
+Staged, voiced scenes in the Alphamatic opening's house style, where the
+games' own stories leave a gap (`STORY_SEAMS.md` in the workspace). Each
+plays once, keeps the game state untouched, advances on a tap and is
+skipped by holding Escape. The backgrounds are drawn in code; Keen's
+poses, Spot and the Megarocket are the Alphamatic opening's.
+
+| When | Scene | Clips |
+|---|---|---|
+| Before Gnosticus IV, after its story | The Shikadi signal comes in on the Photachyon Transceiver in the cockpit (Keen 4 has it at home) | `K4_CUT_*` |
+| Calidune, after its story | Mortimer's transporter takes Keen from orbit to the sand | `CD_CUT_*` |
+| After Dead in the Desert's ending | The copy meets the Megarocket | `CD_CUT_*` |
+| After Atroxian Realm's ending | The Krile's Sklargifax knock-off; the computer moves in | `KR_CUT_*` |
+| After the Alphamatic's ending | The council's summons and VitaCorp's bounty; home first | `AB_CUT_*` |
+| After the Shikadi Station's ending | Spot freed in Bloogton | `SP_CUT_*` |
+| Before Meurglys III, after its chart page | The bounty notice for Rick Uller | `BH_CUT_*` |
+
+Voices: `kwtools/kw_calidune_voice.py`, `kw_spot_rescue_voice.py`,
+`kw_bridge_scene_voice.py`. Test: `sh tests/test-story-scenes.sh BINARY
+PLAY_FOLDER` (`/CDSCENE`, `/SPOTSCENE`, `/BRIDGESCENES`).
+
 ### Adding a fan game
 
 1. Get it converted for Omnispeak (the Omnispeak modding kit includes Keen

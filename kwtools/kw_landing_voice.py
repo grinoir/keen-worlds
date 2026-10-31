@@ -82,7 +82,7 @@ SAVED = {
     'keen7': ["Krodacia is behind us.", "Seven keys, one door, and it was a trap.", "Of course it was."],
     'keen8': ["Calidune is done.", "I have sand in my circuits.", "And I was not even there."],
     'keen9': ["The Universe is not toast.", "I would like that noted in my log."],
-    'arealm': ["Krisle is free, and the Krile have mended me.", "I feel much better.", "Do not crash me again."],
+    'arealm': ["Krisle is free.", "I live in a new ship now.", "It squeaks."],
     'fitf': ["Gnosticus Pi is at peace.", "The trees say goodbye.", "I think."],
     'keen95': ["Aspermontis is safe.", "Eight batteries, all back where they belong.", "Now can we go home for dinner?"],
     'ck55': ["The Omegamatic Two is switched off.", "I suggest nobody builds a third."],

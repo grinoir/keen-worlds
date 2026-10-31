@@ -9,7 +9,7 @@ work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 printf 'oplEmulator = "nukedopl3"\nloadingDelay = 0\nkw_voices = true\n' > "$work/OMNISPK.CFG"
 cd "$game_data"
-for scene in CDSCENE SPOTSCENE; do
+for scene in CDSCENE SPOTSCENE BRIDGESCENES; do
  mkdir -p "$work/$scene"
  if ! SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy KW_AUTOTALK=1 KW_AUTOCUTSCENE="$work/$scene" \
   timeout -k 2s 60s "$binary" /GAMEPATH "$game_data" /USERPATH "$work" /$scene > "$work/$scene/result.log" 2>&1; then
@@ -34,5 +34,8 @@ def check(scene,scenes,shots,clips,prefix,moving):
  assert log.count('KW_AUTOTALK: '+prefix)==clips,'Supply all %d %s clips'%(clips,prefix)
 check('CDSCENE',2,14,5,'CD_CUT_',('4-sanda.ppm','4-sandb.ppm'))     # Keen materialises
 check('SPOTSCENE',1,14,7,'SP_CUT_',('s5-homea.ppm','s5-homeb.ppm'))  # the cage opens
-print('PASS: Calidune (orbit, beam, sand, copy) and Spot rescue (orbit, Bloogton, cage, departure) frames, 12 real speech clips and preserved game state')
+for prefix in ('KR_CUT_','BH_CUT_','AB_CUT_','K4_CUT_'):
+ assert (root/'BRIDGESCENES'/'result.log').read_text(errors='replace').count('KW_AUTOTALK: '+prefix)>0,prefix
+check('BRIDGESCENES',4,32,16,'',('k2-samea.ppm','k2-sameb.ppm'))  # the knock-off lands
+print('PASS: Calidune, Spot rescue and bridge scenes (Krisle, bounty, Alphamatic, Shikadi signal): frames, 28 real speech clips and preserved game state')
 PY

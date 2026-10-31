@@ -30,7 +30,7 @@ static const struct { const char *id, *file, *text; } kw_savedLines[] = {
 	{"keen7", "SAVED_KEEN7.RAW", "Ship computer:\n\nKrodacia is behind us.\nSeven keys, one door, and it\nwas a trap.\nOf course it was."},
 	{"keen8", "SAVED_KEEN8.RAW", "Ship computer:\n\nCalidune is done.\nI have sand in my circuits.\nAnd I was not even there."},
 	{"keen9", "SAVED_KEEN9.RAW", "Ship computer:\n\nThe Universe is not toast.\nI would like that noted in my\nlog."},
-	{"arealm", "SAVED_AREALM.RAW", "Ship computer:\n\nKrisle is free, and the Krile\nhave mended me.\nI feel much better.\nDo not crash me again."},
+	{"arealm", "SAVED_AREALM.RAW", "Ship computer:\n\nKrisle is free.\nI live in a new ship now.\nIt squeaks."},
 	{"fitf", "SAVED_FITF.RAW", "Ship computer:\n\nGnosticus Pi is at peace.\nThe trees say goodbye.\nI think."},
 	{"keen95", "SAVED_KEEN95.RAW", "Ship computer:\n\nAspermontis is safe.\nEight batteries, all back\nwhere they belong.\nNow can we go home for dinner?"},
 	{"ck55", "SAVED_CK55.RAW", "Ship computer:\n\nThe Omegamatic II is switched\noff.\nI suggest nobody builds a\nthird."},

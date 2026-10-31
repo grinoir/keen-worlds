@@ -1,5 +1,7 @@
 /* Keen Worlds: story scenes of its own, between the games. GPL-2.0-or-later.
- * Calidune's arrival and ending, and Spot's rescue on Fribbulus Xax.
+ * Calidune's arrival and ending, Spot's rescue on Fribbulus Xax, Krisle's
+ * new ship, the bounty on Meurglys III, the messages after the Alphamatic
+ * and the Shikadi signal before Gnosticus IV.
  * In the house style of the Alphamatic opening (doc/alphamatic-opening.md):
  * a staged, voiced scene with subtitles; a fresh tap advances a spoken
  * line, holding Escape (or the controller's menu button) skips it all, and
@@ -24,10 +26,16 @@
 #include <string.h>
 
 typedef struct CD_Image { int w,h; uint8_t *pixels,*mask; } CD_Image;
-typedef struct CD_Scene { void *orbit,*xax,*sand,*street; CD_Image keen[3],spot,ship,copy; } CD_Scene;
+// The pictures behind the scenes, drawn when a scene needs them.
+typedef enum CD_Background { BG_CALIDUNE, BG_XAX, BG_MARS, BG_SAND, BG_STREET, BG_KRISLE, BG_COCKPIT, BG_COUNT } CD_Background;
+typedef struct CD_Scene { void *bg[BG_COUNT]; CD_Image keen[3],spot,ship,copy,knockoff; } CD_Scene;
 
 typedef enum CD_Stage { CD_WARN, CD_AGAIN, CD_BEAM, CD_SAND, CD_RISE, CD_COPY, CD_OFF,
-	SP_ORBIT, SP_LAND, SP_SPOT1, SP_LOCK, SP_HOME, SP_SPOT2, SP_DEPART } CD_Stage;
+	SP_ORBIT, SP_LAND, SP_SPOT1, SP_LOCK, SP_HOME, SP_SPOT2, SP_DEPART,
+	KR_ELDER, KR_SAME, KR_SEATS, KR_FLY, KR_MOSTLY,
+	BH_NOTICE, BH_IN, BH_KNOW, BH_MYSTERY,
+	AB_MESSAGES, AB_WORTH, AB_SELL, AB_HOME,
+	K4_SIGNAL, K4_COUNCIL, K4_WIRES, CD_NUM_STAGES } CD_Stage;
 typedef struct CD_Part
 {
 	CD_Stage stage;
@@ -62,6 +70,54 @@ static const CD_Part sp_rescue[] = {
 	{SP_DEPART,"Fribbulus Xax","The Bloogs watched them go. None of them tried to stop the boy with the pogo stick. Not again.",
 		"SP_CUT_DEPART.RAW",7,0,0},
 };
+
+// Krisle, after Atroxian Realm's ending: the Krile could not mend the
+// Megarocket and bought a knock-off (the game's own ending says so).
+static const CD_Part kr_ending[] = {
+	{KR_ELDER,"Elder Krislen","Your ship could not be mended. So we ordered you a new one, from Sklargifax Space Industries.",
+		"KR_CUT_ELDER.RAW",13,0,0},
+	{KR_SAME,"Keen","It's... almost the same.","KR_CUT_SAME.RAW",14,0,200},
+	{KR_SEATS,"Megarocket","I have been moved into a cheaper ship. The seats are plastic.","KR_CUT_SEATS.RAW",11,0,0},
+	{KR_FLY,"Keen","Does it fly?","KR_CUT_FLY.RAW",14,0,0},
+	{KR_MOSTLY,"Megarocket","Mostly.","KR_CUT_MOSTLY.RAW",11,0,0},
+};
+// Meurglys III, the first time: why Keen is hunting a bounty. The reward
+// stays a mystery; the game's ending gives it.
+static const CD_Part bh_opening[] = {
+	{BH_NOTICE,"Megarocket","Bounty notice from Meurglys III. Wanted: Rick Uller. Reward: a mystery prize.","BH_CUT_NOTICE.RAW",11,0,90},
+	{BH_IN,"Keen","A mystery prize? I'm in.","BH_CUT_IN.RAW",14,0,0},
+	{BH_KNOW,"Megarocket","You do not even know what it is.","BH_CUT_KNOW.RAW",11,0,0},
+	{BH_MYSTERY,"Keen","That's what makes it a mystery!","BH_CUT_MYSTERY.RAW",14,0,0},
+};
+// After the Alphamatic's cliffhanger: the summons, the bounty, and home
+// first (where Spot is taken: Far Shadowlands opens there).
+static const CD_Part ab_bridge[] = {
+	{AB_MESSAGES,"Megarocket","Two messages. The council of Gnosticus IV want a word with you. "
+		"And VitaCorp has put a price on your head. One billion vitas.","AB_CUT_MESSAGES.RAW",11,0,0},
+	{AB_WORTH,"Keen","A billion? I'm worth way more than that.","AB_CUT_WORTH.RAW",14,0,0},
+	{AB_SELL,"Megarocket","I will not be selling you.","AB_CUT_SELL.RAW",11,0,0},
+	{AB_HOME,"Keen","Let's stop at home first. Spot's waiting in the yard.","AB_CUT_HOME.RAW",14,0,0},
+};
+// Gnosticus IV, the first time: Keen 4 opens at home with his radio; in
+// Keen Worlds he is already in the ship, so the signal comes in there.
+static const CD_Part k4_opening[] = {
+	{K4_SIGNAL,"Megarocket","Incoming signal. Shikadi frequency. Very rude.","K4_CUT_SIGNAL.RAW",11,0,50},
+	{K4_COUNCIL,"Keen","They're going after the Gnosticene Council! Set a course for Gnosticus IV.","K4_CUT_COUNCIL.RAW",14,0,0},
+	{K4_WIRES,"Megarocket","Course set. Please stop poking my wires.","K4_CUT_WIRES.RAW",11,0,0},
+};
+
+static CD_Background CD_BackgroundOf(CD_Stage stage)
+{
+	switch(stage) {
+	case CD_SAND: return BG_SAND;
+	case SP_ORBIT: case SP_DEPART: return BG_XAX;
+	case SP_LAND: case SP_SPOT1: case SP_LOCK: case SP_HOME: case SP_SPOT2: return BG_STREET;
+	case KR_ELDER: case KR_SAME: case KR_SEATS: case KR_FLY: case KR_MOSTLY: return BG_KRISLE;
+	case AB_MESSAGES: case AB_WORTH: case AB_SELL: case AB_HOME: return BG_MARS;
+	case BH_NOTICE: case BH_IN: case BH_KNOW: case BH_MYSTERY: case K4_SIGNAL: case K4_COUNCIL: case K4_WIRES: return BG_COCKPIT;
+	default: return BG_CALIDUNE;
+	}
+}
 
 static uint32_t CD_Noise(int x,int y,int z)
 {
@@ -112,7 +168,7 @@ static void CD_Sparkle(int x,int y,int w,int h,int count,uint32_t t)
 
 // A planet from orbit: stars, and its curve below. Colours: lit, mid, dark,
 // night, the bright rim of its air, and the air beyond the dark side.
-static const uint8_t cd_calidune[6]={14,6,4,0,12,4},cd_xax[6]={10,2,3,1,11,9};
+static const uint8_t cd_calidune[6]={14,6,4,0,12,4},cd_xax[6]={10,2,3,1,11,9},cd_mars[6]={12,4,6,0,12,4};
 static void *CD_DrawOrbit(const uint8_t *c)
 {
 	void *surface=VL_CreateSurface(320,200),*old=VL_SetScreen(surface);
@@ -251,6 +307,79 @@ static void CD_Cage(bool open)
 	else VH_Bar(236,86,6,8,14); // the lock
 }
 
+// Krisle: a violet sky with two suns, the Great Ziggurat, blue-grey rock.
+static void *CD_DrawKrisle(void)
+{
+	void *surface=VL_CreateSurface(320,200),*old=VL_SetScreen(surface);
+	VL_ClearScreen(0);
+	for(int y=0;y<144;++y) for(int x=0;x<320;++x) {
+		bool dither=(x+y)&1;
+		int color=y<30?(y>20&&dither?5:0):y<60?(y<40&&dither?0:5):y<92?(y<70&&dither?5:13):13;
+		int ax=x-58,ay=y-30,bx=x-96,by=y-48;
+		if(ax*ax+ay*ay<=11*11) color=15;
+		else if(ax*ax+ay*ay<=15*15 && dither) color=14;
+		if(bx*bx+by*by<=6*6) color=12;
+		// the Great Ziggurat, in steps
+		int zx=abs(x-236);
+		for(int step=0;step<5;++step)
+			if(zx<=52-step*10 && y>=96-step*9 && y<105-step*9) color=(x<236)?(dither?6:4):6;
+		if(zx<=3 && y>=48 && y<60) color=14; // its light
+		// rock, with stones
+		if(y>=100) {
+			color=y<104?(dither?3:8):(dither&&y<116?8:3);
+			uint32_t n=CD_Noise(x/6,y/4,11);
+			if(n%23==0) color=8;
+			if(n%41==1) color=11;
+		}
+		VH_Plot(x,y,color);
+	}
+	VL_SetScreen(old);
+	return surface;
+}
+
+// Inside the Megarocket: stars through the window, a console, a big screen.
+static void *CD_DrawCockpit(void)
+{
+	void *surface=VL_CreateSurface(320,200),*old=VL_SetScreen(surface);
+	VL_ClearScreen(0);
+	for(int y=0;y<144;++y) for(int x=0;x<320;++x) {
+		int color=(y%24==0 || x%48==0)?8:0;              // hull plates
+		if((y%24==4 || y%24==20) && (x%48==4 || x%48==44)) color=7; // rivets
+		if(y>=6 && y<30 && x>=8 && x<312) {            // the window
+			uint32_t n=CD_Noise(x,y,21);
+			color=n%61==0?15:n%61==1?7:0;
+		}
+		if((y==5||y==30) && x>=7 && x<313) color=7;
+		if(y>=36 && y<114 && x>=136 && x<310) color=(y==36||y==113||x==136||x==309)?7:(y<38||x<138)?15:0; // the screen
+		if(y>=114) color=y==114?7:(y<120?8:(((x/4)&1)&&y>124?8:0)); // the console
+		VH_Plot(x,y,color);
+	}
+	static const int lights[]={12,10,14,9,11,13,10,12};
+	for(int i=0;i<8;++i) VH_Bar(150+i*18,124,6,4,lights[i]);
+	VL_SetScreen(old);
+	return surface;
+}
+
+// The knock-off: the Megarocket in Sklargifax brown and yellow, a little
+// lopsided (each column sits a bit lower than the one before).
+static void CD_DrawLopsided(const CD_Image *image,int x,int y)
+{
+	for(int dx=0;dx<image->w;++dx) {
+		int shift=dx/16;
+		for(int dy=0;dy<image->h;++dy) {
+			int i=dy*image->w+dx,px=x+dx,py=y+dy+shift;
+			if(image->mask[i] && px>=0 && px<320 && py>=0 && py<144) VH_Plot(px,py,image->pixels[i]);
+		}
+	}
+}
+
+// A line of the screen's lettering, centred on it.
+static void CD_ScreenText(const char *text,int y,int color)
+{
+	uint16_t w,h;VH_MeasurePropString(text,&w,&h,0);
+	VH_DrawPropStringSolid(text,223-w/2,y,0,color);
+}
+
 static int CD_Wrap(const char *text,char lines[][80],int maxLines,int width)
 {
 	int count=0;
@@ -322,7 +451,7 @@ static void CD_Frame(CD_Scene *scene,const CD_Part *part,uint32_t t,bool talking
 {
 	switch(part->stage) {
 	case CD_WARN: case CD_AGAIN: case CD_BEAM: {
-		VL_SurfaceToScreen(scene->orbit,0,0,0,0,320,200);
+		VL_SurfaceToScreen(scene->bg[BG_CALIDUNE],0,0,0,0,320,200);
 		int x=part->stage==CD_WARN?CD_Ease(t,220,-70,124):124,y=48+(int)((t/24)%2);
 		if(part->stage==CD_WARN && x<120) { // the engine, while it still flies in
 			int length=4+(t/5)%4;
@@ -354,7 +483,7 @@ static void CD_Frame(CD_Scene *scene,const CD_Part *part,uint32_t t,bool talking
 		break;
 	}
 	case CD_SAND: {
-		VL_SurfaceToScreen(scene->sand,0,0,0,0,320,200);
+		VL_SurfaceToScreen(scene->bg[BG_SAND],0,0,0,0,320,200);
 		// heat shimmer: a few bright grains drifting over the near dune
 		for(int i=0;i<12;++i) {
 			uint32_t n=CD_Noise(i,0,9);
@@ -368,7 +497,7 @@ static void CD_Frame(CD_Scene *scene,const CD_Part *part,uint32_t t,bool talking
 		break;
 	}
 	case CD_RISE: case CD_COPY: case CD_OFF: {
-		VL_SurfaceToScreen(scene->orbit,0,0,0,0,320,200);
+		VL_SurfaceToScreen(scene->bg[BG_CALIDUNE],0,0,0,0,320,200);
 		uint32_t all=part->stage==CD_RISE?t:400+t;
 		int mx=70,my=46+(int)((all/26)%2);
 		CD_Draw(&scene->ship,mx,my,256,all);
@@ -384,7 +513,7 @@ static void CD_Frame(CD_Scene *scene,const CD_Part *part,uint32_t t,bool talking
 		break;
 	}
 	case SP_ORBIT: case SP_DEPART: {
-		VL_SurfaceToScreen(scene->xax,0,0,0,0,320,200);
+		VL_SurfaceToScreen(scene->bg[BG_XAX],0,0,0,0,320,200);
 		int x,y;
 		if(part->stage==SP_ORBIT) {x=CD_Ease(t,500,-70,150);y=CD_Ease(t,500,8,92);}
 		else {x=CD_Ease(t,500,150,330);y=CD_Ease(t,500,92,-30);}
@@ -393,8 +522,8 @@ static void CD_Frame(CD_Scene *scene,const CD_Part *part,uint32_t t,bool talking
 		CD_Draw(&scene->ship,x,y,256,t);
 		break;
 	}
-	default: { // SP_LAND to SP_SPOT2: the street in Bloogton
-		VL_SurfaceToScreen(scene->street,0,0,0,0,320,200);
+	case SP_LAND: case SP_SPOT1: case SP_LOCK: case SP_HOME: case SP_SPOT2: { // the street in Bloogton
+		VL_SurfaceToScreen(scene->bg[BG_STREET],0,0,0,0,320,200);
 		CD_Draw(&scene->ship,6,92,256,t);
 		if(part->stage==SP_LAND)
 			for(int i=0;i<3;++i) CD_Bloog(150+i*34+(int)(t*(2+i)/3),110-(i%2)*4,t+i*5);
@@ -414,6 +543,81 @@ static void CD_Frame(CD_Scene *scene,const CD_Part *part,uint32_t t,bool talking
 		CD_Draw(&scene->keen[pose],kx,56,256,t);
 		break;
 	}
+	case KR_ELDER: case KR_SAME: case KR_SEATS: case KR_FLY: case KR_MOSTLY: {
+		VL_SurfaceToScreen(scene->bg[BG_KRISLE],0,0,0,0,320,200);
+		// the knock-off comes down and lands, wobbling, beside Keen
+		if(part->stage!=KR_ELDER) {
+			int y=part->stage==KR_SAME?CD_Ease(t,part->lead,-40,90):90;
+			int wobble=part->stage==KR_SAME && t<part->lead?(int)((t/7)%3)-1:0;
+			if(part->stage==KR_SAME && t<part->lead) {
+				int length=4+(t/3)%5;
+				VH_VLine(y+28,y+28+length,180+wobble+12,12);VH_VLine(y+28,y+28+length/2,180+wobble+48,14);
+			}
+			CD_DrawLopsided(&scene->knockoff,180+wobble,y);
+			if((part->stage==KR_SEATS || part->stage==KR_MOSTLY) && talking && (t/16)%2) VH_Bar(224,y+12,2,2,10);
+		}
+		bool keenTalks=talking && part->color==14;
+		int pose=keenTalks?1+(t/14)%2:(t%300>285?1:0);
+		CD_Draw(&scene->keen[pose],96,76,256,t);
+		break;
+	}
+	case BH_NOTICE: case BH_IN: case BH_KNOW: case BH_MYSTERY: case K4_SIGNAL: case K4_COUNCIL: case K4_WIRES: {
+		VL_SurfaceToScreen(scene->bg[BG_COCKPIT],0,0,0,0,320,200);
+		bool bounty=part->stage<=BH_MYSTERY;
+		if(bounty) {
+			// the wanted poster, scrolling onto the screen from the top
+			int shown=part->stage==BH_NOTICE?CD_Ease(t,part->lead,0,74):74;
+			VH_Bar(140,39,166,shown,14);
+			if(shown>=74) {
+				VH_Bar(142,41,162,2,6);VH_Bar(142,109,162,2,6);
+				CD_ScreenText("WANTED",44,4);
+				for(int dy=-12;dy<=12;++dy) for(int dx=-10;dx<=10;++dx)
+					if(dx*dx*144+dy*dy*100<=14400) VH_Plot(223+dx,73+dy,dy>6&&abs(dx)>6?14:8);
+				CD_ScreenText("?",68,15);
+				CD_ScreenText("RICK ULLER",88,0);
+				CD_ScreenText("REWARD: ???",98,(t/20)%2?4:6);
+			}
+		} else {
+			// the Shikadi signal: static, then a wave
+			for(int x=140;x<306;++x) {
+				int wave=(int)(18*sin(x/7.0+t/5.0)*sin(x/31.0)+(int)(CD_Noise(x,(int)t,13)%7)-3);
+				for(int dy=-1;dy<=1;++dy) VH_Plot(x,76+wave+dy,dy?2:10);
+			}
+			if((t/24)%2) CD_ScreenText("SHIKADI FREQUENCY",42,12);
+			CD_ScreenText("PHOTACHYON TRANSCEIVER",100,7);
+			// the transceiver on the console, and its sparks
+			VH_Bar(92,104,30,12,8);VH_HLine(92,121,104,7);VH_VLine(84,104,118,7);VH_Plot(118,83,12);
+			VH_Bar(96,108,4,4,(t/10)%2?10:2);VH_Bar(104,108,4,4,14);
+			if(part->stage==K4_WIRES && (t/6)%3==0) CD_Sparkle(88,98,38,16,8,t);
+		}
+		bool keenTalks=talking && part->color==14;
+		int pose=keenTalks?1+(t/14)%2:(t%300>285?1:0);
+		CD_Draw(&scene->keen[pose],34,78,256,t);
+		break;
+	}
+	case AB_MESSAGES: case AB_WORTH: case AB_SELL: case AB_HOME: {
+		VL_SurfaceToScreen(scene->bg[BG_MARS],0,0,0,0,320,200);
+		int x=part->stage==AB_HOME?CD_Ease(t,400,124,340):124,y=48+(int)((t/24)%2);
+		if(part->stage==AB_HOME) {
+			int length=5+(t/4)%5;
+			VH_HLine(x-length,x-1,y+17,9);VH_HLine(x-length/2,x-1,y+18,11);
+		}
+		CD_Draw(&scene->ship,x,y,256,t);
+		if(part->stage==AB_MESSAGES) {
+			// the two messages, one after the other
+			VH_Bar(8,6,124,46,0);VH_HLine(8,131,6,11);VH_HLine(8,131,51,11);VH_VLine(6,51,8,11);VH_VLine(6,51,131,11);
+			VH_DrawPropStringSolid("1: GNOSTICUS IV",14,10,0,10);
+			VH_DrawPropStringSolid("The council calls",14,20,0,7);
+			if(t>220) {
+				VH_DrawPropStringSolid("2: WANTED - KEEN",14,31,0,(t/18)%2?12:4);
+				VH_DrawPropStringSolid("1,000,000,000 vitas",14,41,0,14);
+			}
+		}
+		if(part->color==14) CD_Inset(scene,260,talking?1+(t/12)%2:0,256,talking,t);
+		break;
+	}
+	default:
+		break;
 	}
 	if(part->lead && t<part->lead) CD_Subtitle(NULL,NULL,0);
 	else CD_Subtitle(part->name,part->text,part->color);
@@ -438,7 +642,12 @@ static bool CD_PlayPart(CD_Scene *scene,const CD_Part *part)
 	if(automatic) {
 		if(part->clip) KW_Narrate(part->clip);
 		static const char *names[]={"1-warn","2-again","3-beam","4-sand","5-rise","6-copy","7-off",
-			"s1-orbit","s2-land","s3-spot","s4-lock","s5-home","s6-snacks","s7-depart"};
+			"s1-orbit","s2-land","s3-spot","s4-lock","s5-home","s6-snacks","s7-depart",
+			"k1-elder","k2-same","k3-seats","k4-fly","k5-mostly",
+			"b1-notice","b2-in","b3-know","b4-mystery",
+			"a1-messages","a2-worth","a3-sell","a4-home",
+			"g1-signal","g2-council","g3-wires"};
+		typedef char cd_everyStageNamed[sizeof(names)/sizeof(names[0])==CD_NUM_STAGES?1:-1];
 		char name[32];
 		CD_Frame(scene,part,part->lead/2+20,false);VH_UpdateScreen();
 		snprintf(name,sizeof(name),"%sa",names[part->stage]);CD_Shot(name);
@@ -473,13 +682,18 @@ static void CD_Play(const CD_Part *parts,int count)
 	VL_FadeToBlack();VL_SetScrollCoords(0,0);VL_SetDefaultPalette();
 	CA_UpLevel();
 	CA_CacheGrChunk(CK_CHUNKNUM(FON_MAINFONT));
-	for(int i=0;i<count;++i) switch(parts[i].stage) {
-	case CD_SAND: if(!scene.sand) scene.sand=CD_DrawSand(); break;
-	case SP_ORBIT: case SP_DEPART: if(!scene.xax) scene.xax=CD_DrawOrbit(cd_xax); break;
-	case CD_WARN: case CD_AGAIN: case CD_BEAM: case CD_RISE: case CD_COPY: case CD_OFF:
-		if(!scene.orbit) scene.orbit=CD_DrawOrbit(cd_calidune);
-		break;
-	default: if(!scene.street) scene.street=CD_DrawStreet(); break;
+	for(int i=0;i<count;++i) {
+		CD_Background bg=CD_BackgroundOf(parts[i].stage);
+		if(scene.bg[bg]) continue;
+		switch(bg) {
+		case BG_CALIDUNE: scene.bg[bg]=CD_DrawOrbit(cd_calidune); break;
+		case BG_XAX: scene.bg[bg]=CD_DrawOrbit(cd_xax); break;
+		case BG_MARS: scene.bg[bg]=CD_DrawOrbit(cd_mars); break;
+		case BG_SAND: scene.bg[bg]=CD_DrawSand(); break;
+		case BG_STREET: scene.bg[bg]=CD_DrawStreet(); break;
+		case BG_KRISLE: scene.bg[bg]=CD_DrawKrisle(); break;
+		default: scene.bg[bg]=CD_DrawCockpit(); break;
+		}
 	}
 	for(int i=0;i<3;++i) scene.keen[i]=CD_Capture(AL_KeenPose(i),AL_SCENE_KEEN_W,AL_SCENE_KEEN_H,NULL,false);
 	scene.spot=CD_Capture(AL_SpotPicture(),AL_SCENE_SPOT_W,AL_SCENE_SPOT_H,NULL,false);
@@ -487,10 +701,13 @@ static void CD_Play(const CD_Part *parts,int count)
 	static const uint8_t strange[16]={0,5,2,3,2,13,6,7,8,13,10,11,10,13,14,15};
 	scene.ship=CD_Capture(AL_ShipPicture(),AL_SCENE_SHIP_W,AL_SCENE_SHIP_H,NULL,false);
 	scene.copy=CD_Capture(AL_ShipPicture(),AL_SCENE_SHIP_W,AL_SCENE_SHIP_H,strange,true);
+	// The knock-off: Sklargifax yellow and brown for the white, blue and red
+	static const uint8_t sklargifax[16]={0,6,2,3,6,6,6,6,8,6,10,11,6,13,14,14};
+	scene.knockoff=CD_Capture(AL_ShipPicture(),AL_SCENE_SHIP_W,AL_SCENE_SHIP_H,sklargifax,false);
 	bool skipped=false;
 	for(int i=0;i<count && !skipped;++i) {
 		CD_Stage st=parts[i].stage;
-		bool cut=i==0 || st==CD_SAND || st==SP_LAND || st==SP_DEPART;
+		bool cut=i==0 || CD_BackgroundOf(st)!=CD_BackgroundOf(parts[i-1].stage);
 		if(cut) {
 			if(i) VL_FadeToBlack();
 			CD_Frame(&scene,&parts[i],0,false);VH_UpdateScreen();VL_FadeFromBlack();
@@ -498,10 +715,9 @@ static void CD_Play(const CD_Part *parts,int count)
 		skipped=CD_PlayPart(&scene,&parts[i]);
 	}
 	VL_FadeToBlack();KW_LinesOver();
-	void *surfaces[]={scene.orbit,scene.xax,scene.sand,scene.street};
-	for(int i=0;i<4;++i) if(surfaces[i]) VL_DestroySurface(surfaces[i]);
+	for(int i=0;i<BG_COUNT;++i) if(scene.bg[i]) VL_DestroySurface(scene.bg[i]);
 	for(int i=0;i<3;++i) CD_Free(&scene.keen[i]);
-	CD_Free(&scene.spot);CD_Free(&scene.ship);CD_Free(&scene.copy);
+	CD_Free(&scene.spot);CD_Free(&scene.ship);CD_Free(&scene.copy);CD_Free(&scene.knockoff);
 	CA_DownLevel();
 	IN_ClearKeysDown();
 	printf("Story scene %s\n",skipped?"skipped":"finished");fflush(stdout);
@@ -532,3 +748,19 @@ void SP_PlayRescue(void)
 	SD_MusicOff();
 	SD_FadeAdLibVolume(256,0);
 }
+
+// The calm tune of Keen Worlds' ending, quietly under the voices.
+static void CD_PlayWithTune(const char *what,const CD_Part *parts,int count)
+{
+	printf("%s: scene\n",what);fflush(stdout);
+	KW_StopVoice();
+	KW_StartEndingMusic(KW_VoicesEnabled() && KW_VoiceVolume()?48:256);
+	CD_Play(parts,count);
+	SD_MusicOff();
+	SD_FadeAdLibVolume(256,0);
+}
+
+void KR_PlayNewShip(void) {CD_PlayWithTune("Krisle's new ship",kr_ending,(int)(sizeof(kr_ending)/sizeof(kr_ending[0])));}
+void BH_PlayBountyNotice(void) {CD_PlayWithTune("The bounty notice",bh_opening,(int)(sizeof(bh_opening)/sizeof(bh_opening[0])));}
+void AB_PlayMessages(void) {CD_PlayWithTune("After the Alphamatic",ab_bridge,(int)(sizeof(ab_bridge)/sizeof(ab_bridge[0])));}
+void K4_PlayShikadiSignal(void) {CD_PlayWithTune("The Shikadi signal",k4_opening,(int)(sizeof(k4_opening)/sizeof(k4_opening[0])));}
