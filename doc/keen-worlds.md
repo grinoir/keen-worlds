@@ -735,6 +735,11 @@ poses, Spot and the Megarocket are the Alphamatic opening's.
 | Before Gnosticus Pi, after its story | The note's planet: its rings bend time, so Foray fits whenever it is played | `FF_CUT_*` |
 | After Suburb Shenanigans' ending | Billy home at dusk with Spot; the Megarocket under a tarp in the yard | `HM_CUT_*` |
 
+**Watching them again:** "Story scenes" at the bottom of the flight
+chart's right column lists those Keen has seen (arrival scenes once the
+world is visited, ending scenes once it is saved); Enter plays one and
+returns to the cabin. `/MENUTEST` checks the list and a replay.
+
 Voices: `kwtools/kw_calidune_voice.py`, `kw_spot_rescue_voice.py`,
 `kw_bridge_scene_voice.py`. Test: `sh tests/test-story-scenes.sh BINARY
 PLAY_FOLDER` (`/CDSCENE`, `/SPOTSCENE`, `/BRIDGESCENES`).

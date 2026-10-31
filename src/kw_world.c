@@ -2005,6 +2005,7 @@ static void KW_DumpScreen(const char *path);
 // folder, which whoever put this galaxy together writes. A line of three
 // dashes starts a new card. Shown from the flight menu and after the ending.
 #define KW_MENU_CREDITS (-3)
+#define KW_MENU_SCENES (-4)
 
 static void KW_ShowAboutKeenWorlds(void)
 {
@@ -2049,6 +2050,128 @@ static void KW_ShowAboutKeenWorlds(void)
 	KW_ShowCards(text);
 }
 
+// "Story scenes" in the flight chart: Keen Worlds' own scenes (src/
+// kw_story_scenes.c) that Keen has already seen, to watch again.
+static void KW_ReplayCaliduneArrival(void)
+{
+	KW_StartCaliduneMusic(KW_VoicesEnabled() && KW_VoiceVolume() ? 64 : 256);
+	CD_PlayArrival();
+	SD_MusicOff();
+	SD_FadeAdLibVolume(256, 0);
+}
+
+static const struct KW_StoryScene
+{
+	const char *name;
+	int world;
+	bool afterSaving; // (seen when the world is saved; otherwise on arriving)
+	void (*play)(void);
+} kw_storyScenes[] = {
+	{"The Shikadi signal", KW_KEEN4, false, K4_PlayShikadiSignal},
+	{"Gnosticus Pi's rings", KW_FITF, false, FF_PlayTimeRings},
+	{"Alone on Calidune", KW_KEEN8, false, KW_ReplayCaliduneArrival},
+	{"The strange copy", KW_KEEN8, true, CD_PlayEnding},
+	{"Krisle's new ship", KW_AREALM, true, KR_PlayNewShip},
+	{"Two messages", KW_ALPHAMATIC, true, AB_PlayMessages},
+	{"A mystery prize", KW_BOUNTY, false, BH_PlayBountyNotice},
+	{"Spot comes home", KW_OSI, true, SP_PlayRescue},
+	{"Home from school", KW_SUBURB, true, HM_PlayHomecoming},
+};
+#define KW_STORY_SCENES ((int)(sizeof(kw_storyScenes) / sizeof(kw_storyScenes[0])))
+
+static bool KW_StorySceneSeen(int i)
+{
+	const struct KW_StoryScene *scene = &kw_storyScenes[i];
+	return scene->afterSaving ? kw_worlds[scene->world].completed : kw_worlds[scene->world].visited;
+}
+
+// Watch one again, then back in the cabin with its tune.
+static void KW_ReplayStoryScene(int i)
+{
+	printf("Story scenes: %s\n", kw_storyScenes[i].name);
+	fflush(stdout);
+	kw_storyScenes[i].play();
+	VL_SetDefaultPalette();
+	RF_ForceRefresh();
+	RF_Refresh();
+	VL_FadeFromBlack();
+	KW_StartShipMusic();
+}
+
+static void KW_ShowStoryScenes(void)
+{
+	int seen[KW_STORY_SCENES], count = 0;
+	for (int i = 0; i < KW_STORY_SCENES; ++i)
+		if (KW_StorySceneSeen(i))
+			seen[count++] = i;
+	if (!count)
+	{
+		KW_ShowCards("Story scenes\n\nNone yet. Keen Worlds' own\nscenes between the games are\nkept here once Keen has seen\nthem.");
+		return;
+	}
+	int sel = 0;
+	bool redraw = true;
+	KW_WaitForButtonsUp();
+	IN_SetLastScan(IN_SC_None);
+	while (true)
+	{
+		if (redraw)
+		{
+			char text[640];
+			size_t n = (size_t)snprintf(text, sizeof(text), "Story scenes\n\n");
+			for (int i = 0; i < count && n < sizeof(text); ++i)
+				n += (size_t)snprintf(text + n, sizeof(text) - n, i == sel ? "> %s <\n" : "%s\n", kw_storyScenes[seen[i]].name);
+			if (n < sizeof(text))
+				snprintf(text + n, sizeof(text) - n, "\nEnter: watch    Esc: back");
+			uint16_t w, h;
+			CK_MeasureMultiline(text, &w, &h);
+			VL_FixRefreshBuffer();
+			US_CenterWindow((w + 15) / 8 + 2, (h + 7) / 8 + 2);
+			US_SetPrintY(US_GetPrintY() + 4);
+			US_CPrint(text);
+			VH_UpdateScreen();
+			redraw = false;
+			if (getenv("KW_AUTOMENUALL"))
+			{
+				// (the menu test: the whole list, drawn once)
+				char path[600];
+				snprintf(path, sizeof(path), "%s/scenes.ppm", getenv("KW_AUTOMENUALL"));
+				void KW_DumpScreenTo(const char *path);
+				KW_DumpScreenTo(path);
+				break;
+			}
+		}
+		IN_PumpEvents();
+		IN_ScanCode scan = IN_GetLastScan();
+		IN_ControlFrame frame;
+		IN_ReadControls(0, &frame);
+		if (scan == IN_SC_Escape || frame.button3)
+			break;
+		int move = scan == IN_SC_UpArrow || frame.yDirection == IN_motion_Up ? -1 :
+			scan == IN_SC_DownArrow || frame.yDirection == IN_motion_Down ? 1 : 0;
+		if (move)
+		{
+			sel = (sel + move + count) % count;
+			redraw = true;
+			IN_SetLastScan(IN_SC_None);
+			KW_WaitForButtonsUp();
+			continue;
+		}
+		if (scan == IN_SC_Enter || scan == IN_SC_Space || frame.jump || frame.pogo)
+		{
+			KW_WaitForButtonsUp();
+			KW_ReplayStoryScene(seen[sel]); // (then the list again, over the cabin)
+			IN_SetLastScan(IN_SC_None);
+			redraw = true;
+			continue;
+		}
+		VL_Present();
+	}
+	KW_WaitForButtonsUp();
+	RF_ForceRefresh();
+	SD_SetLastTimeCount(SD_GetTimeCount());
+}
+
 typedef struct KW_FlightEntry {int world,column,row,step;} KW_FlightEntry;
 static const struct KW_FlightGroup
 {
@@ -2063,6 +2186,7 @@ static const struct KW_FlightGroup
 	{"Atroxian story",1,2,1,{KW_AREALM,KW_ALPHAMATIC}},
 	{"More levels",1,2,0,{KW_CK55,KW_ASYLUM}},
 	{"Spot's rescue",1,2,1,{KW_RTTS,KW_OSI}},
+	{NULL,1,1,0,{KW_MENU_SCENES}},
 };
 
 static int KW_FlightLayout(KW_FlightEntry *entries,int *rows)
@@ -2117,6 +2241,7 @@ static void KW_FlightRelationship(int world,char *text,size_t size)
 	switch(world)
 	{
 	case KW_FITF:case KW_BOUNTY:relationship="Independent adventure. Choose any time.";break;
+	case KW_MENU_SCENES:relationship="Keen Worlds' own scenes between the games.";break;
 	case KW_AREALM:relationship="After The Omegamatic. Next: The Alphamatic.";break;
 	case KW_ALPHAMATIC:relationship="After BOTH Krisle and Aspermontis.";break;
 	case KW_CK55:case KW_ASYLUM:relationship="Optional levels after The Omegamatic.";break;
@@ -2204,12 +2329,13 @@ static int KW_TravelMenu(void)
 		{
 			KW_FlightEntry entry=entries[index];int col=entry.column,world=entry.world;
 			if(entry.row<top[col] || entry.row>=top[col]+VISIBLE) continue;
-			bool available = world == KW_MENU_CREDITS ||
+			bool available = world == KW_MENU_CREDITS || world == KW_MENU_SCENES ||
 				(KW_IsWorldPresent(world) && KW_CourseIsOpen(world));
 			US_SetPrintColour(world == here ? HERE : !available ? GREY :
 				(world >= 0 && KW_WorldIsSaved(world)) ? SAVED : NORMAL);
 			US_SetPrintX(x+14+col*(columnWidth+8)); US_SetPrintY(listY+(entry.row-top[col])*ROW);
-			char name[100];const char *label=world==KW_MENU_CREDITS?"About Keen Worlds":kw_worldDefs[world].name;
+			char name[100];const char *label=world==KW_MENU_CREDITS?"About Keen Worlds":
+				world==KW_MENU_SCENES?"Story scenes":kw_worldDefs[world].name;
 			if(entry.step) snprintf(name,sizeof(name),"%d. %s",entry.step,label);
 			else CK_Cross_strscpy(name,label,sizeof(name));
 			if(allShots)
@@ -2245,9 +2371,11 @@ static int KW_TravelMenu(void)
 		VHB_HLine(x+4,x+width-5,footY-3,8);
 		int world = entries[sel].world;
 		char title[80],status[100];
-		CK_Cross_strscpy(title,world==KW_MENU_CREDITS?"Commander Keen: Worlds":kw_worldDefs[world].title,sizeof(title));
+		CK_Cross_strscpy(title,world==KW_MENU_CREDITS?"Commander Keen: Worlds":
+			world==KW_MENU_SCENES?"Story scenes":kw_worldDefs[world].title,sizeof(title));
 		for (char *c=title;*c;++c) if (*c=='\n') *c=' ';
 		if (world==KW_MENU_CREDITS) snprintf(status,sizeof(status),"Who put this galaxy together.");
+		else if (world==KW_MENU_SCENES) snprintf(status,sizeof(status),"Watch the scenes Keen has seen again.");
 		else if (world==here) snprintf(status,sizeof(status),"Keen is here. Choose to read about it.");
 		else if (!KW_IsWorldPresent(world)) snprintf(status,sizeof(status),"Not installed. Choose for instructions.");
 		else if (!KW_CourseIsOpen(world)) snprintf(status,sizeof(status),"The Chronicle: save %s first.",kw_worldDefs[KW_ChronicleKey(world)].name);
@@ -2320,6 +2448,11 @@ static int KW_TravelMenu(void)
 	if (result == KW_MENU_CREDITS)
 	{
 		KW_ShowAboutKeenWorlds();
+		return KW_NO_WORLD;
+	}
+	if (result == KW_MENU_SCENES)
+	{
+		KW_ShowStoryScenes();
 		return KW_NO_WORLD;
 	}
 	if (result == here)
@@ -5204,6 +5337,27 @@ void KW_TestMenuScreens(void)
 	if(!kw_shipUpUsed) Quit("Menu test: Up at blinking console did not open flight controls");
 	ck_inputFrame.yDirection=IN_motion_None;
 	puts("PASS: cabin flight chart opens with Up under the blinking arrow; watch and chart preserve game progress");
+	// "Story scenes": none before any world is seen, all of them after
+	for(int i=0;i<KW_STORY_SCENES;++i)
+	{
+		KW_WorldState saved=kw_worlds[kw_storyScenes[i].world];
+		kw_worlds[kw_storyScenes[i].world].visited=kw_worlds[kw_storyScenes[i].world].completed=false;
+		if(KW_StorySceneSeen(i)) Quit("Menu test: a story scene is listed before it was seen");
+		kw_worlds[kw_storyScenes[i].world]=saved;
+	}
+	KW_WorldState worlds[KW_NUM_WORLDS];memcpy(worlds,kw_worlds,sizeof(worlds));
+	for(int i=0;i<KW_STORY_SCENES;++i) kw_worlds[kw_storyScenes[i].world].visited=kw_worlds[kw_storyScenes[i].world].completed=true;
+	if(getenv("KW_AUTOMENUALL")) KW_ShowStoryScenes();
+	if(getenv("KW_AUTOCUTSCENE"))
+	{
+		CK_GameState game=ck_gameState;int x=ck_keenObj->posX,y=ck_keenObj->posY,cache=ca_levelnum;
+		KW_ReplayStoryScene(0);
+		if(KW_CurrentWorld()!=KW_SHIP || memcmp(&game,&ck_gameState,sizeof(game)) || x!=ck_keenObj->posX ||
+			y!=ck_keenObj->posY || cache!=ca_levelnum)
+			Quit("Menu test: watching a story scene again changed the cabin or the game");
+	}
+	memcpy(kw_worlds,worlds,sizeof(worlds));
+	puts("PASS: story scenes are listed only once seen, and the full list fits its card");
 }
 
 // Player feedback: deliberate Up boarding on every installed destination.
