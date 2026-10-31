@@ -78,6 +78,12 @@ def main(game, keen4, out):
         sys.argv = ['kw_patconv.py', 'actions', os.path.join(game, 'KEEN4E.EXE'), os.path.join(game, PAT), keen4]
         kw_patconv.main()
     actions = [l for l in buf.getvalue().splitlines() if l.startswith('%action')]
+    # The mod's patch for the second walking frame of the blue bird missed by
+    # two bytes: it wrote the new speed (256) over the action's type, which
+    # no engine knows. What it meant is what the other three frames got.
+    actions = [l.replace(' 256 0 1 7 0x80 0 ', ' UnscaledOnce 0 1 7 256 0 ')
+               if l.startswith('%action CK4_ACT_BirdWalk1 ') else l for l in actions]
+    assert not any(' 256 0 1 ' in l for l in actions), 'an action type the engine does not know'
     with open(os.path.join(out, 'MOD.CK4'), 'a', encoding='latin1') as f:
         f.write('\n# The sprite actions the patches change (the blue bird walks and kills like\n'
                 '# the Mad Mushroom, the schoolfish swim, the Dopefish, the stunned bounder\n'

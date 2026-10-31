@@ -83,6 +83,7 @@ KEEPSAKE_TEXT = {
     'ASYLUM': "A letter with no address. Keen delivered it anyway.",
     'BOUNTY': "Rick Uller's wanted poster. Wanted no more.",
     'SUBURB': "Mortimer's dummy head. It still sparks sometimes.",
+    'AURORA': "The can of Vorta Cola Craig spilled on the Navi-Com. Empty now.",
 }
 SPOT_NEW = {
     'KEEN4': "A shiny gem! I'll put it where the sun hits it.",
@@ -101,6 +102,7 @@ SPOT_NEW = {
     'ASYLUM': "A letter with no address? That's the saddest letter.",
     'BOUNTY': "Rick Uller! Wanted no more. You got him!",
     'SUBURB': "Mortimer's head?! Is it... is it off?",
+    'AURORA': "Vorta Cola! Who drank it? ...Craig drank it.",
 }
 
 # (the C array, the clips' prefix, the voice)

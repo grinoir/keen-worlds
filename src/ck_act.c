@@ -260,6 +260,21 @@ const char **CK_VAR_GetStringArray(const char *name)
 #endif
 }
 
+// KEEN WORLDS: how many strings a string array holds (0: not set).
+int CK_VAR_GetStringArrayLength(const char *name)
+{
+#ifdef CK_VAR_TYPECHECK
+	CK_VAR_Variable *var = (CK_VAR_Variable *)CK_VAR_GetByName(name, NULL);
+	return (var && var->type == VAR_StringArray) ? var->length : 0;
+#else
+	const char **array = (const char **)CK_VAR_GetByName(name, 0);
+	int n = 0;
+	while (array && array[n]) // (CK_VAR_SetStringArray ends it with NULL)
+		++n;
+	return n;
+#endif
+}
+
 const char *CK_VAR_GetStringArrayElement(const char *name, int index)
 {
 #ifdef CK_VAR_TYPECHECK
@@ -397,8 +412,11 @@ void CK_VAR_SetString(const char *name, const char *val)
 void CK_VAR_SetStringArray(const char *name, const char **array, size_t arrayLen)
 {
 	const char *realName = MM_ArenaStrDup(ck_varArena, name);
-	intptr_t *realArray = (intptr_t *)MM_ArenaAllocAligned(ck_varArena, arrayLen * sizeof(const char *), sizeof(const char *));
+	// KEEN WORLDS: one more, NULL, so that the length can be counted in a
+	// build without CK_VAR_TYPECHECK (CK_VAR_GetStringArrayLength)
+	intptr_t *realArray = (intptr_t *)MM_ArenaAllocAligned(ck_varArena, (arrayLen + 1) * sizeof(const char *), sizeof(const char *));
 	memcpy(realArray, array, arrayLen * sizeof(const char *));
+	realArray[arrayLen] = 0;
 #ifdef CK_VAR_TYPECHECK
 	CK_VAR_Variable *var = (CK_VAR_Variable *)MM_ArenaAlloc(ck_varArena, sizeof(*var));
 	var->type = VAR_StringArray;

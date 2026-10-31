@@ -921,6 +921,11 @@ int main(int argc, char *argv[])
 			puts("PASS: the outpost scene preserves game state, position and cache level");
 			Quit(NULL);
 		}
+		else if (!CK_Cross_strcasecmp(argv[i], "/ENTRYTEXTS"))
+		{
+			KW_CheckAllEntryTexts();
+			Quit(NULL);
+		}
 		else if (!CK_Cross_strcasecmp(argv[i], "/OUTPOSTPLAY"))
 		{
 			KW_OutpostPlayTest();

@@ -131,7 +131,9 @@ def convert(game, keen4, out, pat='Mymod.PAT', files=DATA_FILES, extra=(), skip=
     for m in re.finditer(r'%level\.name\s+(\d+)\s+([^\n]*)', pat_text):
         names[int(m.group(1))] = m.group(2).strip()
     for m in re.finditer(r'%level\.entry\s+(\d+)\s+((?:(?!%)[\s\S])*)', pat_text):
-        entries[int(m.group(1))] = '\n'.join(l.strip() for l in m.group(2).strip().split('\n') if l.strip())
+        # (a line break may also be written \n, as CKPatch reads it: Aurora Bliss)
+        entry = m.group(2).strip().replace('\\n', '\n')
+        entries[int(m.group(1))] = '\n'.join(l.strip() for l in entry.split('\n') if l.strip())
     names.update(level_names or {})   # (names the caller knows: where Omnispeak's own spelling differs from the program's)
     base_names, base_entries = arrays['ck_str_levelNames'], arrays['ck_str_levelEntryText']
     n = len(base_names)

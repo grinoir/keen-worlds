@@ -26,24 +26,24 @@
 	"Bean-with-Bacon\nMegarocket"
 
 %stringarray ck_str_levelEntryText
-	"Keen explores\\n Aurora Bliss",
-	"Keen passes through\\n Den of Madness",
-	"Keen finds\\n the Hidden Cavern",
-	"Keen wades through\\n the Crimson Lake",
-	"Keen is daunted \\n by the Temple of Wisdom",
-	"Keen enters the \\n smegging Starbug",
-	"Keen encounters\\n Craig Canmore",
-	"Keen runs \\n through Aqua Temple",
-	"Keen wonders why\\n it's called Canyon Hurt",
-	"Keen enters \\n the Caged Gardens",
-	"Keen sneaks\\n in the Infested Mine",
-	"Keen walks in\\n the Temple of Doors",
-	"Keen listlessly\\n enters the Astra Temple",
-	"Keen woefully\\n enters the Echo Cave",
-	"Keen is amazed by\\n the Overgrown City",
-	"Keen bravely steps in\\n Rose Elysium",
-	"Keen regrets entering\\n Ancel Caves",
-	"Keen examines\\n the Hall of Colors",
+	"Keen explores\nAurora Bliss",
+	"Keen passes through\nDen of Madness",
+	"Keen finds\nthe Hidden Cavern",
+	"Keen wades through\nthe Crimson Lake",
+	"Keen is daunted\nby the Temple of Wisdom",
+	"Keen enters the\nsmegging Starbug",
+	"Keen encounters\nCraig Canmore",
+	"Keen runs\nthrough Aqua Temple",
+	"Keen wonders why\nit's called Canyon Hurt",
+	"Keen enters\nthe Caged Gardens",
+	"Keen sneaks\nin the Infested Mine",
+	"Keen walks in\nthe Temple of Doors",
+	"Keen listlessly\nenters the Astra Temple",
+	"Keen woefully\nenters the Echo Cave",
+	"Keen is amazed by\nthe Overgrown City",
+	"Keen bravely steps in\nRose Elysium",
+	"Keen regrets entering\nAncel Caves",
+	"Keen examines\nthe Hall of Colors",
 	"Keen launches into the\nBean-with-Bacon\nMegarocket"
 
 %intarray CK_LevelMusic 7, 10, 5, 4, 5, 6, 11, 0, 10, 8, 4, 0, 8, 2, 9, 9, 10, 3, 4, 12
@@ -149,7 +149,7 @@
 %action CK_ACT_keenEnterDoor4 0x0ED2 @SPR_KEENENTER5 @SPR_KEENENTER5 UnscaledOnce 0 0 9 0 -64 CK_KeenEnterDoor NULL CK_BasicDrawFunc1 CK_ACT_keenLookUp1
 %action CK4_ACT_BirdHatched0 0x21B6 @SPR_EGGBIRDWALKL1 @SPR_EGGBIRDWALKR1 UnscaledOnce 0 1 120 256 0 NULL CK4_BirdHatchedCol CK_BasicDrawFunc2 CK4_ACT_BirdWalk1
 %action CK4_ACT_BirdWalk0 0x21D4 @SPR_EGGBIRDWALKL1 @SPR_EGGBIRDWALKR1 UnscaledOnce 0 1 7 256 0 NULL CK4_MushroomCol CK_BasicDrawFunc2 CK4_ACT_BirdWalk1
-%action CK4_ACT_BirdWalk1 0x21F2 @SPR_EGGBIRDWALKL2 @SPR_EGGBIRDWALKR2 256 0 1 7 0x80 0 NULL CK4_MushroomCol CK_BasicDrawFunc2 CK4_ACT_BirdWalk2
+%action CK4_ACT_BirdWalk1 0x21F2 @SPR_EGGBIRDWALKL2 @SPR_EGGBIRDWALKR2 UnscaledOnce 0 1 7 256 0 NULL CK4_MushroomCol CK_BasicDrawFunc2 CK4_ACT_BirdWalk2
 %action CK4_ACT_BirdWalk2 0x2210 @SPR_EGGBIRDWALKL3 @SPR_EGGBIRDWALKR3 UnscaledOnce 0 1 7 256 0 NULL CK4_MushroomCol CK_BasicDrawFunc2 CK4_ACT_BirdWalk3
 %action CK4_ACT_BirdWalk3 0x222E @SPR_EGGBIRDWALKL4 @SPR_EGGBIRDWALKR4 UnscaledOnce 0 1 7 256 0 CK4_BirdWalk CK4_MushroomCol CK_BasicDrawFunc2 CK4_ACT_BirdWalk0
 %action CK4_ACT_BirdFly0 0x224C @SPR_EGGBIRDFLY1 @SPR_EGGBIRDFLY1 ScaledFrame 0 0 8 0 0 CK4_BirdFly CK4_MushroomCol CK4_BirdFlyingDraw CK4_ACT_BirdFly1

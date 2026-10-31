@@ -41,6 +41,7 @@ intptr_t *CK_VAR_GetIntArray(const char *name);
 intptr_t CK_VAR_GetIntArrayElement(const char *name, int index);
 const char **CK_VAR_GetStringArray(const char *name);
 const char *CK_VAR_GetStringArrayElement(const char *name, int index);
+int CK_VAR_GetStringArrayLength(const char *name); // KEEN WORLDS
 CK_action *CK_GetActionByName(const char *name);
 CK_action *CK_GetOrCreateActionByName(const char *name);
 CK_action *CK_GetActionByAlias(const char *alias, const char *name); // KEEN WORLDS

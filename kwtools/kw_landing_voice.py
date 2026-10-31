@@ -24,6 +24,8 @@ VOICE = 'af_heart'        # Kokoro's "Heart", an American woman
 KOKORO_DIR = os.environ.get('KW_KOKORO_DIR', os.path.expanduser('~/Projects/SignalweaveCMS'))
 # world id: the words, a sentence each
 LANDINGS = {
+    'aurora': ["You have now landed on Aurora Bliss.", "My Navi-Com is sticky with Vorta Cola.",
+               "Please find the spare parts, and do not let Craig touch anything."],
     'rtts': ["You have now landed in the far Shadowlands.", "Beware of the local scouts.",
              "They are lost, they are hungry, and they all want your autograph."],
     'suburb': ["You have now landed on Earth. Your own street.",
@@ -60,6 +62,7 @@ LANDINGS = {
 # The Chronicle: a world has been saved and the ship has learned the course
 # to the next. world id: the place's name as it is said.
 COURSES = {
+    'aurora': 'Aurora Bliss',
     'rtts': 'The far Shadowlands',
     'suburb': 'Earth. Your own street',
     'alpham': 'The Alphamatic',
@@ -70,6 +73,7 @@ COURSES = {
 # A world has been saved: what the ship computer says when Keen is next in
 # the cabin. world id: the words, a sentence each.
 SAVED = {
+    'aurora': ["Aurora Bliss is behind us.", "The Navi-Com works again.", "It still smells of Vorta Cola."],
     'rtts': ["The page scouts are home, and the Oracle has spoken.", "The Bloogs took Spot.",
              "Next stop: the Shikadi Station."],
     'suburb': ["Earth. Your own street. The school bag is found, and Billy has caught the bus.",

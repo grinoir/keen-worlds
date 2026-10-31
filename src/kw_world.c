@@ -45,6 +45,7 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 #include "kw_art.h"
 #include "kw_alphamatic_dock_art.h"
 #include "kw_habitat.h"
+#include "kw_arealm.h"
 #include "kw_title_art.h"
 
 extern const char *ck_episodeFile;
@@ -608,12 +609,13 @@ bool KW_IsWorldVisited(int world)
 
 // Keen's outpost in Border Village (kw_habitat.c): whether its opening
 // scene has been seen (saved from word 216 of the save block's extras), and
-// which keepsakes Spot has already remarked on (one bit each, word 217).
+// which keepsakes Spot has already remarked on (one bit each: words 217
+// and 218, low and high).
 static bool kw_outpostShown;
-static uint16_t kw_spotSeen;
+static uint32_t kw_spotSeen;
 
 unsigned KW_SpotKeepsakesSeen(void) {return kw_spotSeen;}
-void KW_SetSpotKeepsakesSeen(unsigned bits) {kw_spotSeen = (uint16_t)bits;}
+void KW_SetSpotKeepsakesSeen(unsigned bits) {kw_spotSeen = (uint32_t)bits;}
 
 bool KW_TakeOutpostScene(void)
 {
@@ -817,7 +819,8 @@ bool KW_WriteSaveBlock(FS_File fp)
 	extra[214]=kw_arcadeCabinDirection;
 	extra[215]=KW_CHRONICLE_RULES;
 	extra[216]=kw_outpostShown;
-	extra[217]=(int16_t)kw_spotSeen;
+	extra[217]=(int16_t)(kw_spotSeen & 0xFFFF);
+	extra[218]=(int16_t)(kw_spotSeen >> 16);
 	return AR_WriteState(fp) && FF_WriteState(fp) && KW_WriteId(fp, kw_worldDefs[kw_boardedFrom].id) &&
 		FS_WriteInt16LE(extra, 261, fp) == 261;
 }
@@ -913,7 +916,7 @@ bool KW_ReadSaveBlock(FS_File fp, bool *deferred)
 			}
 			kw_chronicleEndTold = extra[80] == 1;
 			kw_outpostShown = extra[216] == 1;
-			kw_spotSeen = kw_outpostShown ? (uint16_t)extra[217] : 0;
+			kw_spotSeen = kw_outpostShown ? (uint16_t)extra[217] | (uint32_t)(uint16_t)extra[218] << 16 : 0;
 			if (kw_chronicle && extra[215] != KW_CHRONICLE_RULES)
 				KW_KeepLegacyCourses(worlds, known);
 			OSI_SetState(&extra[90]);
@@ -4140,7 +4143,7 @@ void KW_DebugFrame(void)
 	}
 	// KW_AUTOTALK=n: at frame n, everyone in Keen 4 says their lines (the
 	// windows of its dialogues, one after another)
-	if (getenv("KW_AUTOTALK") && count + 1 == atoi(getenv("KW_AUTOTALK")) && (kw_currentWorld == KW_KEEN4 || kw_currentWorld == KW_KEEN7 || kw_currentWorld == KW_KEEN95 || kw_currentWorld == KW_BOUNTY))
+	if (getenv("KW_AUTOTALK") && count + 1 == atoi(getenv("KW_AUTOTALK")) && (kw_currentWorld == KW_KEEN4 || kw_currentWorld == KW_KEEN7 || kw_currentWorld == KW_KEEN95 || kw_currentWorld == KW_BOUNTY || kw_currentWorld == KW_AURORA))
 	{
 		void CK4_ShowCouncilMessage(void);
 		void CK4_ShowPrincessMessage(void);
@@ -4246,6 +4249,52 @@ void KW_DebugFrame(void)
 		(int)RF_UnitToTile(ck_keenObj->posX), (int)RF_UnitToTile(ck_keenObj->posY), ck_keenObj->gfxChunk,
 		(int)ck_gameState.levelState, path);
 	Quit(0);
+}
+
+// For /KWTEST and /ENTRYTEXTS: a level's "Keen enters..." box must hold
+// its text (a line too wide stops the game; the self-test loads levels
+// silently, without the box). Measured as US_CPrintLine does.
+void KW_CheckEntryText(int lv)
+{
+	if (FF_IsActive() || KD_IsActive() || AR_IsActive())
+		return; // (their own boxes)
+	if (lv < 0 || lv >= CK_VAR_GetStringArrayLength("ck_str_levelEntryText"))
+		return;
+	const char *entry = CK_STRINGELEMENT(ck_str_levelEntryText, lv);
+	CA_CacheGrChunk(CK_CHUNKNUM(FON_MAINFONT));
+	// (CK_BeginCacheBox: a window 26 characters wide, less the picture's 48 pixels)
+	int room = 26 * 8 - 0x30;
+	char line[128];
+	for (const char *p = entry; *p;)
+	{
+		size_t n = strcspn(p, "\n");
+		snprintf(line, sizeof(line), "%.*s", (int)(n < sizeof(line) ? n : sizeof(line) - 1), p);
+		uint16_t lw, lh;
+		VH_MeasurePropString(line, &lw, &lh, 0); // (font 0: the main font, as the box prints)
+		if (getenv("KW_ENTRYDEBUG"))
+			printf("ENTRY %s %d: %d of %d \"%s\"\n", kw_worldDefs[kw_currentWorld].id, lv, lw, room, line);
+		if (lw > room)
+			QuitF("KW_SelfTest: %s level %d's entry text \"%s\" is too wide for its box!",
+				kw_worldDefs[kw_currentWorld].id, lv, line);
+		p += n + (p[n] == '\n');
+	}
+}
+
+// Developer tool (/ENTRYTEXTS): every installed Galaxy world's entry texts.
+void KW_CheckAllEntryTexts(void)
+{
+	kw_cardsOff = true;
+	for (int w = 0; w < KW_NUM_WORLDS; ++w)
+	{
+		if (!KW_IsWorldPresent(w) || w == KW_SHIP || w == KW_MARS)
+			continue;
+		CK_NewGame();
+		if (w != KW_CurrentWorld())
+			KW_SwitchWorld(w);
+		for (int lv = 0; lv < 19; ++lv)
+			KW_CheckEntryText(lv);
+	}
+	puts("PASS: every world's entry texts fit their box");
 }
 
 // Developer tool (/OUTPOSTPLAY): Border Village in play, the outpost just
@@ -4620,6 +4669,7 @@ void KW_SelfTest(void)
 				{
 					if (!CA_MapExists(lv))
 						continue;
+					KW_CheckEntryText(lv);
 					ck_gameState.currentLevel = lv;
 					ck_gameState.levelsDone[lv] = 0;
 					CK_LoadLevel(true, true);

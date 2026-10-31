@@ -2,6 +2,7 @@
 // What the ship computer says when the Megarocket has landed: the world's id,
 // the sound clip in the voice folder, the words for the card.
 static const struct { const char *id, *file, *text; } kw_landings[] = {
+	{"aurora", "LAND_AURORA.RAW", "Ship computer:\n\nYou have now landed on Aurora\nBliss.\nMy Navi-Com is sticky with\nVorta Cola.\nPlease find the spare parts,\nand do not let Craig touch\nanything."},
 	{"rtts", "LAND_RTTS.RAW", "Ship computer:\n\nYou have now landed in the far\nShadowlands.\nBeware of the local scouts.\nThey are lost, they are\nhungry, and they all want your\nautograph."},
 	{"suburb", "LAND_SUBURB.RAW", "Ship computer:\n\nYou have now landed on Earth.\nYour own street.\nI am parked by the backyard\nclubhouse.\nPlease try to catch the bus\nthis time."},
 	{"alpham", "LAND_ALPHAM.RAW", "Ship computer:\n\nYou have now docked at the\nAlphamatic.\nVitaCorp's bigger armageddon\nmachine.\nPlease switch it off before we\nleave."},
@@ -21,6 +22,7 @@ static const struct { const char *id, *file, *text; } kw_landings[] = {
 };
 // What it says when a world has been saved and Keen is back in the cabin.
 static const struct { const char *id, *file, *text; } kw_savedLines[] = {
+	{"aurora", "SAVED_AURORA.RAW", "Ship computer:\n\nAurora Bliss is behind us.\nThe Navi-Com works again.\nIt still smells of Vorta Cola."},
 	{"rtts", "SAVED_RTTS.RAW", "Ship computer:\n\nThe page scouts are home, and\nthe Oracle has spoken.\nThe Bloogs took Spot.\nNext stop: the Shikadi\nStation."},
 	{"suburb", "SAVED_SUBURB.RAW", "Ship computer:\n\nEarth.\nYour own street.\nThe school bag is found, and\nBilly has caught the bus.\nI will wait here until school\nis over."},
 	{"alpham", "SAVED_ALPHAM.RAW", "Ship computer:\n\nThe Alphamatic is disabled.\nVitaCorp has lost another\narmageddon machine.\nI hope they kept the receipt."},

@@ -90,6 +90,10 @@ void KW_SleepInOutpost(void);
 // Which of the outpost's keepsakes Spot has remarked on (bit i: keepsake i).
 unsigned KW_SpotKeepsakesSeen(void);
 void KW_SetSpotKeepsakesSeen(unsigned bits);
+// A level's "Keen enters..." text must fit its box (quits if not), and
+// the same for every installed world (/ENTRYTEXTS).
+void KW_CheckEntryText(int level);
+void KW_CheckAllEntryTexts(void);
 // Developer tool: Border Village in play, the outpost just opened.
 void KW_OutpostPlayTest(void);
 
