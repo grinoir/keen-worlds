@@ -1,6 +1,7 @@
 """Keen Worlds' own bridge scenes, spoken: Krisle's new ship, the bounty
-notice for Meurglys III, the messages after the Alphamatic and the
-Shikadi signal before Gnosticus IV.
+notice for Meurglys III, the messages after the Alphamatic, the Shikadi
+signal before Gnosticus IV, the time-bending rings of Gnosticus Pi and
+Billy home from school after Suburb Shenanigans.
 
     python3 kwtools/kw_bridge_scene_voice.py omnispeak/data/voice
 
@@ -10,9 +11,9 @@ kw_arealm_voice.py). The words are in src/kw_story_scenes.c.
 """
 import sys
 from kw_landing_voice import speak_all, VOICE as COMPUTER
-from kw_keen4_voice import KEEN
+from kw_keen4_voice import KEEN, NARRATOR
 from kw_arealm_voice import ELDER, STYLE as AR_STYLE
-from kw_keen789_voice import STYLE
+from kw_keen789_voice import SPOT, STYLE
 
 STYLE = dict(STYLE, **{ELDER: AR_STYLE[ELDER]})
 
@@ -40,6 +41,19 @@ CLIPS = {
     'K4_CUT_SIGNAL.RAW': (COMPUTER, ['Incoming signal.', 'Shikadi frequency.', 'Very rude.']),
     'K4_CUT_COUNCIL.RAW': (KEEN, ["They're going after the Gnosticene Council!", 'Set a course for Gnosticus IV.']),
     'K4_CUT_WIRES.RAW': (COMPUTER, ['Course set.', 'Please stop poking my wires.']),
+    # before Gnosticus Pi: why its story can be any time
+    'FF_CUT_RINGS.RAW': (COMPUTER, ['The note leads to Gnosticus Pi.', 'Its rings bend time.',
+                                    'When we land, it may be last year.', 'Or next week.']),
+    'FF_CUT_WHEN.RAW': (KEEN, ['So my plush friends could be anywhere...', 'and any-when!']),
+    'FF_CUT_WORDS.RAW': (COMPUTER, ['Please do not invent words in my cockpit.']),
+    # after Suburb Shenanigans: home from school
+    'HM_CUT_DUSK.RAW': (NARRATOR, ['The school day ended, eventually.',
+                                   "Mortimer's dummies were dealt with, at least until tomorrow."]),
+    'HM_CUT_DAY.RAW': (KEEN, ['What a day.', 'Robot Mortimers at school, and I still have homework.']),
+    'HM_CUT_SPACE.RAW': (SPOT, ['Can we go to space instead?']),
+    'HM_CUT_FIRST.RAW': (KEEN, ['Homework first.', 'Then space.']),
+    'HM_CUT_WARM.RAW': (COMPUTER, ['I have kept the engine warm.']),
+    'HM_CUT_SHH.RAW': (KEEN, ['Shh! Mom will hear you!']),
 }
 
 

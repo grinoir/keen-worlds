@@ -18,4 +18,8 @@ void BH_PlayBountyNotice(void);
 void AB_PlayMessages(void);
 // Before Gnosticus IV, the first time: the Shikadi signal in the cockpit.
 void K4_PlayShikadiSignal(void);
+// Before Gnosticus Pi, the first time: its rings bend time.
+void FF_PlayTimeRings(void);
+// After Suburb Shenanigans' ending: Billy home at dusk, before space again.
+void HM_PlayHomecoming(void);
 #endif

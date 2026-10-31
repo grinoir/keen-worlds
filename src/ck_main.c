@@ -885,6 +885,7 @@ int main(int argc, char *argv[])
 			CK_GameState before=ck_gameState;
 			int x=ck_keenObj->posX,y=ck_keenObj->posY,cacheLevel=ca_levelnum;
 			KR_PlayNewShip();BH_PlayBountyNotice();AB_PlayMessages();K4_PlayShikadiSignal();
+			FF_PlayTimeRings();HM_PlayHomecoming();
 			if (memcmp(&before,&ck_gameState,sizeof(before)) || x!=ck_keenObj->posX || y!=ck_keenObj->posY || cacheLevel!=ca_levelnum)
 				Quit("Bridge scenes changed the running game state");
 			puts("PASS: bridge scenes preserve game state, position and cache level");

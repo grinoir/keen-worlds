@@ -533,6 +533,9 @@ void KW_AfterWorldEnding(void)
 		KR_PlayNewShip();
 	if (kw_currentWorld == KW_ALPHAMATIC && !kw_worlds[KW_ALPHAMATIC].completed && !KW_CardsOff())
 		AB_PlayMessages();
+	// Suburb Shenanigans: home from school, before the next trip.
+	if (kw_currentWorld == KW_SUBURB && !kw_worlds[KW_SUBURB].completed && !KW_CardsOff())
+		HM_PlayHomecoming();
 	kw_worlds[kw_currentWorld].completed = true;
 	if (!ck_gameState.levelsDone[ca_mapOn])
 		ck_gameState.levelsDone[ca_mapOn] = 1;
@@ -1616,6 +1619,8 @@ static void KW_PlayWorldStory(void)
 		BH_PlayBountyNotice();
 	if (kw_currentWorld == KW_KEEN4)
 		K4_PlayShikadiSignal();
+	if (kw_currentWorld == KW_FITF)
+		FF_PlayTimeRings(); // (so Foray's story fits whenever it is played)
 	if (ownTune)
 	{
 		// Mortimer's transporter takes Keen, alone, down to the sand.

@@ -1,7 +1,8 @@
 /* Keen Worlds: story scenes of its own, between the games. GPL-2.0-or-later.
  * Calidune's arrival and ending, Spot's rescue on Fribbulus Xax, Krisle's
- * new ship, the bounty on Meurglys III, the messages after the Alphamatic
- * and the Shikadi signal before Gnosticus IV.
+ * new ship, the bounty on Meurglys III, the messages after the Alphamatic,
+ * the Shikadi signal before Gnosticus IV, Gnosticus Pi's time-bending rings
+ * and Billy home from school after Suburb Shenanigans.
  * In the house style of the Alphamatic opening (doc/alphamatic-opening.md):
  * a staged, voiced scene with subtitles; a fresh tap advances a spoken
  * line, holding Escape (or the controller's menu button) skips it all, and
@@ -27,7 +28,7 @@
 
 typedef struct CD_Image { int w,h; uint8_t *pixels,*mask; } CD_Image;
 // The pictures behind the scenes, drawn when a scene needs them.
-typedef enum CD_Background { BG_CALIDUNE, BG_XAX, BG_MARS, BG_SAND, BG_STREET, BG_KRISLE, BG_COCKPIT, BG_COUNT } CD_Background;
+typedef enum CD_Background { BG_CALIDUNE, BG_XAX, BG_MARS, BG_SAND, BG_STREET, BG_KRISLE, BG_COCKPIT, BG_YARD, BG_COUNT } CD_Background;
 typedef struct CD_Scene { void *bg[BG_COUNT]; CD_Image keen[3],spot,ship,copy,knockoff; } CD_Scene;
 
 typedef enum CD_Stage { CD_WARN, CD_AGAIN, CD_BEAM, CD_SAND, CD_RISE, CD_COPY, CD_OFF,
@@ -35,7 +36,9 @@ typedef enum CD_Stage { CD_WARN, CD_AGAIN, CD_BEAM, CD_SAND, CD_RISE, CD_COPY, C
 	KR_ELDER, KR_SAME, KR_SEATS, KR_FLY, KR_MOSTLY,
 	BH_NOTICE, BH_IN, BH_KNOW, BH_MYSTERY,
 	AB_MESSAGES, AB_WORTH, AB_SELL, AB_HOME,
-	K4_SIGNAL, K4_COUNCIL, K4_WIRES, CD_NUM_STAGES } CD_Stage;
+	K4_SIGNAL, K4_COUNCIL, K4_WIRES,
+	FF_RINGS, FF_WHEN, FF_WORDS,
+	HM_DUSK, HM_DAY, HM_SPACE, HM_FIRST, HM_WARM, HM_SHH, CD_NUM_STAGES } CD_Stage;
 typedef struct CD_Part
 {
 	CD_Stage stage;
@@ -106,6 +109,27 @@ static const CD_Part k4_opening[] = {
 	{K4_WIRES,"Megarocket","Course set. Please stop poking my wires.","K4_CUT_WIRES.RAW",11,0,0},
 };
 
+// Gnosticus Pi, the first time: Foray in the Forest opens "after Vorticon
+// VI" and its ending jokes about later games, yet it can be played at any
+// time. Its rings bend time (and its ending's "time travel" is true).
+static const CD_Part ff_opening[] = {
+	{FF_RINGS,"Megarocket","The note leads to Gnosticus Pi. Its rings bend time. When we land, it may be last year. Or next week.",
+		"FF_CUT_RINGS.RAW",11,0,40},
+	{FF_WHEN,"Keen","So my plush friends could be anywhere... and any-when!","FF_CUT_WHEN.RAW",14,0,0},
+	{FF_WORDS,"Megarocket","Please do not invent words in my cockpit.","FF_CUT_WORDS.RAW",11,0,0},
+};
+// After Suburb Shenanigans: Billy home from school before the next trip,
+// without deciding the IQ test (its sequel was never released).
+static const CD_Part hm_homecoming[] = {
+	{HM_DUSK,"Home","The school day ended, eventually. Mortimer's dummies were dealt with, at least until tomorrow.",
+		"HM_CUT_DUSK.RAW",7,0,0},
+	{HM_DAY,"Keen","What a day. Robot Mortimers at school, and I still have homework.","HM_CUT_DAY.RAW",14,0,0},
+	{HM_SPACE,"Spot","Can we go to space instead?","HM_CUT_SPACE.RAW",13,0,0},
+	{HM_FIRST,"Keen","Homework first. Then space.","HM_CUT_FIRST.RAW",14,0,0},
+	{HM_WARM,"Megarocket","(from under the tarp) I have kept the engine warm.","HM_CUT_WARM.RAW",11,0,0},
+	{HM_SHH,"Keen","Shh! Mom will hear you!","HM_CUT_SHH.RAW",14,0,0},
+};
+
 static CD_Background CD_BackgroundOf(CD_Stage stage)
 {
 	switch(stage) {
@@ -114,7 +138,9 @@ static CD_Background CD_BackgroundOf(CD_Stage stage)
 	case SP_LAND: case SP_SPOT1: case SP_LOCK: case SP_HOME: case SP_SPOT2: return BG_STREET;
 	case KR_ELDER: case KR_SAME: case KR_SEATS: case KR_FLY: case KR_MOSTLY: return BG_KRISLE;
 	case AB_MESSAGES: case AB_WORTH: case AB_SELL: case AB_HOME: return BG_MARS;
-	case BH_NOTICE: case BH_IN: case BH_KNOW: case BH_MYSTERY: case K4_SIGNAL: case K4_COUNCIL: case K4_WIRES: return BG_COCKPIT;
+	case BH_NOTICE: case BH_IN: case BH_KNOW: case BH_MYSTERY: case K4_SIGNAL: case K4_COUNCIL: case K4_WIRES:
+	case FF_RINGS: case FF_WHEN: case FF_WORDS: return BG_COCKPIT;
+	case HM_DUSK: case HM_DAY: case HM_SPACE: case HM_FIRST: case HM_WARM: case HM_SHH: return BG_YARD;
 	default: return BG_CALIDUNE;
 	}
 }
@@ -360,6 +386,53 @@ static void *CD_DrawCockpit(void)
 	return surface;
 }
 
+// Home at dusk: the house with lit windows, the fence, the clubhouse, grass.
+static void *CD_DrawYard(void)
+{
+	void *surface=VL_CreateSurface(320,200),*old=VL_SetScreen(surface);
+	VL_ClearScreen(0);
+	for(int y=0;y<144;++y) for(int x=0;x<320;++x) {
+		bool dither=(x+y)&1;
+		int color=y<26?1:y<46?(dither?1:5):y<70?(y<56&&dither?5:13):y<90?(y<78&&dither?13:12):(dither?12:14);
+		uint32_t n=CD_Noise(x,y,31);
+		if(y<40 && n%257==0) color=15;                          // the first stars
+		if(y>=88 && y<120 && (x%14<11) && x>=84) color=y==88||x%14==0?6:(dither&&y>100?4:6); // the fence
+		if(x<86 && y>=48) {                                       // the house
+			color=8;
+			if((x>=12&&x<32&&y>=64&&y<82) || (x>=50&&x<70&&y>=64&&y<82)) color=(x%10==1||y==72)?8:14;
+			if(x>=36&&x<48&&y>=92) color=6;
+		}
+		if(x<92 && y>=22 && y<48 && y-22>=(46-x)/2-23 && abs(x-43)<=(y-22)*2) color=0; // the roof
+		if(x>=262 && x<316 && y>=58 && y<92) {                    // the clubhouse
+			color=(y-58)%6==0?4:6;
+			if(x>=280&&x<296&&y>=70) color=0;
+			if(x>=300&&x<310&&y>=64&&y<74) color=14;
+		}
+		if(y<58 && x>=258 && x<320 && y>=40 && abs(x-289)<=(y-40)*2) color=4;
+		if(x>=268&&x<272 && y>=92 && y<120) color=6;                 // its posts
+		if(x>=306&&x<310 && y>=92 && y<120) color=6;
+		if(y>=118) color=dither&&y<126?2:(n%9==0?10:2);            // the lawn
+		VH_Plot(x,y,color);
+	}
+	VL_SetScreen(old);
+	return surface;
+}
+
+// The Megarocket under its tarp in the yard; it twitches when it speaks.
+static void CD_Tarp(int x,int y,bool talking,uint32_t t)
+{
+	int jiggle=talking?(int)((t/5)%2):0;
+	for(int dy=0;dy<28;++dy) for(int dx=0;dx<76;++dx) {
+		int top=(int)(14-13*sin((dx+1)*3.14159/77)+(dx>58?(dx-58)/2:0));
+		if(dy<top) continue;
+		int color=((dx+dy)&1)&&dy<top+3?9:1;
+		if((dx%19==9) && dy>top+2) color=7; // the ropes
+		VH_Plot(x+dx,y+dy-jiggle,color);
+	}
+	VH_Bar(x+72,y+20-jiggle,6,4,7);VH_Bar(x+77,y+21-jiggle,3,2,15); // the nose pokes out
+	if(talking && (t/12)%2) VH_Bar(x+6,y+24,2,2,10);
+}
+
 // The knock-off: the Megarocket in Sklargifax brown and yellow, a little
 // lopsided (each column sits a bit lower than the one before).
 static void CD_DrawLopsided(const CD_Image *image,int x,int y)
@@ -561,10 +634,28 @@ static void CD_Frame(CD_Scene *scene,const CD_Part *part,uint32_t t,bool talking
 		CD_Draw(&scene->keen[pose],96,76,256,t);
 		break;
 	}
-	case BH_NOTICE: case BH_IN: case BH_KNOW: case BH_MYSTERY: case K4_SIGNAL: case K4_COUNCIL: case K4_WIRES: {
+	case BH_NOTICE: case BH_IN: case BH_KNOW: case BH_MYSTERY: case K4_SIGNAL: case K4_COUNCIL: case K4_WIRES:
+	case FF_RINGS: case FF_WHEN: case FF_WORDS: {
 		VL_SurfaceToScreen(scene->bg[BG_COCKPIT],0,0,0,0,320,200);
-		bool bounty=part->stage<=BH_MYSTERY;
-		if(bounty) {
+		bool bounty=part->stage<=BH_MYSTERY,foray=part->stage>=FF_RINGS;
+		if(foray) {
+			// the cryptic note, and the planet with strange rings
+			int shown=part->stage==FF_RINGS?CD_Ease(t,part->lead,0,74):74;
+			VH_Bar(140,39,166,shown,15);
+			if(shown>=74) {
+				VH_DrawPropStringSolid("Your friends are where",146,44,0,1);
+				VH_DrawPropStringSolid("the rings are strange.",146,54,0,1);
+				for(int dy=-11;dy<=11;++dy) for(int dx=-11;dx<=11;++dx)
+					if(dx*dx+dy*dy<=121) VH_Plot(256+dx,88+dy,dx+dy<-6?10:2);
+				double turn=t/40.0;
+				for(int a=0;a<96;++a) {
+					double r=a*3.14159/48;
+					int rx=(int)(26*cos(r)),ry=(int)(7*sin(r)*cos(turn)+3*cos(r)*sin(turn));
+					if(!(ry<0 && rx*rx+ry*ry<121)) VH_Plot(256+rx,88+ry,a%2?14:13);
+				}
+				VH_DrawPropStringSolid("- ?",160,96,0,8);
+			}
+		} else if(bounty) {
 			// the wanted poster, scrolling onto the screen from the top
 			int shown=part->stage==BH_NOTICE?CD_Ease(t,part->lead,0,74):74;
 			VH_Bar(140,39,166,shown,14);
@@ -595,6 +686,20 @@ static void CD_Frame(CD_Scene *scene,const CD_Part *part,uint32_t t,bool talking
 		CD_Draw(&scene->keen[pose],34,78,256,t);
 		break;
 	}
+	case HM_DUSK: case HM_DAY: case HM_SPACE: case HM_FIRST: case HM_WARM: case HM_SHH: {
+		VL_SurfaceToScreen(scene->bg[BG_YARD],0,0,0,0,320,200);
+		CD_Tarp(184,94,talking && part->stage==HM_WARM,t);
+		// Keen walks in from the bus stop, Spot hops over to meet him
+		int kx=part->stage==HM_DUSK?CD_Ease(t,300,-40,98):98;
+		int sx=part->stage==HM_DUSK?CD_Ease(t,300,180,146):146;
+		bool spotTalks=talking && part->color==13;
+		int sy=80-(spotTalks?(int)((t/12)%3):part->stage==HM_DUSK && t>200 && t<300?(int)((t/8)%2)*2:0);
+		CD_Draw(&scene->spot,sx,sy,256,t);
+		bool keenTalks=talking && part->color==14;
+		int pose=keenTalks?1+(t/14)%2:(t%300>285?1:0);
+		CD_Draw(&scene->keen[pose],kx,58,256,t);
+		break;
+	}
 	case AB_MESSAGES: case AB_WORTH: case AB_SELL: case AB_HOME: {
 		VL_SurfaceToScreen(scene->bg[BG_MARS],0,0,0,0,320,200);
 		int x=part->stage==AB_HOME?CD_Ease(t,400,124,340):124,y=48+(int)((t/24)%2);
@@ -617,7 +722,7 @@ static void CD_Frame(CD_Scene *scene,const CD_Part *part,uint32_t t,bool talking
 		break;
 	}
 	default:
-		break;
+		Quit("Story scene: a stage with no picture");
 	}
 	if(part->lead && t<part->lead) CD_Subtitle(NULL,NULL,0);
 	else CD_Subtitle(part->name,part->text,part->color);
@@ -646,7 +751,9 @@ static bool CD_PlayPart(CD_Scene *scene,const CD_Part *part)
 			"k1-elder","k2-same","k3-seats","k4-fly","k5-mostly",
 			"b1-notice","b2-in","b3-know","b4-mystery",
 			"a1-messages","a2-worth","a3-sell","a4-home",
-			"g1-signal","g2-council","g3-wires"};
+			"g1-signal","g2-council","g3-wires",
+			"f1-rings","f2-when","f3-words",
+			"h1-dusk","h2-day","h3-space","h4-first","h5-warm","h6-shh"};
 		typedef char cd_everyStageNamed[sizeof(names)/sizeof(names[0])==CD_NUM_STAGES?1:-1];
 		char name[32];
 		CD_Frame(scene,part,part->lead/2+20,false);VH_UpdateScreen();
@@ -692,6 +799,7 @@ static void CD_Play(const CD_Part *parts,int count)
 		case BG_SAND: scene.bg[bg]=CD_DrawSand(); break;
 		case BG_STREET: scene.bg[bg]=CD_DrawStreet(); break;
 		case BG_KRISLE: scene.bg[bg]=CD_DrawKrisle(); break;
+		case BG_YARD: scene.bg[bg]=CD_DrawYard(); break;
 		default: scene.bg[bg]=CD_DrawCockpit(); break;
 		}
 	}
@@ -764,3 +872,5 @@ void KR_PlayNewShip(void) {CD_PlayWithTune("Krisle's new ship",kr_ending,(int)(s
 void BH_PlayBountyNotice(void) {CD_PlayWithTune("The bounty notice",bh_opening,(int)(sizeof(bh_opening)/sizeof(bh_opening[0])));}
 void AB_PlayMessages(void) {CD_PlayWithTune("After the Alphamatic",ab_bridge,(int)(sizeof(ab_bridge)/sizeof(ab_bridge[0])));}
 void K4_PlayShikadiSignal(void) {CD_PlayWithTune("The Shikadi signal",k4_opening,(int)(sizeof(k4_opening)/sizeof(k4_opening[0])));}
+void FF_PlayTimeRings(void) {CD_PlayWithTune("Gnosticus Pi's rings",ff_opening,(int)(sizeof(ff_opening)/sizeof(ff_opening[0])));}
+void HM_PlayHomecoming(void) {CD_PlayWithTune("Home from school",hm_homecoming,(int)(sizeof(hm_homecoming)/sizeof(hm_homecoming[0])));}

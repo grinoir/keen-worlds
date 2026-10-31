@@ -732,6 +732,8 @@ poses, Spot and the Megarocket are the Alphamatic opening's.
 | After the Alphamatic's ending | The council's summons and VitaCorp's bounty; home first | `AB_CUT_*` |
 | After the Shikadi Station's ending | Spot freed in Bloogton | `SP_CUT_*` |
 | Before Meurglys III, after its chart page | The bounty notice for Rick Uller | `BH_CUT_*` |
+| Before Gnosticus Pi, after its story | The note's planet: its rings bend time, so Foray fits whenever it is played | `FF_CUT_*` |
+| After Suburb Shenanigans' ending | Billy home at dusk with Spot; the Megarocket under a tarp in the yard | `HM_CUT_*` |
 
 Voices: `kwtools/kw_calidune_voice.py`, `kw_spot_rescue_voice.py`,
 `kw_bridge_scene_voice.py`. Test: `sh tests/test-story-scenes.sh BINARY
