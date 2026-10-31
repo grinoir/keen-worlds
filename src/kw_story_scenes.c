@@ -363,7 +363,8 @@ static void *CD_DrawKrisle(void)
 	return surface;
 }
 
-// Inside the Megarocket: stars through the window, a console, a big screen.
+// Inside the Megarocket: stars through the window, a big screen above the
+// console on the right, and a floor for Keen to stand on at the left.
 static void *CD_DrawCockpit(void)
 {
 	void *surface=VL_CreateSurface(320,200),*old=VL_SetScreen(surface);
@@ -371,17 +372,18 @@ static void *CD_DrawCockpit(void)
 	for(int y=0;y<144;++y) for(int x=0;x<320;++x) {
 		int color=(y%24==0 || x%48==0)?8:0;              // hull plates
 		if((y%24==4 || y%24==20) && (x%48==4 || x%48==44)) color=7; // rivets
-		if(y>=6 && y<30 && x>=8 && x<312) {            // the window
+		if(y>=4 && y<20 && x>=8 && x<312) {            // the window
 			uint32_t n=CD_Noise(x,y,21);
 			color=n%61==0?15:n%61==1?7:0;
 		}
-		if((y==5||y==30) && x>=7 && x<313) color=7;
-		if(y>=36 && y<114 && x>=136 && x<310) color=(y==36||y==113||x==136||x==309)?7:(y<38||x<138)?15:0; // the screen
-		if(y>=114) color=y==114?7:(y<120?8:(((x/4)&1)&&y>124?8:0)); // the console
+		if((y==3||y==20) && x>=7 && x<313) color=7;
+		if(y>=26 && y<104 && x>=136 && x<310) color=(y==26||y==103||x==136||x==309)?7:(y<28||x<138)?15:0; // the screen
+		if(y>=104 && y<124 && x>=126) color=y==104||x==126?7:(y<110?8:(((x/4)&1)&&y>114?8:0)); // the console
+		if(y>=124) color=y==124?7:(x%32==0||(y-124)%10==0)?0:8; // the floor
 		VH_Plot(x,y,color);
 	}
 	static const int lights[]={12,10,14,9,11,13,10,12};
-	for(int i=0;i<8;++i) VH_Bar(150+i*18,124,6,4,lights[i]);
+	for(int i=0;i<8;++i) VH_Bar(150+i*18,114,6,4,lights[i]);
 	VL_SetScreen(old);
 	return surface;
 }
@@ -641,45 +643,45 @@ static void CD_Frame(CD_Scene *scene,const CD_Part *part,uint32_t t,bool talking
 		if(foray) {
 			// the cryptic note, and the planet with strange rings
 			int shown=part->stage==FF_RINGS?CD_Ease(t,part->lead,0,74):74;
-			VH_Bar(140,39,166,shown,15);
+			VH_Bar(140,29,166,shown,15);
 			if(shown>=74) {
-				VH_DrawPropStringSolid("Your friends are where",146,44,0,1);
-				VH_DrawPropStringSolid("the rings are strange.",146,54,0,1);
+				VH_DrawPropStringSolid("Your friends are where",146,34,0,1);
+				VH_DrawPropStringSolid("the rings are strange.",146,44,0,1);
 				for(int dy=-11;dy<=11;++dy) for(int dx=-11;dx<=11;++dx)
-					if(dx*dx+dy*dy<=121) VH_Plot(256+dx,88+dy,dx+dy<-6?10:2);
+					if(dx*dx+dy*dy<=121) VH_Plot(256+dx,78+dy,dx+dy<-6?10:2);
 				double turn=t/40.0;
 				for(int a=0;a<96;++a) {
 					double r=a*3.14159/48;
 					int rx=(int)(26*cos(r)),ry=(int)(7*sin(r)*cos(turn)+3*cos(r)*sin(turn));
-					if(!(ry<0 && rx*rx+ry*ry<121)) VH_Plot(256+rx,88+ry,a%2?14:13);
+					if(!(ry<0 && rx*rx+ry*ry<121)) VH_Plot(256+rx,78+ry,a%2?14:13);
 				}
-				VH_DrawPropStringSolid("- ?",160,96,0,8);
+				VH_DrawPropStringSolid("- ?",160,86,0,8);
 			}
 		} else if(bounty) {
 			// the wanted poster, scrolling onto the screen from the top
 			int shown=part->stage==BH_NOTICE?CD_Ease(t,part->lead,0,74):74;
-			VH_Bar(140,39,166,shown,14);
+			VH_Bar(140,29,166,shown,14);
 			if(shown>=74) {
-				VH_Bar(142,41,162,2,6);VH_Bar(142,109,162,2,6);
-				CD_ScreenText("WANTED",44,4);
+				VH_Bar(142,31,162,2,6);VH_Bar(142,99,162,2,6);
+				CD_ScreenText("WANTED",34,4);
 				for(int dy=-12;dy<=12;++dy) for(int dx=-10;dx<=10;++dx)
-					if(dx*dx*144+dy*dy*100<=14400) VH_Plot(223+dx,73+dy,dy>6&&abs(dx)>6?14:8);
-				CD_ScreenText("?",68,15);
-				CD_ScreenText("RICK ULLER",88,0);
-				CD_ScreenText("REWARD: ???",98,(t/20)%2?4:6);
+					if(dx*dx*144+dy*dy*100<=14400) VH_Plot(223+dx,63+dy,dy>6&&abs(dx)>6?14:8);
+				CD_ScreenText("?",58,15);
+				CD_ScreenText("RICK ULLER",78,0);
+				CD_ScreenText("REWARD: ???",88,(t/20)%2?4:6);
 			}
 		} else {
 			// the Shikadi signal: static, then a wave
 			for(int x=140;x<306;++x) {
 				int wave=(int)(18*sin(x/7.0+t/5.0)*sin(x/31.0)+(int)(CD_Noise(x,(int)t,13)%7)-3);
-				for(int dy=-1;dy<=1;++dy) VH_Plot(x,76+wave+dy,dy?2:10);
+				for(int dy=-1;dy<=1;++dy) VH_Plot(x,66+wave+dy,dy?2:10);
 			}
-			if((t/24)%2) CD_ScreenText("SHIKADI FREQUENCY",42,12);
-			CD_ScreenText("PHOTACHYON TRANSCEIVER",100,7);
+			if((t/24)%2) CD_ScreenText("SHIKADI FREQUENCY",32,12);
+			CD_ScreenText("PHOTACHYON TRANSCEIVER",90,7);
 			// the transceiver on the console, and its sparks
-			VH_Bar(92,104,30,12,8);VH_HLine(92,121,104,7);VH_VLine(84,104,118,7);VH_Plot(118,83,12);
-			VH_Bar(96,108,4,4,(t/10)%2?10:2);VH_Bar(104,108,4,4,14);
-			if(part->stage==K4_WIRES && (t/6)%3==0) CD_Sparkle(88,98,38,16,8,t);
+			VH_Bar(128,106,20,10,8);VH_HLine(128,147,106,7);VH_VLine(84,106,131,7);VH_Plot(131,83,12);
+			VH_Bar(132,109,3,3,(t/10)%2?10:2);VH_Bar(139,109,3,3,14);
+			if(part->stage==K4_WIRES && (t/6)%3==0) CD_Sparkle(124,100,30,14,8,t);
 		}
 		bool keenTalks=talking && part->color==14;
 		int pose=keenTalks?1+(t/14)%2:(t%300>285?1:0);
