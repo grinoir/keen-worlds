@@ -53,8 +53,6 @@ typedef enum KW_World
 	KW_REVIVAL, // Bliss, as Keen: "Revival of Bliss" (fan game on Keen 4, Craig's story part three; append)
 	KW_REVIVALC, // Bliss, as Craig: "Revival of Bliss", its other build (append)
 	KW_FUTURE, // Shadowlands: "The Last Reunion", Revival of Bliss's hidden epilogue (on Keen 4; append)
-	KW_PRISONER, // A-Danac 2 & 3: "The Prisoner's Dilemma" as Keen (on Keen 6; append)
-	KW_PRISONERR, // A-Danac 2 & 3: "The Prisoner's Dilemma" as Rick Uller (on Keen 6; append)
 	KW_CLORTS, // Aleph Zilch: "Send in the Clorts", the Mortimer finale's end (on Keen 5; append)
 	KW_TFOS, // Phaelox: "The Terror from Outer Space" (fan game on Keen 4; append)
 	KW_NUM_WORLDS,

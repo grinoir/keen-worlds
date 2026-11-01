@@ -41,7 +41,6 @@ CK_EpisodeDef ck6_episode = {
 	&CK6_IsPresent,
 };
 
-void CK6_Prisoner_SetupFunctions(void);
 
 void CK6_SetupFunctions()
 {
@@ -49,7 +48,6 @@ void CK6_SetupFunctions()
 	CK6_Obj2_SetupFunctions();
 	CK6_Obj3_SetupFunctions();
 	CK6_Map_SetupFunctions();
-	CK6_Prisoner_SetupFunctions(); // KEEN WORLDS: The Prisoner's Dilemma's routine (kw_prisoner.c)
 }
 
 // Check if all the game files are present.
