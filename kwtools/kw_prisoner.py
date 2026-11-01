@@ -95,6 +95,21 @@ DATA_FILES = {
 # The mod ships AUDIOHED (not the base's AUDIOHHD); ca_tileInfo is TILEINFO.CK6.
 EXTRA_CA = ['%string ca_audioHead "AUDIOHED.CK6"']
 
+# The Chronicle scroll (ck_str_storyText), both builds: the game tells its own
+# story as a comic in HELPTEXT.CK6; this is that story, cut to a scroll in the
+# game's voice. (Meurglys III is Bounty Hunting Brouhaha's world; the
+# Re-Synapsizer is the machine Keen chases on to Aleph Zilch in Send in the
+# Clorts.) Keen 6's intro is shown this way in Keen Worlds, like every world's.
+STORY = (
+    "Above Meurglys III,\nbounty hunter Commander\nKeen and his former\nquarry, Rick Uller,\n"
+    "shake hands: together\nthey will stop Mortimer\nMcMire once and for\nall. But the Union man\n"
+    "who comes to arrest\nthem is Mort himself,\nin disguise. He gloats\nof his latest machine,\n"
+    "the Re-Synapsizer,\nwhich will triple every\ncreature's wits and\nkill most of them, then\n"
+    "drops the pair down a\ncriminal deposit slot\nonto the Twin Prison\nPlanets, A-Danac 2 and\n"
+    "3. Stripped of their\nships and Keen's pogo,\nlocked in adjoining\ncells, they have one\n"
+    "hope: break out, reach\nthe Chief Magistrate,\nand play Rick's secret\nrecording of Mort's\n"
+    "confession. Now are you\nglad we teamed up?")
+
 
 def build(gid, game, exe, keen6, mods, stage):
     b = BUILDS[gid]
@@ -102,7 +117,9 @@ def build(gid, game, exe, keen6, mods, stage):
     os.makedirs(out, exist_ok=True)
     for name in STANDARD:
         shutil.copyfile(os.path.join(keen6, name), os.path.join(out, name))
-    extra, handled = list(EXTRA_CA), []
+    extra = list(EXTRA_CA) + ['# the Chronicle scroll (the game\'s HELPTEXT story, cut to a scroll)',
+                              '%%string ck_str_storyText "%s"' % escape(STORY)]
+    handled = []
     for places, what, setting in COMMON:
         handled += places
         if setting:

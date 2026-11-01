@@ -67,6 +67,8 @@
 
 # The mod's changes to the program's rules, as settings
 %string ca_audioHead "AUDIOHED.CK6"
+# the Chronicle scroll (the game's HELPTEXT story, cut to a scroll)
+%string ck_str_storyText "Above Meurglys III,\nbounty hunter Commander\nKeen and his former\nquarry, Rick Uller,\nshake hands: together\nthey will stop Mortimer\nMcMire once and for\nall. But the Union man\nwho comes to arrest\nthem is Mort himself,\nin disguise. He gloats\nof his latest machine,\nthe Re-Synapsizer,\nwhich will triple every\ncreature's wits and\nkill most of them, then\ndrops the pair down a\ncriminal deposit slot\nonto the Twin Prison\nPlanets, A-Danac 2 and\n3. Stripped of their\nships and Keen's pogo,\nlocked in adjoining\ncells, they have one\nhope: break out, reach\nthe Chief Magistrate,\nand play Rick's secret\nrecording of Mort's\nconfession. Now are you\nglad we teamed up?"
 # Bobbas (here, caged aliens) do not shoot
 %int CK6_BobbaNoShoot 1
 # Babobbas (big caged aliens) do not nap or shoot

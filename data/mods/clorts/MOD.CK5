@@ -56,6 +56,8 @@
 	""
 
 # The mod's changes to the program's rules, as settings
+# the Chronicle scroll (the game's own intro story, cut to a scroll)
+%string ck_str_storyText "Acting on a hot tip\nfrom the A-Danac system,\nCommander Keen arrives\non planet Aleph Zilch,\nhunting Mortimer McMire\nand his latest\ninvention, the\nRe-Synapsizer. The\ndevice is about to\nre-wire the brains of\nevery sentient being in\nthe universe, killing\nninety percent of them\nin the process. Keen\nsteps out of the Bean-\nwith-Bacon Megarocket,\ntakes a look around,\nand is joined by his\npart-time sidekick Rick\nUller, who stopped for\na banana milkshake on\nthe way. \"This planet\nlooks empty,\" says\nKeen. \"Not as empty as\nthis cup,\" says Rick.\nBelow them, the\nRe-Synapsizer is\nwarming up."
 # its own sound and music (20 songs from chunk 186)
 %string ca_audioHead "AUDIOHED.CK5"
 %string ca_audioDict "AUDIODCT.CK5"

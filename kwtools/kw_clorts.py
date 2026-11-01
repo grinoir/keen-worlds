@@ -21,13 +21,26 @@ research/ocflore-and-aurora-bliss.md in the workspace root.
 import os, re, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from kw_accumulators import convert
+from kw_accumulators import convert, escape
 import kw_patconv
 
 FILES = {'AUDIO.CK5': 'AUDIO.CK5', 'AUDIODCT.CK5': 'AUDIODCT.CK5', 'AUDIOHED.CK5': 'AUDIOHED.CK5',
          'EGAGRAPH.CK5': 'EGAGRAPH.CK5', 'EGAHEAD.CK5': 'EGAHEAD.CK5', 'GAMEMAPS.CK5': 'GAMEMAPS.CK5',
          'maphead.ck5': 'MAPHEAD.CK5', 'Keen5.tli': 'KEEN5.TLI'}
 PAT = 'KEEN5a.PAT'
+
+# The Chronicle scroll (ck_str_storyText): the game tells its story as a
+# picture sequence (its TEXT_STORY chunk); this is that story, cut to a scroll
+# in the game's own words. It follows straight on from The Prisoner's Dilemma
+# (the A-Danac system) and chases Mortimer's Re-Synapsizer to Aleph Zilch.
+STORY = (
+    "Acting on a hot tip\nfrom the A-Danac system,\nCommander Keen arrives\non planet Aleph Zilch,\n"
+    "hunting Mortimer McMire\nand his latest\ninvention, the\nRe-Synapsizer. The\ndevice is about to\n"
+    "re-wire the brains of\nevery sentient being in\nthe universe, killing\nninety percent of them\n"
+    "in the process. Keen\nsteps out of the Bean-\nwith-Bacon Megarocket,\ntakes a look around,\n"
+    "and is joined by his\npart-time sidekick Rick\nUller, who stopped for\na banana milkshake on\n"
+    "the way. \"This planet\nlooks empty,\" says\nKeen. \"Not as empty as\nthis cup,\" says Rick.\n"
+    "Below them, the\nRe-Synapsizer is\nwarming up.")
 
 # (the patches' places in the program, what they do, the setting)
 RULES = [
@@ -100,7 +113,9 @@ def lumps(keen5):
 
 
 def main(game, exe, keen5, out):
-    extra, handled = [], []
+    extra = ['# the Chronicle scroll (the game\'s own intro story, cut to a scroll)',
+             '%%string ck_str_storyText "%s"' % escape(STORY)]
+    handled = []
     for places, what, setting in RULES:
         handled += places
         if setting:
