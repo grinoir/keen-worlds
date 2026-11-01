@@ -100,6 +100,7 @@ static const char *KW_WatchTask(void)
  case KW_REVIVAL:case KW_REVIVALC:return "STOP ALLAIN";
  case KW_FUTURE:return "SAY GOODBYE";
  case KW_PRISONER:case KW_PRISONERR:return "FIND THE MAGISTRATE";
+ case KW_CLORTS:return "SEND IN THE CLORTS";
  case KW_MARS:return "GET THE SHIP PARTS";
  case KW_DREAM:return "FIND THE BOOBUS BOMBS";
  default:return "CHECK THE FLIGHT CHART";

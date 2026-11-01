@@ -104,8 +104,10 @@ void CK5_SparkyCol(CK_object *obj1, CK_object *obj2)
 	{
 		CK_KillKeen();
 	}
-	else if (obj2->type == CT_Stunner)
+	else if (obj2->type == CT_Stunner && !CK_INT(CK5_SparkyShotProof, 0))
 	{
+		// KEEN WORLDS: Send in the Clorts' Sparkies ignore the stunner (the
+		// mod says they can only be killed by each other).
 		CK_StunCreature(obj1, obj2, CK_ACTION(CK5_ACT_SparkyStunned0));
 	}
 }

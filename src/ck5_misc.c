@@ -220,7 +220,9 @@ void CK5_SpawnLevelEnd(void)
 
 void CK5_LevelEnd(CK_object *obj)
 {
-	ck_gameState.levelState = (ca_mapOn == 12) ? LS_DestroyedQED : LS_KorathFuse;
+	// KEEN WORLDS: which level ends the game when its fuse is destroyed is
+	// variable (Send in the Clorts ends on level 10, not Keen 5's level 12).
+	ck_gameState.levelState = (ca_mapOn == CK_INT(CK5_QEDLevel, 12)) ? LS_DestroyedQED : LS_KorathFuse;
 }
 
 // KEEN WORLDS: a mod's creature may need another one's sprites too
@@ -494,7 +496,7 @@ void CK5_ScanInfoLayer()
 			case 41:
 				// KEEN WORLDS: CK5_QEDEveryLevel and CK5_QEDFuseCount (Keen 9's
 				// fuses are all QED objects)
-				if (ck_gameState.currentLevel == 12 || CK_INT(CK5_QEDEveryLevel, 0))
+				if (ck_gameState.currentLevel == CK_INT(CK5_QEDLevel, 12) || CK_INT(CK5_QEDEveryLevel, 0))
 				{
 					ck_gameState.ep.ck5.fusesRemaining = CK_INT(CK5_QEDFuseCount, 4);
 					CK5_QEDSpawn(x, y);

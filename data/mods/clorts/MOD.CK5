@@ -1,0 +1,179 @@
+# Send in the Clorts (a Keen 5 v1.4 mod) as a Keen Worlds world.
+# Written by kwtools/kw_clorts.py from the mod's CKPatch file; the data
+# files beside it are the player's copy of the mod. It runs on Keen 5.
+
+%string ca_tileInfo "KEEN5.TLI"
+
+%stringarray ck_str_levelNames
+	"Aleph Zilch",
+	"Zilch Gulch",
+	"Baobab Forest",
+	"Cave of Acute\nDiscomfort",
+	"Spent Fuel Depot",
+	"Geothermal Energy\nPlant",
+	"Church of\nMortimer McMire",
+	"Mort's Library",
+	"The Shipyard",
+	"The Haunted\nRuins",
+	"The Re-Synapsizer",
+	"The Cloning Lab",
+	"Clortopolis",
+	"Bethesda HQ",
+	"INDEMNITY!",
+	"High Scores"
+
+%stringarray ck_str_levelEntryText
+	"Keen zigs and zags\nacross Aleph Zilch",
+	"Keen apprehensively\nenters Zilch Gulch",
+	"Keen bobs and weaves\ninto Baobab Forest",
+	"Keen rappels into\nthe Cave of Acute\nDiscomfort",
+	"Keen suits up and\nenters the Spent\nFuel Depot",
+	"Keen feverishly\nenters Geothermal\nEnergy Plant",
+	"Keen devoutly enters\nChurch of\nMortimer McMire",
+	"Keen reads the\nsituation in\nMort's Library",
+	"Keen sails into\nThe Shipyard",
+	"Keen morbidly enters\nthe Haunted Ruins",
+	"This is it!\nKeen enters the\nRe-Synapsizer",
+	"Keen dons his lab\ncoat, and enters\nCloning Lab",
+	"Keen pounds the\npavement in\nClortopolis",
+	"Keen gets meta\nat Bethesda Games\nHeadquarters",
+	"Live from Aleph Zilch,\nit's the galaxy's\nfavourite game show:\nINDEMNITY!",
+	"Keen unexplainedly\nfind himself by\ntheHigh Scores"
+
+%intarray CK_LevelMusic 0, 1, 1, 2, 3, 2, 4, 5, 3, 5, 7, 6, 6, 8, 9, 4, 6, 1, 0, 10
+
+%string ck5_str_fuseDestroyed "Cool! I wonder what\nthis cloaking device\nwas hiding."
+%string ck_str_exitToMap "Exit to AlephZilch"
+%string ck_str_statusCentilives "BROCC. "
+%stringarray ck_defaultHighScoreNames
+	"Id Software - '91",
+	"",
+	"Jason Blochowiak",
+	"Adrian Carmack",
+	"John Carmack",
+	"Tom Hall",
+	"John Romero",
+	""
+
+# The mod's changes to the program's rules, as settings
+# its own sound and music (20 songs from chunk 186)
+%string ca_audioHead "AUDIOHED.CK5"
+%string ca_audioDict "AUDIODCT.CK5"
+%int ca_audStartMusic 186
+%int ca_audNumSongs 20
+# the game ends when the fuse on level 10 (Clortopolis) is destroyed, not Keen 5's level 12
+%int CK5_QEDLevel 10
+# switches lay down thicker bridges
+%int CK_BridgeThickness 6
+# the Shikadi takes two shots to kill
+%int CK5_ShikadiHealth 2
+# Spherefuls scatter no particles
+%int CK5_SpherefulDiamonds 0
+# Sparkies ignore the stunner (the mod: killed only by each other)
+%int CK5_SparkyShotProof 1
+
+%override "EPISODE.CK5"
+
+# Its sprite actions, as the patches leave them (Keen 5's own, frames changed)
+%action CK5_ACT_purpleAxisPlatform 0x1B7C 319 317 UnscaledFrame 0 0 15 0 0 CK5_PurpleAxisPlatform NULL CK_BasicDrawFunc1 CK5_ACT_purpleAxisPlatform2
+%action CK5_ACT_purpleAxisPlatform2 0x1B9A 318 316 UnscaledFrame 0 0 15 0 0 CK5_PurpleAxisPlatform NULL CK_BasicDrawFunc1 CK5_ACT_purpleAxisPlatform
+%action CK5_ACT_SparkySearch1 0x1FA2 370 370 UnscaledOnce 0x0 0x1 0x6 0x0 0x0 NULL CK5_SparkyCol CK_BasicDrawFunc1 CK5_ACT_SparkySearch2
+%action CK5_ACT_SparkySearch2 0x1FC0 370 370 UnscaledOnce 0x0 0x1 0x6 0x0 0x0 NULL CK5_SparkyCol CK_BasicDrawFunc1 CK5_ACT_SparkySearch3
+%action CK5_ACT_SparkySearch4 0x1FFC 370 370 UnscaledOnce 0x0 0x1 0x6 0x0 0x0 NULL CK5_SparkyCol CK_BasicDrawFunc1 CK5_ACT_SparkySearch5
+%action CK5_ACT_SparkySearch5 0x201A 370 370 UnscaledOnce 0x0 0x1 0x6 0x0 0x0 NULL CK5_SparkyCol CK_BasicDrawFunc1 CK5_ACT_SparkySearch6
+%action CK5_ACT_SparkySearch6 0x2038 @SPR_SPARKYFACEL 370 UnscaledOnce 0x0 0x1 0x6 0x0 0x0 NULL CK5_SparkyCol CK_BasicDrawFunc1 CK5_ACT_SparkySearch7
+%action CK5_ACT_SparkyTurn0 0x2164 370 @SPR_SPARKYFACEL UnscaledOnce 0x0 0x1 0x8 0x0 0x0 NULL CK5_SparkyCol CK_BasicDrawFunc1 CK5_ACT_SparkyTurn1
+%action CK5_ACT_SparkyTurn1 0x2182 370 370 UnscaledOnce 0x0 0x1 0x8 0x0 0x0 NULL CK5_SparkyCol CK_BasicDrawFunc1 CK5_ACT_SparkyTurn2
+%action CK5_ACT_SparkyTurn2 0x21A0 @SPR_SPARKYFACEL 370 UnscaledOnce 0x0 0x1 0x8 0x0 0x0 NULL CK5_SparkyCol CK_BasicDrawFunc1 CK5_ACT_Sparky0
+%action CK5_ACT_ShellyExplode0 0x2542 @SPR_SHELLEYBOOM1 @SPR_SHELLEYBOOM1 UnscaledOnce 0x0 0x0 5 0x0 0x0 NULL CK_DeadlyCol CK_BasicDrawFunc1 CK5_ACT_ShellyExplode1
+%action CK5_ACT_ShellyExplode1 0x2560 @SPR_SHELLEYBOOM2 @SPR_SHELLEYBOOM2 UnscaledOnce 0x0 0x0 5 0x0 0x0 NULL CK_DeadlyCol CK_BasicDrawFunc1 CK5_ACT_ShellyExplode2
+%action CK5_ACT_ShellyExplode2 0x257E @SPR_SHELLEYBOOM3 @SPR_SHELLEYBOOM3 UnscaledOnce 0x0 0x0 5 0x0 0x0 NULL CK_DeadlyCol CK_BasicDrawFunc1 CK5_ACT_ShellyExplode3
+%action CK5_ACT_ShellyExplode3 0x259C @SPR_SHELLEYBOOM4 @SPR_SHELLEYBOOM4 UnscaledOnce 0x0 0x0 5 0x0 0x0 NULL CK_DeadlyCol CK_BasicDrawFunc1 NULL
+%action CK5_ACT_ShikadiStand0 0x2D10 322 322 UnscaledOnce 0x0 0x1 0x8 0x0 0x0 NULL CK5_ShikadiCol CK5_ShikadiTileCol CK5_ACT_ShikadiStand1
+%action CK5_ACT_ShikadiStand1 0x2D2E 323 323 UnscaledOnce 0x0 0x1 0x8 0x0 0x0 NULL CK5_ShikadiCol CK5_ShikadiTileCol CK5_ACT_ShikadiStand2
+%action CK5_ACT_BarkShot0 0x2FA4 @SPR_PETSPARK1 355 UnscaledFrame 0x0 0x0 0x8 0x0 0x0 CK_Glide CK5_BarkShotCol CK5_BarkShotTileCol CK5_ACT_BarkShot1
+%action CK5_ACT_BarkShot1 0x2FC2 354 @SPR_PETSPARK2 UnscaledFrame 0x0 0x0 0x8 0x0 0x0 CK_Glide CK5_BarkShotCol CK5_BarkShotTileCol CK5_ACT_BarkShot0
+%action CK5_ACT_Sphereful0 0x303A @SPR_SPHEREFUL1 @SPR_SPHEREFUL1 UnscaledFrame 0x0 0x0 9 0x0 0x0 CK5_SpherefulBounce CK_DeadlyCol CK5_SpherefulTileCol CK5_ACT_Sphereful1
+%action CK5_ACT_Sphereful1 0x3058 @SPR_SPHEREFUL2 @SPR_SPHEREFUL2 UnscaledFrame 0x0 0x0 9 0x0 0x0 CK5_SpherefulBounce CK_DeadlyCol CK5_SpherefulTileCol CK5_ACT_Sphereful2
+%action CK5_ACT_Sphereful2 0x3076 @SPR_SPHEREFUL3 @SPR_SPHEREFUL3 UnscaledFrame 0x0 0x0 9 0x0 0x0 CK5_SpherefulBounce CK_DeadlyCol CK5_SpherefulTileCol CK5_ACT_Sphereful3
+%action CK5_ACT_Sphereful3 0x3094 @SPR_SPHEREFUL4 @SPR_SPHEREFUL4 UnscaledFrame 0x0 0x0 9 0x0 0x0 CK5_SpherefulBounce CK_DeadlyCol CK5_SpherefulTileCol CK5_ACT_Sphereful0
+
+# The sprite lumps: the boats onto the Master's frames, two caches tightened
+%intarray lumpStarts
+	6,
+	67,
+	83,
+	90,
+	92,
+	102,
+	108,
+	207,
+	210,
+	212,
+	214,
+	216,
+	218,
+	220,
+	222,
+	224,
+	233,
+	236,
+	242,
+	283,
+	286,
+	290,
+	294,
+	304,
+	322,
+	337,
+	358,
+	366,
+	378,
+	385,
+	387,
+	393,
+	405,
+	417,
+	316,
+	424,
+	428,
+	446
+%intarray lumpEnds
+	66,
+	82,
+	89,
+	91,
+	97,
+	106,
+	206,
+	209,
+	211,
+	213,
+	215,
+	217,
+	219,
+	221,
+	223,
+	232,
+	234,
+	241,
+	282,
+	285,
+	289,
+	293,
+	303,
+	319,
+	336,
+	357,
+	361,
+	377,
+	384,
+	386,
+	392,
+	404,
+	416,
+	421,
+	319,
+	427,
+	445,
+	447

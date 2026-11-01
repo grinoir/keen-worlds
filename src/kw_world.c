@@ -328,6 +328,16 @@ static const KW_WorldDef kw_worldDefs[KW_NUM_WORLDS] = {
 		"Rick Uller's side of the story\nA fan game by Levellass and\nthe community, 2021",
 		"By Levellass and the Keen\ncommunity\n\nPlay as Rick Uller, Keen's\nformer quarry turned ally" KW_NOT_OURS,
 		"The Prisoner's Dilemma v1.0\n(get it from keenwiki.shikadi.net)\nand your Keen 6 v1.4. Run\nkw_prisoner.py; put its 'as Rick'\nfiles in mods/prisonerr."},
+	// Send in the Clorts: a Keen 5 patch mod, the Mortimer finale's last game
+	// (after The Prisoner's Dilemma). The player's copy of its files in
+	// play/mods/clorts, with our MOD.CK5 (kwtools/kw_clorts.py, from the
+	// patches and the player's Keen 5 program); its rule changes are settings
+	// in the Keen 5 code, and it adds no routines of its own.
+	{"clorts", "Aleph Zilch", 5, "mods/clorts", "MOD.CK5",
+		"Send in the Clorts",
+		"The Mortimer finale, the end\nA fan game on Keen 5",
+		"A Commander Keen 5 fan game\n\nSend in the Clorts" KW_NOT_OURS,
+		"Send in the Clorts (get it from\nkeenwiki.shikadi.net) and your\nKeen 5 v1.4. Run kw_clorts.py;\nput its files in mods/clorts."},
 };
 
 static CK_EpisodeDef *KW_EpisodeDef(int episode)
@@ -2089,6 +2099,12 @@ static int KW_ChronicleKey(int world)
 	case KW_PRISONERR:
 		if (KW_IsWorldPresent(KW_BOUNTY) && !KW_WorldIsSaved(KW_BOUNTY)) return KW_BOUNTY;
 		return KW_LastChronicleWorld();
+	case KW_CLORTS: // the Mortimer finale's end, after The Prisoner's Dilemma (either build)
+		if (KW_IsWorldPresent(KW_PRISONERR) && !KW_WorldIsSaved(KW_PRISONERR) &&
+			!(KW_IsWorldPresent(KW_PRISONER) && KW_WorldIsSaved(KW_PRISONER))) return KW_PRISONERR;
+		if (KW_IsWorldPresent(KW_PRISONER) && !KW_WorldIsSaved(KW_PRISONER) &&
+			!(KW_IsWorldPresent(KW_PRISONERR) && KW_WorldIsSaved(KW_PRISONERR))) return KW_PRISONER;
+		return KW_LastChronicleWorld();
 	case KW_FUTURE: // after Revival of Bliss (either build)
 		if (KW_IsWorldPresent(KW_REVIVALC) && !KW_WorldIsSaved(KW_REVIVALC) &&
 			!(KW_IsWorldPresent(KW_REVIVAL) && KW_WorldIsSaved(KW_REVIVAL))) return KW_REVIVALC;
@@ -2433,7 +2449,7 @@ static const struct KW_FlightGroup
 	{"More levels",1,2,0,{KW_CK55,KW_ASYLUM}},
 	{"Spot's rescue",1,2,1,{KW_RTTS,KW_OSI}},
 	{"Craig's story",1,7,1,{KW_AURORA,KW_CANMORE,KW_SAINT,KW_PARTY,KW_REVIVAL,KW_REVIVALC,KW_FUTURE}},
-	{"Mortimer's end",1,2,1,{KW_PRISONER,KW_PRISONERR}},
+	{"Mortimer's end",1,3,1,{KW_PRISONER,KW_PRISONERR,KW_CLORTS}},
 	{"Further trips",1,1,0,{KW_OCFLORE}},
 	{NULL,1,1,0,{KW_MENU_SCENES}},
 };
@@ -2506,6 +2522,7 @@ static void KW_FlightRelationship(int world,char *text,size_t size)
 	case KW_FUTURE:relationship="After Revival. Many years on.";break;
 	case KW_PRISONER:relationship="After Bounty. Play as Keen.";break;
 	case KW_PRISONERR:relationship="After Bounty. Play as Rick.";break;
+	case KW_CLORTS:relationship="The finale's end. After PD.";break;
 	}
 	CK_Cross_strscpy(text,relationship,size);
 }
@@ -5569,8 +5586,8 @@ void KW_SelfTest(void)
 	// with the patches' rules and routines, run in every level, and each is
 	// hit by a shot once (Keen can't die meanwhile).
 	{
-		static const int patchWorlds[] = {KW_AURORA, KW_OCFLORE, KW_CANMORE, KW_SAINT, KW_PARTY, KW_REVIVAL, KW_REVIVALC, KW_FUTURE};
-		for (int p = 0; p < 8; ++p)
+		static const int patchWorlds[] = {KW_AURORA, KW_OCFLORE, KW_CANMORE, KW_SAINT, KW_PARTY, KW_REVIVAL, KW_REVIVALC, KW_FUTURE, KW_CLORTS};
+		for (int p = 0; p < 9; ++p)
 		{
 			int w = patchWorlds[p];
 			if (!KW_IsWorldPresent(w))
