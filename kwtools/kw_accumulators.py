@@ -28,7 +28,8 @@ HIGHSCORE_NAMES = 0x33234
 # Where each engine's v1.4 program keeps them (Keen 4 above; Keen 5 for
 # Canmore's Redemption, kw_canmore.py)
 EPISODES = {4: dict(exe='KEEN4E.EXE', ext='CK4', music=(MUSIC_TABLE, MUSIC_LEVELS), scores=HIGHSCORE_NAMES, tli='KEEN4.TLI'),
-            5: dict(exe='KEEN5E.EXE', ext='CK5', music=(0x3067A, 20), scores=0x33D56, tli='KEEN5.TLI')}
+            5: dict(exe='KEEN5E.EXE', ext='CK5', music=(0x3067A, 20), scores=0x33D56, tli='KEEN5.TLI'),
+            6: dict(exe='KEEN6E.EXE', ext='CK6', music=(0x3103E, 20), scores=0x34AF4, tli='TILEINFO.CK6')}
 DATA_FILES = {'AUDIO.CK4': 'AUDIO.CK4', 'Egagraph.ck4': 'EGAGRAPH.CK4', 'EGAHEAD.CK4': 'EGAHEAD.CK4',
               'Gamemaps.ck4': 'GAMEMAPS.CK4', 'maphead.ck4': 'MAPHEAD.CK4', 'Keen4.tli': 'KEEN4.TLI'}
 
