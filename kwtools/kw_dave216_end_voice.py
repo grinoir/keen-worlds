@@ -43,7 +43,7 @@ GAP = 0.35
 SAID = {'BwB': 'Bean-with-Bacon', 'Navi-Com': 'Navi-Com', 'finnaly': 'finally', 'Vexidar VI': 'Vexidar Six',
         'Xantis VIII': 'Xantis Eight', '314': 'three-fourteen', "I've think": 'I think',
         'RADIO STARTS STUTTERING': 'The radio starts stuttering.', 'riffle': 'rifle', 'tensity': 'tension',
-        'freighted': 'frightened', 'Morty, Morty Morty': 'Morty, Morty, Morty', 'with\xa0you': 'with you', '- shouts out Keen as he sees': 'Keen sees', '-says Craig as he throws': 'Craig throws'}
+        'freighted': 'frightened', 'Morty, Morty Morty': 'Morty, Morty, Morty', 'with\xa0you': 'with you', 'commander,Craig': 'Commander, Craig', '- shouts out Keen as he sees': 'Keen sees', '-says Craig as he throws': 'Craig throws'}
 
 # game id: (folder, chunk, dictionary (None: Keen 5's in Omnispeak's data), ext, prefix, secret chunk, roles)
 GAMES = {
@@ -56,6 +56,8 @@ GAMES = {
                 {'E': N, 'B': K, 'D': CRAIG, 'C': ALLAIN, '2': MYAH, 'A': BARKER, '6': MORTIMER, '3': LINDSEY}),
     'revivalc': ('revivalc', 4743, 'revivalc', 'CK4', 'RC', None,
                  {'A': N, 'F': K, '9': CRAIG, '8': ALLAIN, '6': MYAH, 'E': BARKER, '2': MORTIMER, '7': LINDSEY}),
+    'future': ('future', 4743, 'aurora', 'CK4', 'FU', None,
+               {'A': N, 'F': K, '9': CRAIG, '6': MORTIMER}),
 }
 # The colours of pages not spoken: the passwords of Canmore's archives, the
 # riddle at the end of Revival of Bliss (Keen Worlds opens what they open)

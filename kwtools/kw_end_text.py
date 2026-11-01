@@ -51,7 +51,7 @@ def pages(folder, number, egadict, ext='CK4'):
     text = chunk(folder, ext, number, egadict).split('^E')[0]
     result = []
     for page in text.split('^P')[1:]:
-        lines = [l for l in page.replace('\r', '').split('\n') if not re.match(r'\s*\^[GTBL]', l)]
+        lines = [l for l in page.replace('\r', '').split('\n') if not re.match(r'\s*\^[GTBLA]', l)]
         body = ' '.join(l.strip() for l in lines)
         runs, colour = [], None
         for part in re.split(r'(\^[cC][0-9A-Fa-f])', body):

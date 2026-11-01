@@ -2,6 +2,7 @@
 // What the ship computer says when the Megarocket has landed: the world's id,
 // the sound clip in the voice folder, the words for the card.
 static const struct { const char *id, *file, *text; } kw_landings[] = {
+	{"future", "LAND_FUTURE.RAW", "Ship computer:\n\nYou have now landed in the\nShadowlands.\nIt is thirty two years later.\nKeen is old.\nI am older.\nPlease walk slowly."},
 	{"revival", "LAND_REVIVAL.RAW", "Ship computer:\n\nYou have now landed on Aurora\nBliss.\nAgain.\nAllain is turning the whole\nplanet into one machine.\nCraig is here too.\nPlease keep him away from my\nNavi-Com."},
 	{"revivalc", "LAND_REVIVALC.RAW", "Ship computer:\n\nYou have now landed on Aurora\nBliss.\nAgain.\nCaptain Craig, I hear your\npogo stick is broken.\nPlease do not fix it with my\nparts."},
 	{"saint", "LAND_SAINT.RAW", "Ship computer:\n\nYou have now landed on Aurora\nBliss, in the mountains.\nThree months have gone by.\nCraig is buried here.\nI will wait.\nTake your time."},
@@ -28,6 +29,7 @@ static const struct { const char *id, *file, *text; } kw_landings[] = {
 };
 // What it says when a world has been saved and Keen is back in the cabin.
 static const struct { const char *id, *file, *text; } kw_savedLines[] = {
+	{"future", "SAVED_FUTURE.RAW", "Ship computer:\n\nThe reunion is over.\nCraig is the Commander now.\nI think I will park, for good\nthis time."},
 	{"revival", "SAVED_REVIVAL.RAW", "Ship computer:\n\nAurora Bliss is green again.\nAllain is in a prison cell.\nMortimer saved everyone, and\nnobody knows why."},
 	{"revivalc", "SAVED_REVIVALC.RAW", "Ship computer:\n\nAurora Bliss is saved.\nBy Captain Craig.\nI will never hear the end of\nit."},
 	{"saint", "SAVED_SAINT.RAW", "Ship computer:\n\nThe Aurora Mountains are\nbehind us.\nThe planet is green again.\nThey call him the Saint of\nAurora now."},

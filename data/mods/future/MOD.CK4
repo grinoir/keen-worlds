@@ -1,0 +1,119 @@
+# The Last Reunion (hidden epilogue of Revival of Bliss: Dave216, 2024) as a Keen Worlds world.
+# Written by kwtools/kw_future.py from the mod's CKPatch file; the data
+# files beside it are the player's copy of the mod. It runs on Keen 4.
+
+%string ca_tileInfo "KEEN4.TLI"
+
+%stringarray ck_str_levelNames
+	"Shadowlands",
+	"Border Village",
+	"Slug Village",
+	"The Perilous Pit",
+	"Cave of the Descendents",
+	"Chasm of Chills",
+	"Crystalus",
+	"Hilville",
+	"Sand Yego",
+	"Miragia",
+	"Lifewater Oasis",
+	"Pyramid of the Moons",
+	"Pyramid of Shadows",
+	"Pyramid of the\nGnosticene Ancients",
+	"Pyramid of the Forbidden",
+	"Isle of Tar",
+	"Isle of Fire",
+	"Well of Wishes",
+	"Bean-with-Bacon\nMegarocket"
+
+%stringarray ck_str_levelEntryText
+	"Thirty two years\nlater...",
+	"Keen makes a run for\nthe Border Village",
+	"Keen slips into\nSlug Village",
+	"Keen plummets into\nthe The Perilous Pit",
+	"Keen plods down into\nthe Cave of the\nDescendents",
+	"Keen shivers along\nthe Chasm of Chills",
+	"Keen reflects upon\nentering Crystalus",
+	"Keen stumbles upon\nHillville",
+	"Keen grits his teeth\nand enters Sand Yego",
+	"Keen disappears into\nMiragia",
+	"Keen crawls into\nLifewater Oasis",
+	"Keen backs into the\nPyramid of the Moons",
+	"Keen move silently in\nthe Pyramid of Shadows",
+	"Keen reverently enters\nthe Pyramid of the\nGnosticene Ancients",
+	"Keen hesitantly crosses\ninto the Pyramid of the\nForbidden",
+	"Keen mucks along the\nIsle of Tar",
+	"Keen blazes across the\nIsle of Fire",
+	"Keen hopefully enters\nthe Well of Wishes",
+	"Keen launches into the\nBean-with-Bacon\nMegarocket"
+
+%intarray CK_LevelMusic 0, 1, 1, 2, 6, 6, 6, 3, 7, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 1
+
+%string ck4_str_statusRescued "       "
+%string ck4_str_statusWetsuit "       "
+%string ck_str_statusCentilives "             "
+%string ck_str_statusHard ""
+%string ck_str_statusNormal "Trivial"
+%string ck_str_storyText "\"Hey, Barker. I am\ncalling a meeting at\nShadowlands HQ in three\ndays. I have some news\nI would like to discuss\nwith you all. It's\nsomething I've been\nthinking about for a\nlong time. Also, I hope\nthat Barker Jr. enjoyed\nhis birthday present.\nAs soon as I heard he\nwas into football, I\nknew the helmet was\ngoing to be the perfect\ngift for him. Craig\nsaid he was coming,\nothers haven't\nresponded yet. It's\ngoing to be one jolly\nreunion, I can already\ntell. Anyway, see you.\nYour friend, Commander\nKeen........"
+%stringarray ck4_str_councilMessage
+	"Sup?                 \n          ",
+	"Sounds like a plan,\nbearded one!",
+	"No problemo.",
+	"Great.  You known, you\nlook a lot like the\nlast guy I rescued...",
+	"Good idea, Gramps.",
+	"May the road rise\nto meet your feet,\nMr. Member.",
+	"Wise plan of action,\nyour ancientness.",
+	"You're the last one,\nfella. Let's both\nget back to the\nOracle chamber!"
+%stringarray ck_defaultHighScoreNames
+	"Dave216          ",
+	"Tom Hall         ",
+	"Ceilick          ",
+	"Fleexy           ",
+	"Levellass        ",
+	"Kryten 2X4B-523P ",
+	"Douglas Uppity   ",
+	"My brain hurts   "
+
+# The mod's changes to the program's rules, as settings
+# its own sound and music: 12 songs from chunk 150
+%string ca_audioHead "AUDIOHED.CK4"
+%string ca_audioDict "AUDIODCT.CK4"
+%int ca_audStartMusic 150
+%int ca_audNumSongs 12
+# its one level plays song 0
+%intarray CK_LevelMusic 0
+# the ending plays song 7
+%int CK_EndingMusicLevel 7
+# map 0 is its level (it scrolls and ends like one)
+%int ck_worldMapNumber 99
+# one council member (Craig, whom Keen meets) ends it
+%int CK4_NumCouncilsToRescue 1
+# no thanks window: only Keen's line
+%int CK4_CouncilNoThanks 1
+# no sounds when Craig is found
+%int CK4_CouncilQuiet 1
+# Craig stands still
+%int CK4_CouncilNeverPauses 1
+# a lost life starts the level again at once
+%int CK_DeathRestartsLevel 1
+# K1n9_Duk3's fix: the floor check ends at the map's top
+%int CK_ClipToEndsSigned 1
+# the hero (Craig) has no pogo stick
+%int CK_PogoNeedsWetsuit 1
+# his gun throws its shots (up, right, down, left)
+%int CK_ShotArc 1
+%intarray CK_ShotArcVel 0, -0x4C, 0x30, -0x18, 0, 0x20, -0x40, -0x18
+# his shots never run out
+%int CK_ShotsFree 1
+%int ck_scoreBoxHideShots 1
+# black help pages
+%int CK_HelpBarColour 0
+
+%override "EPISODE.CK4"
+
+# The sprite actions the patches change (Craig's thrown shots, Craig stands)
+%action CK_ACT_keenEnterDoor4 0x0ED2 @SPR_KEENENTER5 @SPR_KEENENTER5 UnscaledOnce 0 0 9 0 -64 CK_KeenEnterDoor NULL CK_BasicDrawFunc1 CK_ACT_keenLookUp1
+%action CK_ACT_keenPogo1 0x110C 145 137 UnscaledFrame 0 0 50 0 0 CK_KeenJumpThink CK_KeenColFunc CK_KeenJumpDrawFunc CK_ACT_keenFall1
+%action CK_ACT_keenPogo2 0x112A 145 137 UnscaledFrame 0 0 50 0 0 CK_KeenJumpThink CK_KeenColFunc CK_KeenJumpDrawFunc CK_ACT_keenFall1
+%action CK_ACT_keenPogo3 0x1148 145 137 UnscaledFrame 0 0 50 0 0 CK_KeenJumpThink CK_KeenColFunc CK_KeenJumpDrawFunc CK_ACT_keenFall1
+%action CK4_ACT_CouncilWalk0 0x1FB8 @SPR_MEMBERSHUFFLEL1 @SPR_MEMBERSHUFFLER1 UnscaledOnce 0 1 10 0 0 CK4_CouncilWalk NULL CK_BasicDrawFunc2 CK4_ACT_CouncilWalk1
+%action CK4_ACT_CouncilWalk1 0x1FD6 @SPR_MEMBERSHUFFLEL2 @SPR_MEMBERSHUFFLER2 UnscaledOnce 0 1 10 0 0 CK4_CouncilWalk NULL CK_BasicDrawFunc2 CK4_ACT_CouncilWalk0

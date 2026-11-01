@@ -24,6 +24,8 @@ VOICE = 'af_heart'        # Kokoro's "Heart", an American woman
 KOKORO_DIR = os.environ.get('KW_KOKORO_DIR', os.path.expanduser('~/Projects/SignalweaveCMS'))
 # world id: the words, a sentence each
 LANDINGS = {
+    'future': ["You have now landed in the Shadowlands.", "It is thirty two years later.",
+               "Keen is old. I am older. Please walk slowly."],
     'revival': ["You have now landed on Aurora Bliss. Again.", "Allain is turning the whole planet into one machine.",
                 "Craig is here too. Please keep him away from my Navi-Com."],
     'revivalc': ["You have now landed on Aurora Bliss. Again.", "Captain Craig, I hear your pogo stick is broken.",
@@ -76,6 +78,7 @@ LANDINGS = {
 # The Chronicle: a world has been saved and the ship has learned the course
 # to the next. world id: the place's name as it is said.
 COURSES = {
+    'future': 'The Shadowlands, years later',
     'revival': 'Aurora Bliss, again',
     'revivalc': 'Aurora Bliss, with Captain Craig',
     'saint': 'The Aurora Mountains',
@@ -93,6 +96,7 @@ COURSES = {
 # A world has been saved: what the ship computer says when Keen is next in
 # the cabin. world id: the words, a sentence each.
 SAVED = {
+    'future': ["The reunion is over.", "Craig is the Commander now.", "I think I will park, for good this time."],
     'revival': ["Aurora Bliss is green again.", "Allain is in a prison cell.", "Mortimer saved everyone, and nobody knows why."],
     'revivalc': ["Aurora Bliss is saved. By Captain Craig.", "I will never hear the end of it."],
     'saint': ["The Aurora Mountains are behind us.", "The planet is green again.",

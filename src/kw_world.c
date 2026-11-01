@@ -304,6 +304,15 @@ static const KW_WorldDef kw_worldDefs[KW_NUM_WORLDS] = {
 		"Craig's story, part three:\nCaptain Craig's own way\nA fan game by Dave216, 2024",
 		"Created by David Novosel\n(Dave216)\n\nPatches: nwe74, K1n9_Duk3,\nLevellass, Ceilick's Keen 7\nTesting: DarkAle, Mobiethian,\nSyllypryde, Filthy Casual" KW_NOT_OURS,
 		"Revival of Bliss v1.1 by\nDave216 (2024-06-08). Get it\nfrom keenwiki.shikadi.net; put\nits CRAIG folder's files in\nmods/revivalc."},
+	// The Last Reunion: the bonus game hidden in Revival of Bliss's launcher
+	// (LAUNCHER.DAT), unlocked by the password its endings point to.
+	// kwtools/kw_future.py extracts it to play/mods/future, with Aurora
+	// Bliss's EGADICT.CK4. A one-level Keen 4 epilogue, 32 years on.
+	{"future", "Shadowlands", 4, "mods/future", "MOD.CK4",
+		"The Last Reunion",
+		"Craig's story: the hidden epilogue\nof Revival of Bliss\nA fan game by Dave216, 2024",
+		"Created by David Novosel\n(Dave216)\n\nUnlocked by its own riddle\n(the words the orbs repeat)" KW_NOT_OURS,
+		"Hidden in Revival of Bliss's\nLAUNCHER.DAT. Run kw_future.py\nwith Revival and Aurora Bliss\nto unlock it into mods/future\n(see its README)."},
 };
 
 static CK_EpisodeDef *KW_EpisodeDef(int episode)
@@ -522,6 +531,8 @@ static const KW_Ship kw_ships[] = {
 	{KW_RTTS, 20, 3, 17, 3, 14, 19, 19},
 	// Saint of Aurora: its one level (map 0) starts Keen beside the ship.
 	{KW_SAINT, 0, 7, 43, 2, 39, 8, 44},
+	// The Last Reunion: its one long level (map 0), the ship at Keen's start.
+	{KW_FUTURE, 0, 2, 22, 1, 19, 4, 23},
 };
 // Foray's level 1: the forest with the landed ship is the top of the map;
 // the game's own rooms of the ship start below this row.
@@ -1708,7 +1719,7 @@ void KW_WorldPalette(void)
 		VL_SetCustomColors(ocflore);
 	else if (kw_currentWorld == KW_REVIVAL)
 		VL_SetCustomColors(revival);
-	else if (kw_currentWorld == KW_REVIVALC)
+	else if (kw_currentWorld == KW_REVIVALC || kw_currentWorld == KW_FUTURE)
 		VL_SetCustomColors(revivalc);
 }
 
@@ -2059,6 +2070,12 @@ static int KW_ChronicleKey(int world)
 	case KW_REVIVALC:
 		if (KW_IsWorldPresent(KW_CANMORE) && !KW_WorldIsSaved(KW_CANMORE)) return KW_CANMORE;
 		return KW_LastChronicleWorld();
+	case KW_FUTURE: // after Revival of Bliss (either build)
+		if (KW_IsWorldPresent(KW_REVIVALC) && !KW_WorldIsSaved(KW_REVIVALC) &&
+			!(KW_IsWorldPresent(KW_REVIVAL) && KW_WorldIsSaved(KW_REVIVAL))) return KW_REVIVALC;
+		if (KW_IsWorldPresent(KW_REVIVAL) && !KW_WorldIsSaved(KW_REVIVAL) &&
+			!(KW_IsWorldPresent(KW_REVIVALC) && KW_WorldIsSaved(KW_REVIVALC))) return KW_REVIVAL;
+		return KW_LastChronicleWorld();
 	case KW_SAINT: // (and each epilogue opens with its ending: KW_EpilogueLocked)
 	case KW_PARTY:
 		if (KW_IsWorldPresent(KW_CANMORE) && !KW_WorldIsSaved(KW_CANMORE)) return KW_CANMORE;
@@ -2386,7 +2403,7 @@ typedef struct KW_FlightEntry {int world,column,row,step;} KW_FlightEntry;
 static const struct KW_FlightGroup
 {
 	const char *title;
-	int column,count,firstStep,worlds[6];
+	int column,count,firstStep,worlds[7];
 } kw_flightGroups[]={
 	{"Goodbye, Galaxy!",0,3,1,{KW_KEEN4,KW_KEEN5,KW_KEEN6}},
 	{"The Universe Is Toast!",0,3,4,{KW_KEEN7,KW_KEEN8,KW_KEEN9}},
@@ -2396,7 +2413,7 @@ static const struct KW_FlightGroup
 	{"Atroxian story",1,2,1,{KW_AREALM,KW_ALPHAMATIC}},
 	{"More levels",1,2,0,{KW_CK55,KW_ASYLUM}},
 	{"Spot's rescue",1,2,1,{KW_RTTS,KW_OSI}},
-	{"Craig's story",1,6,1,{KW_AURORA,KW_CANMORE,KW_SAINT,KW_PARTY,KW_REVIVAL,KW_REVIVALC}},
+	{"Craig's story",1,7,1,{KW_AURORA,KW_CANMORE,KW_SAINT,KW_PARTY,KW_REVIVAL,KW_REVIVALC,KW_FUTURE}},
 	{"Further trips",1,1,0,{KW_OCFLORE}},
 	{NULL,1,1,0,{KW_MENU_SCENES}},
 };
@@ -2466,6 +2483,7 @@ static void KW_FlightRelationship(int world,char *text,size_t size)
 	case KW_PARTY:relationship="If Craig lives (Myah's armour).";break;
 	case KW_REVIVAL:relationship="After Canmore. Keen's way.";break;
 	case KW_REVIVALC:relationship="After Canmore. Craig's way.";break;
+	case KW_FUTURE:relationship="After Revival. Many years on.";break;
 	}
 	CK_Cross_strscpy(text,relationship,size);
 }
@@ -5501,8 +5519,8 @@ void KW_SelfTest(void)
 	// with the patches' rules and routines, run in every level, and each is
 	// hit by a shot once (Keen can't die meanwhile).
 	{
-		static const int patchWorlds[] = {KW_AURORA, KW_OCFLORE, KW_CANMORE, KW_SAINT, KW_PARTY, KW_REVIVAL, KW_REVIVALC};
-		for (int p = 0; p < 7; ++p)
+		static const int patchWorlds[] = {KW_AURORA, KW_OCFLORE, KW_CANMORE, KW_SAINT, KW_PARTY, KW_REVIVAL, KW_REVIVALC, KW_FUTURE};
+		for (int p = 0; p < 8; ++p)
 		{
 			int w = patchWorlds[p];
 			if (!KW_IsWorldPresent(w))

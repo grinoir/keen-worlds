@@ -71,7 +71,7 @@ SHELF2_X, SHELF2_W = CHART_X - 1, 1
 KEEPSAKES = ['KEEN4', 'KEEN5', 'KEEN6', 'KEEN7', 'KEEN8', 'KEEN9',
              'KEEN95', 'AREALM', 'FITF', 'ALPHAMATIC', 'RTTS', 'OSI',
              'CK55', 'ASYLUM', 'BOUNTY', 'SUBURB', 'AURORA', 'OCFLORE',
-             'CANMORE', 'SAINT', 'PARTY', 'REVIVAL', 'REVIVALC']
+             'CANMORE', 'SAINT', 'PARTY', 'REVIVAL', 'REVIVALC', 'FUTURE']
 
 
 def level(d=None):
@@ -357,6 +357,11 @@ def keepsake(name):
             c.rect(5, y, 10, y, LGREY)
             c.put(5 if k % 2 else 10, y - 1, DGREY)
         c.rect(6, B, 9, B, DGREY)
+    elif name == 'FUTURE':     # the photo of Keen and Craig's first adventure
+        c.box(3, B - 9, 12, B - 1, WHITE, LGREY)
+        c.box(4, B - 8, 11, B - 3, BLUE)                # the sky in the photo
+        c.put(6, B - 5, LRED); c.put(9, B - 5, GREEN)   # two tiny figures
+        c.rect(4, B - 4, 11, B - 3, DGREY)
     elif name == 'SUBURB':     # Mortimer's dummy head
         c.box(4, B - 9, 11, B - 2, YELLOW)
         c.rect(5, B - 10, 10, B - 10, BLACK)            # hair

@@ -52,6 +52,7 @@ typedef enum KW_World
 	KW_PARTY,   // Tower of Dusk: "Initiation Party" (Canmore's Redemption's happy epilogue, on Keen 4; append)
 	KW_REVIVAL, // Bliss, as Keen: "Revival of Bliss" (fan game on Keen 4, Craig's story part three; append)
 	KW_REVIVALC, // Bliss, as Craig: "Revival of Bliss", its other build (append)
+	KW_FUTURE, // Shadowlands: "The Last Reunion", Revival of Bliss's hidden epilogue (on Keen 4; append)
 	KW_NUM_WORLDS,
 	KW_NO_WORLD = -1,
 } KW_World;

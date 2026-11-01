@@ -90,6 +90,7 @@ KEEPSAKE_TEXT = {
     'PARTY': "Shikadi soda from Captain Craig's party. No brewskies.",
     'REVIVAL': "The officer-bot Myah fixed to Keen's helmet.",
     'REVIVALC': "A spare spring from Craig's mended pogo stick.",
+    'FUTURE': "A photo of Keen and Craig's first adventure. Keep it.",
 }
 SPOT_NEW = {
     'KEEN4': "A shiny gem! I'll put it where the sun hits it.",
@@ -115,6 +116,7 @@ SPOT_NEW = {
     'PARTY': "There was a party? And nobody invited Spot?",
     'REVIVAL': "A robot head! It's looking at me.",
     'REVIVALC': "A spring! Boing! ...Sorry.",
+    'FUTURE': "That's you and Craig. You both look so young.",
 }
 
 # (the C array, the clips' prefix, the voice)

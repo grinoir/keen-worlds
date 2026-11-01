@@ -65,6 +65,7 @@ static const char *const kw_keepsakeText[] = {
 	"Shikadi soda from\nCaptain Craig's\nparty. No\nbrewskies.",
 	"The officer-bot\nMyah fixed to\nKeen's helmet.",
 	"A spare spring from\nCraig's mended pogo\nstick.",
+	"A photo of Keen and\nCraig's first\nadventure. Keep it.",
 };
 static const char *const kw_spotNewText[][2] = {
 	{"A shiny gem! I'll\nput it where the\nsun hits it.", "OP_SPNEW_KEEN4.RAW"},
@@ -90,4 +91,5 @@ static const char *const kw_spotNewText[][2] = {
 	{"There was a party?\nAnd nobody invited\nSpot?", "OP_SPNEW_PARTY.RAW"},
 	{"A robot head! It's\nlooking at me.", "OP_SPNEW_REVIVAL.RAW"},
 	{"A spring! Boing!\n...Sorry.", "OP_SPNEW_REVIVALC.RAW"},
+	{"That's you and\nCraig. You both\nlook so young.", "OP_SPNEW_FUTURE.RAW"},
 };
