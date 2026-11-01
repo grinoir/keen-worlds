@@ -130,7 +130,8 @@ void CK6_Rocket(CK_object *obj)
 
 void CK6_RocketCol(CK_object *a, CK_object *b)
 {
-	if (ck_gameState.ep.ck6.passcard == 0)
+	// KEEN WORLDS: CK6_RocketNoPasscard (The Prisoner's Dilemma: the rocket just flies)
+	if (ck_gameState.ep.ck6.passcard == 0 && !CK_INT(CK6_RocketNoPasscard, 0))
 	{
 
 		CA_CacheGrChunk(CK_CHUNKNUM(PIC_KEENTALK1));
@@ -586,7 +587,9 @@ void CK6_SpawnMolly(int tileX, int tileY)
 void CK6_GoPlatDraw(CK_object *obj)
 {
 	RF_AddSpriteDraw(&(obj->sde), obj->posX, obj->posY, obj->gfxChunk, false, obj->zLayer);
-	RF_AddSpriteDrawUsing16BitOffset(&(obj->user3), obj->posX + CK_INT(CK6_GoplatGikXOffset, 0x100), obj->posY + 0x100, obj->user1 + CK_CHUNKNUM(SPR_PLATBIP1), false, 0);
+	// KEEN WORLDS: CK6_GoPlatNoAccessory (The Prisoner's Dilemma's platforms have no rider)
+	if (!CK_INT(CK6_GoPlatNoAccessory, 0))
+		RF_AddSpriteDrawUsing16BitOffset(&(obj->user3), obj->posX + CK_INT(CK6_GoplatGikXOffset, 0x100), obj->posY + 0x100, obj->user1 + CK_CHUNKNUM(SPR_PLATBIP1), false, 0);
 }
 
 // Bloogs

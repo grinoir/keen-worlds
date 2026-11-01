@@ -313,6 +313,21 @@ static const KW_WorldDef kw_worldDefs[KW_NUM_WORLDS] = {
 		"Craig's story: the hidden epilogue\nof Revival of Bliss\nA fan game by Dave216, 2024",
 		"Created by David Novosel\n(Dave216)\n\nUnlocked by its own riddle\n(the words the orbs repeat)" KW_NOT_OURS,
 		"Hidden in Revival of Bliss's\nLAUNCHER.DAT. Run kw_future.py\nwith Revival and Aurora Bliss\nto unlock it into mods/future\n(see its README)."},
+	// The Prisoner's Dilemma (Levellass and the community, 2021): a Keen 6
+	// v1.4 mod in two builds, play as Keen or as Rick Uller, over shared
+	// maps. kwtools/kw_prisoner.py writes each MOD.CK6; its one routine is in
+	// kw_prisoner.c, the rest are Keen 6 settings. The Mortimer finale's
+	// middle game, after Bounty Hunting Brouhaha.
+	{"prisoner", "A-Danac 2 & 3", 6, "mods/prisoner", "MOD.CK6",
+		"The Prisoner's Dilemma\n(as Keen)",
+		"Keen and Rick Uller team up\nA fan game by Levellass and\nthe community, 2021",
+		"By Levellass and the Keen\ncommunity\n\nTwo playable characters:\nKeen and Rick Uller" KW_NOT_OURS,
+		"The Prisoner's Dilemma v1.0\n(get it from keenwiki.shikadi.net)\nand your Keen 6 v1.4. Run\nkw_prisoner.py; put its 'as Keen'\nfiles in mods/prisoner."},
+	{"prisonerr", "A-Danac 2 & 3", 6, "mods/prisonerr", "MOD.CK6",
+		"The Prisoner's Dilemma\n(as Rick)",
+		"Rick Uller's side of the story\nA fan game by Levellass and\nthe community, 2021",
+		"By Levellass and the Keen\ncommunity\n\nPlay as Rick Uller, Keen's\nformer quarry turned ally" KW_NOT_OURS,
+		"The Prisoner's Dilemma v1.0\n(get it from keenwiki.shikadi.net)\nand your Keen 6 v1.4. Run\nkw_prisoner.py; put its 'as Rick'\nfiles in mods/prisonerr."},
 };
 
 static CK_EpisodeDef *KW_EpisodeDef(int episode)
@@ -2070,6 +2085,10 @@ static int KW_ChronicleKey(int world)
 	case KW_REVIVALC:
 		if (KW_IsWorldPresent(KW_CANMORE) && !KW_WorldIsSaved(KW_CANMORE)) return KW_CANMORE;
 		return KW_LastChronicleWorld();
+	case KW_PRISONER: // the Mortimer finale begins, after Bounty Hunting Brouhaha
+	case KW_PRISONERR:
+		if (KW_IsWorldPresent(KW_BOUNTY) && !KW_WorldIsSaved(KW_BOUNTY)) return KW_BOUNTY;
+		return KW_LastChronicleWorld();
 	case KW_FUTURE: // after Revival of Bliss (either build)
 		if (KW_IsWorldPresent(KW_REVIVALC) && !KW_WorldIsSaved(KW_REVIVALC) &&
 			!(KW_IsWorldPresent(KW_REVIVAL) && KW_WorldIsSaved(KW_REVIVAL))) return KW_REVIVALC;
@@ -2414,6 +2433,7 @@ static const struct KW_FlightGroup
 	{"More levels",1,2,0,{KW_CK55,KW_ASYLUM}},
 	{"Spot's rescue",1,2,1,{KW_RTTS,KW_OSI}},
 	{"Craig's story",1,7,1,{KW_AURORA,KW_CANMORE,KW_SAINT,KW_PARTY,KW_REVIVAL,KW_REVIVALC,KW_FUTURE}},
+	{"Mortimer's end",1,2,1,{KW_PRISONER,KW_PRISONERR}},
 	{"Further trips",1,1,0,{KW_OCFLORE}},
 	{NULL,1,1,0,{KW_MENU_SCENES}},
 };
@@ -2484,6 +2504,8 @@ static void KW_FlightRelationship(int world,char *text,size_t size)
 	case KW_REVIVAL:relationship="After Canmore. Keen's way.";break;
 	case KW_REVIVALC:relationship="After Canmore. Craig's way.";break;
 	case KW_FUTURE:relationship="After Revival. Many years on.";break;
+	case KW_PRISONER:relationship="After Bounty. Play as Keen.";break;
+	case KW_PRISONERR:relationship="After Bounty. Play as Rick.";break;
 	}
 	CK_Cross_strscpy(text,relationship,size);
 }
@@ -4231,6 +4253,34 @@ static void KW_TestRevivalBehaviour(bool craig)
 		craig ? "Craig throws his shots for free" : "Keen shoots as ever");
 }
 
+void CK6_RendezvousCol(CK_object *a, CK_object *b); // kw_prisoner.c
+// For /KWTEST: The Prisoner's Dilemma's converted rules (kwtools/kw_prisoner.py,
+// kw_prisoner.c) in either build: the A-Danac Express flies without a passcard,
+// caged aliens (Bobbas) don't shoot, the hero has no pogo until it is found,
+// and the rendezvous pickup uses our collide (CK6_RendezvousCol: shows its
+// window and stays in the level rather than ending it).
+static void KW_TestPrisonerBehaviour(const char *build)
+{
+	if (CK_INT(CK6_RocketNoPasscard, 0) != 1 || CK_INT(CK6_BobbaNoShoot, 0) != 1 ||
+		CK_INT(CK_PogoNeedsWetsuit, 0) != 1 || CK_INT(CK6_GoPlatNoAccessory, 0) != 1 ||
+		CK_ACT_GetColFunction("CK6_RendezvousCol") != &CK6_RendezvousCol)
+		QuitF("KW_SelfTest: The Prisoner's Dilemma's settings or routine aren't loaded (%s)!", build);
+	// The rendezvous pickup: touched by a shot, nothing happens (not a player);
+	// touched by Keen, it would show its window and set the passcard flag.
+	CK_object *pass = CK_GetNewObj(false);
+	pass->type = CT_Friendly; // (anything but CT_Player)
+	CK_object *shot = CK_GetNewObj(true);
+	shot->type = CT_Stunner;
+	ck_gameState.ep.ck6.passcard = 0;
+	CK6_RendezvousCol(pass, shot);
+	if (ck_gameState.ep.ck6.passcard != 0)
+		QuitF("KW_SelfTest: The Prisoner's Dilemma's rendezvous pickup reacts to a shot (%s)!", build);
+	CK_RemoveObj(shot);
+	CK_RemoveObj(pass);
+	printf("PASS: The Prisoner's Dilemma (%s): the rocket needs no passcard, caged aliens are quiet, "
+		"the pogo is found, and the rendezvous stays in the level\n", build);
+}
+
 // For /KWTEST: every creature in the loaded level has its picture in memory
 // (a fan game moves sprites between caches; a wrong cache table shows here).
 void KW_TestLevelSpritesCached(const char *world, int level)
@@ -5754,6 +5804,43 @@ void KW_SelfTest(void)
 			ck_inputFrame.yDirection = IN_motion_None;
 		}
 
+	}
+
+	// The Prisoner's Dilemma (when installed), as Keen and as Rick Uller: its
+	// converted rules load, every level loads with its sprites in memory, and
+	// a completed level is peaceful. (Its rendezvous pickup shows a blocking
+	// window on a player's touch, so its creatures are not shot here.)
+	for (int w = KW_PRISONER; w <= KW_PRISONERR; ++w)
+	{
+		if (!KW_IsWorldPresent(w))
+			continue;
+		KW_SwitchWorld(w);
+		KW_TestPrisonerBehaviour(kw_worldDefs[w].id);
+		int loaded = 0;
+		for (int lv = 0; lv < CA_NUMMAPS; ++lv)
+		{
+			if (!CA_MapExists(lv))
+				continue;
+			ck_gameState.currentLevel = lv;
+			ck_gameState.levelsDone[lv] = 0;
+			CK_LoadLevel(true, true);
+			KW_TestLevelSpritesCached(kw_worldDefs[w].id, lv);
+			ck_gameState.levelsDone[lv] = 1;
+			CK_LoadLevel(true, true);
+			int hostiles, residents;
+			CK_object *first;
+			KW_CountLevelPeople(&hostiles, &residents, &first);
+			if (lv && (!KW_IsLevelPeaceful() || hostiles))
+				QuitF("KW_SelfTest: a completed %s level isn't peaceful!", kw_worldDefs[w].id);
+			ck_gameState.levelsDone[lv] = 0;
+			++loaded;
+		}
+		if (loaded < 18)
+			QuitF("KW_SelfTest: %s is missing levels!", kw_worldDefs[w].id);
+		printf("PASS: %s's %d levels load, caches are right, and completed levels are peaceful\n",
+			kw_worldDefs[w].id, loaded);
+		memset(ck_gameState.levelsDone, 0, sizeof(ck_gameState.levelsDone));
+		KW_SwitchWorld(KW_KEEN4);
 	}
 
 	// Habitable levels: Border Village is peaceful once completed, with an

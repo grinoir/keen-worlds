@@ -1,0 +1,118 @@
+# The Prisoner's Dilemma, as Keen (Levellass and the community, 2021, v1.0) as a Keen Worlds world.
+# Written by kwtools/kw_prisoner.py from the mod's CKPatch file; the data
+# files beside it are the player's copy of the mod. It runs on Keen 6.
+
+%string ca_tileInfo "TILEINFO.CK6"
+
+%stringarray ck_str_levelNames
+	"A-Danac 2 & 3  ",
+	"Cell Block Alpha",
+	"Cell Block Beta",
+	"Vertical Village",
+	"Rusty's Swamp",
+	"Old Rail Yard",
+	"The Impound Lot",
+	"The Greenhouse ",
+	"W. Tundra Town",
+	"E. Tundra Town",
+	"A-Danac Express",
+	"Tiny Town",
+	"Checkpoint Zero",
+	"The Courthouse",
+	"The Courthouse",
+	"Bloog Control Center",
+	"A Cliff?",
+	"The Rendezvous Point",
+	"High Scores"
+
+%stringarray ck_str_levelEntryText
+	"Keen traverses \nA-Danac 2 and 3",
+	"Keen sneaks out of \nCell Block Alpha   ",
+	"Keen skulks around \nCell Block Beta    ",
+	"Keen climbs into   \nVertical Village   ",
+	"Keen wades across  \nRusty's Swamp      ",
+	"Keen encounters an \nAbandoned Rail Yard",
+	"Keen seeks treasure\nat the Impound Lot ",
+	"Keen digs\nThe Greenhouse",
+	"Keen chills out in \nWest Tundra Town   ",
+	"Keen takes the air \nin East Tundra Town",
+	"Keen boards the    \nA-Danac Express    ",
+	"Keen begins to suspect\nthat teleporter  \nmay have been broken  ",
+	"Keen crashes through\nCheckpoint Zero     ",
+	"Keen causes disorder\nin the Courthouse   ",
+	"Keen demands answers\nin the Courthouse   \n                    ",
+	"Keen bravely enters the\nBloog Control Center,\nlooking for Molly",
+	"Keen encounters a\nCliff Of Some Sort",
+	"Keen meets Rick at\nthe Rendezvous Point",
+	"Keen is in the High\nScore screen. Call Id!"
+
+%intarray CK_LevelMusic 0, 1, 1, 4, 4, 3, 2, 5, 5, 5, 3, 6, 2, 7, 7, 6, 8, 8, -1, 0
+
+%string ck6_str_cliffNoRope "Scram! This area is\nfor uniformed\npersonnel only!    "
+%string ck6_str_getPasscard "I know I said I was\nvegetarian, but it\ndoesn't count if the\nanimal isn't from\nEarth!"
+%string ck6_str_getRope "A cop's uniform! I'm\nsure this'll come\nin handy."
+%string ck6_str_getSandwich "Hello, old friend!"
+%string ck6_str_grabbiterFed "The Chief Magistrate\nis probably in one of\nthese buildings.\nI'll check here,\nyou check there."
+%string ck_str_exitToMap "Exit to A-Danac"
+%string ck_str_statusCentilives "COINS"
+%stringarray ck_defaultHighScoreNames
+	"Id Software - '91",
+	"",
+	"Jason Blochowiak",
+	"Adrian Carmack",
+	"John Carmack",
+	"Tom Hall",
+	"John Romero",
+	""
+
+# The mod's changes to the program's rules, as settings
+%string ca_audioHead "AUDIOHED.CK6"
+# Bobbas (here, caged aliens) do not shoot
+%int CK6_BobbaNoShoot 1
+# Babobbas (big caged aliens) do not nap or shoot
+%int CK6_BabobbaNapChance 0
+%int CK6_BabobbaHopsPerShot 0
+# go-platforms have no accessory animation
+%int CK6_GoPlatNoAccessory 1
+# the hero has no pogo until it is found (the "Hello, old friend!" pickup)
+%int CK_PogoNeedsWetsuit 1
+# the rocket (A-Danac Express) flies without the passcard
+%int CK6_RocketNoPasscard 1
+# the rendezvous banter (Keen 6's Grabbiter and cliff messages, rewritten)
+%string ck6_str_grabbiterHungry "Where were you?!\nAnyway, I'll look\nfor the magistrate\nhere, you go over\nthere."
+%string ck6_str_grabbiterFed "The Chief Magistrate\nis probably in one of\nthese buildings.\nI'll check here,\nyou check there."
+%string ck6_str_cliffNoRope "Scram! This area is\nfor uniformed\npersonnel only!    "
+
+%override "EPISODE.CK6"
+
+# Its sprite actions, as the patches leave them (CK6_RendezvousCol is ours,
+# kwtools/kw_prisoner.py; the rest are Keen 6's own, graphics changed)
+%action CK6_ACT_Passcard0 0x1D42 @SPR_PASSCARD @SPR_PASSCARD Frame 0 0 0 0x0 0x0 NULL CK6_RendezvousCol CK_BasicDrawFunc1 NULL
+%action CK_ACT_FallPlat0 0x1DF6 425 425 Frame 0 0 0 0x0 0x0 CK_FallPlatSit NULL CK_BasicDrawFunc1 NULL
+%action CK_ACT_FallPlat1 0x1E14 425 425 Frame 0 0 0 0x0 0x0 CK_FallPlatFall NULL CK_BasicDrawFunc1 NULL
+%action CK_ACT_FallPlat2 0x1E32 425 425 ScaledFrame 0 0 0 0x0 -32 CK_FallPlatRise NULL CK_BasicDrawFunc1 NULL
+%action CK6_ACT_BloogguardWalk0 0x1F7C 259 262 UnscaledOnce 0 1 9 0x80 0x0 CK6_BloogguardWalk CK6_BloogguardCol CK6_MultihitDraw CK6_ACT_BloogguardWalk1
+%action CK6_ACT_BloogguardWalk1 0x1F9A 260 263 UnscaledOnce 0 1 9 0x80 0x0 CK6_BloogguardWalk CK6_BloogguardCol CK6_MultihitDraw CK6_ACT_BloogguardWalk2
+%action CK6_ACT_BloogguardWalk2 0x1FB8 261 264 UnscaledOnce 0 1 9 0x80 0x0 CK6_BloogguardWalk CK6_BloogguardCol CK6_MultihitDraw CK6_ACT_BloogguardWalk3
+%action CK6_ACT_BloogguardWalk3 0x1FD6 260 263 UnscaledOnce 0 1 9 0x80 0x0 CK6_BloogguardWalk CK6_BloogguardCol CK6_MultihitDraw CK6_ACT_BloogguardWalk0
+%action CK6_ACT_BloogguardClub0 0x1FF4 265 @SPR_BLOOGUARDSWINGR1 UnscaledOnce 0 1 30 0x0 0x0 NULL CK6_BloogguardCol CK6_MultihitDraw CK6_ACT_BloogguardClub1
+%action CK6_ACT_BloogguardClub1 0x2012 266 @SPR_BLOOGUARDSWINGR2 UnscaledOnce 0 1 9 0x0 0x0 NULL CK6_BloogguardCol CK6_MultihitDraw CK6_ACT_BloogguardClub2
+%action CK6_ACT_BloogguardClub2 0x2030 267 @SPR_BLOOGUARDSWINGR3 UnscaledOnce 1 1 1 0x0 0x0 CK6_BloogguardSmash CK6_BloogguardCol CK6_MultihitDraw CK6_ACT_BloogguardClub3
+%action CK6_ACT_BloogguardClub3 0x204E 267 @SPR_BLOOGUARDSWINGR3 UnscaledOnce 0 1 9 0x0 0x0 NULL CK6_BloogguardCol CK6_MultihitDraw CK6_ACT_BloogguardWalk0
+%action CK6_ACT_BloogguardStunned0 0x206C @SPR_BLOOGUARDSTUN @SPR_BLOOGUARDSTUN Frame 0 0 0 0x0 0x0 CK_Fall CK_CarryKeenCol CK_BasicDrawFunc4 CK6_ACT_BloogguardStunned0
+%action CK6_ACT_BloogletRRun0 0x208A @SPR_RBLOOGLETWALKL1 @SPR_RBLOOGLETWALKR1 UnscaledOnce 0 1 5 64 0x0 CK6_Bloog CK6_BloogletCol CK_BasicDrawFunc2 CK6_ACT_BloogletRRun1
+%action CK6_ACT_BloogletRRun1 0x20A8 @SPR_RBLOOGLETWALKL2 @SPR_RBLOOGLETWALKR2 UnscaledOnce 0 1 5 64 0x0 CK6_Bloog CK6_BloogletCol CK_BasicDrawFunc2 CK6_ACT_BloogletRRun2
+%action CK6_ACT_BloogletRRun2 0x20C6 @SPR_RBLOOGLETWALKL3 @SPR_RBLOOGLETWALKR3 UnscaledOnce 0 1 5 64 0x0 CK6_Bloog CK6_BloogletCol CK_BasicDrawFunc2 CK6_ACT_BloogletRRun3
+%action CK6_ACT_BloogletRRun3 0x20E4 @SPR_RBLOOGLETWALKL4 @SPR_RBLOOGLETWALKR4 UnscaledOnce 0 1 5 64 0x0 CK6_Bloog CK6_BloogletCol CK_BasicDrawFunc2 CK6_ACT_BloogletRRun0
+%action CK6_ACT_BloogletYRun0 0x2120 @SPR_YBLOOGLETWALKL1 @SPR_YBLOOGLETWALKR1 UnscaledOnce 0 1 5 32 0x0 CK6_Bloog CK6_BloogletCol CK_BasicDrawFunc2 CK6_ACT_BloogletYRun1
+%action CK6_ACT_BloogletYRun1 0x213E @SPR_YBLOOGLETWALKL2 @SPR_YBLOOGLETWALKR2 UnscaledOnce 0 1 5 32 0x0 CK6_Bloog CK6_BloogletCol CK_BasicDrawFunc2 CK6_ACT_BloogletYRun2
+%action CK6_ACT_BloogletYRun2 0x215C @SPR_YBLOOGLETWALKL3 @SPR_YBLOOGLETWALKR3 UnscaledOnce 0 1 5 32 0x0 CK6_Bloog CK6_BloogletCol CK_BasicDrawFunc2 CK6_ACT_BloogletYRun3
+%action CK6_ACT_BloogletYRun3 0x217A @SPR_YBLOOGLETWALKL4 @SPR_YBLOOGLETWALKR4 UnscaledOnce 0 1 5 32 0x0 CK6_Bloog CK6_BloogletCol CK_BasicDrawFunc2 CK6_ACT_BloogletYRun0
+%action CK6_ACT_BloogletGRun0 0x224C @SPR_GBLOOGLETWALKL1 @SPR_GBLOOGLETWALKR1 UnscaledOnce 0 1 5 48 0x0 CK6_Bloog NULL CK_BasicDrawFunc2 CK6_ACT_BloogletGRun1
+%action CK6_ACT_BloogletGRun1 0x226A @SPR_GBLOOGLETWALKL2 @SPR_GBLOOGLETWALKR2 UnscaledOnce 0 1 5 48 0x0 CK6_Bloog NULL CK_BasicDrawFunc2 CK6_ACT_BloogletGRun2
+%action CK6_ACT_BloogletGRun2 0x2288 @SPR_GBLOOGLETWALKL3 @SPR_GBLOOGLETWALKR3 UnscaledOnce 0 1 5 48 0x0 CK6_Bloog NULL CK_BasicDrawFunc2 CK6_ACT_BloogletGRun3
+%action CK6_ACT_BloogletGRun3 0x22A6 @SPR_GBLOOGLETWALKL4 @SPR_GBLOOGLETWALKR4 UnscaledOnce 0 1 5 48 0x0 CK6_Bloog NULL CK_BasicDrawFunc2 CK6_ACT_BloogletGRun0
+%action CK6_ACT_BloogletGStunned0 0x22C4 385 385 Frame 0 0 0 0x0 0x0 CK_Fall NULL CK_BasicDrawFunc4 NULL
+%action CK6_ACT_GikSlide0 0x267C 396 @SPR_GIKSLIDER1 UnscaledFrame 0 0 6 0x0 0x0 CK6_GikSlide CK_LethalCol CK6_GikSlideDraw CK6_ACT_GikSlide1
+%action CK6_ACT_GikSlide1 0x269A 396 395 UnscaledFrame 0 0 6 0x0 0x0 CK6_GikSlide CK_LethalCol CK6_GikSlideDraw CK6_ACT_GikSlide0
+%action CK6_ACT_GikEndSlide0 0x26B8 393 394 UnscaledOnce 0 1 20 0x0 0x0 NULL CK_LethalCol CK_BasicDrawFunc2 CK6_ACT_GikWalk0

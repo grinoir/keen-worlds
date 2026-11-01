@@ -107,7 +107,8 @@ void CK6_BobbaFireball(CK_object *obj)
 
 void CK6_Bobba(CK_object *obj)
 {
-	if (++obj->user1 == CK_INT(CK6_BobbaHopsPerShot, 3))
+	// KEEN WORLDS: CK6_BobbaNoShoot (The Prisoner's Dilemma: its caged aliens only hop)
+	if (!CK_INT(CK6_BobbaNoShoot, 0) && ++obj->user1 == CK_INT(CK6_BobbaHopsPerShot, 3))
 	{
 		// Shoot every third hop
 		obj->user1 = 0;
