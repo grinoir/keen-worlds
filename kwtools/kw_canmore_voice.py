@@ -8,7 +8,7 @@ it is spoken in, with the world's prefix CR_ (see kw_music.c). Its windows
 are Keen 9's friends' messages (kw_keen9.c KW9_FriendMessage, keyed by the
 friend Keen 9 has there): one per level where a fuse marker is touched.
 Keen keeps his voice, Craig the one he has in Aurora Bliss. New in this
-world, PROVISIONAL until the user picks by ear (see art/voices/):
+world:
 
   Myah           (level 5)                 af_sky
 

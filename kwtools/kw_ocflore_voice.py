@@ -5,8 +5,7 @@ words.
 
 Then kwtools/kw_voice_pack.py packs them. A clip has the name of the window
 it is spoken in, with the world's prefix OC_ (see kw_music.c). Keen and the
-narrator keep their voices. New in this world, PROVISIONAL until the user
-picks by ear (see art/voices/):
+narrator keep their voices. New in this world:
 
   The Dorsal     (Lindsey's windows)       bf_isabella, lowered
 

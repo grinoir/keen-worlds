@@ -7,7 +7,7 @@ Then kwtools/kw_voice_pack.py packs them. A clip has the name of the window
 it is spoken in (Keen 4's), with the world's prefix: RV_ for the Keen build,
 RC_ for the Craig build (see kw_music.c). Its endings are spoken by
 kw_dave216_end_voice.py. Keen, Craig, Myah, Lt. Barker keep their voices.
-New here, PROVISIONAL until the user picks by ear (see art/voices/):
+New here:
 
   The Yorps       (Lindsey's windows)      bf_lily, raised
   The visions     (the Janitor's orb)      af_nicole (Keen's) and am_echo,

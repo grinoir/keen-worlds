@@ -10,7 +10,7 @@ prints each speaker in a colour of his own; ROLES gives each colour's voice
 per game. The narrator reads the rest. Operation Ocflore's ending has no
 colours: its lines are given here, in its own words. Keen, the narrator and
 the friends keep their voices; Craig, Myah and the Dorsal have the
-provisional ones of their worlds; the radio call at the end of Aurora Bliss
+voices of their worlds; the radio call at the end of Aurora Bliss
 is the Krile advisor of Krisle (Atroxian Realm, whose planet is invaded) on a
 crackling radio.
 
@@ -31,7 +31,7 @@ from kw_ocflore_voice import DORSAL, STYLE as OCFLORE_STYLE
 from kw_end_text import pages
 
 KRILE = 'af_kore'
-ALLAIN = 'am_santa'   # PROVISIONAL (samples in art/voices/allain_*)
+ALLAIN = 'am_santa'
 RADIO = 'radio'   # (a role, not a voice: the Krile on the radio)
 VOICES = {RADIO: KRILE}
 STYLE = dict(BASE_STYLE)

@@ -4,8 +4,7 @@
 
 Then kwtools/kw_voice_pack.py packs them. A clip has the name of the window
 it is spoken in, with the world's prefix AB_ (see kw_music.c). Keen keeps
-his voice. New in this world, PROVISIONAL until the user picks by ear (see
-art/voices/):
+his voice. The voices chosen for this world:
 
   Craig          (Lindsey's windows)       am_liam, raised
   The Joy Bots   (council and janitor)     am_onyx, lowered, with the robot effect
