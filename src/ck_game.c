@@ -880,6 +880,10 @@ bool CK_TryAgainMenu()
 	/* If lives remain, see if they want to try this level again */
 	if (--ck_gameState.numLives >= 0)
 	{
+		// KEEN WORLDS: CK_DeathRestartsLevel: straight back in, no question
+		// (Canmore's Redemption's epilogue Saint of Aurora)
+		if (CK_INT(CK_DeathRestartsLevel, 0))
+			return true;
 		VL_FixRefreshBuffer();
 		// KEEN WORLDS: a third choice when there is a saved game to go back
 		// to (Foray in the Forest has it; here every world does): the last
@@ -1194,7 +1198,7 @@ void CK_GameLoop()
 #ifdef WITH_KEEN4
 			if (ck_currentEpisode->ep == EP_CK4)
 			{
-				if (ca_mapOn)
+				if (ca_mapOn && !CK_INT(CK4_CouncilQuiet, 0)) // KEEN WORLDS: variable
 					SD_PlaySound(CK_SOUNDNUM(SOUND_LEVELEXIT));
 
 				ck_lastLevelFinished = ca_mapOn;

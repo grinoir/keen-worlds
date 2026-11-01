@@ -33,6 +33,9 @@ CLIPS = {
     'CR_HINT_BARKER.RAW': [(CRAIG, ["What is this?", "I wonder what... what does this mean?"])],
     'CR_HINT_SPOT.RAW': [(CRAIG, ["Hmmm...", "It seems like a piece of note.", "I'll take it."])],
     'CR_HINT_JANITOR.RAW': [(K, ["We broke free but...", "Mort passed out.", "Listen, find us a way out of here!"])],
+    # Initiation Party, its epilogue: Keen arrives at the party (its council
+    # member's window; Saint of Aurora's has only "...", unspoken)
+    'PA_KEEN_COUNCIL0.RAW': [(K, ["Hey, sorry I am late.", "Let's eat!"])],
 }
 
 

@@ -48,12 +48,17 @@ typedef enum KW_World
 	KW_AURORA, // Aurora Bliss: "Aurora Bliss" (fan game on Keen 4, Craig's story part one; append)
 	KW_OCFLORE, // Ocflore V: "Operation Ocflore" (fan game on Keen 4; append)
 	KW_CANMORE, // Azura Astrid: "Canmore's Redemption" (fan game on Keen 5, Craig's story part two; append)
+	KW_SAINT,   // Aurora Mountains: "Saint of Aurora" (Canmore's Redemption's sad epilogue, on Keen 4; append)
+	KW_PARTY,   // Tower of Dusk: "Initiation Party" (Canmore's Redemption's happy epilogue, on Keen 4; append)
 	KW_NUM_WORLDS,
 	KW_NO_WORLD = -1,
 } KW_World;
 
 // The world currently loaded.
 int KW_CurrentWorld(void);
+// Canmore's Redemption's ending was shown (true: the body-armour one); its
+// epilogue's course opens.
+void KW_NoteCanmoreEnding(bool armour);
 // A slower reveal after falling asleep or waking; consumed once by loading.
 bool KW_FadeDreamIn(void);
 

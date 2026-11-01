@@ -272,6 +272,21 @@ static const KW_WorldDef kw_worldDefs[KW_NUM_WORLDS] = {
 		"Craig's story, part two\nA fan game by Dave216, 2023",
 		"Created by David Novosel\n(Dave216)\n\nPatches: nwe74, K1n9_Duk3,\nMink, The CK Guy, and Keen 9's\n(Levellass, Lemm)" KW_NOT_OURS,
 		"Canmore's Redemption v1.0.2 by\nDave216 (2023-07-30). Get it\nfrom keenwiki.shikadi.net and\nput its files in mods/canmore."},
+	// Canmore's Redemption's two epilogues (Dave216, Keen 4 patch mods): the
+	// archives in its download, whose passwords its endings show. The
+	// player's copy of their files in play/mods/saint and play/mods/party,
+	// with Aurora Bliss's EGADICT.CK4 (they are packed with it) and our
+	// MOD.CK4 (kwtools/kw_canmore_epilogues.py). Each opens with its ending.
+	{"saint", "Aurora Mountains", 4, "mods/saint", "MOD.CK4",
+		"Saint of Aurora",
+		"Craig's story: the sad epilogue\nof Canmore's Redemption\nA fan game by Dave216, 2022",
+		"Created by David Novosel\n(Dave216)" KW_NOT_OURS,
+		"\"Saint of Aurora.rar\" is in\nCanmore's Redemption (password\nfrom its sad ending). Unpack it\nin mods/saint, with Aurora\nBliss's EGADICT.CK4."},
+	{"party", "Tower of Dusk", 4, "mods/party", "MOD.CK4",
+		"Initiation Party",
+		"Craig's story: the happy epilogue\nof Canmore's Redemption\nA fan game by Dave216, 2023",
+		"Created by David Novosel\n(Dave216)" KW_NOT_OURS,
+		"\"Initiation Party.rar\" is in\nCanmore's Redemption (password\nfrom its armour ending). Unpack\nit in mods/party, with Aurora\nBliss's EGADICT.CK4."},
 };
 
 static CK_EpisodeDef *KW_EpisodeDef(int episode)
@@ -488,6 +503,8 @@ static const KW_Ship kw_ships[] = {
 	{KW_SUBURB, 10, 28, 14, 14, 11, 29, 17},
 	// Far Shadowlands: its Megarocket level (20) is Keen 4's, five rows lower.
 	{KW_RTTS, 20, 3, 17, 3, 14, 19, 19},
+	// Saint of Aurora: its one level (map 0) starts Keen beside the ship.
+	{KW_SAINT, 0, 7, 43, 2, 39, 8, 44},
 };
 // Foray's level 1: the forest with the landed ship is the top of the map;
 // the game's own rooms of the ship start below this row.
@@ -631,6 +648,10 @@ bool KW_IsWorldVisited(int world)
 // which keepsakes Spot has already remarked on (one bit each: words 217
 // and 218, low and high).
 static bool kw_outpostShown;
+// Canmore's Redemption's endings seen (one bit each: 1 the sad one, 2 the
+// body-armour one; save block word 219, marked by 220). Each epilogue opens
+// with its ending, as the game gives the password of its archive there.
+static int kw_canmoreEndings;
 static uint32_t kw_spotSeen;
 
 unsigned KW_SpotKeepsakesSeen(void) {return kw_spotSeen;}
@@ -840,6 +861,7 @@ bool KW_WriteSaveBlock(FS_File fp)
 	extra[216]=kw_outpostShown;
 	extra[217]=(int16_t)(kw_spotSeen & 0xFFFF);
 	extra[218]=(int16_t)(kw_spotSeen >> 16);
+	extra[219]=kw_canmoreEndings; extra[220]=0x4352;
 	return AR_WriteState(fp) && FF_WriteState(fp) && KW_WriteId(fp, kw_worldDefs[kw_boardedFrom].id) &&
 		FS_WriteInt16LE(extra, 261, fp) == 261;
 }
@@ -936,6 +958,7 @@ bool KW_ReadSaveBlock(FS_File fp, bool *deferred)
 			kw_chronicleEndTold = extra[80] == 1;
 			kw_outpostShown = extra[216] == 1;
 			kw_spotSeen = kw_outpostShown ? (uint16_t)extra[217] | (uint32_t)(uint16_t)extra[218] << 16 : 0;
+			kw_canmoreEndings = extra[220] == 0x4352 ? extra[219] & 3 : 0;
 			if (kw_chronicle && extra[215] != KW_CHRONICLE_RULES)
 				KW_KeepLegacyCourses(worlds, known);
 			OSI_SetState(&extra[90]);
@@ -1071,6 +1094,7 @@ void KW_ResetWorlds(void)
 	kw_chronicleEndTold = 0;
 	kw_outpostShown = false;
 	kw_spotSeen = 0;
+	kw_canmoreEndings = 0;
 	kw_pendingWorld = KW_NO_WORLD;
 	kw_placeArrivalAtShip = false;
 	kw_marsLinked=kw_arcadeCabinDue=kw_arcadeFadeIn=kw_cabinReturnRequested=false;
@@ -2006,6 +2030,10 @@ static int KW_ChronicleKey(int world)
 	case KW_CANMORE: // Craig's story goes on
 		if (KW_IsWorldPresent(KW_AURORA) && !KW_WorldIsSaved(KW_AURORA)) return KW_AURORA;
 		return KW_LastChronicleWorld();
+	case KW_SAINT: // (and each epilogue opens with its ending: KW_EpilogueLocked)
+	case KW_PARTY:
+		if (KW_IsWorldPresent(KW_CANMORE) && !KW_WorldIsSaved(KW_CANMORE)) return KW_CANMORE;
+		return KW_LastChronicleWorld();
 	case KW_OSI:
 		// Spot's story: the Oracle names the Omegamatrix station at the end
 		// of Return to the Shadowlands, so the station follows it.
@@ -2032,6 +2060,16 @@ static int KW_ChronicleKey(int world)
 			before = kw_chronicleLine[i];
 	}
 	return before;
+}
+
+void KW_NoteCanmoreEnding(bool armour)
+{
+	kw_canmoreEndings |= armour ? 2 : 1;
+}
+
+static bool KW_EpilogueLocked(int world)
+{
+	return (world == KW_SAINT && !(kw_canmoreEndings & 1)) || (world == KW_PARTY && !(kw_canmoreEndings & 2));
 }
 
 static bool KW_CourseIsOpen(int world)
@@ -2319,7 +2357,7 @@ typedef struct KW_FlightEntry {int world,column,row,step;} KW_FlightEntry;
 static const struct KW_FlightGroup
 {
 	const char *title;
-	int column,count,firstStep,worlds[3];
+	int column,count,firstStep,worlds[5];
 } kw_flightGroups[]={
 	{"Goodbye, Galaxy!",0,3,1,{KW_KEEN4,KW_KEEN5,KW_KEEN6}},
 	{"The Universe Is Toast!",0,3,4,{KW_KEEN7,KW_KEEN8,KW_KEEN9}},
@@ -2329,7 +2367,7 @@ static const struct KW_FlightGroup
 	{"Atroxian story",1,2,1,{KW_AREALM,KW_ALPHAMATIC}},
 	{"More levels",1,2,0,{KW_CK55,KW_ASYLUM}},
 	{"Spot's rescue",1,2,1,{KW_RTTS,KW_OSI}},
-	{"Craig's story",1,2,1,{KW_AURORA,KW_CANMORE}},
+	{"Craig's story",1,4,1,{KW_AURORA,KW_CANMORE,KW_SAINT,KW_PARTY}},
 	{"Further trips",1,1,0,{KW_OCFLORE}},
 	{NULL,1,1,0,{KW_MENU_SCENES}},
 };
@@ -2395,6 +2433,8 @@ static void KW_FlightRelationship(int world,char *text,size_t size)
 	case KW_AURORA:relationship="After Aspermontis. Craig comes along.";break;
 	case KW_OCFLORE:relationship="A trip of its own, after Aspermontis.";break;
 	case KW_CANMORE:relationship="After Aurora Bliss. Craig flies.";break;
+	case KW_SAINT:relationship="If Craig dies on Azura Astrid.";break;
+	case KW_PARTY:relationship="If Craig lives (Myah's armour).";break;
 	}
 	CK_Cross_strscpy(text,relationship,size);
 }
@@ -2526,6 +2566,7 @@ static int KW_TravelMenu(void)
 		else if (world==KW_MENU_SCENES) snprintf(status,sizeof(status),"Watch the scenes Keen has seen again.");
 		else if (world==here) snprintf(status,sizeof(status),"Keen is here. Choose to read about it.");
 		else if (!KW_IsWorldPresent(world)) snprintf(status,sizeof(status),"Not installed. Choose for instructions.");
+		else if (KW_EpilogueLocked(world)) snprintf(status,sizeof(status),"Opens with its Canmore ending.");
 		else if (!KW_CourseIsOpen(world)) snprintf(status,sizeof(status),"The Chronicle: save %s first.",kw_worldDefs[KW_ChronicleKey(world)].name);
 		else if (KW_WorldIsSaved(world)) snprintf(status,sizeof(status),"Saved.");
 		else
@@ -2610,6 +2651,14 @@ static int KW_TravelMenu(void)
 	{
 		// (inside the ship: the world it stands on)
 		KW_ShowAboutWorld(kw_currentWorld == KW_SHIP ? kw_boardedFrom : kw_currentWorld);
+		return KW_NO_WORLD;
+	}
+	if (result != KW_NO_WORLD && KW_IsWorldPresent(result) && KW_EpilogueLocked(result))
+	{
+		KW_ShowCards(result == KW_SAINT ?
+			"Saint of Aurora\n\nThe ship has no course there.\nIt is where Canmore's\nRedemption ends if Craig dies.\nFinish it without Myah's armour." :
+			"Initiation Party\n\nThe ship has no course there.\nIt is where Canmore's\nRedemption ends if Craig lives.\nFinish it with Myah's armour\n(level 5).");
+		SD_PlaySound(CK_SOUNDNUM(SOUND_NEEDKEYCARD));
 		return KW_NO_WORLD;
 	}
 	if (result != KW_NO_WORLD && KW_IsWorldPresent(result) && !KW_CourseIsOpen(result))
@@ -4067,7 +4116,18 @@ static void KW_TestCanmoreBehaviour(void)
 	ca_mapOn = map;
 	if (won != LS_DestroyedQED || died != LS_Died)
 		Quit("KW_SelfTest: dying in Canmore's last level doesn't win!");
-	printf("PASS: Canmore's Redemption's rules and routines (an enemy shot makes an Ampton drop a keycard)\n");
+	// Each epilogue opens with its own ending (the game shows its archive's password there).
+	int endings = kw_canmoreEndings;
+	kw_canmoreEndings = 0;
+	bool shut = KW_EpilogueLocked(KW_SAINT) && KW_EpilogueLocked(KW_PARTY);
+	KW_NoteCanmoreEnding(false);
+	bool sad = !KW_EpilogueLocked(KW_SAINT) && KW_EpilogueLocked(KW_PARTY);
+	KW_NoteCanmoreEnding(true);
+	bool both = !KW_EpilogueLocked(KW_SAINT) && !KW_EpilogueLocked(KW_PARTY);
+	kw_canmoreEndings = endings;
+	if (!shut || !sad || !both)
+		Quit("KW_SelfTest: Canmore's epilogues don't open with their endings!");
+	printf("PASS: Canmore's Redemption's rules and routines (an enemy shot makes an Ampton drop a keycard; each epilogue opens with its ending)\n");
 }
 
 // For /KWTEST: every creature in the loaded level has its picture in memory
@@ -5357,8 +5417,8 @@ void KW_SelfTest(void)
 	// with the patches' rules and routines, run in every level, and each is
 	// hit by a shot once (Keen can't die meanwhile).
 	{
-		static const int patchWorlds[] = {KW_AURORA, KW_OCFLORE, KW_CANMORE};
-		for (int p = 0; p < 3; ++p)
+		static const int patchWorlds[] = {KW_AURORA, KW_OCFLORE, KW_CANMORE, KW_SAINT, KW_PARTY};
+		for (int p = 0; p < 5; ++p)
 		{
 			int w = patchWorlds[p];
 			if (!KW_IsWorldPresent(w))
@@ -5666,11 +5726,12 @@ void KW_SelfTest(void)
 				Quit("KW_SelfTest: the light on the hut's mast does not blink!");
 			kw_worlds[opener].completed = true;
 			CK_LoadLevel(true, true);
-			// (keepsakes stand on the shelves: check the shelves' last cell, never one's place)
+			// (keepsakes stand on the shelves: check the second shelves' last
+			// cell, the last place a keepsake would get)
 			if (!KW_IsOutpostOpen() || !KW_IsArtCellPlaced(&kw_hutArt, 103, 12) || KW_IsArtPlaced(&kw_hutBoardsArt) ||
 				!KW_IsArtCellPlaced(&kw_hutLightArt, kw_hutLightArt.originX, kw_hutLightArt.originY) || // (a lit window)
-				!KW_IsArtCellPlaced(&kw_outpostShelvesArt, kw_outpostShelvesArt.originX + kw_outpostShelvesArt.tilesW - 1,
-					kw_outpostShelvesArt.originY + kw_outpostShelvesArt.tilesH - 1))
+				!KW_IsArtCellPlaced(&kw_outpostShelves2Art, kw_outpostShelves2Art.originX + kw_outpostShelves2Art.tilesW - 1,
+					kw_outpostShelves2Art.originY + kw_outpostShelves2Art.tilesH - 1))
 				Quit("KW_SelfTest: once open, the outpost should be furnished and its door free!");
 			if ((TI_ForeMisc(CA_TileAtPos(hutStreetX, hutStreetY, 1)) & 0x7F) != MISCFLAG_DOOR ||
 				CA_TileAtPos(hutStreetX, hutStreetY, 2) != ((hutRoomX << 8) | hutRoomY) ||

@@ -85,6 +85,9 @@ KEEPSAKE_TEXT = {
     'SUBURB': "Mortimer's dummy head. It still sparks sometimes.",
     'AURORA': "The can of Vorta Cola Craig spilled on the Navi-Com. Empty now.",
     'OCFLORE': "A vial of Ostrum from Ocflore V. The Ormch wanted it. It glows.",
+    'CANMORE': "The keycard that opened Keen's cell on Azura Astrid.",
+    'SAINT': "A flower from the meadow on Aurora Bliss where Craig rests.",
+    'PARTY': "Shikadi soda from Captain Craig's party. No brewskies.",
 }
 SPOT_NEW = {
     'KEEN4': "A shiny gem! I'll put it where the sun hits it.",
@@ -105,6 +108,9 @@ SPOT_NEW = {
     'SUBURB': "Mortimer's head?! Is it... is it off?",
     'AURORA': "Vorta Cola! Who drank it? ...Craig drank it.",
     'OCFLORE': "It glows! Is it supposed to glow? I'm not touching it.",
+    'CANMORE': "A keycard! Can it open the fridge?",
+    'SAINT': "A flower for Craig. I'll water it every day.",
+    'PARTY': "There was a party? And nobody invited Spot?",
 }
 
 # (the C array, the clips' prefix, the voice)

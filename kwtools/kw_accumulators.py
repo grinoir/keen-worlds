@@ -156,6 +156,7 @@ def convert(game, keen4, out, pat='Mymod.PAT', files=DATA_FILES, extra=(), skip=
     lines.append('%stringarray ck_str_levelEntryText\n' + ',\n'.join('\t"%s"' % escape(item(entries, base_entries, i)) for i in range(len(base_entries))) + '\n')
     # music
     music = [patched[music_table + 2 * i] | patched[music_table + 2 * i + 1] << 8 for i in range(music_levels)]
+    music = [m - 0x10000 if m >= 0x8000 else m for m in music]   # ($FFFF: no music)
     for span in spans:
         if span[0] >= music_table and span[1] <= music_table + 2 * music_levels:
             span[2] = True

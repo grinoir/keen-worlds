@@ -1168,6 +1168,8 @@ void help_endgame(void)
 #ifdef WITH_KEEN5
 	if (CK_UseSecretEnding())
 	{
+		if (KW_CurrentWorld() == KW_CANMORE)
+			KW_NoteCanmoreEnding(true); // KEEN WORLDS: its epilogue opens
 		CA_CacheGrChunk(CK_CHUNKNUM(TEXT_SECRETEND));
 		ptext = (char *)ca_graphChunks[CK_CHUNKNUM(TEXT_SECRETEND)];
 		secretEnding = true;
@@ -1175,6 +1177,8 @@ void help_endgame(void)
 	else
 #endif
 	{
+		if (KW_CurrentWorld() == KW_CANMORE)
+			KW_NoteCanmoreEnding(false); // KEEN WORLDS: its epilogue opens
 		CA_CacheGrChunk(CK_CHUNKNUM(TEXT_END));
 		ptext = (char *)ca_graphChunks[CK_CHUNKNUM(TEXT_END)];
 	}

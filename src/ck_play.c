@@ -2105,7 +2105,7 @@ void CK_CentreCamera(CK_object *obj)
 	else
 		screenX = obj->posX - RF_PixelToUnit(152);
 
-	if (ca_mapOn == 0)
+	if (ca_mapOn == CK_INT(ck_worldMapNumber, 0)) // KEEN WORLDS: variable
 	{
 		// World Map
 		if (obj->posY < RF_PixelToUnit(80))
@@ -2594,7 +2594,9 @@ void CK_PlayLoop()
 		if (KD_IsActive())
 			KD_ScrollScreen(); // KEEN WORLDS (kw_dreams.c): also how its levels end
 		else
-		if (ca_mapOn == 0 || (ck_currentEpisode->ep == EP_CK4 && ca_mapOn == CK_INT(CK4_UnderwaterCameraLevel, 17)))
+		// KEEN WORLDS: ck_worldMapNumber (a mod whose map 0 is a level: the
+		// epilogues of Canmore's Redemption)
+		if (ca_mapOn == CK_INT(ck_worldMapNumber, 0) || (ck_currentEpisode->ep == EP_CK4 && ca_mapOn == CK_INT(CK4_UnderwaterCameraLevel, 17)))
 		{
 			CK_MapCamera(ck_keenObj);
 			// KEEN WORLDS (Operation Ocflore): its underwater level ends where

@@ -703,34 +703,42 @@ void CK4_ShowCouncilMessage(void)
 	CA_MarkGrChunk(CK_CHUNKNUM(PIC_KEENTALK1));
 	CA_MarkGrChunk(CK_CHUNKNUM(PIC_KEENTALK2));
 	CA_CacheMarks(0);
-	// KEEN WORLDS: variables (Aurora Bliss: both talks; Operation Ocflore: the council's)
-	StartMusic(CK_INT(CK4_CouncilTalkMusicLevel, CK_INT(CK4_TalkMusicLevel, -1)));
+	// KEEN WORLDS: variables (Aurora Bliss: both talks; Operation Ocflore: the
+	// council's); CK4_CouncilTalkKeepsMusic: the level's goes on (Initiation Party)
+	bool keepMusic = CK_INT(CK4_CouncilTalkKeepsMusic, 0);
+	if (!keepMusic)
+		StartMusic(CK_INT(CK4_CouncilTalkMusicLevel, CK_INT(CK4_TalkMusicLevel, -1)));
 
 	VL_FixRefreshBuffer();
 
-	US_CenterWindow(26, 8);
-	VHB_DrawBitmap(US_GetWindowX(), US_GetWindowY(), CK_CHUNKNUM(PIC_ORACLE));
-	US_SetPrintY(US_GetPrintY() + 6);
-	US_SetWindowW(US_GetWindowW() - 0x30);
-	US_SetWindowX(US_GetWindowX() + 0x30);
-
-	if (ca_mapOn == CK_INT(CK4_CouncilMessageUnderwaterLevel, 17))
+	// KEEN WORLDS: CK4_CouncilNoThanks: only Keen's line, no thanks from
+	// the one rescued (Canmore's Redemption's epilogues)
+	if (!CK_INT(CK4_CouncilNoThanks, 0))
 	{
-		// Underwater level
-		US_CPrint(CK_STRING(ck4_str_councilThanks2));
-	}
-	else
-	{
-		US_CPrint(CK_STRING(ck4_str_councilThanks));
-	}
+		US_CenterWindow(26, 8);
+		VHB_DrawBitmap(US_GetWindowX(), US_GetWindowY(), CK_CHUNKNUM(PIC_ORACLE));
+		US_SetPrintY(US_GetPrintY() + 6);
+		US_SetWindowW(US_GetWindowW() - 0x30);
+		US_SetWindowX(US_GetWindowX() + 0x30);
 
-	VH_UpdateScreen();
-	// KEEN WORLDS: he says it (through the water, where the world has that clip)
-	if (!(ca_mapOn == CK_INT(CK4_CouncilMessageUnderwaterLevel, 17) && KW_SayWorldLine("COUNCIL_WET")))
-		KW_SayWorldLine("COUNCIL");
-	// VL_WaitVBL(60);
-	IN_ClearKeysDown();
-	IN_WaitButton();
+		if (ca_mapOn == CK_INT(CK4_CouncilMessageUnderwaterLevel, 17))
+		{
+			// Underwater level
+			US_CPrint(CK_STRING(ck4_str_councilThanks2));
+		}
+		else
+		{
+			US_CPrint(CK_STRING(ck4_str_councilThanks));
+		}
+
+		VH_UpdateScreen();
+		// KEEN WORLDS: he says it (through the water, where the world has that clip)
+		if (!(ca_mapOn == CK_INT(CK4_CouncilMessageUnderwaterLevel, 17) && KW_SayWorldLine("COUNCIL_WET")))
+			KW_SayWorldLine("COUNCIL");
+		// VL_WaitVBL(60);
+		IN_ClearKeysDown();
+		IN_WaitButton();
+	}
 	US_CenterWindow(26, 8);
 	VHB_DrawBitmap(US_GetWindowX() + US_GetWindowW() - 0x30, US_GetWindowY(), CK_CHUNKNUM(PIC_KEENTALK1));
 	US_SetWindowW(US_GetWindowW() - 0x30);
@@ -753,7 +761,8 @@ void CK4_ShowCouncilMessage(void)
 	ck_gameState.ep.ck4.membersRescued++;
 	KW_LinesOver(); // KEEN WORLDS: no more of the clip; the music comes back up
 	CA_DownLevel();
-	StopMusic();
+	if (!keepMusic)
+		StopMusic();
 }
 
 void CK4_SpawnKeenBubble(CK_object *);

@@ -24,6 +24,10 @@ VOICE = 'af_heart'        # Kokoro's "Heart", an American woman
 KOKORO_DIR = os.environ.get('KW_KOKORO_DIR', os.path.expanduser('~/Projects/SignalweaveCMS'))
 # world id: the words, a sentence each
 LANDINGS = {
+    'saint': ["You have now landed on Aurora Bliss, in the mountains.", "Three months have gone by.",
+              "Craig is buried here. I will wait. Take your time."],
+    'party': ["You have now landed in the Shadowlands.", "There is a party at the Tower of Dusk.",
+              "You are late. Again."],
     'canmore': ["You have now landed on Azura Astrid.", "The pilot was Craig Canmore. I did not agree to this.",
                 "Keen and Mortimer are tied up in the back, and they are not happy.",
                 "Craig, go and find your sister."],
@@ -68,6 +72,8 @@ LANDINGS = {
 # The Chronicle: a world has been saved and the ship has learned the course
 # to the next. world id: the place's name as it is said.
 COURSES = {
+    'saint': 'The Aurora Mountains',
+    'party': 'The Tower of Dusk',
     'canmore': 'Azura Astrid',
     'ocflore': 'Ocflore Five',
     'aurora': 'Aurora Bliss',
@@ -81,6 +87,10 @@ COURSES = {
 # A world has been saved: what the ship computer says when Keen is next in
 # the cabin. world id: the words, a sentence each.
 SAVED = {
+    'saint': ["The Aurora Mountains are behind us.", "The planet is green again.",
+              "They call him the Saint of Aurora now."],
+    'party': ["The party is over.", "Captain Craig. I suppose I will have to call him that now.",
+              "He is still not allowed near my controls."],
     'canmore': ["Azura Astrid is behind us.", "Keen carried Craig home through a teleporter.",
                 "Nobody came back for me. I flew myself home."],
     'ocflore': ["Ocflore Five is free.", "The Ormch have packed up their project.", "The Dorsal say thank you. In bubbles."],

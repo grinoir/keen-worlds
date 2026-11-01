@@ -193,7 +193,8 @@ void CK_KeenColFunc(CK_object *a, CK_object *b)
 				}
 				else
 				{
-					SD_PlaySound(CK_SOUNDNUM(SOUND_COUNCILSAVE));
+					if (!CK_INT(CK4_CouncilQuiet, 0)) // KEEN WORLDS: (Canmore's Redemption's epilogues)
+						SD_PlaySound(CK_SOUNDNUM(SOUND_COUNCILSAVE));
 					ck_gameState.levelState = LS_CouncilRescued;
 				}
 			}
@@ -940,6 +941,11 @@ void CK_KeenStandingThink(CK_object *obj)
 
 		return;
 	}
+
+	// KEEN WORLDS: CK_KeenNoBored: Keen just stands (Canmore's Redemption's
+	// epilogue Saint of Aurora)
+	if (CK_INT(CK_KeenNoBored, 0))
+		return;
 
 	//If not on platform
 	if ((obj->topTI & ~7) != 0x18)

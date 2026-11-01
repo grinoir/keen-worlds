@@ -60,6 +60,9 @@ static const char *const kw_keepsakeText[] = {
 	"Mortimer's dummy\nhead. It still\nsparks sometimes.",
 	"The can of Vorta\nCola Craig spilled\non the Navi-Com.\nEmpty now.",
 	"A vial of Ostrum\nfrom Ocflore V. The\nOrmch wanted it. It\nglows.",
+	"The keycard that\nopened Keen's cell\non Azura Astrid.",
+	"A flower from the\nmeadow on Aurora\nBliss where Craig\nrests.",
+	"Shikadi soda from\nCaptain Craig's\nparty. No\nbrewskies.",
 };
 static const char *const kw_spotNewText[][2] = {
 	{"A shiny gem! I'll\nput it where the\nsun hits it.", "OP_SPNEW_KEEN4.RAW"},
@@ -80,4 +83,7 @@ static const char *const kw_spotNewText[][2] = {
 	{"Mortimer's head?!\nIs it... is it off?", "OP_SPNEW_SUBURB.RAW"},
 	{"Vorta Cola! Who\ndrank it? ...Craig\ndrank it.", "OP_SPNEW_AURORA.RAW"},
 	{"It glows! Is it\nsupposed to glow?\nI'm not touching\nit.", "OP_SPNEW_OCFLORE.RAW"},
+	{"A keycard! Can it\nopen the fridge?", "OP_SPNEW_CANMORE.RAW"},
+	{"A flower for Craig.\nI'll water it every\nday.", "OP_SPNEW_SAINT.RAW"},
+	{"There was a party?\nAnd nobody invited\nSpot?", "OP_SPNEW_PARTY.RAW"},
 };

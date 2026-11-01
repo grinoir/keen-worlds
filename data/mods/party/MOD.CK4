@@ -1,0 +1,98 @@
+# Initiation Party (an epilogue of Canmore's Redemption: Dave216, 2023) as a Keen Worlds world.
+# Written by kwtools/kw_canmore_epilogues.py from the mod's CKPatch file; the data
+# files beside it are the player's copy of the mod. It runs on Keen 4.
+
+%string ca_tileInfo "KEEN4.TLI"
+
+%stringarray ck_str_levelNames
+	"Shadowlands",
+	"Ancient Village",
+	"Zooti Bridge",
+	"Tower of Dusk",
+	"The Party",
+	"Chasm of Chills",
+	"Crystalus",
+	"Hilville",
+	"Sand Yego",
+	"Miragia",
+	"Lifewater Oasis",
+	"Pyramid of the Moons",
+	"Pyramid of Shadows",
+	"Pyramid of the\nGnosticene Ancients",
+	"Pyramid of the Forbidden",
+	"Isle of Tar",
+	"Isle of Fire",
+	"Well of Wishes",
+	"Bean-with-Bacon\nMegarocket"
+
+%stringarray ck_str_levelEntryText
+	"Keen is late\nfor the party",
+	"Keen passes through\nAncient Village",
+	"Keen crosses\nthe Zooti Bridge",
+	"Keen enters the\nthe Tower of Dusk",
+	"Keen joins\nthe Party",
+	"Keen shivers along\nthe Chasm of Chills",
+	"Keen reflects upon\nentering Crystalus",
+	"Keen stumbles upon\nHillville",
+	"Keen grits his teeth\nand enters Sand Yego",
+	"Keen disappears into\nMiragia",
+	"Keen crawls into\nLifewater Oasis",
+	"Keen backs into the\nPyramid of the Moons",
+	"Keen move silently in\nthe Pyramid of Shadows",
+	"Keen reverently enters\nthe Pyramid of the\nGnosticene Ancients",
+	"Keen hesitantly crosses\ninto the Pyramid of the\nForbidden",
+	"Keen mucks along the\nIsle of Tar",
+	"Keen blazes across the\nIsle of Fire",
+	"Keen hopefully enters\nthe Well of Wishes",
+	"Keen launches into the\nBean-with-Bacon\nMegarocket"
+
+%intarray CK_LevelMusic 3, 4, 4, 5, 2, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 5
+
+%string ck4_str_statusRescued "       "
+%string ck4_str_statusWetsuit "       "
+%string ck_str_statusCentilives "             "
+%string ck_str_storyText "\"Hi, Billy! I am your\nnew neighbour - Craig!\nMe and my folks just\nmoved here from\nConnecticut. I was\nhoping that maybe you'd\nlike to play with me\nsometimes. I got these\ncool toys my mom bought\nfor me and my sister\nAndrianne. If you want\nyou can come over\ntomorrow after school\nto my house and I'll\nshow you! Anyway, I\nwill leave this note on\nyour toolshed since you\nseem to spend a lot of\nyour time cooped up in\nthere. I hope we'll\ntalk more\nsoon!..................\n.......................\n..............Craig"
+%stringarray ck4_str_councilMessage
+	"Hey, sorry I am late.\nLet's eat!",
+	"Sounds like a plan,\nbearded one!",
+	"No problemo.",
+	"Great.  You known, you\nlook a lot like the\nlast guy I rescued...",
+	"Good idea, Gramps.",
+	"May the road rise\nto meet your feet,\nMr. Member.",
+	"Wise plan of action,\nyour ancientness.",
+	"You're the last one,\nfella. Let's both\nget back to the\nOracle chamber!"
+%stringarray ck_defaultHighScoreNames
+	"Craig Canmore    ",
+	"Tom Hall         ",
+	"John Romero      ",
+	"Fleexy           ",
+	"Levellass        ",
+	"Nws              ",
+	"Douglas Uppity   ",
+	"Dave216          "
+
+# The mod's changes to the program's rules, as settings
+# its own sound and music
+%string ca_audioHead "AUDIOHED.CK4"
+%string ca_audioDict "AUDIODCT.CK4"
+# the ending plays song 7
+%int CK_EndingMusicLevel 7
+# one council member (the one Keen comes to see) ends it
+%int CK4_NumCouncilsToRescue 1
+# no thanks window: only Keen's line
+%int CK4_CouncilNoThanks 1
+# no sounds when he is found
+%int CK4_CouncilQuiet 1
+# the one Keen comes to see stands still
+%int CK4_CouncilNeverPauses 1
+# ten songs from chunk 152
+%int ca_audStartMusic 152
+%int ca_audNumSongs 10
+# the level's music plays on while Keen talks
+%int CK4_CouncilTalkKeepsMusic 1
+
+%override "EPISODE.CK4"
+
+# The sprite actions the patches change (the one Keen comes to see stands)
+%action CK4_ACT_CouncilWalk0 0x1FB8 @SPR_MEMBERSHUFFLEL1 @SPR_MEMBERSHUFFLER1 UnscaledOnce 0 1 10 0 0 CK4_CouncilWalk NULL CK_BasicDrawFunc2 CK4_ACT_CouncilWalk1
+%action CK4_ACT_CouncilWalk1 0x1FD6 @SPR_MEMBERSHUFFLEL2 @SPR_MEMBERSHUFFLER2 UnscaledOnce 0 1 10 0 0 CK4_CouncilWalk NULL CK_BasicDrawFunc2 CK4_ACT_CouncilWalk0

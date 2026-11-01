@@ -59,16 +59,19 @@ ROOM_STAND = ROOM_FLOOR - 1
 TO_ROOM = (ROOM_DOOR_X << 8) | ROOM_STAND
 TO_STREET = (DOOR_X << 8) | (DOOR_ROWS[1] + 1)
 
-SHELF_X, SHELF_TOP, SHELF_W, SHELF_H = ROOM_DOOR_X + 2, ROOM_TOP + 1, 6, 3
+SHELF_X, SHELF_TOP, SHELF_W, SHELF_H = ROOM_DOOR_X + 2, ROOM_TOP + 1, 7, 3
 BUNK_X, BUNK_Y = SHELF_X + 4, ROOM_STAND - 1   # 3x2, on the floor
 SPOT_X, SPOT_Y = SHELF_X + 1, ROOM_STAND - 1   # 2x2
 CHART_X, CHART_Y = ROOM_DOOR_X - 1, ROOM_TOP + 2  # 1x2, between window and door
+# More shelves: one column on the wall between the window and the chart
+SHELF2_X, SHELF2_W = CHART_X - 1, 1
 
 # One keepsake per world, in the order of the Chronicle, left to right and
 # top to bottom on the shelves. The names are KW_World's.
 KEEPSAKES = ['KEEN4', 'KEEN5', 'KEEN6', 'KEEN7', 'KEEN8', 'KEEN9',
              'KEEN95', 'AREALM', 'FITF', 'ALPHAMATIC', 'RTTS', 'OSI',
-             'CK55', 'ASYLUM', 'BOUNTY', 'SUBURB', 'AURORA', 'OCFLORE']
+             'CK55', 'ASYLUM', 'BOUNTY', 'SUBURB', 'AURORA', 'OCFLORE',
+             'CANMORE', 'SAINT', 'PARTY']
 
 
 def level(d=None):
@@ -159,16 +162,16 @@ def draw_light(d=None):
     return c.px
 
 
-def draw_shelves():
-    """Three wooden shelf boards on the wall, 6x3 tiles: each tile's bottom
-    rows are the board the keepsake stands on."""
-    c = Canvas(SHELF_W * 16, SHELF_H * 16)
+def draw_shelves(width=SHELF_W):
+    """Three wooden shelf boards on the wall, width x 3 tiles: each tile's
+    bottom rows are the board the keepsake stands on."""
+    c = Canvas(width * 16, SHELF_H * 16)
     for r in range(SHELF_H):
         y = r * 16 + 13
-        c.rect(0, y, SHELF_W * 16 - 1, y + 1, BROWN)
-        c.rect(0, y, SHELF_W * 16 - 1, y, YELLOW)
-        c.rect(1, y + 2, SHELF_W * 16 - 2, y + 2, BLACK)
-        for bx in (6, SHELF_W * 16 - 8):            # brackets
+        c.rect(0, y, width * 16 - 1, y + 1, BROWN)
+        c.rect(0, y, width * 16 - 1, y, YELLOW)
+        c.rect(1, y + 2, width * 16 - 2, y + 2, BLACK)
+        for bx in ((6, width * 16 - 8) if width > 1 else (7,)):   # brackets
             c.rect(bx, y + 2, bx + 1, y + 2, BLACK)
             c.put(bx, y + 3, BLACK)
     return c.px
@@ -324,6 +327,24 @@ def keepsake(name):
         c.rect(6, B - 6, 9, B - 1, LMAGENTA)
         c.put(7, B - 5, WHITE); c.put(8, B - 3, WHITE)
         c.put(4, B - 7, LMAGENTA); c.put(11, B - 4, LMAGENTA)   # the glow
+    elif name == 'CANMORE':    # the keycard that opened Keen's cell on Azura Astrid
+        c.box(3, B - 7, 12, B, YELLOW, BROWN)
+        c.rect(4, B - 6, 11, B - 5, BLACK)              # its magnetic stripe
+        c.box(4, B - 3, 6, B - 1, LCYAN)                # a chip
+        c.rect(8, B - 2, 11, B - 2, BROWN)
+    elif name == 'SAINT':      # a flower from the meadow where Craig rests
+        c.rect(7, B - 5, 7, B, GREEN)
+        c.put(6, B - 2, LGREEN); c.put(8, B - 3, LGREEN)
+        for x, y in ((7, B - 9), (5, B - 7), (9, B - 7), (6, B - 8), (8, B - 8), (6, B - 6), (8, B - 6)):
+            c.put(x, y, LMAGENTA)
+        c.put(7, B - 7, YELLOW)
+        c.box(5, B - 1, 9, B, BROWN)                    # its pot
+    elif name == 'PARTY':      # a can of Shikadi soda from Captain Craig's party
+        c.box(5, B - 9, 10, B, LBLUE)
+        c.rect(6, B - 6, 9, B - 4, YELLOW)
+        c.put(7, B - 5, BLUE); c.put(8, B - 5, LCYAN)   # the Shikadi's spark
+        c.rect(6, B - 9, 9, B - 9, LGREY)
+        c.put(3, B - 3, LMAGENTA); c.put(12, B - 6, YELLOW); c.put(13, B - 2, LGREEN)  # confetti
     elif name == 'SUBURB':     # Mortimer's dummy head
         c.box(4, B - 9, 11, B - 2, YELLOW)
         c.rect(5, B - 10, 10, B - 10, BLACK)            # hair
@@ -338,7 +359,10 @@ def keepsake(name):
 
 
 def keepsake_place(i):
-    return SHELF_X + i % SHELF_W, SHELF_TOP + i // SHELF_W
+    if i < SHELF_W * SHELF_H:
+        return SHELF_X + i % SHELF_W, SHELF_TOP + i // SHELF_W
+    i -= SHELF_W * SHELF_H          # (then the column by the window, top to bottom)
+    return SHELF2_X + i % SHELF2_W, SHELF_TOP + i // SHELF2_W
 
 
 def to_image(px):
@@ -359,6 +383,7 @@ def art_pieces(d=None):
               ('hutboards', DOOR_X, DOOR_ROWS[0], [kw_barhouse.draw_boards()], 'closed'),
               ('hutlight', LIGHT_X, LIGHT_TOP, [draw_light(d)], 'lit'),
               ('shelves', SHELF_X, SHELF_TOP, [draw_shelves()], 'open'),
+              ('shelves2', SHELF2_X, SHELF_TOP, [draw_shelves(SHELF2_W)], 'open'),
               ('bunk', BUNK_X, BUNK_Y, [draw_bunk()], 'open'),
               ('chart', CHART_X, CHART_Y, [draw_chart()], 'open'),
               ('spot', SPOT_X, SPOT_Y, [draw_spot()], 'spot')]

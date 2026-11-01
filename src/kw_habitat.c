@@ -334,6 +334,7 @@ const KW_Art kw_hutBoardsArt = {
 // Its windows, lit since the opening scene's "home by Tuesday", for good.
 const KW_Art kw_hutLightArt = KW_OUTPOST_ART(hutlight, HUTLIGHT);
 const KW_Art kw_outpostShelvesArt = KW_OUTPOST_ART(shelves, SHELVES);
+const KW_Art kw_outpostShelves2Art = KW_OUTPOST_ART(shelves2, SHELVES2);
 static const KW_Art kw_outpostBunkArt = KW_OUTPOST_ART(bunk, BUNK);
 static const KW_Art kw_outpostChartArt = KW_OUTPOST_ART(chart, CHART);
 const KW_Art kw_outpostSpotArt = KW_OUTPOST_ART(spot, SPOT);
@@ -350,6 +351,8 @@ const KW_Art kw_keepsakeArt[KW_OUTPOST_KEEPSAKES] = {
 	KW_OUTPOST_ART(keepck55, KEEPCK55), KW_OUTPOST_ART(keepasylum, KEEPASYLUM),
 	KW_OUTPOST_ART(keepbounty, KEEPBOUNTY), KW_OUTPOST_ART(keepsuburb, KEEPSUBURB),
 	KW_OUTPOST_ART(keepaurora, KEEPAURORA), KW_OUTPOST_ART(keepocflore, KEEPOCFLORE),
+	KW_OUTPOST_ART(keepcanmore, KEEPCANMORE), KW_OUTPOST_ART(keepsaint, KEEPSAINT),
+	KW_OUTPOST_ART(keepparty, KEEPPARTY),
 };
 const int kw_keepsakeWorld[KW_OUTPOST_KEEPSAKES] = {KW_OUTPOST_KEEPSAKE_WORLDS};
 
@@ -413,6 +416,7 @@ static void KW_PlaceOutpost(void)
 	}
 	KW_PlaceArt(&kw_hutLightArt); // (on top of the hut)
 	KW_PlaceArt(&kw_outpostShelvesArt);
+	KW_PlaceArt(&kw_outpostShelves2Art);
 	KW_PlaceArt(&kw_outpostBunkArt);
 	KW_PlaceArt(&kw_outpostChartArt);
 	if (KW_SpotIsHome())

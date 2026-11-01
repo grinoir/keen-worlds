@@ -46,7 +46,7 @@
 	"Keen kicks up dust\nin the Sculpture Garden\n",
 	"Keen launches into the\nBean-with-Bacon\nMegarocket"
 
-%intarray CK_LevelMusic 0, 3, 4, 4, 2, 3, 3, 3, 4, 0, 4, 1, 2, 2, 1, 4, 5, 5, 5, 65535
+%intarray CK_LevelMusic 0, 3, 4, 4, 2, 3, 3, 3, 4, 0, 4, 1, 2, 2, 1, 4, 5, 5, 5, -1
 
 %string ck4_str_gotWetsuit "The jig is up.\nYou're coming with me."
 %string ck4_str_janitor1 "Whoa there young fella!\nDrink this potion. It'll\nfortify you for your\nquest."
