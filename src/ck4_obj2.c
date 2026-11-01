@@ -35,7 +35,7 @@ void CK4_SpawnWormmouth(int tileX, int tileY)
 	CK_object *obj = CK_GetNewObj(false);
 	obj->type = CT4_Wormmouth;
 	obj->active = OBJ_ACTIVE;
-	obj->zLayer = PRIORITIES - 4;
+	obj->zLayer = CK_INT(CK4_WormmouthZLayer, PRIORITIES - 4); // KEEN WORLDS: variable
 	obj->posX = RF_TileToUnit(tileX);
 	obj->posY = RF_TileToUnit(tileY) + CK_INT(CK4_WormmouthSpawnYOffset, 0x8F);
 	obj->xDirection = US_RndT() < 0x80 ? IN_motion_Right : IN_motion_Left;
@@ -142,7 +142,8 @@ void CK4_CloudMove(CK_object *obj)
 
 void CK4_CloudCheckStrike(CK_object *obj)
 {
-	CK_PhysAccelHorz(obj, obj->xDirection, CK_INT(CK4_CloudXAccel, 10));
+	// KEEN WORLDS: CK4_CloudStrikeXAccel (Revival of Bliss's cloud stays where it is)
+	CK_PhysAccelHorz(obj, obj->xDirection, CK_INT(CK4_CloudStrikeXAccel, CK_INT(CK4_CloudXAccel, 10)));
 
 	// Align the cloud on an 8px boundary so that the lightning bolt,
 	// which has one shift, is aligned properly
@@ -190,7 +191,7 @@ void CK4_CloudStrike(CK_object *obj)
 void CK4_CloudCol(CK_object *a, CK_object *b)
 {
 	if (b->type == CT_Player)
-		CK_SetAction2(a, CK_ACTION(CK4_ACT_CloudAwaken0));
+		CK_SetAction2(a, CK_ACTION_ALIAS(CK4_ACT_CloudTouched, CK4_ACT_CloudAwaken0)); // KEEN WORLDS: redirectable
 }
 
 // Berkeloids
@@ -335,7 +336,7 @@ void CK4_BerkeloidDraw(CK_object *obj)
 		obj->timeUntillThink = US_RndT() / CK_INT(CK4_BerkeloidThinkTimeDivisor, 32);
 		CK_SetAction2(obj, obj->currentAction);
 	}
-	else if (obj->topTI == 0)
+	else if (obj->topTI == 0 && !CK_INT(CK4_BerkeloidNoEdgeTurn, 0)) // KEEN WORLDS: variable (Revival of Bliss)
 	{
 		if (CK_INT(CK_WalkTurnUndoesY, 0)) // KEEN WORLDS: variable (Operation Ocflore)
 		{

@@ -92,7 +92,9 @@ void CK4_MapMiscFlagsCheck(CK_object *obj)
 
 		if (mf == MF_WaterN || mf == MF_WaterE || mf == MF_WaterS || mf == MF_WaterW)
 		{
-			if (!ck_gameState.ep.ck4.wetsuit && !CK_INT(CK4_MapAlwaysSwim, 0)) // KEEN WORLDS: variable
+			// KEEN WORLDS: variables (CK4_MapNeverSwim: Revival of Bliss's Craig,
+			// whose "wetsuit" is his mended pogo stick)
+			if ((!ck_gameState.ep.ck4.wetsuit || CK_INT(CK4_MapNeverSwim, 0)) && !CK_INT(CK4_MapAlwaysSwim, 0))
 			{
 				SD_PlaySound(CK_SOUNDNUM(SOUND_NEEDKEYCARD));
 				CK4_ShowCantSwimMessage();

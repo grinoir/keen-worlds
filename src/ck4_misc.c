@@ -51,6 +51,7 @@ void KD_SetupFunctions(void);
 
 bool OC_SpawnFlyingBird(int info, int tileX, int tileY);
 void OC_SetupFunctions(void);
+void RV_SetupFunctions(void);
 
 void CK4_SetupFunctions()
 {
@@ -58,6 +59,7 @@ void CK4_SetupFunctions()
 	CK4_Obj2_SetupFunctions();
 	CK4_Obj3_SetupFunctions();
 	OC_SetupFunctions(); // KEEN WORLDS: Operation Ocflore's routines (kw_ocflore.c)
+	RV_SetupFunctions(); // KEEN WORLDS: Revival of Bliss's (kw_revival.c)
 	CK4_Map_SetupFunctions();
 	CK4_Misc_SetupFunctions();
 	RT_SetupFunctions(); // KEEN WORLDS: Return to the Shadowlands (kw_rtts.c)
@@ -227,6 +229,13 @@ void CK4_ScanInfoLayer()
 			case 77:
 				if (ck_gameState.difficulty < D_Normal)
 					break;
+				// KEEN WORLDS: Revival of Bliss: its Devil Feet (inchworms) stand here
+				if (CK_INT(CK4_BirdIconsSpawnInchworm, 0))
+				{
+					CA_MARKLUMP(LUMP_INCHWORM);
+					CK4_SpawnInchworm(x, y);
+					break;
+				}
 				CA_MARKLUMP(LUMP_BLUEBIRD);
 				CK4_SpawnBird(x, y);
 				break;
@@ -366,6 +375,13 @@ void CK4_ScanInfoLayer()
 			case 87:
 				if (ck_gameState.difficulty < D_Normal)
 					break;
+				// KEEN WORLDS: Revival of Bliss: schoolfish here (its one Dopefish is the boss)
+				if (CK_INT(CK4_DopefishIconsSpawnSchoolfish, 0))
+				{
+					CA_MARKLUMP(LUMP_SCHOOLFISH);
+					CK4_SpawnSchoolfish(x, y);
+					break;
+				}
 			case 15:
 				CA_MARKLUMP(LUMP_DOPEFISH);
 				CK4_SpawnDopefish(x, y);
@@ -576,7 +592,37 @@ void CK4_ShowJanitorMessage(void)
 	CA_CacheMarks(0);
 
 	VL_FixRefreshBuffer();
-	StartMusic(0xFFFF);
+	// KEEN WORLDS: its music variable (Aurora Bliss, Revival of Bliss)
+	StartMusic(CK_INT(CK4_JanitorTalkMusicLevel, 0xFFFF));
+	// KEEN WORLDS: CK4_JanitorWindows 4 (Revival of Bliss: four windows, with
+	// a second picture for the second and fourth and Keen's own for the third)
+	if (CK_INT(CK4_JanitorWindows, 5) == 4)
+	{
+		static const char *names[4] = {"JANITOR1", "JANITOR2", "KEEN_JANITOR", "JANITOR4"};
+		for (int w = 0; w < 4; ++w)
+		{
+			int pic = w == 0 ? CK_INT(CK4_JanitorPic, CK_CHUNKNUM(PIC_ORACLE)) : w == 2 ? CK_INT(CK4_JanitorKeenPic, CK_CHUNKNUM(PIC_KEENTALK1)) :
+				CK_INT(CK4_JanitorPic2, CK_CHUNKNUM(PIC_ORACLE));
+			const char *text = w == 0 ? CK_STRING(ck4_str_janitor1) : w == 1 ? CK_STRING(ck4_str_janitor2) :
+				w == 2 ? CK_STRING(ck4_str_janitor3) : CK_STRING(ck4_str_janitor4);
+			CA_CacheGrChunk(pic);
+			US_CenterWindow(26, 8);
+			VHB_DrawBitmap(US_GetWindowX(), US_GetWindowY(), pic);
+			US_SetPrintY(US_GetPrintY() + (w == 0 ? 6 : 12));
+			US_SetWindowW(US_GetWindowW() - 0x30);
+			US_SetWindowX(US_GetWindowX() + 0x30);
+			US_CPrint(text);
+			VH_UpdateScreen();
+			KW_SayWorldLine(names[w]);
+			IN_ClearKeysDown();
+			IN_WaitButton();
+		}
+		StopMusic();
+		KW_LinesOver();
+		CA_DownLevel();
+		StartMusic(ck_gameState.currentLevel);
+		return;
+	}
 
 	US_CenterWindow(26, 8);
 	VHB_DrawBitmap(US_GetWindowX(), US_GetWindowY(), CK_INT(CK4_JanitorPic, CK_CHUNKNUM(PIC_ORACLE)));
@@ -721,7 +767,16 @@ void CK4_ShowCouncilMessage(void)
 		US_SetWindowW(US_GetWindowW() - 0x30);
 		US_SetWindowX(US_GetWindowX() + 0x30);
 
-		if (ca_mapOn == CK_INT(CK4_CouncilMessageUnderwaterLevel, 17))
+		// KEEN WORLDS: CK4_LastCouncilGivesWetsuit (Revival of Bliss: the last
+		// one gives the ID chip, or mends Craig's pogo stick, with its own words)
+		bool lastGift = CK_INT(CK4_LastCouncilGivesWetsuit, 0) &&
+			ck_gameState.ep.ck4.membersRescued == CK_INT(CK4_NumCouncilsToRescue, 8) - 1;
+		if (lastGift)
+		{
+			ck_gameState.ep.ck4.wetsuit = 1;
+			US_CPrint(CK_STRING(ck4_str_councilThanks2));
+		}
+		else if (ca_mapOn == CK_INT(CK4_CouncilMessageUnderwaterLevel, 17))
 		{
 			// Underwater level
 			US_CPrint(CK_STRING(ck4_str_councilThanks2));
@@ -733,7 +788,8 @@ void CK4_ShowCouncilMessage(void)
 
 		VH_UpdateScreen();
 		// KEEN WORLDS: he says it (through the water, where the world has that clip)
-		if (!(ca_mapOn == CK_INT(CK4_CouncilMessageUnderwaterLevel, 17) && KW_SayWorldLine("COUNCIL_WET")))
+		if (!(lastGift && KW_SayWorldLine("COUNCIL_LAST")) &&
+			!(ca_mapOn == CK_INT(CK4_CouncilMessageUnderwaterLevel, 17) && KW_SayWorldLine("COUNCIL_WET")))
 			KW_SayWorldLine("COUNCIL");
 		// VL_WaitVBL(60);
 		IN_ClearKeysDown();

@@ -2,6 +2,8 @@
 // What the ship computer says when the Megarocket has landed: the world's id,
 // the sound clip in the voice folder, the words for the card.
 static const struct { const char *id, *file, *text; } kw_landings[] = {
+	{"revival", "LAND_REVIVAL.RAW", "Ship computer:\n\nYou have now landed on Aurora\nBliss.\nAgain.\nAllain is turning the whole\nplanet into one machine.\nCraig is here too.\nPlease keep him away from my\nNavi-Com."},
+	{"revivalc", "LAND_REVIVALC.RAW", "Ship computer:\n\nYou have now landed on Aurora\nBliss.\nAgain.\nCaptain Craig, I hear your\npogo stick is broken.\nPlease do not fix it with my\nparts."},
 	{"saint", "LAND_SAINT.RAW", "Ship computer:\n\nYou have now landed on Aurora\nBliss, in the mountains.\nThree months have gone by.\nCraig is buried here.\nI will wait.\nTake your time."},
 	{"party", "LAND_PARTY.RAW", "Ship computer:\n\nYou have now landed in the\nShadowlands.\nThere is a party at the Tower\nof Dusk.\nYou are late.\nAgain."},
 	{"canmore", "LAND_CANMORE.RAW", "Ship computer:\n\nYou have now landed on Azura\nAstrid.\nThe pilot was Craig Canmore.\nI did not agree to this.\nKeen and Mortimer are tied up\nin the back, and they are not\nhappy.\nCraig, go and find your\nsister."},
@@ -26,6 +28,8 @@ static const struct { const char *id, *file, *text; } kw_landings[] = {
 };
 // What it says when a world has been saved and Keen is back in the cabin.
 static const struct { const char *id, *file, *text; } kw_savedLines[] = {
+	{"revival", "SAVED_REVIVAL.RAW", "Ship computer:\n\nAurora Bliss is green again.\nAllain is in a prison cell.\nMortimer saved everyone, and\nnobody knows why."},
+	{"revivalc", "SAVED_REVIVALC.RAW", "Ship computer:\n\nAurora Bliss is saved.\nBy Captain Craig.\nI will never hear the end of\nit."},
 	{"saint", "SAVED_SAINT.RAW", "Ship computer:\n\nThe Aurora Mountains are\nbehind us.\nThe planet is green again.\nThey call him the Saint of\nAurora now."},
 	{"party", "SAVED_PARTY.RAW", "Ship computer:\n\nThe party is over.\nCaptain Craig.\nI suppose I will have to call\nhim that now.\nHe is still not allowed near\nmy controls."},
 	{"canmore", "SAVED_CANMORE.RAW", "Ship computer:\n\nAzura Astrid is behind us.\nKeen carried Craig home\nthrough a teleporter.\nNobody came back for me.\nI flew myself home."},

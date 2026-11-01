@@ -24,6 +24,10 @@ VOICE = 'af_heart'        # Kokoro's "Heart", an American woman
 KOKORO_DIR = os.environ.get('KW_KOKORO_DIR', os.path.expanduser('~/Projects/SignalweaveCMS'))
 # world id: the words, a sentence each
 LANDINGS = {
+    'revival': ["You have now landed on Aurora Bliss. Again.", "Allain is turning the whole planet into one machine.",
+                "Craig is here too. Please keep him away from my Navi-Com."],
+    'revivalc': ["You have now landed on Aurora Bliss. Again.", "Captain Craig, I hear your pogo stick is broken.",
+                 "Please do not fix it with my parts."],
     'saint': ["You have now landed on Aurora Bliss, in the mountains.", "Three months have gone by.",
               "Craig is buried here. I will wait. Take your time."],
     'party': ["You have now landed in the Shadowlands.", "There is a party at the Tower of Dusk.",
@@ -72,6 +76,8 @@ LANDINGS = {
 # The Chronicle: a world has been saved and the ship has learned the course
 # to the next. world id: the place's name as it is said.
 COURSES = {
+    'revival': 'Aurora Bliss, again',
+    'revivalc': 'Aurora Bliss, with Captain Craig',
     'saint': 'The Aurora Mountains',
     'party': 'The Tower of Dusk',
     'canmore': 'Azura Astrid',
@@ -87,6 +93,8 @@ COURSES = {
 # A world has been saved: what the ship computer says when Keen is next in
 # the cabin. world id: the words, a sentence each.
 SAVED = {
+    'revival': ["Aurora Bliss is green again.", "Allain is in a prison cell.", "Mortimer saved everyone, and nobody knows why."],
+    'revivalc': ["Aurora Bliss is saved. By Captain Craig.", "I will never hear the end of it."],
     'saint': ["The Aurora Mountains are behind us.", "The planet is green again.",
               "They call him the Saint of Aurora now."],
     'party': ["The party is over.", "Captain Craig. I suppose I will have to call him that now.",

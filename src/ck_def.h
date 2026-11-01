@@ -256,6 +256,7 @@ typedef enum CK_LevelState
 	LS_ARAtroxus = 21,        // talked to Atroxus
 	LS_SSCheckpoint = 22,    // Suburb: continue directly in the next map slot
 	LS_SSBag = 23,           // Suburb: bag found, complete both Scudders halves
+	LS_RVBossDown = 24,      // Revival of Bliss: its boss beaten, the game is won
 } CK_LevelState;
 
 // This struct is 0x58 bytes big in Keen5

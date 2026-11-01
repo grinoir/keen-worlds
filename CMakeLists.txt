@@ -368,6 +368,7 @@ set(OMNISPEAK_CK_SRCS
 	src/kw_keen9.c
 	src/kw_ocflore.c
 	src/kw_canmore.c
+	src/kw_revival.c
 	src/kw_arealm.c
 	src/kw_ar_act1.c
 	src/kw_ar_act2.c

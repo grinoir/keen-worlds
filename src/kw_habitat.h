@@ -67,7 +67,7 @@ extern const struct KW_Art kw_colaArt;
 // on its door (until it opens), and inside, once open, the shelves, Spot and
 // a keepsake per world saved (kw_keepsakeWorld[i] is keepsake i's world).
 extern const struct KW_Art kw_hutArt, kw_hutMastArt, kw_hutBoardsArt, kw_hutLightArt, kw_outpostShelvesArt, kw_outpostShelves2Art, kw_outpostSpotArt;
-#define KW_OUTPOST_KEEPSAKE_COUNT 21
+#define KW_OUTPOST_KEEPSAKE_COUNT 23
 extern const struct KW_Art kw_keepsakeArt[KW_OUTPOST_KEEPSAKE_COUNT];
 extern const int kw_keepsakeWorld[KW_OUTPOST_KEEPSAKE_COUNT];
 bool KW_IsOutpostOpen(void);

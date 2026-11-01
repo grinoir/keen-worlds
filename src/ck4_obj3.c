@@ -28,12 +28,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <stdio.h>
 
+void RV_SetBossHealth(int health, int max); // KEEN WORLDS: Revival of Bliss's boss (kw_revival.c)
+
 // =========================================================================
 
 void CK4_SpawnSmirky(int tileX, int tileY)
 {
 	CK_object *obj = CK_GetNewObj(false);
-	obj->type = CT4_Smirky;
+	obj->type = CK_INT(CK4_SmirkyType, CT4_Smirky); // KEEN WORLDS: Revival of Bliss's is ridden like a bounder
 	obj->active = OBJ_ACTIVE;
 	obj->zLayer = CK_INT(CK4_SmirkyZLayer, PRIORITIES - 1); // KEEN WORLDS: variable (Operation Ocflore)
 	obj->posX = RF_TileToUnit(tileX);
@@ -216,7 +218,7 @@ void CK4_SpawnMimrock(int tileX, int tileY)
 	obj->posY = RF_TileToUnit(tileY) - CK_INT(CK4_MimrockSpawnYOffset, 0xD0);
 	obj->xDirection = IN_motion_Right;
 	obj->yDirection = IN_motion_Down;
-	CK_SetAction(obj, CK_ACTION(CK4_ACT_Mimrock0));
+	CK_SetAction(obj, CK_ACTION_ALIAS(CK4_ACT_MimrockStart, CK4_ACT_Mimrock0)); // KEEN WORLDS: redirectable
 }
 
 void CK4_MimrockWait(CK_object *obj)
@@ -225,9 +227,12 @@ void CK4_MimrockWait(CK_object *obj)
 	{
 		if (CK_Cross_abs((int16_t)(obj->posX - ck_keenObj->posX)) > CK_INT(CK4_MimrockWaitXRadius, 0x300))
 		{
+			// (KEEN WORLDS: CK4_MimrockIgnoresFacing: Revival of Bliss's follows
+			// Keen whichever way he faces)
+			bool anyway = CK_INT(CK4_MimrockIgnoresFacing, 0);
 			if (ck_keenObj->posX < obj->posX)
 			{
-				if (ck_keenObj->xDirection == IN_motion_Left)
+				if (anyway || ck_keenObj->xDirection == IN_motion_Left)
 				{
 					obj->xDirection = IN_motion_Left;
 					obj->currentAction = CK_ACTION(CK4_ACT_MimrockWalk0);
@@ -235,7 +240,7 @@ void CK4_MimrockWait(CK_object *obj)
 			}
 			else
 			{
-				if (ck_keenObj->xDirection == IN_motion_Right)
+				if (anyway || ck_keenObj->xDirection == IN_motion_Right)
 				{
 					obj->xDirection = IN_motion_Right;
 					obj->currentAction = CK_ACTION(CK4_ACT_MimrockWalk0);
@@ -247,6 +252,19 @@ void CK4_MimrockWait(CK_object *obj)
 
 void CK4_MimrockCheckJump(CK_object *obj)
 {
+	// KEEN WORLDS: CK4_MimrockAlwaysChases (Revival of Bliss): once walking it
+	// never sits down again, and jumps whenever Keen is near enough across
+	if (CK_INT(CK4_MimrockAlwaysChases, 0))
+	{
+		if (CK_Cross_abs((int16_t)(obj->posX - ck_keenObj->posX)) < CK_INT(CK4_MimrockJumpXRadius, 0x400))
+		{
+			obj->velX = obj->xDirection * CK_INT(CK4_MimrockJumpXVelocity, 20);
+			obj->velY = CK_INT(CK4_MimrockJumpYVelocity, -40);
+			ck_nextY = obj->velY * SD_GetSpriteSync();
+			obj->currentAction = CK_ACTION(CK4_ACT_MimrockJump0);
+		}
+		return;
+	}
 	if ((CK_Cross_abs((int16_t)(obj->clipRects.unitY2 - ck_keenObj->clipRects.unitY2)) <= CK_INT(CK4_MimrockJumpYRadius, 0x500)) &&
 		(obj->xDirection == ck_keenObj->xDirection))
 	{
@@ -337,6 +355,14 @@ void CK4_SpawnDopefish(int tileX, int tileY)
 	obj->posY = RF_TileToUnit(tileY) + CK_INT(CK4_DopefishSpawnYOffset, -0x300);
 	obj->xDirection = US_RndT() < 0x80 ? IN_motion_Right : IN_motion_Left;
 	obj->yDirection = IN_motion_Down;
+	// KEEN WORLDS: CK4_DopefishIsBoss (Revival of Bliss: Allain): health by
+	// difficulty, shown in the score box (kw_revival.c)
+	if (CK_INT(CK4_DopefishIsBoss, 0))
+	{
+		int d = ck_gameState.difficulty < D_Easy ? 0 : ck_gameState.difficulty > D_Hard ? 2 : ck_gameState.difficulty - D_Easy;
+		obj->user2 = CK_INTELEMENT(CK4_DopefishHealth, d);
+		RV_SetBossHealth(obj->user2, obj->user2);
+	}
 	CK_SetAction(obj, CK_ACTION(CK4_ACT_DopefishSwim0));
 }
 
@@ -534,7 +560,7 @@ void CK4_SpawnSchoolfish(int tileX, int tileY)
 	CK_object *obj = CK_GetNewObj(false);
 	obj->type = CT4_Schoolfish;
 	obj->active = OBJ_ACTIVE;
-	obj->clipped = CLIP_simple;
+	obj->clipped = (CK_ClipType)CK_INT(CK4_SchoolfishClip, CLIP_simple); // KEEN WORLDS: variable (Revival of Bliss)
 	obj->zLayer = PRIORITIES - 4;
 	obj->posX = RF_TileToUnit(tileX);
 	obj->posY = RF_TileToUnit(tileY);
@@ -576,7 +602,8 @@ void CK4_SpawnSprite(int tileX, int tileY)
 void CK4_SpritePatrol(CK_object *obj)
 {
 	CK_PhysAccelVert1(obj, obj->yDirection, CK_INT(CK4_SpritePatrolYAccel, 8));
-	if (obj->user1 - obj->posY > CK_INT(CK4_SpritePatrolYRadius, 0x20))
+	// (KEEN WORLDS: CK4_SpritePatrolYRadiusTop: Revival of Bliss's floats less far up)
+	if (obj->user1 - obj->posY > CK_INT(CK4_SpritePatrolYRadiusTop, CK_INT(CK4_SpritePatrolYRadius, 0x20)))
 		obj->yDirection = IN_motion_Down;
 
 	if (obj->posY - obj->user1 > CK_INT(CK4_SpritePatrolYRadius, 0x20))
@@ -612,7 +639,7 @@ void CK4_SpriteShoot(CK_object *obj)
 	shot->xDirection = obj->xDirection;
 	// (Operation Ocflore: the first frame is its stunned Sprite; the shot has three)
 	CK_SetAction(shot, CK_INT(CK4_SpriteShotSkipFirst, 0) ? CK_ACTION(CK4_ACT_SpriteBullet1) : CK_ACTION(CK4_ACT_SpriteBullet0));
-	SD_PlaySound(CK_SOUNDNUM(SOUND_SPRITESHOOT));
+	SD_PlaySound(CK_INT(CK4_SpriteShootSound, CK_SOUNDNUM(SOUND_SPRITESHOOT))); // KEEN WORLDS: variable (Revival of Bliss)
 }
 
 void CK4_ProjectileDraw(CK_object *obj)

@@ -88,6 +88,8 @@ KEEPSAKE_TEXT = {
     'CANMORE': "The keycard that opened Keen's cell on Azura Astrid.",
     'SAINT': "A flower from the meadow on Aurora Bliss where Craig rests.",
     'PARTY': "Shikadi soda from Captain Craig's party. No brewskies.",
+    'REVIVAL': "The officer-bot Myah fixed to Keen's helmet.",
+    'REVIVALC': "A spare spring from Craig's mended pogo stick.",
 }
 SPOT_NEW = {
     'KEEN4': "A shiny gem! I'll put it where the sun hits it.",
@@ -111,6 +113,8 @@ SPOT_NEW = {
     'CANMORE': "A keycard! Can it open the fridge?",
     'SAINT': "A flower for Craig. I'll water it every day.",
     'PARTY': "There was a party? And nobody invited Spot?",
+    'REVIVAL': "A robot head! It's looking at me.",
+    'REVIVALC': "A spring! Boing! ...Sorry.",
 }
 
 # (the C array, the clips' prefix, the voice)

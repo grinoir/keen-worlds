@@ -50,6 +50,8 @@ typedef enum KW_World
 	KW_CANMORE, // Azura Astrid: "Canmore's Redemption" (fan game on Keen 5, Craig's story part two; append)
 	KW_SAINT,   // Aurora Mountains: "Saint of Aurora" (Canmore's Redemption's sad epilogue, on Keen 4; append)
 	KW_PARTY,   // Tower of Dusk: "Initiation Party" (Canmore's Redemption's happy epilogue, on Keen 4; append)
+	KW_REVIVAL, // Bliss, as Keen: "Revival of Bliss" (fan game on Keen 4, Craig's story part three; append)
+	KW_REVIVALC, // Bliss, as Craig: "Revival of Bliss", its other build (append)
 	KW_NUM_WORLDS,
 	KW_NO_WORLD = -1,
 } KW_World;

@@ -123,6 +123,8 @@ bool KD_IsActive(void);
 int KD_ScoreBoxShots(void);
 int KD_ScoreBoxIcon(void);
 
+int RV_BossBar(char *buf, size_t size); // KEEN WORLDS (kw_revival.c)
+
 void CK_UpdateScoreBox(CK_object *scorebox)
 {
 
@@ -146,8 +148,21 @@ void CK_UpdateScoreBox(CK_object *scorebox)
 
 	VH_ShiftedSprite *spr = (VH_ShiftedSprite *)CA_GetGrChunk(CK_CHUNKNUM(SPR_SCOREBOX), 0, "ScoreBox", true);
 
+	// KEEN WORLDS: Revival of Bliss's boss level shows the boss's health
+	// instead of the score ("BOSS:" and a bar: kw_revival.c)
+	char bossBar[16];
+	int boss = RV_BossBar(bossBar, sizeof(bossBar));
+	if (boss > 0)
+	{
+		VH_ShiftedSprite *s = spr;
+		int planeSize = s->sprShiftByteWidths[0] * box.height;
+		uint8_t *dest = s->data + planeSize + box.width * 4 + CK_INT(ck_scoreBoxScoreColumn, 1);
+		for (char *c = bossBar; *c != 0; c++)
+			CK_ScoreBoxDrawTile8(*c - CK_INT(ck_scoreBoxDigitOffset, 6), dest++, box.width, planeSize);
+		updated = true;
+	}
 	// Draw the score if it's changed
-	if ((scorebox->user1 != (ck_gameState.keenScore >> 16)) || (scorebox->user2 != (ck_gameState.keenScore & 0xFFFF)))
+	if (boss < 0 && ((scorebox->user1 != (ck_gameState.keenScore >> 16)) || (scorebox->user2 != (ck_gameState.keenScore & 0xFFFF))))
 	{
 		int place, len, planeSize;
 		char buf[16];
@@ -185,9 +200,10 @@ void CK_UpdateScoreBox(CK_object *scorebox)
 
 	// Draw the number of shots if it's changed
 	// KEEN WORLDS: in Keen Dreams it is flower power, or Boobus bombs in
-	// Boobus Tuber's castle, with a picture of which (kw_dreams.c)
+	// Boobus Tuber's castle, with a picture of which (kw_dreams.c);
+	// ck_scoreBoxHideShots: none (Revival of Bliss's Craig never runs out)
 	int shots = KD_IsActive() ? KD_ScoreBoxShots() : ck_gameState.numShots;
-	if (scorebox->user3 != shots)
+	if (scorebox->user3 != shots && !CK_INT(ck_scoreBoxHideShots, 0))
 	{
 		int place, len, planeSize;
 		char buf[16];

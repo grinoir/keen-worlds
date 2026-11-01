@@ -287,6 +287,23 @@ static const KW_WorldDef kw_worldDefs[KW_NUM_WORLDS] = {
 		"Craig's story: the happy epilogue\nof Canmore's Redemption\nA fan game by Dave216, 2023",
 		"Created by David Novosel\n(Dave216)" KW_NOT_OURS,
 		"\"Initiation Party.rar\" is in\nCanmore's Redemption (password\nfrom its armour ending). Unpack\nit in mods/party, with Aurora\nBliss's EGADICT.CK4."},
+	// Revival of Bliss (Dave216, v1.1 2024): a Keen 4 patch mod in two
+	// builds, played as Keen or as Craig (the DOS game asks with a
+	// launcher; here each is a world, side by side on the chart). The
+	// player's copy of the KEEN and CRAIG folders in play/mods/revival and
+	// play/mods/revivalc (each with the Craig build's EGADICT.CK4), with our
+	// MOD.CK4 (kwtools/kw_revival.py); its rules are settings in the Keen 4
+	// code, its own routines in kw_revival.c.
+	{"revival", "Bliss, as Keen", 4, "mods/revival", "MOD.CK4",
+		"Revival of Bliss\n(as Keen)",
+		"Craig's story, part three\nA fan game by Dave216, 2024",
+		"Created by David Novosel\n(Dave216)\n\nPatches: nwe74, K1n9_Duk3,\nLevellass, Ceilick's Keen 7\nTesting: DarkAle, Mobiethian,\nSyllypryde, Filthy Casual" KW_NOT_OURS,
+		"Revival of Bliss v1.1 by\nDave216 (2024-06-08). Get it\nfrom keenwiki.shikadi.net; put\nits KEEN folder's files in\nmods/revival, with CRAIG's\nEGADICT.CK4."},
+	{"revivalc", "Bliss, as Craig", 4, "mods/revivalc", "MOD.CK4",
+		"Revival of Bliss\n(as Craig)",
+		"Craig's story, part three:\nCaptain Craig's own way\nA fan game by Dave216, 2024",
+		"Created by David Novosel\n(Dave216)\n\nPatches: nwe74, K1n9_Duk3,\nLevellass, Ceilick's Keen 7\nTesting: DarkAle, Mobiethian,\nSyllypryde, Filthy Casual" KW_NOT_OURS,
+		"Revival of Bliss v1.1 by\nDave216 (2024-06-08). Get it\nfrom keenwiki.shikadi.net; put\nits CRAIG folder's files in\nmods/revivalc."},
 };
 
 static CK_EpisodeDef *KW_EpisodeDef(int episode)
@@ -1683,8 +1700,16 @@ void KW_WorldPalette(void)
 		{0xaa, 0x00, 0x00}, {0xaa, 0x00, 0xaa}, {0xaa, 0x55, 0x00}, {0xaa, 0xaa, 0xaa},
 		{0x55, 0x55, 0x55}, {0x55, 0x55, 0xff}, {0x55, 0xff, 0x55}, {0x55, 0xff, 0xff},
 		{0xff, 0x55, 0x55}, {0xff, 0x55, 0xff}, {0xff, 0xff, 0x55}, {0xff, 0xff, 0xff}};
+	// Revival of Bliss: K1n9_Duk3's palette patch again, each build its own
+	// (kwtools/kw_revival.py; 0-63 made 0-255)
+	static const uint8_t revival[16][3] = {{0x00, 0x00, 0x00}, {0x00, 0x00, 0xaa}, {0x00, 0xaa, 0x3d}, {0x00, 0xa2, 0xa2}, {0x8e, 0x00, 0x00}, {0xaa, 0x00, 0xaa}, {0xf3, 0x65, 0x28}, {0xaa, 0xaa, 0xaa}, {0x55, 0x55, 0x55}, {0x55, 0x55, 0xff}, {0x55, 0xff, 0x55}, {0x55, 0xff, 0xff}, {0xff, 0x51, 0x51}, {0xff, 0x55, 0xff}, {0xff, 0xff, 0x55}, {0xff, 0xff, 0xff}};
+	static const uint8_t revivalc[16][3] = {{0x00, 0x00, 0x00}, {0x00, 0x00, 0xaa}, {0x00, 0xaa, 0x3d}, {0x00, 0xa2, 0xa2}, {0x8e, 0x00, 0x00}, {0xaa, 0x00, 0xaa}, {0xdf, 0x3d, 0x65}, {0xaa, 0xaa, 0xaa}, {0x55, 0x55, 0x55}, {0x55, 0x55, 0xff}, {0x55, 0xff, 0x55}, {0x55, 0xff, 0xff}, {0xff, 0x28, 0x28}, {0xff, 0x55, 0xff}, {0xff, 0xff, 0x55}, {0xff, 0xff, 0xff}};
 	if (kw_currentWorld == KW_OCFLORE)
 		VL_SetCustomColors(ocflore);
+	else if (kw_currentWorld == KW_REVIVAL)
+		VL_SetCustomColors(revival);
+	else if (kw_currentWorld == KW_REVIVALC)
+		VL_SetCustomColors(revivalc);
 }
 
 // The scroll itself, for the current world (whose graphics must be loaded).
@@ -2030,6 +2055,10 @@ static int KW_ChronicleKey(int world)
 	case KW_CANMORE: // Craig's story goes on
 		if (KW_IsWorldPresent(KW_AURORA) && !KW_WorldIsSaved(KW_AURORA)) return KW_AURORA;
 		return KW_LastChronicleWorld();
+	case KW_REVIVAL: // after Canmore's Redemption (Craig lives: its happy ending's world)
+	case KW_REVIVALC:
+		if (KW_IsWorldPresent(KW_CANMORE) && !KW_WorldIsSaved(KW_CANMORE)) return KW_CANMORE;
+		return KW_LastChronicleWorld();
 	case KW_SAINT: // (and each epilogue opens with its ending: KW_EpilogueLocked)
 	case KW_PARTY:
 		if (KW_IsWorldPresent(KW_CANMORE) && !KW_WorldIsSaved(KW_CANMORE)) return KW_CANMORE;
@@ -2357,7 +2386,7 @@ typedef struct KW_FlightEntry {int world,column,row,step;} KW_FlightEntry;
 static const struct KW_FlightGroup
 {
 	const char *title;
-	int column,count,firstStep,worlds[5];
+	int column,count,firstStep,worlds[6];
 } kw_flightGroups[]={
 	{"Goodbye, Galaxy!",0,3,1,{KW_KEEN4,KW_KEEN5,KW_KEEN6}},
 	{"The Universe Is Toast!",0,3,4,{KW_KEEN7,KW_KEEN8,KW_KEEN9}},
@@ -2367,7 +2396,7 @@ static const struct KW_FlightGroup
 	{"Atroxian story",1,2,1,{KW_AREALM,KW_ALPHAMATIC}},
 	{"More levels",1,2,0,{KW_CK55,KW_ASYLUM}},
 	{"Spot's rescue",1,2,1,{KW_RTTS,KW_OSI}},
-	{"Craig's story",1,4,1,{KW_AURORA,KW_CANMORE,KW_SAINT,KW_PARTY}},
+	{"Craig's story",1,6,1,{KW_AURORA,KW_CANMORE,KW_SAINT,KW_PARTY,KW_REVIVAL,KW_REVIVALC}},
 	{"Further trips",1,1,0,{KW_OCFLORE}},
 	{NULL,1,1,0,{KW_MENU_SCENES}},
 };
@@ -2435,6 +2464,8 @@ static void KW_FlightRelationship(int world,char *text,size_t size)
 	case KW_CANMORE:relationship="After Aurora Bliss. Craig flies.";break;
 	case KW_SAINT:relationship="If Craig dies on Azura Astrid.";break;
 	case KW_PARTY:relationship="If Craig lives (Myah's armour).";break;
+	case KW_REVIVAL:relationship="After Canmore. Keen's way.";break;
+	case KW_REVIVALC:relationship="After Canmore. Craig's way.";break;
 	}
 	CK_Cross_strscpy(text,relationship,size);
 }
@@ -4130,6 +4161,58 @@ static void KW_TestCanmoreBehaviour(void)
 	printf("PASS: Canmore's Redemption's rules and routines (an enemy shot makes an Ampton drop a keycard; each epilogue opens with its ending)\n");
 }
 
+// For /KWTEST: Revival of Bliss's converted rules (kwtools/kw_revival.py,
+// kw_revival.c) in either build: its boss loses health to shots, falls when
+// it has none, and that wins the game; the Craig build throws its shots for
+// free.
+void CK_SpawnShot(int x, int y, int direction);
+
+static void KW_TestRevivalBehaviour(bool craig)
+{
+	if (ca_audInfoE.startMusic != 137 || ca_audInfoE.numSongs != 25 || !CK_INT(CK4_DopefishIsBoss, 0) ||
+		CK_ACTION(CK4_ACT_DopefishSwim0)->collide != CK_ACT_GetColFunction("RV_BossCol") ||
+		CK_ACTION(CK4_ACT_DopefishSwim0)->think != CK_ACT_GetFunction("RV_BossMove") ||
+		CK_ACTION(CK4_ACT_DopefishBurp1)->think != CK_ACT_GetFunction("RV_BossDefeated") ||
+		CK_ACTION(CK4_ACT_Inchworm0)->collide != CK_ACT_GetColFunction("RV_InchwormCol") ||
+		CK_ACTION(CK4_ACT_SmirkyJump0)->draw != CK_ACT_GetFunction("RV_SmirkyDraw") ||
+		CK_ACTION_ALIAS(CK4_ACT_CloudTouched, CK4_ACT_CloudAwaken0) != CK_ACTION(CK4_ACT_CloudStrike0) ||
+		CK_INT(CK_PogoNeedsWetsuit, 0) != craig || CK_INT(CK_ShotsFree, 0) != craig ||
+		(craig && CK_ACTION(CK_ACT_keenShot1)->draw != CK_ACT_GetFunction("RV_CraigShotDraw")))
+		Quit("KW_SelfTest: Revival of Bliss's settings or routines aren't loaded!");
+
+	CK_object *boss = CK_GetNewObj(false);
+	boss->type = CT4_Dopefish;
+	boss->posX = ck_keenObj->posX + 0x1000;
+	boss->posY = ck_keenObj->posY;
+	CK_SetAction(boss, CK_ACTION(CK4_ACT_DopefishSwim0));
+	boss->user2 = 2;
+	for (int hit = 0; hit < 2; ++hit)
+	{
+		CK_object *shot = CK_GetNewObj(true);
+		shot->type = CT_Stunner;
+		CK_SetAction(shot, CK_ACTION(CK_ACT_keenShot1));
+		boss->currentAction->collide(boss, shot);
+	}
+	if (boss->type != CT4_StunnedCreature || boss->currentAction != CK_ACTION(CK4_ACT_DopefishBurp0))
+		Quit("KW_SelfTest: Revival of Bliss's boss isn't beaten by its last shot!");
+	CK_ACTION(CK4_ACT_DopefishBurp1)->think(boss);
+	if (ck_gameState.levelState != LS_RVBossDown)
+		Quit("KW_SelfTest: beating Revival of Bliss's boss doesn't win!");
+	ck_gameState.levelState = LS_Playing;
+	CK_RemoveObj(boss);
+
+	int shots = ck_gameState.numShots = 5;
+	CK_SpawnShot(ck_keenObj->posX, ck_keenObj->posY, 2);
+	CK_object *last = ck_keenObj;
+	while (last->next)
+		last = last->next;
+	if (craig != (ck_gameState.numShots == shots) || (craig && (last->velX != 0x30 || last->velY != -0x18)))
+		Quit("KW_SelfTest: Revival of Bliss's shots (Craig's thrown, free) are wrong!");
+	CK_RemoveObj(last);
+	printf("PASS: Revival of Bliss (%s): its boss falls to shots and that wins; %s\n", craig ? "Craig" : "Keen",
+		craig ? "Craig throws his shots for free" : "Keen shoots as ever");
+}
+
 // For /KWTEST: every creature in the loaded level has its picture in memory
 // (a fan game moves sprites between caches; a wrong cache table shows here).
 void KW_TestLevelSpritesCached(const char *world, int level)
@@ -4332,7 +4415,8 @@ void KW_DebugFrame(void)
 	}
 	// KW_AUTOTALK=n: at frame n, everyone in Keen 4 says their lines (the
 	// windows of its dialogues, one after another)
-	if (getenv("KW_AUTOTALK") && count + 1 == atoi(getenv("KW_AUTOTALK")) && (kw_currentWorld == KW_KEEN4 || kw_currentWorld == KW_KEEN7 || kw_currentWorld == KW_KEEN95 || kw_currentWorld == KW_BOUNTY || kw_currentWorld == KW_AURORA || kw_currentWorld == KW_OCFLORE))
+	if (getenv("KW_AUTOTALK") && count + 1 == atoi(getenv("KW_AUTOTALK")) && (kw_currentWorld == KW_KEEN4 || kw_currentWorld == KW_KEEN7 || kw_currentWorld == KW_KEEN95 || kw_currentWorld == KW_BOUNTY || kw_currentWorld == KW_AURORA || kw_currentWorld == KW_OCFLORE ||
+		kw_currentWorld == KW_PARTY || kw_currentWorld == KW_REVIVAL || kw_currentWorld == KW_REVIVALC))
 	{
 		void CK4_ShowCouncilMessage(void);
 		void CK4_ShowPrincessMessage(void);
@@ -5417,8 +5501,8 @@ void KW_SelfTest(void)
 	// with the patches' rules and routines, run in every level, and each is
 	// hit by a shot once (Keen can't die meanwhile).
 	{
-		static const int patchWorlds[] = {KW_AURORA, KW_OCFLORE, KW_CANMORE, KW_SAINT, KW_PARTY};
-		for (int p = 0; p < 5; ++p)
+		static const int patchWorlds[] = {KW_AURORA, KW_OCFLORE, KW_CANMORE, KW_SAINT, KW_PARTY, KW_REVIVAL, KW_REVIVALC};
+		for (int p = 0; p < 7; ++p)
 		{
 			int w = patchWorlds[p];
 			if (!KW_IsWorldPresent(w))
@@ -5454,6 +5538,8 @@ void KW_SelfTest(void)
 				KW_TestLevelSpritesCached(kw_worldDefs[w].id, lv);
 				if (w == KW_CANMORE && lv == 1)
 					KW_TestCanmoreBehaviour();
+				if ((w == KW_REVIVAL || w == KW_REVIVALC) && lv == 1)
+					KW_TestRevivalBehaviour(w == KW_REVIVALC);
 				ck_gameState.levelState = LS_Playing;
 				++ran;
 			}

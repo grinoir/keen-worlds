@@ -965,7 +965,8 @@ void CK_KeenStandingThink(CK_object *obj)
 #ifdef WITH_KEEN4
 		if ((ck_currentEpisode->ep == EP_CK4) && (ck_keenMoon == 1))
 		{
-			ck_keenMoon = 2;
+			if (!CK_INT(CK4_MoonAgain, 0)) // KEEN WORLDS: Revival of Bliss: Keen moons as often as he likes
+				ck_keenMoon = 2;
 			obj->currentAction = CK_ACTION(CK_ACT_keenMoon1);
 		}
 		else
@@ -1066,7 +1067,7 @@ void CK_KeenDrawFunc(CK_object *obj)
 	else if (obj->topTI == 0x29)
 	{
 		// Keen6 conveyor belt right
-		ck_nextX = SD_GetSpriteSync() * 8;
+		ck_nextX = SD_GetSpriteSync() * CK_INT(CK_ConveyorRightSpeed, 8); // KEEN WORLDS: variable (Revival of Bliss: 0)
 		ck_nextY = 0;
 		obj->user1 = 0;
 		CK_PhysUpdateNormalObj(obj);
@@ -1110,7 +1111,7 @@ void CK_KeenRunDrawFunc(CK_object *obj)
 	else if (obj->topTI == 0x29)
 	{
 		// Keen6 conveyor belt right
-		ck_nextX = SD_GetSpriteSync() * 8;
+		ck_nextX = SD_GetSpriteSync() * CK_INT(CK_ConveyorRightSpeed, 8); // KEEN WORLDS: variable (Revival of Bliss: 0)
 		ck_nextY = 0;
 		CK_PhysUpdateNormalObj(obj);
 	}
@@ -1657,7 +1658,7 @@ void CK_KeenSpecialColFunc(CK_object *obj, CK_object *other)
 #endif
 	else if (
 #ifdef WITH_KEEN4
-		((ck_currentEpisode->ep == EP_CK4) && (other->type == CT4_Bounder)) ||
+		((ck_currentEpisode->ep == EP_CK4) && (other->type == CT4_Bounder) && !CK_INT(CK4_BounderNoPolePush, 0)) || // KEEN WORLDS: variable
 #endif
 #ifdef WITH_KEEN5
 		((ck_currentEpisode->ep == EP_CK5) && ((other->type == CT5_Ampton) || (other->type == CT5_Korath))) ||
@@ -2016,7 +2017,8 @@ void CK_SpawnShot(int x, int y, int direction)
 		return;
 	}
 
-	ck_gameState.numShots--;
+	if (!CK_INT(CK_ShotsFree, 0)) // KEEN WORLDS: Revival of Bliss's Craig never runs out
+		ck_gameState.numShots--;
 
 	CK_object *shot = CK_GetNewObj(true);
 	shot->posX = x;
@@ -2047,6 +2049,15 @@ void CK_SpawnShot(int x, int y, int direction)
 		break;
 	default:
 		Quit("SpawnShot: Bad dir!");
+	}
+	// KEEN WORLDS: CK_ShotArcVel (Revival of Bliss's Craig): the shot is
+	// thrown, with a speed for each direction (up, right, down, left: x, y)
+	if (CK_INT(CK_ShotArc, 0))
+	{
+		int d = direction / 2;
+		shot->velX = CK_INTELEMENT(CK_ShotArcVel, d * 2);
+		shot->velY = CK_INTELEMENT(CK_ShotArcVel, d * 2 + 1);
+		shot->xDirection = shot->yDirection = 1;
 	}
 
 	CK_SetAction(shot, CK_ACTION(CK_ACT_keenShot1));

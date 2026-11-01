@@ -1488,6 +1488,10 @@ void CK_HandleInput()
 	{
 		// TODO: Gravis Gamepad input handling
 	}
+	// KEEN WORLDS: CK_PogoNeedsWetsuit: Revival of Bliss's Craig has no pogo
+	// stick until it is repaired (the wetsuit's flag)
+	if (CK_INT(CK_PogoNeedsWetsuit, 0) && !ck_gameState.ep.ck4.wetsuit)
+		ck_keenState.pogoIsPressed = false;
 
 	// Mars keeps raw pogo input for two-button firing, but cannot pogo
 	// before collecting the stick. This also covers mapped controllers.

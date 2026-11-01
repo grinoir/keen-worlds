@@ -63,6 +63,8 @@ static const char *const kw_keepsakeText[] = {
 	"The keycard that\nopened Keen's cell\non Azura Astrid.",
 	"A flower from the\nmeadow on Aurora\nBliss where Craig\nrests.",
 	"Shikadi soda from\nCaptain Craig's\nparty. No\nbrewskies.",
+	"The officer-bot\nMyah fixed to\nKeen's helmet.",
+	"A spare spring from\nCraig's mended pogo\nstick.",
 };
 static const char *const kw_spotNewText[][2] = {
 	{"A shiny gem! I'll\nput it where the\nsun hits it.", "OP_SPNEW_KEEN4.RAW"},
@@ -86,4 +88,6 @@ static const char *const kw_spotNewText[][2] = {
 	{"A keycard! Can it\nopen the fridge?", "OP_SPNEW_CANMORE.RAW"},
 	{"A flower for Craig.\nI'll water it every\nday.", "OP_SPNEW_SAINT.RAW"},
 	{"There was a party?\nAnd nobody invited\nSpot?", "OP_SPNEW_PARTY.RAW"},
+	{"A robot head! It's\nlooking at me.", "OP_SPNEW_REVIVAL.RAW"},
+	{"A spring! Boing!\n...Sorry.", "OP_SPNEW_REVIVALC.RAW"},
 };

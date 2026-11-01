@@ -1205,7 +1205,9 @@ void CK_GameLoop()
 				ck_gameState.levelsDone[ca_mapOn] = 1;
 				CK4_ShowCouncilMessage();
 
-				if (ck_gameState.ep.ck4.membersRescued == CK_INT(CK4_NumCouncilsToRescue, 8))
+				// (KEEN WORLDS: CK4_CouncilNeverWins: Revival of Bliss is won by
+				// beating its boss, LS_RVBossDown)
+				if (ck_gameState.ep.ck4.membersRescued == CK_INT(CK4_NumCouncilsToRescue, 8) && !CK_INT(CK4_CouncilNeverWins, 0))
 				{
 					// Game won
 					CK_EndingPurge();
@@ -1223,6 +1225,14 @@ void CK_GameLoop()
 				}
 			}
 #endif
+			break;
+		case LS_RVBossDown: // KEEN WORLDS: Revival of Bliss: its boss is beaten
+			ck_lastLevelFinished = ca_mapOn;
+			ck_gameState.levelsDone[ca_mapOn] = 1;
+			CK_EndingPurge();
+			VL_FixRefreshBuffer();
+			help_endgame();
+			KW_AfterWorldEnding();
 			break;
 #ifdef WITH_KEEN6
 		case LS_Sandwich:

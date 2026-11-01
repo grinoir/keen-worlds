@@ -202,6 +202,13 @@ void CK_BasicDrawFunc4(CK_object *obj)
 		switch (obj->user4)
 		{
 
+		// KEEN WORLDS: Revival of Bliss's beaten boss (the Dopefish's object)
+		// has no stars
+		case CT4_Dopefish:
+			if (CK_INT(CK4_DopefishStarsOff, 0))
+				return;
+			break;
+
 		// KEEN WORLDS: some offsets are variables (Operation Ocflore)
 		case CT4_Slug:
 			starsX = CK_INT(CK4_SlugStarsX, 0);

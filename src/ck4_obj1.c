@@ -142,7 +142,7 @@ void CK4_SpawnMushroom(int tileX, int tileY)
 	CK_object *obj = CK_GetNewObj(false);
 	obj->type = CT4_Mushroom;
 	obj->active = OBJ_ACTIVE;
-	obj->zLayer = PRIORITIES - 4;
+	obj->zLayer = CK_INT(CK4_MushroomZLayer, PRIORITIES - 4); // KEEN WORLDS: variable
 	obj->posX = RF_TileToUnit(tileX);
 	obj->posY = RF_TileToUnit((tileY)) - CK_INT(CK4_MushroomSpawnYOffset, 0xF1);
 	obj->xDirection = IN_motion_Right;
@@ -230,6 +230,9 @@ void CK4_SpawnBird(int tileX, int tileY)
 void CK4_EggCol(CK_object *a, CK_object *b)
 {
 	// KEEN WORLDS: Aurora Bliss: a shot pops on the egg; only Keen hatches it
+	// (Revival of Bliss: shots fly through it, and it hatches with a sound)
+	if (b->type == CT_Stunner && CK_INT(CK4_EggIgnoresShots, 0))
+		return;
 	if (b->type == CT_Stunner && CK_INT(CK4_EggHatchesOnlyForKeen, 0))
 	{
 		CK_ShotHit(b);
@@ -239,6 +242,8 @@ void CK4_EggCol(CK_object *a, CK_object *b)
 	{
 		if (b->type == CT_Stunner)
 			CK_ShotHit(b);
+		if (CK_INT(CK4_EggHatchSound, -1) >= 0)
+			SD_PlaySound(CK_INT(CK4_EggHatchSound, -1));
 
 		a->type = CT_Friendly;
 		a->active = OBJ_EXISTS_ONLY_ONSCREEN;
@@ -435,6 +440,10 @@ void CK4_SpawnArachnut(int tileX, int tileY)
 	obj->posY = RF_TileToUnit(tileY) - CK_INT(CK4_ArachnutSpawnYOffset, 0x171);
 	obj->xDirection = US_RndT() < 0x80 ? IN_motion_Right : IN_motion_Left;
 	obj->yDirection = IN_motion_Down;
+	// KEEN WORLDS: CK4_ArachnutStunTimes (Revival of Bliss): how long it stays
+	// stunned, by difficulty
+	if (CK_INT(CK4_ArachnutStunTimed, 0) && ck_gameState.difficulty >= D_Easy && ck_gameState.difficulty <= D_Hard)
+		CK_ACTION(CK4_ACT_ArachnutRecover2)->timer = CK_INTELEMENT(CK4_ArachnutStunTimes, ck_gameState.difficulty - D_Easy);
 	CK_SetAction(obj, CK_ACTION(CK4_ACT_ArachnutWalk0));
 }
 
@@ -447,7 +456,7 @@ void CK4_ArachnutCol(CK_object *a, CK_object *b)
 {
 	if (b->type == CT_Stunner)
 	{
-		CK_StunCreature(a, b, CK_ACTION(CK4_ACT_ArachnutStunned0));
+		CK_StunCreature(a, b, CK_ACTION_ALIAS(CK4_ACT_ArachnutStunned, CK4_ACT_ArachnutStunned0)); // KEEN WORLDS: redirectable
 	}
 	else if (b->type == CT_Player && !CK_INT(CK4_ArachnutHarmless, 0)) // KEEN WORLDS: variable
 	{
@@ -459,7 +468,7 @@ void CK4_ArachnutStunnedCol(CK_object *a, CK_object *b)
 {
 	if (b->type == CT_Stunner)
 	{
-		CK_StunCreature(a, b, CK_ACTION(CK4_ACT_ArachnutStunned0));
+		CK_StunCreature(a, b, CK_ACTION_ALIAS(CK4_ACT_ArachnutStunned, CK4_ACT_ArachnutStunned0)); // KEEN WORLDS: redirectable
 	}
 }
 
@@ -544,7 +553,13 @@ void CK4_SkypestDraw(CK_object *obj)
 	}
 
 	// (Operation Ocflore: it never lands, only slides along the ground)
-	if (obj->topTI && !obj->rightTI && !obj->leftTI && (!CK_INT(CK4_SkypestNeverLands, 0) || obj->bottomTI))
+	// (Revival of Bliss: it bounces off the ground)
+	if (obj->topTI && !obj->rightTI && !obj->leftTI && CK_INT(CK4_SkypestBounces, 0))
+	{
+		obj->velY = -8;
+		obj->yDirection = IN_motion_Up;
+	}
+	else if (obj->topTI && !obj->rightTI && !obj->leftTI && (!CK_INT(CK4_SkypestNeverLands, 0) || obj->bottomTI))
 	{
 		obj->posY += CK_INT(CK4_SkypestPreenYOffset, 0x80);
 		CK_SetAction2(obj, CK_ACTION(CK4_ACT_SkypestPreen0));

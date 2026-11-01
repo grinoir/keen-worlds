@@ -31,16 +31,19 @@ from kw_ocflore_voice import DORSAL, STYLE as OCFLORE_STYLE
 from kw_end_text import pages
 
 KRILE = 'af_kore'
+ALLAIN = 'am_santa'   # PROVISIONAL (samples in art/voices/allain_*)
 RADIO = 'radio'   # (a role, not a voice: the Krile on the radio)
 VOICES = {RADIO: KRILE}
 STYLE = dict(BASE_STYLE)
 STYLE[CRAIG] = AURORA_STYLE[CRAIG]
 STYLE[DORSAL] = OCFLORE_STYLE[DORSAL]
+STYLE[ALLAIN] = dict(pitch=0.8)
 EFFECT = {RADIO: 'highpass=f=500,lowpass=f=2800,acrusher=bits=8:mix=0.3,tremolo=f=9:d=0.5,volume=1.4'}
 GAP = 0.35
 SAID = {'BwB': 'Bean-with-Bacon', 'Navi-Com': 'Navi-Com', 'finnaly': 'finally', 'Vexidar VI': 'Vexidar Six',
         'Xantis VIII': 'Xantis Eight', '314': 'three-fourteen', "I've think": 'I think',
-        'RADIO STARTS STUTTERING': 'The radio starts stuttering.', '- shouts out Keen as he sees': 'Keen sees'}
+        'RADIO STARTS STUTTERING': 'The radio starts stuttering.', 'riffle': 'rifle', 'tensity': 'tension',
+        'freighted': 'frightened', 'Morty, Morty Morty': 'Morty, Morty, Morty', 'with\xa0you': 'with you', '- shouts out Keen as he sees': 'Keen sees', '-says Craig as he throws': 'Craig throws'}
 
 # game id: (folder, chunk, dictionary (None: Keen 5's in Omnispeak's data), ext, prefix, secret chunk, roles)
 GAMES = {
@@ -49,7 +52,14 @@ GAMES = {
     'saint': ('saint', 4743, 'aurora', 'CK4', 'SA', None, {'E': N}),
     'party': ('party', 4743, 'aurora', 'CK4', 'PA', None,
               {'D': CRAIG, 'B': K, 'E': N, '2': MYAH, 'A': BARKER, 'F': JANITOR, '3': LINDSEY}),
+    'revival': ('revival', 4743, 'revival', 'CK4', 'RV', None,
+                {'E': N, 'B': K, 'D': CRAIG, 'C': ALLAIN, '2': MYAH, 'A': BARKER, '6': MORTIMER, '3': LINDSEY}),
+    'revivalc': ('revivalc', 4743, 'revivalc', 'CK4', 'RC', None,
+                 {'A': N, 'F': K, '9': CRAIG, '8': ALLAIN, '6': MYAH, 'E': BARKER, '2': MORTIMER, '7': LINDSEY}),
 }
+# The colours of pages not spoken: the passwords of Canmore's archives, the
+# riddle at the end of Revival of Bliss (Keen Worlds opens what they open)
+SKIP = {'canmore': {'C3'}, 'revival': {'C7'}, 'revivalc': {'C3'}}
 D = DORSAL
 OCFLORE = {
     'OC_END_00.RAW': [(N, ["With the three force-field relics in hand, Commander Keen makes his way to the heart of the "
@@ -73,7 +83,7 @@ OCFLORE = {
                       (K, ["What do you mean, already on our way?"])],
     'OC_END_14.RAW': [(N, ["To be continued..."])],
 }
-ATTRIBUTION = re.compile(r'^"?\s*-\s*(says|murmurs|yells|groans|shouts)\b[^.!?]*$', re.I)
+ATTRIBUTION = re.compile(r'^"?\s*-\s*(says|asks|murmurs|yells|groans|shouts)\b[^.!?]{0,40}[.!?]?$', re.I)
 
 
 def clean(text):
@@ -102,7 +112,7 @@ def clips_of(mods, game):
             turns = []
             for colour, text in page:
                 code = (colour or '')[1:].upper()
-                if colour and colour[0] == 'C' or ATTRIBUTION.match(text) or text.strip().upper() == 'THE END':
+                if colour in SKIP.get(game, ()) or ATTRIBUTION.match(text) or text.strip().upper() == 'THE END':
                     continue   # (the passwords' page; "- says Keen"; the words THE END)
                 voice = roles.get(code, N) if colour else N
                 words = sentences(clean(text))

@@ -71,7 +71,7 @@ SHELF2_X, SHELF2_W = CHART_X - 1, 1
 KEEPSAKES = ['KEEN4', 'KEEN5', 'KEEN6', 'KEEN7', 'KEEN8', 'KEEN9',
              'KEEN95', 'AREALM', 'FITF', 'ALPHAMATIC', 'RTTS', 'OSI',
              'CK55', 'ASYLUM', 'BOUNTY', 'SUBURB', 'AURORA', 'OCFLORE',
-             'CANMORE', 'SAINT', 'PARTY']
+             'CANMORE', 'SAINT', 'PARTY', 'REVIVAL', 'REVIVALC']
 
 
 def level(d=None):
@@ -345,6 +345,18 @@ def keepsake(name):
         c.put(7, B - 5, BLUE); c.put(8, B - 5, LCYAN)   # the Shikadi's spark
         c.rect(6, B - 9, 9, B - 9, LGREY)
         c.put(3, B - 3, LMAGENTA); c.put(12, B - 6, YELLOW); c.put(13, B - 2, LGREEN)  # confetti
+    elif name == 'REVIVAL':    # the officer-bot Myah fixed to Keen's helmet
+        c.box(4, B - 8, 11, B - 1, LGREY, DGREY)
+        c.rect(5, B - 6, 6, B - 6, LRED); c.rect(9, B - 6, 10, B - 6, LRED)   # its eyes
+        c.rect(6, B - 3, 9, B - 3, DGREY)
+        c.rect(7, B - 10, 8, B - 9, DGREY); c.put(7, B - 11, YELLOW)         # its aerial
+        c.rect(5, B, 10, B, DGREY)
+    elif name == 'REVIVALC':   # a spare spring from Craig's mended pogo stick
+        for k in range(5):
+            y = B - 1 - k * 2
+            c.rect(5, y, 10, y, LGREY)
+            c.put(5 if k % 2 else 10, y - 1, DGREY)
+        c.rect(6, B, 9, B, DGREY)
     elif name == 'SUBURB':     # Mortimer's dummy head
         c.box(4, B - 9, 11, B - 2, YELLOW)
         c.rect(5, B - 10, 10, B - 10, BLACK)            # hair
