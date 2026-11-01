@@ -47,6 +47,7 @@ typedef enum KW_World
 	KW_RTTS,   // Far Shadowlands: "Return to the Shadowlands" (its own code, on Keen 4's; append)
 	KW_AURORA, // Aurora Bliss: "Aurora Bliss" (fan game on Keen 4, Craig's story part one; append)
 	KW_OCFLORE, // Ocflore V: "Operation Ocflore" (fan game on Keen 4; append)
+	KW_CANMORE, // Azura Astrid: "Canmore's Redemption" (fan game on Keen 5, Craig's story part two; append)
 	KW_NUM_WORLDS,
 	KW_NO_WORLD = -1,
 } KW_World;

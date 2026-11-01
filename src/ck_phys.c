@@ -309,7 +309,10 @@ void CK_PhysClipVert(CK_object *obj)
 	}
 	vertDisplace = abs(ck_deltaRects.unitXmid) - ck_deltaRects.unitY1 + 16;
 
-	for (uint16_t y = ck_oldRects.tileY1 + 1; y >= obj->clipRects.tileY1; --y)
+	// KEEN WORLDS: CK_ClipToEndsSigned (K1n9_Duk3's fix in Canmore's
+	// Redemption): the loop compares signed, so it ends at the map's top row
+	bool signedEnds = CK_INT(CK_ClipToEndsSigned, 0);
+	for (uint16_t y = ck_oldRects.tileY1 + 1; signedEnds ? (int16_t)y >= (int16_t)obj->clipRects.tileY1 : y >= obj->clipRects.tileY1; --y)
 	{
 		int16_t tile = CA_TileAtPos(obj->clipRects.tileXmid, y, 1);
 
@@ -713,6 +716,10 @@ void CK_PhysPushX(CK_object *pushee, CK_object *pusher)
 		FF_ClipToSpriteSide(pushee, pusher);
 		return;
 	}
+	// KEEN WORLDS: CK_PushXResetsY (K1n9_Duk3's fix in Canmore's Redemption):
+	// no height left over from whatever moved last
+	if (CK_INT(CK_PushXResetsY, 0))
+		ck_nextY = 0;
 	int16_t deltaPosX = pusher->deltaPosX - pushee->deltaPosX;
 	int16_t deltaX_1 = pusher->clipRects.unitX2 - pushee->clipRects.unitX1;
 	int16_t deltaX_2 = pushee->clipRects.unitX2 - pusher->clipRects.unitX1;

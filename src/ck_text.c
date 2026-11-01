@@ -513,7 +513,9 @@ void PageLayout(int show_status)
 	/* Fill the background and draw the border */
 	// KEEN WORLDS: ck_textBlackBackground gives a plain black page (some of
 	// Atroxian Realm's story screens)
-	VHB_Bar(0, 0, 320, 200, ck_textBlackBackground ? 0 : HELP_BACKCOLOUR);
+	// CK_HelpBarColour: the colour the page is filled with, where the text is
+	// still drawn for HELP_BACKCOLOUR (Canmore's Redemption's pages are black)
+	VHB_Bar(0, 0, 320, 200, ck_textBlackBackground ? 0 : CK_INT(CK_HelpBarColour, HELP_BACKCOLOUR));
 #ifdef HAS_HELPSCREEN
 	if (ck_currentEpisode->ep != EP_CK6 && !ck_textBlackBackground)
 	{
@@ -672,7 +674,7 @@ int ShowHelp(void)
 	//CONTROLLER_STATUS cstatus;
 
 	/* Erase the screen */
-	VHB_Bar(0, 0, 320, 200, 4);
+	VHB_Bar(0, 0, 320, 200, CK_INT(CK_HelpBarColour, 4)); // KEEN WORLDS: variable
 
 	/* Cache graphics */
 	CA_CacheGrChunk(CK_CHUNKNUM(PIC_HELPMENU));     /* Help menu pic */
@@ -707,7 +709,7 @@ int ShowHelp(void)
 		VH_UpdateScreen();
 
 		/* Erase the pointer */
-		VHB_Bar(48, 48 + help_topic * 24, 39, 24, 4);
+		VHB_Bar(48, 48 + help_topic * 24, 39, 24, CK_INT(CK_HelpBarColour, 4)); // KEEN WORLDS: variable
 
 		/* Check for input */
 		IN_ReadControls(0, &cinfo);

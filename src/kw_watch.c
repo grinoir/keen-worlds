@@ -94,6 +94,7 @@ static const char *KW_WatchTask(void)
  case KW_RTTS:return "RESCUE THE PAGE SCOUTS";
  case KW_AURORA:return "FIND THE SPARE PARTS";
  case KW_OCFLORE:return "FIND THE THREE RELICS";
+ case KW_CANMORE:return "SAVE KEEN AND MORTIMER";
  case KW_MARS:return "GET THE SHIP PARTS";
  case KW_DREAM:return "FIND THE BOOBUS BOMBS";
  default:return "CHECK THE FLIGHT CHART";

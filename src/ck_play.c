@@ -2573,7 +2573,7 @@ void CK_PlayLoop()
 					if (currentObj->type == CT_Player)
 					{
 						// Kill Keen if he exits the bottom of the map.
-						ck_gameState.levelState = LS_Died;
+						ck_gameState.levelState = CK_DiedState(); // KEEN WORLDS: (CK_DiedWinsLevel)
 						continue;
 					}
 					else

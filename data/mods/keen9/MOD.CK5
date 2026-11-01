@@ -488,6 +488,6 @@
 %action CK5_ACT_SpirogripSpawn = CK5_ACT_SpirogripSpin8 # $127DC
 %action CK5_ACT_SpirogripSpin3Fly = CK5_ACT_SpirogripFlyDown # $12820
 %action CK5_ACT_MineTurn = CK5_ACT_Mine0 # $1205B
-%action CK5_ACT_MineShrapA = CK5_ACT_Sphereful0 # $1244F: three probes fly out
+%action CK5_ACT_MineShrapB = CK5_ACT_Sphereful0 # $1244F (the second, up-right piece): three probes fly out
 %action CK5_ACT_MineShrapE = CK5_ACT_Sphereful0 # $12509
 %action CK5_ACT_MineShrapF = CK5_ACT_Sphereful0 # $1253F

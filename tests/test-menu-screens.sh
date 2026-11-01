@@ -14,7 +14,7 @@ fi
 python3 - "$work" <<'PY'
 from pathlib import Path
 from PIL import Image
-import sys
+import re,sys
 p=Path(sys.argv[1]);log=(p/'result.log').read_text()
 assert log.count('PASS:')==3 and 'runtime error:' not in log and 'ERROR: AddressSanitizer' not in log
 assert len(list(p.glob('watch-[0-9][0-9].ppm')))==18
@@ -27,7 +27,7 @@ for f in p.glob('watch-*.ppm'):
  for bounds in ((0,0,68,200),(246,0,320,200),(0,0,320,41),(0,157,320,200)):
   assert im.crop(bounds).tobytes()==watch.crop(bounds).tobytes(),f'Watch case overwritten at {f}'
 assert Image.open(p/'scenes.ppm').size==(320,200) and 'Story scenes: The Shikadi signal' in log and (p/'g1-signala.ppm').exists()
-flights=sorted(p.glob('flight-*.ppm'));assert len(flights)==18
+flights=sorted(p.glob('flight-*.ppm'));count=int(re.search(r'flight chart, item 1/(\d+)',log).group(1));assert len(flights)==count>=18
 reference=Image.open(flights[0])
 for f in flights:
  im=Image.open(f);assert im.size==(320,200)
@@ -36,6 +36,6 @@ for f in flights:
 assert (p/'flight-00.ppm').read_bytes()!=(p/'flight-16.ppm').read_bytes()
 assert Image.open(p/'flight-00.ppm').crop((164,48,304,120)).tobytes()==Image.open(p/'flight-08.ppm').crop((164,48,304,120)).tobytes(), 'Main-story scrolling moved the side trips'
 assert Image.open(p/'flight-09.ppm').crop((16,48,156,120)).tobytes()==Image.open(p/'flight-16.ppm').crop((16,48,156,120)).tobytes(), 'Side-trip scrolling moved the main story'
-print('PASS: 18 grouped flight entries, independent column scrolling, forward/reverse navigation, unchanged frame, and watch/submenu renders')
+print(f'PASS: {count} grouped flight entries, independent column scrolling, forward/reverse navigation, unchanged frame, and watch/submenu renders')
 PY
 rg '^PASS:' "$work/result.log"

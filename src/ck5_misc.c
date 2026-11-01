@@ -223,7 +223,16 @@ void CK5_LevelEnd(CK_object *obj)
 	ck_gameState.levelState = (ca_mapOn == 12) ? LS_DestroyedQED : LS_KorathFuse;
 }
 
+// KEEN WORLDS: a mod's creature may need another one's sprites too
+// (CK5_MineExtraLump etc.: Canmore's Redemption's mine leaves a Shockshund)
+static void CK5_MarkExtraLump(int lump)
+{
+	if (lump >= 0)
+		CA_MarkLumpNeeded(lump);
+}
+
 void KW9_SetupFunctions(void);
+void CR_SetupFunctions(void);
 void AR_Act1_SetupFunctions(void);
 void FF_SetupFunctions(void);
 void AR_Act2_SetupFunctions(void);
@@ -238,6 +247,7 @@ void CK5_SetupFunctions()
 	CK5_Obj2_SetupFunctions();
 	CK5_Obj3_SetupFunctions();
 	KW9_SetupFunctions(); // KEEN WORLDS: Keen 9's functions (kw_keen9.c)
+	CR_SetupFunctions(); // KEEN WORLDS: Canmore's Redemption's (kw_canmore.c)
 	MARS_SetupFunctions();
 	AL_SetupFunctions();
 	SS_SetupFunctions();
@@ -367,6 +377,7 @@ void CK5_ScanInfoLayer()
 			case 7:
 				CK5_SpawnMine(x, y);
 				CA_MARKLUMP(LUMP_MINE);
+				CK5_MarkExtraLump(CK_INT(CK5_MineExtraLump, -1));
 				break;
 
 			case 12:
@@ -504,6 +515,7 @@ void CK5_ScanInfoLayer()
 			case 42:
 				CK5_SpawnAmpton(x, y);
 				CA_MARKLUMP(LUMP_AMPTON);
+				CK5_MarkExtraLump(CK_INT(CK5_AmptonExtraLump, -1));
 				break;
 
 			case 53:
@@ -632,6 +644,7 @@ void CK5_ScanInfoLayer()
 			case 88:
 				CK5_SpawnMaster(x, y);
 				CA_MARKLUMP(LUMP_MASTER);
+				CK5_MarkExtraLump(CK_INT(CK5_MasterExtraLump, -1));
 				break;
 
 			case 101:
@@ -670,6 +683,7 @@ void CK5_ScanInfoLayer()
 			case 124:
 				CK5_SpawnKorath(x, y);
 				CA_MARKLUMP(LUMP_KORATH);
+				CK5_MarkExtraLump(CK_INT(CK5_KorathExtraLump, -1));
 				break;
 			case 125:
 				// TODO: Signal about teleportation (caching)
@@ -791,7 +805,18 @@ void CK5_ExplodeGalaxy()
 	// purge_chunks()
 	VL_SetScrollCoords(0, 0);
 
-	VL_FadeToBlack();
+	// KEEN WORLDS: CK5_GameOverWhite: Canmore's Redemption fades the galaxy
+	// in and out of white and doesn't explode it
+	bool white = CK_INT(CK5_GameOverWhite, 0);
+	if (white)
+		for (int i = 3; i <= 5; i++)
+		{
+			VL_SetPaletteByID(i);
+			VL_Present();
+			VL_DelayTics(6);
+		}
+	else
+		VL_FadeToBlack();
 	CA_CacheGrChunk(CK_CHUNKNUM(PIC_MILKYWAY));   // Galaxy Pic
 	CA_CacheGrChunk(CK_CHUNKNUM(EXTERN_GALAXY)); // Star Coords
 	CA_CacheGrChunk(CK_CHUNKNUM(PIC_GAMEOVER));   // Game Over Pic
@@ -803,9 +828,21 @@ void CK5_ExplodeGalaxy()
 
 	// Draw the galaxy
 	VH_DrawBitmap(0, 0, CK_CHUNKNUM(PIC_MILKYWAY));
+	KW_Presentation presentation;
+	if (white)
+	{
+		for (int i = 5; i >= 3; i--)
+		{
+			VL_SetPaletteByID(i);
+			VL_Present();
+			VL_DelayTics(6);
+		}
+		IN_ClearKeysDown();
+		KW_BeginPresentation(&presentation);
+		goto done;
+	}
 	VL_FadeFromBlack();
 	IN_ClearKeysDown();
-	KW_Presentation presentation;
 	KW_BeginPresentation(&presentation);
 	SD_PlaySound(CK_SOUNDNUM(SOUND_GALAXYEXPLODEPRE));
 

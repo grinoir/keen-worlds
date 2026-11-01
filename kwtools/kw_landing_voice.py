@@ -24,6 +24,9 @@ VOICE = 'af_heart'        # Kokoro's "Heart", an American woman
 KOKORO_DIR = os.environ.get('KW_KOKORO_DIR', os.path.expanduser('~/Projects/SignalweaveCMS'))
 # world id: the words, a sentence each
 LANDINGS = {
+    'canmore': ["You have now landed on Azura Astrid.", "The pilot was Craig Canmore. I did not agree to this.",
+                "Keen and Mortimer are tied up in the back, and they are not happy.",
+                "Craig, go and find your sister."],
     'ocflore': ["You have now landed on Ocflore Five.", "Beware of the local water. There is a lot of it.",
                 "The Ormch are waiting to meet you. I do not trust them."],
     'aurora': ["You have now landed on Aurora Bliss.", "And here we stay.",
@@ -65,6 +68,7 @@ LANDINGS = {
 # The Chronicle: a world has been saved and the ship has learned the course
 # to the next. world id: the place's name as it is said.
 COURSES = {
+    'canmore': 'Azura Astrid',
     'ocflore': 'Ocflore Five',
     'aurora': 'Aurora Bliss',
     'rtts': 'The far Shadowlands',
@@ -77,6 +81,8 @@ COURSES = {
 # A world has been saved: what the ship computer says when Keen is next in
 # the cabin. world id: the words, a sentence each.
 SAVED = {
+    'canmore': ["Azura Astrid is behind us.", "Keen carried Craig home through a teleporter.",
+                "Nobody came back for me. I flew myself home."],
     'ocflore': ["Ocflore Five is free.", "The Ormch have packed up their project.", "The Dorsal say thank you. In bubbles."],
     'aurora': ["Aurora Bliss is behind us.", "The Navi-Com works again.", "It still smells of Vorta Cola."],
     'rtts': ["The page scouts are home, and the Oracle has spoken.", "The Bloogs took Spot.",

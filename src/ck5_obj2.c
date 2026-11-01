@@ -39,6 +39,7 @@ void CK5_SpawnSparky(int tileX, int tileY)
 	new_object->posY = RF_TileToUnit(tileY) + CK_INT(CK5_SparkySpawnYOffset, -0x100);
 	new_object->xDirection = US_RndT() < 0x80 ? IN_motion_Right : IN_motion_Left;
 	new_object->yDirection = IN_motion_Down;
+	new_object->user2 = CK_INT(CK5_SparkyHealth, 0); // KEEN WORLDS: Canmore's Redemption's takes shots (CR_SparkyCol)
 	CK_SetAction(new_object, CK_ACTION(CK5_ACT_Sparky0));
 }
 
@@ -502,6 +503,9 @@ void CK5_SpawnShelly(int tileX, int tileY)
 
 void CK5_ShellyWait(CK_object *obj)
 {
+	// KEEN WORLDS: CK5_ShelleyNoDive: Canmore's Redemption's never jumps off ledges
+	if (CK_INT(CK5_ShelleyNoDive, 0))
+		return;
 
 	// KEEN WORLDS: CK5_ShelleyJumpsUp makes it jump at Keen when he is above it
 	if (CK_INT(CK5_ShelleyJumpsUp, 0) ? (ck_keenObj->clipRects.unitY1 <= obj->clipRects.unitY2) : (ck_keenObj->clipRects.unitY1 >= obj->clipRects.unitY2))

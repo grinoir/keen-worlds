@@ -26,9 +26,9 @@ WORLDS = {   # id: the base episode's strings file (or None), the world's own fo
     'keen4': (K4, None), 'keen5': (K5, None), 'keen6': (K6, None),
     'keen7': (K4, 'keen7'), 'keen8': (K6, 'keen8'), 'keen9': (K5, 'keen9'),
     'keen95': (K4, 'keen95'), 'bounty': (K4, 'bounty'), 'ck55': (K5, 'ck55'), 'asylum': (K5, 'asylum'),
-    'rtts': (K4, 'rtts'), 'aurora': (K4, 'aurora'), 'alpham': (None, 'alphamatic'), 'suburb': (None,'suburb'), 'osi': (None, 'osi'), 'arealm': (None, 'arealm'), 'fitf': (None, 'fitf'),
+    'rtts': (K4, 'rtts'), 'aurora': (K4, 'aurora'), 'canmore': (K5, 'canmore'), 'alpham': (None, 'alphamatic'), 'suburb': (None,'suburb'), 'osi': (None, 'osi'), 'arealm': (None, 'arealm'), 'fitf': (None, 'fitf'),
 }
-SAID = {'Meurglys III': 'Meurglys Three', 'Ocflore V': 'Ocflore Five', '#': 'Pi', 'VIII': 'Eight', 'BwB': 'Bean-with-Bacon', 'doesnt': "doesn't", '&': 'and'}
+SAID = {'.....Previously........': 'Previously.', 'Meurglys III': 'Meurglys Three', 'Ocflore V': 'Ocflore Five', '#': 'Pi', 'VIII': 'Eight', 'BwB': 'Bean-with-Bacon', 'doesnt': "doesn't", '&': 'and'}
 
 
 def story(root, base, folder):

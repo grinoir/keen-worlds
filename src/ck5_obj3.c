@@ -68,6 +68,10 @@ int CK5_MinePathClear(int tileX, int tileY)
 
 	int t, x, y;
 
+	// KEEN WORLDS: CK5_MineStill: Canmore's Redemption's mines stay put
+	if (CK_INT(CK5_MineStill, 0))
+		return 0;
+
 	for (y = 0; y < CK_INT(CK5_MinePathTileHeight, 2); y++)
 	{
 		for (x = 0; x < CK_INT(CK5_MinePathTileWidth, 3); x++)
@@ -498,7 +502,7 @@ void CK5_MineExplode(CK_object *obj)
 	new_object->posY = obj->posY;
 	new_object->velX = CK_INT(CK5_MineShrapABaseXVel, 0) + US_RndT() / CK_INT(CK5_MineShrapARndXVel, -8);
 	new_object->velY = CK_INT(CK5_MineShrapABaseYVel, -48);
-	CK_SetAction(new_object, CK_ACTION_ALIAS(CK5_ACT_MineShrapA, CK5_ACT_MineShrap0)); // KEEN WORLDS: redirectable
+	CK_SetAction(new_object, CK_ACTION(CK5_ACT_MineShrap0));
 
 	// upright
 	new_object = CK_GetNewObj(true);
@@ -506,7 +510,7 @@ void CK5_MineExplode(CK_object *obj)
 	new_object->posY = obj->posY;
 	new_object->velX = CK_INT(CK5_MineShrapBBaseXVel, 0) + US_RndT() / CK_INT(CK5_MineShrapBRndXVel, 8);
 	new_object->velY = CK_INT(CK5_MineShrapBBaseYVel, -48);
-	CK_SetAction(new_object, CK_ACTION(CK5_ACT_MineShrap0));
+	CK_SetAction(new_object, CK_ACTION_ALIAS(CK5_ACT_MineShrapB, CK5_ACT_MineShrap0)); // KEEN WORLDS: redirectable
 
 	new_object = CK_GetNewObj(true);
 	new_object->posX = obj->posX + CK_INT(CK5_MineShrapCSpawnXOffset, 0);
@@ -1084,8 +1088,9 @@ void CK5_ShikadiWalk(CK_object *obj)
 	tile = CA_TileAtPos(tx, obj->clipRects.tileY1, 1);
 	//tile = *MAPSPOT(tx, obj->clipRects.tileY1, FGPLANE);
 	// KEEN WORLDS: the tile it reacts to, what it does there and whether that
-	// makes a sound are variable (Keen 9's yeti throws a snowball).
-	if (TI_ForeMisc(tile) == CK_INT(CK5_ShikadiPoleMiscFlag, MISCFLAG_POLE))
+	// makes a sound are variable (Keen 9's yeti throws a snowball);
+	// CK5_ShikadiZapsAnywhere needs no tile (Canmore's Redemption's).
+	if (CK_INT(CK5_ShikadiZapsAnywhere, 0) || TI_ForeMisc(tile) == CK_INT(CK5_ShikadiPoleMiscFlag, MISCFLAG_POLE))
 	{
 		obj->user1 = tx;
 		obj->currentAction = CK_ACTION_ALIAS(CK5_ACT_ShikadiPoleStart, CK5_ACT_ShikadiPole0);
@@ -1110,7 +1115,8 @@ void CK5_ShikadiCol(CK_object *o1, CK_object *o2)
 	{
 		if (--o1->user2)
 		{
-			o1->user3 = 2;
+			if (!CK_INT(CK5_ShikadiNoFlash, 0)) // KEEN WORLDS: Canmore's Redemption's doesn't flash
+				o1->user3 = 2;
 			o1->visible = true;
 			CK_ShotHit(o2);
 		}
@@ -1280,14 +1286,15 @@ void CK5_ShocksundCol(CK_object *o1, CK_object *o2)
 	{
 		if (CK_INT(CK5_ShocksundStunsAgain, 0) ? (--o1->user2 > 0) : (--o1->user2 != 0))
 		{
-			o1->user3 = 2;
+			if (!CK_INT(CK5_ShocksundNoFlash, 0)) // KEEN WORLDS: Canmore's Redemption's doesn't flash
+				o1->user3 = 2;
 			o1->visible = true;
 			CK_ShotHit(o2);
 		}
 		else
 		{
 			o1->velX = o1->velY = 0;
-			CK_StunCreature(o1, o2, CK_ACTION(CK5_ACT_ShocksundStun0));
+			CK_StunCreature(o1, o2, CK_ACTION_ALIAS(CK5_ACT_ShocksundStunned, CK5_ACT_ShocksundStun0)); // KEEN WORLDS: redirectable
 		}
 	}
 }
@@ -1451,7 +1458,8 @@ void CK5_SpherefulTileCol(CK_object *obj)
 	if (obj->bottomTI)
 	{
 		obj->velY = -obj->velY;
-		SD_PlaySound(CK_SOUNDNUM(SOUND_SPHEREFULCEILING));
+		if (CK_INT(CK5_SpherefulCeilingSound, 1)) // KEEN WORLDS: Canmore's Redemption's bounces silently
+			SD_PlaySound(CK_SOUNDNUM(SOUND_SPHEREFULCEILING));
 	}
 
 	if (obj->topTI)
@@ -1467,7 +1475,8 @@ void CK5_SpherefulTileCol(CK_object *obj)
 		else if (obj->velY < CK_INT(CK5_SpherefulBounceMinYVel, -12))
 			obj->velY = CK_INT(CK5_SpherefulBounceMinYVelSet, CK_INT(CK5_SpherefulBounceMinYVel, -12)); // KEEN WORLDS: variable
 		/* FIXME: Any better name for (shared) sound? */
-		SD_PlaySound(CK_INT(CK5_SpherefulFloorSound, CK_SOUNDNUM(SOUND_SPINDREDFLYUP))); // KEEN WORLDS: variable
+		if (CK_INT(CK5_SpherefulFloorSound, 0) >= 0) // KEEN WORLDS: variable; none if negative
+			SD_PlaySound(CK_INT(CK5_SpherefulFloorSound, CK_SOUNDNUM(SOUND_SPINDREDFLYUP)));
 	}
 
 	// First draw the sphereful
@@ -1529,11 +1538,17 @@ void CK5_SpawnKorath(int tileX, int tileY)
 
 	CK_object *obj = CK_GetNewObj(false);
 
-	obj->type = CT5_Korath;
+	obj->type = CK_INT(CK5_KorathType, CT5_Korath); // KEEN WORLDS: Canmore's Redemption's counts as a Shikadi
 	obj->active = OBJ_ACTIVE;
 	obj->posX = RF_TileToUnit(tileX);
 	obj->posY = RF_TileToUnit(tileY) + CK_INT(CK5_KorathSpawnYOffset, -128);
-	obj->xDirection = US_RndT() < 128 ? 1 : -1;
+	// KEEN WORLDS: Canmore's Redemption's always starts walking right and
+	// takes shots (CK5_KorathHealth, CR_KorathWalkCol)
+	if (CK_INT(CK5_KorathStartsRight, 0))
+		obj->xDirection = IN_motion_Right;
+	else
+		obj->xDirection = US_RndT() < 128 ? 1 : -1;
+	obj->user2 = CK_INT(CK5_KorathHealth, 0);
 	CK_SetAction(obj, CK_ACTION(CK5_ACT_KorathWalk1));
 }
 

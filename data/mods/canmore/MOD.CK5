@@ -1,0 +1,260 @@
+# Canmore's Redemption (Aurora Bliss II: Dave216, 2023, v1.0.2) as a Keen Worlds world.
+# Written by kwtools/kw_canmore.py from the mod's CKPatch file; the data
+# files beside it are the player's copy of the mod. It runs on Keen 5.
+
+%string ca_tileInfo "KEEN5.TLI"
+
+%stringarray ck_str_levelNames
+	"Azura Astrid",
+	"Transport Center A",
+	"City of Neon",
+	"Angelic",
+	"Skidrow District",
+	"The Resistance ",
+	"Toombree Ruins",
+	"Crashed BwB Site",
+	"Motherboard Tunnels",
+	"Tears Cave",
+	"The Grid",
+	"X-42 Radio Access Tower",
+	"Heart of the Complex",
+	"Limpid Alley",
+	"GP Head Office",
+	"Highscores "
+
+%stringarray ck_str_levelEntryText
+	"Craig is thinking\nabout cool motorcycles.",
+	"Craig enters the\nTransport Center A",
+	"Craig is dazed by\nCity of Neon",
+	"Craig falls into\nAngelic",
+	"Craig wonders\ninto Skidrow Street",
+	"Craig comes across\nGuerilla Resistance",
+	"Craig unearths the\nToombree Ruins",
+	"Craig returns to\nCrashed BwB Site",
+	"Craig enters\nthe Motherboard",
+	"Craig digs into\nTears Cave",
+	"Craig falls into\nThe Grid",
+	"Craig ascends the\nX-42 Radio Access Tower",
+	"Craig is\nfighting to save Keen.",
+	"Craig enters\nLimpid Alley",
+	"Craig steps in\nGP Head Office",
+	"Dirty little\nuses warp to enter\nHighscores"
+
+%intarray CK_LevelMusic 3, 7, 5, 4, 9, 10, 11, 13, 18, 1, 17, 12, 16, 2, 0, 15, 6, 1, 0, 8
+
+%string ck5_str_korath3 "Craig explores\nthe Hidden Island"
+%string ck_str_exitToMap "Chicken Out"
+%string ck_str_paddleWarComp "COMP "
+%string ck_str_paddleWarKeen "YOU  "
+%string ck_str_statusCentilives "SHADEES"
+%string ck_str_statusLives "LIVES"
+%string ck_str_storyText ".....Previously........\nCraig Canmore was\nforced by unknown\nfigure from outer space\nto abduct two of his\nclassmates. Billy Blaze\nand Mortimer McMire.\nThe instructions he\nreceived were simple.\nObserve your targets,\nreport your findings\nand when time comes,\nbring them to the\nplanet of Azura Astrid.\nThe voice said that he\ntook his sister\nAndrianne away and that\nif he doesn't comply,\nhe won't ever see her\nagain. Craig quickly\nlearns that his\nclassmates are space\ntravelers. He befriends\nKeen and observes how\nhe navigates BwB\nMegarocket so he can\nfly it to Azura. With\nKeen and Mort as his\ncaptives..... \n"
+%stringarray ck_defaultHighScoreNames
+	"Craig Canmore    ",
+	"John Carmack     ",
+	"Levelass         ",
+	"Adrian Carmack   ",
+	"Baldrick         ",
+	"Tom Hall         ",
+	"John Romero      ",
+	"Dave216          "
+
+# The mod's changes to the program's rules, as settings
+# its own sound and music: 20 songs from chunk 186
+%string ca_audioHead "AUDIOHED.CK5"
+%string ca_audioDict "AUDIODCT.CK5"
+%int ca_audStartMusic 186
+%int ca_audNumSongs 20
+# music of the ending, the story, the help and the game over
+%int CK_EndingMusicLevel 15
+%int CK_StarWarsMusicLevel 9
+%int CK_HelpMusicLevel 2
+%int CK_GameOverMusicLevel 15
+# no "Keen steps out onto Korath III" on the map
+%int CK5_MapMarsMinY 200
+# no elevators on the map
+%int ck5_mapElevators 0
+# finished levels leave the map's other markers alone
+%int CK_MapPreserveCoordinates 1
+# no higher jump on Easy
+%int ck_easyJumpGravity 0
+# black help pages (the text keeps its colours for red)
+%int CK_HelpBarColour 0
+# dying in level 12 wins the game (its last level)
+%int CK_DiedWinsLevel 12
+# the secret ending: level 5 done (Myah's body armour)
+%int CK5_SecretFuseLevel 5
+%int CK5_SecretEndingAnyExit 1
+# every fuse marker is an unseen QED: touching it, a friend speaks (CR_QEDCol)
+%int CK5_QEDEveryLevel 1
+# the pogo stick doesn't break fuses
+%int CK5_PogoBreaksFuse 0
+# slicestars take two shots
+%int CK5_SliceHealth 2
+%int CK5_SliceDiagHealth 2
+# Shelleys don't jump off ledges
+%int CK5_ShelleyNoDive 1
+# Robo Red: 30 shots, from lower down, straight ahead
+%int CK5_RoboNumShots 30
+%int CK5_RoboShotYOffset 0x295
+%int CK5_RoboShotRightXOffset 0x200
+%int CK5_RoboShotYVelocity 0
+# Sparkies take three shots (CR_SparkyCol)
+%int CK5_SparkyHealth 3
+# Spherefuls have no diamonds
+%int CK5_SpherefulDiamonds 0
+# Spherefuls bounce silently on ceilings and floors
+%int CK5_SpherefulCeilingSound 0
+%int CK5_SpherefulFloorSound -1
+# the mine's eye
+%int CK5_MineEyeChunk -1
+# mines don't move
+%int CK5_MineStill 1
+# Mortimer (the Shockshund): 30 hits, then stunned by every shot; no flashing, barks less, harmless to touch
+%int CK5_ShocksundHealth 30
+%int CK5_ShocksundStunsAgain 1
+%int CK5_ShocksundNoFlash 1
+%int CK5_ShocksundShootChance 0x60
+%int CK5_ShocksundHarmless 1
+# Shikadi zap without a pole
+%int CK5_ShikadiZapsAnywhere 1
+# Shikadi don't flash when shot (four shots, as before)
+%int CK5_ShikadiNoFlash 1
+# the Shikadi throws the Master's ball, from lower down
+%int CK5_MasterShotYOffset 0x120
+# the Master's sparks fly sideways at Keen
+%int CK5_PoleZapHorizontal 1
+# game over: the galaxy fades to and from white and doesn't explode
+%int CK5_GameOverWhite 1
+# K1n9_Duk3's fix: the floor check ends at the map's top
+%int CK_ClipToEndsSigned 1
+# K1n9_Duk3's fix: pushing sideways leaves no height over
+%int CK_PushXResetsY 1
+# the friends' messages (KW9_FriendMessage)
+%string kw9_str_lindsey "Myah says: Human boy,\n\ntake this body armor.\nAl's lasers won't be\nable to pierce it!"
+%string kw9_str_barker "What is this?\n\nI wonder what\nwhat does this mean?"
+%string kw9_str_spot "Hmmm......\n\nIt seems like a\npiece of note.\nI'll take it."
+%string kw9_str_janitor "We broke free but...\n\nMort passed out.\nListen, find us a way\nout of here!"
+
+%override "EPISODE.CK5"
+
+# Its sprite actions, as the patches leave them (our routines named as in
+# kwtools/kw_canmore.py STAND_INS)
+%action CK5_ACT_Sparky0 0x1F0C @SPR_SPARKYL1 @SPR_SPARKYR1 UnscaledOnce 0x0 0x1 0x8 0x80 0x0 CK5_SparkyWait CR_SparkyCol CK5_SparkyTileCol CK5_ACT_Sparky1
+%action CK5_ACT_Sparky1 0x1F2A @SPR_SPARKYL2 @SPR_SPARKYR2 UnscaledOnce 0x0 0x1 0x8 0x80 0x0 NULL CR_SparkyCol CK5_SparkyTileCol CK5_ACT_Sparky2
+%action CK5_ACT_Sparky2 0x1F48 @SPR_SPARKYL3 @SPR_SPARKYR3 UnscaledOnce 0x0 0x1 0x8 0x80 0x0 NULL CR_SparkyCol CK5_SparkyTileCol CK5_ACT_Sparky3
+%action CK5_ACT_Sparky3 0x1F66 @SPR_SPARKYL4 @SPR_SPARKYR4 UnscaledOnce 0x0 0x1 0x8 0x80 0x0 NULL CR_SparkyCol CK5_SparkyTileCol CK5_ACT_Sparky0
+%action CK5_ACT_SparkySearch0 0x1F84 @SPR_SPARKYFACEL @SPR_SPARKYFACEL UnscaledOnce 0x0 0x1 0x6 0x0 0x0 NULL CR_SparkyCol CK_BasicDrawFunc1 CK5_ACT_SparkySearch1
+%action CK5_ACT_SparkySearch1 0x1FA2 @SPR_SPARKYFACEF @SPR_SPARKYFACEF UnscaledOnce 0x0 0x1 0x6 0x0 0x0 NULL CR_SparkyCol CK_BasicDrawFunc1 CK5_ACT_SparkySearch2
+%action CK5_ACT_SparkySearch2 0x1FC0 @SPR_SPARKYFACER @SPR_SPARKYFACER UnscaledOnce 0x0 0x1 0x6 0x0 0x0 NULL CR_SparkyCol CK_BasicDrawFunc1 CK5_ACT_SparkySearch3
+%action CK5_ACT_SparkySearch3 0x1FDE @SPR_SPARKYR1 @SPR_SPARKYR1 UnscaledOnce 0x0 0x1 0x6 0x0 0x0 CK5_SparkySearchLeft CR_SparkyCol CK5_SparkyTileCol CK5_ACT_SparkySearch4
+%action CK5_ACT_SparkySearch4 0x1FFC @SPR_SPARKYFACER @SPR_SPARKYFACER UnscaledOnce 0x0 0x1 0x6 0x0 0x0 NULL CR_SparkyCol CK_BasicDrawFunc1 CK5_ACT_SparkySearch5
+%action CK5_ACT_SparkySearch5 0x201A @SPR_SPARKYFACEF @SPR_SPARKYFACER UnscaledOnce 0x0 0x1 0x6 0x0 0x0 NULL CR_SparkyCol CK_BasicDrawFunc1 CK5_ACT_SparkySearch6
+%action CK5_ACT_SparkySearch6 0x2038 @SPR_SPARKYFACEL @SPR_SPARKYFACER UnscaledOnce 0x0 0x1 0x6 0x0 0x0 NULL CR_SparkyCol CK_BasicDrawFunc1 CK5_ACT_SparkySearch7
+%action CK5_ACT_SparkySearch7 0x2056 @SPR_SPARKYL1 @SPR_SPARKYR1 UnscaledOnce 0x0 0x1 0x6 0x0 0x0 CK5_SparkySearchRight CR_SparkyCol CK5_SparkyTileCol CK5_ACT_Sparky1
+%action CK5_ACT_SparkyPrepCharge0 0x2074 @SPR_SPARKYL1 @SPR_SPARKYR1 UnscaledOnce 0x1 0x1 0x4 0x0 0x0 NULL CR_SparkyCol CK5_SparkyTileCol CK5_ACT_SparkyPrepCharge1
+%action CK5_ACT_SparkyPrepCharge1 0x2092 @SPR_SPARKYL2 @SPR_SPARKYR2 UnscaledOnce 0x1 0x1 0x4 0x0 0x0 NULL CR_SparkyCol CK5_SparkyTileCol CK5_ACT_SparkyPrepCharge2
+%action CK5_ACT_SparkyPrepCharge2 0x20B0 @SPR_SPARKYL3 @SPR_SPARKYR3 UnscaledOnce 0x1 0x1 0x4 0x0 0x0 NULL CR_SparkyCol CK5_SparkyTileCol CK5_ACT_SparkyPrepCharge3
+%action CK5_ACT_SparkyPrepCharge3 0x20CE @SPR_SPARKYL4 @SPR_SPARKYR4 UnscaledOnce 0x1 0x1 0x4 0x0 0x0 CK5_SparkyPrepareCharge CR_SparkyCol CK5_SparkyTileCol CK5_ACT_SparkyPrepCharge0
+%action CK5_ACT_SparkyCharge0 0x20EC @SPR_SPARKYL1 @SPR_SPARKYR1 UnscaledOnce 0x1 0x1 0x4 0x80 0x0 NULL CR_SparkyCol CK5_SparkyTileCol CK5_ACT_SparkyCharge1
+%action CK5_ACT_SparkyCharge1 0x210A @SPR_SPARKYL2 @SPR_SPARKYR2 UnscaledOnce 0x1 0x1 0x4 0x80 0x0 CK5_SparkyCharge0 CR_SparkyCol CK5_SparkyTileCol CK5_ACT_SparkyCharge2
+%action CK5_ACT_SparkyCharge2 0x2128 @SPR_SPARKYL3 @SPR_SPARKYR3 UnscaledOnce 0x1 0x1 0x4 0x80 0x0 NULL CR_SparkyCol CK5_SparkyTileCol CK5_ACT_SparkyCharge3
+%action CK5_ACT_SparkyCharge3 0x2146 @SPR_SPARKYL4 @SPR_SPARKYR4 UnscaledOnce 0x1 0x1 0x4 0x80 0x0 CK5_SparkyCharge1 CR_SparkyCol CK5_SparkyTileCol CK5_ACT_SparkyCharge0
+%action CK5_ACT_SparkyTurn0 0x2164 @SPR_SPARKYFACER @SPR_SPARKYFACEL UnscaledOnce 0x0 0x1 0x8 0x0 0x0 NULL CR_SparkyCol CK_BasicDrawFunc1 CK5_ACT_SparkyTurn1
+%action CK5_ACT_SparkyTurn1 0x2182 @SPR_SPARKYFACEF @SPR_SPARKYFACEF UnscaledOnce 0x0 0x1 0x8 0x0 0x0 NULL CR_SparkyCol CK_BasicDrawFunc1 CK5_ACT_SparkyTurn2
+%action CK5_ACT_SparkyTurn2 0x21A0 @SPR_SPARKYFACEL @SPR_SPARKYFACER UnscaledOnce 0x0 0x1 0x8 0x0 0x0 NULL CR_SparkyCol CK_BasicDrawFunc1 CK5_ACT_Sparky0
+%action CK5_ACT_Ampton0 0x21DC @SPR_AMPTONWALKL1 @SPR_AMPTONWALKR1 UnscaledOnce 0x0 0x1 0x8 0x80 0x0 CK5_AmptonWalk CR_AmptonCol CK5_AmptonTileCol CK5_ACT_Ampton1
+%action CK5_ACT_Ampton1 0x21FA @SPR_AMPTONWALKL2 @SPR_AMPTONWALKR2 UnscaledOnce 0x0 0x1 0x8 0x80 0x0 CK5_AmptonWalk CR_AmptonCol CK5_AmptonTileCol CK5_ACT_Ampton2
+%action CK5_ACT_Ampton2 0x2218 @SPR_AMPTONWALKL3 @SPR_AMPTONWALKR3 UnscaledOnce 0x0 0x1 0x8 0x80 0x0 CK5_AmptonWalk CR_AmptonCol CK5_AmptonTileCol CK5_ACT_Ampton3
+%action CK5_ACT_Ampton3 0x2236 @SPR_AMPTONWALKL4 @SPR_AMPTONWALKR4 UnscaledOnce 0x0 0x1 0x8 0x80 0x0 CK5_AmptonWalk CR_AmptonCol CK5_AmptonTileCol CK5_ACT_Ampton0
+%action CK5_ACT_AmptonTurn0 0x2254 @SPR_AMPTONFACE @SPR_AMPTONFACE UnscaledOnce 0x0 0x1 0x8 0x0 0x0 NULL CR_AmptonCol CK_BasicDrawFunc1 CK5_ACT_Ampton0
+%action CK5_ACT_AmptonPole0 0x2272 @SPR_AMPTONGRAB1 @SPR_AMPTONGRAB1 UnscaledOnce 0x0 0x1 0x8 0x0 0x0 NULL CR_AmptonCol CK_BasicDrawFunc1 CK5_ACT_AmptonPole1
+%action CK5_ACT_AmptonPole1 0x2290 @SPR_AMPTONGRAB2 @SPR_AMPTONGRAB2 UnscaledOnce 0x0 0x1 0x8 0x0 0x0 NULL CR_AmptonCol CK_BasicDrawFunc1 CK5_ACT_AmptonPole2
+%action CK5_ACT_AmptonPole2 0x22AE @SPR_AMPTONGRAB2 @SPR_AMPTONGRAB2 ScaledFrame 0x0 0x0 0x0 0x0 0x20 CK5_AmptonPoleClimb CR_AmptonCol CK_BasicDrawFunc1 NULL
+%action CK5_ACT_AmptonDismount0 0x22CC @SPR_AMPTONGRAB2 @SPR_AMPTONGRAB2 UnscaledOnce 0x0 0x0 0x8 0x0 0x0 NULL CR_AmptonCol CK_BasicDrawFunc1 CK5_ACT_AmptonDismount1
+%action CK5_ACT_AmptonDismount1 0x22EA @SPR_AMPTONGRAB1 @SPR_AMPTONGRAB1 UnscaledOnce 0x0 0x0 0x8 0x0 0x0 CK5_AmptonSwitch CR_AmptonCol CK_BasicDrawFunc1 CK5_ACT_Ampton0
+%action CK5_ACT_AmptonComp0 0x2308 @SPR_AMPTONGRAB1 @SPR_AMPTONGRAB1 UnscaledOnce 0x0 0x1 0xc 0x0 0x0 NULL CR_AmptonCol CK_BasicDrawFunc1 CK5_ACT_AmptonComp1
+%action CK5_ACT_AmptonComp1 0x2326 @SPR_AMPTONGRAB2 @SPR_AMPTONGRAB2 UnscaledOnce 0x0 0x1 0xc 0x0 0x0 NULL CR_AmptonCol CK_BasicDrawFunc1 CK5_ACT_AmptonComp2
+%action CK5_ACT_AmptonComp2 0x2344 @SPR_AMPTONGRAB1 @SPR_AMPTONGRAB1 UnscaledOnce 0x0 0x1 0xc 0x0 0x0 NULL CR_AmptonCol CK_BasicDrawFunc1 CK5_ACT_AmptonComp3
+%action CK5_ACT_AmptonComp3 0x2362 @SPR_AMPTONGRAB2 @SPR_AMPTONGRAB2 UnscaledOnce 0x0 0x1 0xc 0x0 0x0 NULL CR_AmptonCol CK_BasicDrawFunc1 CK5_ACT_AmptonComp4
+%action CK5_ACT_AmptonComp4 0x2380 @SPR_AMPTONGRAB1 @SPR_AMPTONGRAB1 UnscaledOnce 0x0 0x1 0xc 0x0 0x0 CK5_AmptonSwitch CR_AmptonCol CK_BasicDrawFunc1 CK5_ACT_Ampton0
+%action CK5_ACT_MineExplode1 0x2680 @SPR_SHIKADIMINEPULSE2 @SPR_SHIKADIMINEPULSE2 UnscaledOnce 0x0 0x0 0xa 0x0 0x0 CK5_MineExplode CK5_MineCol CK_BasicDrawFunc1 CK5_ACT_MineExplode2
+%action CK5_ACT_MineExplode2 0x269E @SPR_SHIKADIMINEPULSE1 @SPR_SHIKADIMINEPULSE1 UnscaledOnce 0x0 0x0 0xa 0x0 0x0 CK5_MineExplode CK5_MineCol CK_BasicDrawFunc1 CK5_ACT_MineExplode3
+%action CK5_ACT_Robo0 0x2734 @SPR_ROBOREDL @SPR_ROBOREDR UnscaledOnce 0x0 0x1 0x6 128 0x0 CK5_RoboMove CK5_RoboCol CK_BasicDrawFunc2 CK5_ACT_Robo0
+%action CK5_ACT_RoboShoot2 0x278E @SPR_ROBOREDL @SPR_ROBOREDR UnscaledOnce 0x0 0x1 0x6 16 0x0 CK5_RoboShoot CK_DeadlyCol CK_BasicDrawFunc1 CK5_ACT_RoboShoot1
+%action CK5_ACT_RoboShot0 0x27AC @SPR_ROBOSHOT1 @SPR_ROBOSHOT1 UnscaledFrame 0x0 0x0 0x8 53 0x0 CK_Glide CK5_RoboShotCol CK5_RoboShotTileCol CK5_ACT_RoboShot1
+%action CK5_ACT_RoboShot1 0x27CA @SPR_ROBOSHOT2 @SPR_ROBOSHOT2 UnscaledFrame 0x0 0x0 0x8 53 0x0 CK_Glide CK5_RoboShotCol CK5_RoboShotTileCol CK5_ACT_RoboShot0
+%action CK5_ACT_MasterShoot0 0x2B6C @SPR_MASTERCASTL @SPR_MASTERCASTR UnscaledOnce 0x0 0x0 0x1e 0x0 0x0 CK5_ShikadiPole CK_DeadlyCol CK_BasicDrawFunc1 CK5_ACT_MasterShoot1
+%action CK5_ACT_MasterTele1 0x2BC6 @SPR_MASTERTELEPORT2 @SPR_MASTERTELEPORT2 UnscaledOnce 0x0 0x1 0x14 0x0 0x0 NULL CK_DeadlyCol CK_BasicDrawFunc1 CK5_ACT_MasterTele2
+%action CK5_ACT_ShikadiPole0 0x2E00 @SPR_SHIKADIGRABL @SPR_SHIKADIGRABR UnscaledOnce 0x0 0x1 0x14 0x0 0x0 CK5_MasterShoot CK5_ShikadiCol CK5_ShikadiTileCol CK5_ACT_ShikadiPole1
+%action CK5_ACT_PoleZap0 0x2E5A @SPR_SHIKADIPOLESPARK1 @SPR_SHIKADIPOLESPARK1 UnscaledFrame 0x0 0x0 3 144 0x0 NULL CR_ClipSideCol CK_BasicDrawFunc1 CK5_ACT_PoleZap1
+%action CK5_ACT_PoleZap1 0x2E78 @SPR_SHIKADIPOLESPARK1 @SPR_SHIKADIPOLESPARK1 UnscaledFrame 0x0 0x0 3 144 0x0 NULL CR_ClipSideCol CK_BasicDrawFunc1 CK5_ACT_PoleZap0
+%action CK5_ACT_ShocksundShoot1 0x2EF0 @SPR_PETBARKL2 @SPR_PETBARKR2 UnscaledOnce 0x0 0x1 150 0x0 0x0 CK5_ShocksundShoot CK5_ShocksundCol CK5_ShocksundGroundTileCol CK5_ACT_Shocksund0
+%action CK5_ACT_ShocksundStun0 0x301C 343 343 ScaledOnce 0x0 0x0 112 0x0 0x0 CK5_ShocksundSearch CK5_ShocksundCol CK5_ShocksundJumpTileCol CK5_ACT_Shocksund1
+%action CK5_ACT_Sphereful0 0x303A @SPR_SPHEREFUL1 @SPR_SPHEREFUL1 UnscaledFrame 0x0 0x0 54 0x0 0x0 CK5_SpherefulBounce CK_DeadlyCol CK5_SpherefulTileCol CK5_ACT_Sphereful1
+%action CK5_ACT_Sphereful1 0x3058 @SPR_SPHEREFUL2 @SPR_SPHEREFUL2 UnscaledFrame 0x0 0x0 54 0x0 0x0 CK5_SpherefulBounce CK_DeadlyCol CK5_SpherefulTileCol CK5_ACT_Sphereful2
+%action CK5_ACT_Sphereful2 0x3076 @SPR_SPHEREFUL3 @SPR_SPHEREFUL3 UnscaledFrame 0x0 0x0 54 0x0 0x0 CK5_SpherefulBounce CK_DeadlyCol CK5_SpherefulTileCol CK5_ACT_Sphereful3
+%action CK5_ACT_Sphereful3 0x3094 @SPR_SPHEREFUL4 @SPR_SPHEREFUL4 UnscaledFrame 0x0 0x0 54 0x0 0x0 CK5_SpherefulBounce CK_DeadlyCol CK5_SpherefulTileCol CK5_ACT_Sphereful0
+%action CK5_ACT_KorathWalk1 0x30D2 @SPR_KORATHWALKL1 @SPR_KORATHWALKR1 UnscaledOnce 0 1 8 128 0 CK5_KorathWalk CR_KorathWalkCol CK_BasicDrawFunc2 CK5_ACT_KorathWalk2
+%action CK5_ACT_KorathWalk2 0x30F0 @SPR_KORATHWALKL2 @SPR_KORATHWALKR2 UnscaledOnce 0 1 8 128 0 CK5_KorathWalk CR_KorathWalkCol CK_BasicDrawFunc2 CK5_ACT_KorathWalk3
+%action CK5_ACT_KorathWalk3 0x310E @SPR_KORATHWALKL3 @SPR_KORATHWALKR3 UnscaledOnce 0 1 8 128 0 CK5_KorathWalk CR_KorathWalkCol CK_BasicDrawFunc2 CK5_ACT_KorathWalk4
+%action CK5_ACT_KorathWalk4 0x312C @SPR_KORATHWALKL4 @SPR_KORATHWALKR4 UnscaledOnce 0 1 8 128 0 CK5_KorathWalk CR_KorathWalkCol CK_BasicDrawFunc2 CK5_ACT_KorathWalk1
+%action CK5_ACT_KorathWait 0x314A @SPR_KORATHWAIT @SPR_KORATHWAIT UnscaledOnce 0 1 0x1E 0 0 CK_TurretShoot CR_KorathWalkCol CK_BasicDrawFunc2 CK5_ACT_KorathWalk1
+%action CK5_ACT_QED 0x3186 -1 -1 ScaledOnce 0 0 8 0 0 NULL CR_QEDCol CK5_ShocksundJumpTileCol CK5_ACT_QED
+
+# Settings that name Keen 5's own (so after its file)
+# Amptons: harmless, pushing, Keen's shots bounce off; an enemy shot stuns one and it drops a keycard (CR_AmptonCol)
+%int CK5_AmptonExtraLump @LUMP_KEYCARD
+# a mine's second piece is a Shockshund
+%action CK5_ACT_MineShrapB = CK5_ACT_ShocksundJump0
+# a mine needs the Shockshund's sprites
+%int CK5_MineExtraLump @LUMP_SHOCKSHUND
+# a stunned Shockshund jumps
+%action CK5_ACT_ShocksundStunned = CK5_ACT_ShocksundJump0
+# Korath: seven shots, starts walking right, a Shikadi to the program, deadly (CR_KorathWalkCol, CR_KorathCol), shoots like a turret when it stops
+%int CK5_KorathHealth 7
+%int CK5_KorathStartsRight 1
+%int CK5_KorathType 20
+%int CK5_KorathExtraLump @LUMP_LASER
+# the Master needs the Shikadi's sprites
+%int CK5_MasterExtraLump @LUMP_SHIKADI
+# the Shikadi's sprites begin at the Master's ball ($31A30)
+%intarray lumpStarts
+	@PIC_HELPMENU,
+	@PIC_MENUCARD,
+	@PIC_CREDIT1,
+	@PIC_KEENTALK1,
+	@PIC_COUNTDOWN5,
+	@SPR_PADDLE,
+	@SPR_KEENSTANDR,
+	@SPR_SECURITYCARD_1,
+	@SPR_100_PTS1,
+	@SPR_200_PTS1,
+	@SPR_500_PTS1,
+	@SPR_1000_PTS1,
+	@SPR_2000_PTS1,
+	@SPR_5000_PTS1,
+	@SPR_1UP1,
+	@SPR_GEM_A1,
+	@SPR_STUNNER1,
+	@SPR_LASER1,
+	@SPR_MAPKEEN_WALK1_W,
+	@SPR_FUSEFLASH1,
+	@SPR_STAREXPLODE1,
+	@SPR_TELEPORTSPARK1,
+	@SPR_KORATHWALKL1,
+	@SPR_MASTER1,
+	312,
+	@SPR_PETSIT1,
+	@SPR_SPHEREFUL1,
+	@SPR_SPARKYL1,
+	@SPR_SHIKADIMINE,
+	@SPR_SLICESTAR,
+	@SPR_ROBOREDR,
+	@SPR_SPIROGRABD,
+	@SPR_AMPTONWALKR1,
+	@SPR_VOLTEFACE1,
+	@SPR_PURPLEPLAT1,
+	@SPR_SPINDRED1,
+	@SPR_SHELLEYR1,
+	@SPR_PLATFORM

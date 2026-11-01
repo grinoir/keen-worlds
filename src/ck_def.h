@@ -500,6 +500,7 @@ extern chunk_id_t ck_itemShadows[];
 
 void CK_IncreaseScore(int score);
 void CK_KillKeen();
+CK_LevelState CK_DiedState(void); // KEEN WORLDS: (ck_keen.c)
 
 extern CK_object *ck_keenObj;
 

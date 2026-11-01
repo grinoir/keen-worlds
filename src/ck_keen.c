@@ -1602,7 +1602,9 @@ void CK_KeenPogoDrawFunc(CK_object *obj)
 			{
 				if (obj->velY >= CK_INT(CK5_FuseBreakVel, 0x30)) // KEEN WORLDS: variable
 				{
-					CK_KeenBreakFuse(obj->clipRects.tileXmid, obj->clipRects.tileY2);
+					// KEEN WORLDS: CK5_PogoBreaksFuse 0: Canmore's Redemption's fuses hold
+					if (CK_INT(CK5_PogoBreaksFuse, 1))
+						CK_KeenBreakFuse(obj->clipRects.tileXmid, obj->clipRects.tileY2);
 					RF_AddSpriteDraw(&obj->sde, obj->posX, obj->posY, obj->gfxChunk, 0, obj->zLayer);
 					return;
 				}
@@ -1761,8 +1763,15 @@ void CK_KeenDeathThink(CK_object *obj)
 	ck_nextX = obj->velX * SD_GetSpriteSync();
 	if (!CK_ObjectVisible(obj))
 	{
-		ck_gameState.levelState = LS_Died;
+		ck_gameState.levelState = CK_DiedState();
 	}
+}
+
+// KEEN WORLDS: dying in the level CK_DiedWinsLevel wins the game instead
+// (Canmore's Redemption: its last level)
+CK_LevelState CK_DiedState(void)
+{
+	return ca_mapOn == CK_INT(CK_DiedWinsLevel, -1) ? LS_DestroyedQED : LS_Died;
 }
 
 bool FF_IsActive(void);

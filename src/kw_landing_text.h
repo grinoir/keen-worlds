@@ -2,6 +2,7 @@
 // What the ship computer says when the Megarocket has landed: the world's id,
 // the sound clip in the voice folder, the words for the card.
 static const struct { const char *id, *file, *text; } kw_landings[] = {
+	{"canmore", "LAND_CANMORE.RAW", "Ship computer:\n\nYou have now landed on Azura\nAstrid.\nThe pilot was Craig Canmore.\nI did not agree to this.\nKeen and Mortimer are tied up\nin the back, and they are not\nhappy.\nCraig, go and find your\nsister."},
 	{"ocflore", "LAND_OCFLORE.RAW", "Ship computer:\n\nYou have now landed on Ocflore\nV.\nBeware of the local water.\nThere is a lot of it.\nThe Ormch are waiting to meet\nyou.\nI do not trust them."},
 	{"aurora", "LAND_AURORA.RAW", "Ship computer:\n\nYou have now landed on Aurora\nBliss.\nAnd here we stay.\nMy Navi-Com is sticky with\nVorta Cola, and I cannot take\noff.\nPlease find the spare parts,\nand do not let Craig touch\nanything."},
 	{"rtts", "LAND_RTTS.RAW", "Ship computer:\n\nYou have now landed in the far\nShadowlands.\nBeware of the local scouts.\nThey are lost, they are\nhungry, and they all want your\nautograph."},
@@ -23,6 +24,7 @@ static const struct { const char *id, *file, *text; } kw_landings[] = {
 };
 // What it says when a world has been saved and Keen is back in the cabin.
 static const struct { const char *id, *file, *text; } kw_savedLines[] = {
+	{"canmore", "SAVED_CANMORE.RAW", "Ship computer:\n\nAzura Astrid is behind us.\nKeen carried Craig home\nthrough a teleporter.\nNobody came back for me.\nI flew myself home."},
 	{"ocflore", "SAVED_OCFLORE.RAW", "Ship computer:\n\nOcflore V is free.\nThe Ormch have packed up their\nproject.\nThe Dorsal say thank you.\nIn bubbles."},
 	{"aurora", "SAVED_AURORA.RAW", "Ship computer:\n\nAurora Bliss is behind us.\nThe Navi-Com works again.\nIt still smells of Vorta Cola."},
 	{"rtts", "SAVED_RTTS.RAW", "Ship computer:\n\nThe page scouts are home, and\nthe Oracle has spoken.\nThe Bloogs took Spot.\nNext stop: the Shikadi\nStation."},

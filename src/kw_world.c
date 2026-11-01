@@ -262,6 +262,16 @@ static const KW_WorldDef kw_worldDefs[KW_NUM_WORLDS] = {
 		"A fan game by Bubbatom, 2020",
 		"Created by Bubbatom\n\nPatches: Levellass, K1n9_Duk3\n(screen, palette and slope\nfixes), Lemm\nMusic: 55Aavenue and others" KW_NOT_OURS,
 		"Operation Ocflore v1.3 by\nBubbatom (2020-02-18). Get it\nfrom keenwiki.shikadi.net and\nput its files in mods/ocflore."},
+	// Canmore's Redemption (Dave216, v1.0.2 2023): a Keen 5 patch mod, Craig
+	// the hero. The player's copy of its files in play/mods/canmore, with our
+	// MOD.CK5 (kwtools/kw_canmore.py, from the patches and the player's Keen
+	// 5 program); its rule changes are settings in the Keen 5 code, its own
+	// routines in kw_canmore.c.
+	{"canmore", "Azura Astrid", 5, "mods/canmore", "MOD.CK5",
+		"Canmore's Redemption",
+		"Craig's story, part two\nA fan game by Dave216, 2023",
+		"Created by David Novosel\n(Dave216)\n\nPatches: nwe74, K1n9_Duk3,\nMink, The CK Guy, and Keen 9's\n(Levellass, Lemm)" KW_NOT_OURS,
+		"Canmore's Redemption v1.0.2 by\nDave216 (2023-07-30). Get it\nfrom keenwiki.shikadi.net and\nput its files in mods/canmore."},
 };
 
 static CK_EpisodeDef *KW_EpisodeDef(int episode)
@@ -1993,6 +2003,9 @@ static int KW_ChronicleKey(int world)
 	case KW_AURORA: // ("After a long adventure, Keen returns home": after the journey home)
 	case KW_OCFLORE: // (a standalone trip, from the journey home on)
 		return KW_LastChronicleWorld();
+	case KW_CANMORE: // Craig's story goes on
+		if (KW_IsWorldPresent(KW_AURORA) && !KW_WorldIsSaved(KW_AURORA)) return KW_AURORA;
+		return KW_LastChronicleWorld();
 	case KW_OSI:
 		// Spot's story: the Oracle names the Omegamatrix station at the end
 		// of Return to the Shadowlands, so the station follows it.
@@ -2316,7 +2329,7 @@ static const struct KW_FlightGroup
 	{"Atroxian story",1,2,1,{KW_AREALM,KW_ALPHAMATIC}},
 	{"More levels",1,2,0,{KW_CK55,KW_ASYLUM}},
 	{"Spot's rescue",1,2,1,{KW_RTTS,KW_OSI}},
-	{"Craig's story",1,1,1,{KW_AURORA}},
+	{"Craig's story",1,2,1,{KW_AURORA,KW_CANMORE}},
 	{"Further trips",1,1,0,{KW_OCFLORE}},
 	{NULL,1,1,0,{KW_MENU_SCENES}},
 };
@@ -2381,6 +2394,7 @@ static void KW_FlightRelationship(int world,char *text,size_t size)
 	case KW_OSI:relationship="After the Far Shadowlands.";break;
 	case KW_AURORA:relationship="After Aspermontis. Craig comes along.";break;
 	case KW_OCFLORE:relationship="A trip of its own, after Aspermontis.";break;
+	case KW_CANMORE:relationship="After Aurora Bliss. Craig flies.";break;
 	}
 	CK_Cross_strscpy(text,relationship,size);
 }
@@ -3983,7 +3997,7 @@ static void KW_TestKeen9Behaviour(void)
 	if (CK_ACTION_ALIAS(CK5_ACT_RoboShootStart, CK5_ACT_RoboShoot0) != CK_ACTION(CK5_ACT_ShikadiPole0) ||
 		CK_ACTION_ALIAS(CK5_ACT_MasterShootStart, CK5_ACT_MasterShoot0) != CK_ACTION(CK5_ACT_RoboShoot0) ||
 		CK_ACTION_ALIAS(CK5_ACT_ShikadiPoleStart, CK5_ACT_ShikadiPole0) != CK_ACTION(CK5_ACT_MasterShoot0) ||
-		CK_ACTION_ALIAS(CK5_ACT_MineShrapA, CK5_ACT_MineShrap0) != CK_ACTION(CK5_ACT_Sphereful0))
+		CK_ACTION_ALIAS(CK5_ACT_MineShrapB, CK5_ACT_MineShrap0) != CK_ACTION(CK5_ACT_Sphereful0))
 		Quit("KW_SelfTest: Keen 9's redirected actions are wrong!");
 	// The functions its patch file adds are there and wired to their actions.
 	CK_action *korathoid = CK_ACTION(KW9_ACT_Korathoid0);
@@ -4002,6 +4016,58 @@ static void KW_TestKeen9Behaviour(void)
 		CK_ACTION(CK5_ACT_Sphereful0)->collide != CK_ACT_GetColFunction("KW9_SpherefulCol") ||
 		CK_ACTION(CK5_ACT_KorathWalk1)->collide != CK_ACT_GetColFunction("KW9_KorathCol"))
 		Quit("KW_SelfTest: Keen 9's new creature code isn't wired up!");
+}
+
+// For /KWTEST: Canmore's Redemption's converted rules (kwtools/kw_canmore.py,
+// kw_canmore.c) are in force in its world, and its own routines do what the
+// patches do: an enemy's shot stuns an Ampton and it drops a keycard; Keen's
+// shot doesn't; dying in its last level wins.
+static void KW_TestCanmoreBehaviour(void)
+{
+	if (ca_audInfoE.startMusic != 186 || ca_audInfoE.numSongs != 20 || CK_INT(CK_DiedWinsLevel, -1) != 12 ||
+		CK_INTELEMENT(lumpStarts, CK_INT(LUMP_SHIKADI, 0)) != 312 || !CK_INT(CK5_QEDEveryLevel, 0) ||
+		CK_INTELEMENT(lumpStarts, CK_INT(LUMP_KORATH, 0)) != CK_INT(SPR_KORATHWALKL1, -1) ||
+		CK_INT(CK5_MineExtraLump, -1) != CK_INT(LUMP_SHOCKSHUND, -2) ||
+		CK_ACTION_ALIAS(CK5_ACT_MineShrapB, CK5_ACT_MineShrap0) != CK_ACTION(CK5_ACT_ShocksundJump0) ||
+		CK_ACTION_ALIAS(CK5_ACT_ShocksundStunned, CK5_ACT_ShocksundStun0) != CK_ACTION(CK5_ACT_ShocksundJump0) ||
+		CK_ACTION(CK5_ACT_QED)->collide != CK_ACT_GetColFunction("CR_QEDCol") || !CK_ACTION(CK5_ACT_QED)->collide ||
+		CK_ACTION(CK5_ACT_Ampton0)->collide != CK_ACT_GetColFunction("CR_AmptonCol") ||
+		CK_ACTION(CK5_ACT_Sparky0)->collide != CK_ACT_GetColFunction("CR_SparkyCol") ||
+		CK_ACTION(CK5_ACT_KorathWalk1)->collide != CK_ACT_GetColFunction("CR_KorathWalkCol") ||
+		CK_ACTION(CK5_ACT_PoleZap0)->collide != CK_ACT_GetColFunction("CR_ClipSideCol") ||
+		strncmp(CK_STRING(kw9_str_lindsey), "Myah says", 9))
+		Quit("KW_SelfTest: Canmore's Redemption's settings or routines aren't loaded!");
+
+	CK_object *ampton = CK_GetNewObj(false), *shot = CK_GetNewObj(true);
+	ampton->type = CT5_Ampton;
+	ampton->posX = ck_keenObj->posX + 0x800;
+	ampton->posY = ck_keenObj->posY;
+	CK_SetAction(ampton, CK_ACTION(CK5_ACT_Ampton0));
+	shot->type = CT_Stunner;
+	CK_SetAction(shot, CK_ACTION(CK_ACT_keenShot1));
+	ampton->currentAction->collide(ampton, shot);
+	if (ampton->type != CT5_Ampton)
+		Quit("KW_SelfTest: Keen's shot stunned a Canmore Ampton!");
+	shot = CK_GetNewObj(true);
+	shot->type = CT5_EnemyShot;
+	CK_SetAction(shot, CK_ACTION(CK_ACT_turretShot1));
+	ampton->currentAction->collide(ampton, shot);
+	CK_object *card = NULL;
+	for (CK_object *o = ck_keenObj; o; o = o->next)
+		if (o->type == CT5_Item && o->user1 == 12 && o->posX == ampton->posX)
+			card = o;
+	if (ampton->type != CT5_StunnedCreature || !card)
+		Quit("KW_SelfTest: a Canmore Ampton hit by an enemy shot isn't stunned or drops no keycard!");
+	CK_RemoveObj(card);
+	int map = ca_mapOn;
+	ca_mapOn = 12;
+	CK_LevelState won = CK_DiedState();
+	ca_mapOn = 11;
+	CK_LevelState died = CK_DiedState();
+	ca_mapOn = map;
+	if (won != LS_DestroyedQED || died != LS_Died)
+		Quit("KW_SelfTest: dying in Canmore's last level doesn't win!");
+	printf("PASS: Canmore's Redemption's rules and routines (an enemy shot makes an Ampton drop a keycard)\n");
 }
 
 // For /KWTEST: every creature in the loaded level has its picture in memory
@@ -4224,9 +4290,10 @@ void KW_DebugFrame(void)
 		void CK5_FuseMessage(void);
 		CK5_FuseMessage();
 	}
-	if (getenv("KW_AUTOTALK") && count + 1 == atoi(getenv("KW_AUTOTALK")) && kw_currentWorld == KW_KEEN9)
+	if (getenv("KW_AUTOTALK") && count + 1 == atoi(getenv("KW_AUTOTALK")) && (kw_currentWorld == KW_KEEN9 || kw_currentWorld == KW_CANMORE))
 	{
-		// (its friends' hints: who speaks depends on the level)
+		// (its friends' hints, and Canmore's Redemption's: who speaks depends
+		// on the level)
 		void KW9_FriendMessage(void);
 		int level = ck_gameState.currentLevel;
 		static const int levels[] = {5, 11, 2, 1};
@@ -5285,12 +5352,13 @@ void KW_SelfTest(void)
 	// loads with its sprites in memory and its creatures run, as vegetables
 	// and as the flowers that flower power makes of them; and a lost dream
 	// begins again.
-	// Aurora Bliss and Operation Ocflore (when installed): their creatures,
+	// Aurora Bliss, Operation Ocflore and Canmore's Redemption (when
+	// installed): their creatures,
 	// with the patches' rules and routines, run in every level, and each is
 	// hit by a shot once (Keen can't die meanwhile).
 	{
-		static const int patchWorlds[] = {KW_AURORA, KW_OCFLORE};
-		for (int p = 0; p < 2; ++p)
+		static const int patchWorlds[] = {KW_AURORA, KW_OCFLORE, KW_CANMORE};
+		for (int p = 0; p < 3; ++p)
 		{
 			int w = patchWorlds[p];
 			if (!KW_IsWorldPresent(w))
@@ -5324,6 +5392,8 @@ void KW_SelfTest(void)
 				}
 				KW_TestRunObjects(60);
 				KW_TestLevelSpritesCached(kw_worldDefs[w].id, lv);
+				if (w == KW_CANMORE && lv == 1)
+					KW_TestCanmoreBehaviour();
 				ck_gameState.levelState = LS_Playing;
 				++ran;
 			}
