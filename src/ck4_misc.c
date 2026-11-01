@@ -52,6 +52,7 @@ void KD_SetupFunctions(void);
 bool OC_SpawnFlyingBird(int info, int tileX, int tileY);
 void OC_SetupFunctions(void);
 void RV_SetupFunctions(void);
+void TFOS_SetupFunctions(void);
 
 void CK4_SetupFunctions()
 {
@@ -60,6 +61,7 @@ void CK4_SetupFunctions()
 	CK4_Obj3_SetupFunctions();
 	OC_SetupFunctions(); // KEEN WORLDS: Operation Ocflore's routines (kw_ocflore.c)
 	RV_SetupFunctions(); // KEEN WORLDS: Revival of Bliss's (kw_revival.c)
+	TFOS_SetupFunctions(); // KEEN WORLDS: The Terror from Outer Space's (kw_tfos.c)
 	CK4_Map_SetupFunctions();
 	CK4_Misc_SetupFunctions();
 	RT_SetupFunctions(); // KEEN WORLDS: Return to the Shadowlands (kw_rtts.c)
@@ -510,6 +512,14 @@ void CK4_ScanInfoLayer()
 		if (obj->active != OBJ_ALWAYS_ACTIVE)
 			obj->active = OBJ_INACTIVE;
 	}
+
+	// KEEN WORLDS: a mod that shuffles creatures' sprites between the cache
+	// lumps (The Terror from Outer Space: its Berkeloid stuns into Mimrock
+	// frames) can't rely on each creature marking the one lump that still holds
+	// all of its frames, so such a world names the extra lumps its creatures
+	// borrow and marks them too.
+	for (int i = 0, n = CK_INT(CK4_NumExtraSpriteLumps, 0); i < n; ++i)
+		CA_MarkLumpNeeded(CK_INTELEMENT(CK4_ExtraSpriteLumps, i));
 
 	CA_MarkAllLumps();
 }

@@ -78,6 +78,7 @@ static const char *KW_WatchTask(void)
  if(KW_IsWorldCompleted(world)) return "EXPLORE SOME MORE";
  switch(world) {
  case KW_KEEN4:return "FIND THE COUNCIL";
+ case KW_TFOS:return "SHUT DOWN THE OUTPOST";
  case KW_KEEN5:case KW_CK55:return "STOP THE MACHINE";
  case KW_KEEN6:return "FIND MOLLY";
  case KW_KEEN7:return "FIND THE SEVEN KEYS";

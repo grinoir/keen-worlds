@@ -70,7 +70,7 @@ def main(game, keen4, out):
 
 def convert(game, keen4, out, pat='Mymod.PAT', files=DATA_FILES, extra=(), skip=('keen4.tli', 'ck4load.bin'),
             title='The Eight Accumulators ("Keen 9.5": Bubbatom, 2011)', tool='tools/kw_accumulators.py', handled=(),
-            level_names=None, episode=4, exe=None, drop_strings=()):
+            level_names=None, episode=4, exe=None, drop_strings=(), num_levels=None):
     """The work, for any Keen 4 mod of this kind (tools/kw_bounty.py uses it
     too), or a Keen 5 one (episode=5). extra: lines for the variable file
     that stand for patches in program code; handled: the offsets of those
@@ -81,20 +81,30 @@ def convert(game, keen4, out, pat='Mymod.PAT', files=DATA_FILES, extra=(), skip=
     ep = EPISODES[episode]
     music_table, music_levels = ep['music']
     pat_path = os.path.join(game, pat)
-    image = load_image(exe or os.path.join(game, ep['exe']))
+    image = bytearray(load_image(exe or os.path.join(game, ep['exe'])))
     patched = bytearray(image)
     spans = []
+
+    def apply(off, data):
+        # A CKPatch may write past the end of the program (it grows it: new
+        # actions, extra text). Grow both buffers to match, so the string
+        # searches below do not run off the end (a no-op for ordinary mods).
+        end = off + len(data)
+        if end > len(patched):
+            patched.extend(b'\0' * (end - len(patched)))
+            image.extend(b'\0' * (end - len(image)))
+        patched[off:end] = data
+        spans.append([off, end, False])
+
     for off, data in parse_pat(pat_path):
-        patched[off:off + len(data)] = data
-        spans.append([off, off + len(data), False])
+        apply(off, data)
     pat_text = strip_comments(open(pat_path, encoding='latin1').read())
     for m in re.finditer(r'%patchfile\s+\$([0-9A-Fa-f]+)\s+"?([\w.]+)"?', pat_text):
         data = open(os.path.join(game, [f for f in os.listdir(game) if f.lower() == m.group(2).lower()][0]), 'rb').read()
         off = int(m.group(1), 16)
         if m.group(2).lower() in skip:
             continue   # tile properties (a file of its own here); the loading screen's text-mode picture
-        patched[off:off + len(data)] = data
-        spans.append([off, off + len(data), False])
+        apply(off, data)
 
     # Every patch lands in a C string of the program: find where that string
     # begins, which of Omnispeak's strings it is (spaces and line ends are
@@ -146,20 +156,31 @@ def convert(game, keen4, out, pat='Mymod.PAT', files=DATA_FILES, extra=(), skip=
         entries[int(m.group(1))] = '\n'.join(l.strip() for l in entry.split('\n') if l.strip())
     names.update(level_names or {})   # (names the caller knows: where Omnispeak's own spelling differs from the program's)
     base_names, base_entries = arrays['ck_str_levelNames'], arrays['ck_str_levelEntryText']
-    n = len(base_names)
+    # A mod with more levels than the base game (its own ship/finale levels)
+    # needs these arrays to reach its highest level, or the game reads past
+    # them when it loads one (the loading box prints the level's entry text).
+    # num_levels: the mod's level count (the caller counts its maps); the arrays
+    # grow to cover it, the added slots blank unless the patches name them.
+    n = max(len(base_names), num_levels or 0)
+    m = max(len(base_entries), num_levels or 0)
     # (a mod may also write them over the program's own, as texts)
     def item(table, base, i):
         if i in table:
             return table[i]
+        if i >= len(base):
+            return ''   # a level past the base game's: blank unless the mod names it
         new = changed(base[i])
         return new if new is not None else base[i]
     lines.append('%stringarray ck_str_levelNames\n' + ',\n'.join('\t"%s"' % escape(item(names, base_names, i)) for i in range(n)) + '\n')
-    lines.append('%stringarray ck_str_levelEntryText\n' + ',\n'.join('\t"%s"' % escape(item(entries, base_entries, i)) for i in range(len(base_entries))) + '\n')
+    lines.append('%stringarray ck_str_levelEntryText\n' + ',\n'.join('\t"%s"' % escape(item(entries, base_entries, i)) for i in range(m)) + '\n')
     # music
-    music = [patched[music_table + 2 * i] | patched[music_table + 2 * i + 1] << 8 for i in range(music_levels)]
+    # A mod with its own extra levels extends this table too (its songs for
+    # them); read as many as it has levels so CK_LevelMusic reaches them.
+    n_music = max(music_levels, num_levels or 0)
+    music = [patched[music_table + 2 * i] | patched[music_table + 2 * i + 1] << 8 for i in range(n_music)]
     music = [m - 0x10000 if m >= 0x8000 else m for m in music]   # ($FFFF: no music)
     for span in spans:
-        if span[0] >= music_table and span[1] <= music_table + 2 * music_levels:
+        if span[0] >= music_table and span[1] <= music_table + 2 * n_music:
             span[2] = True
     lines.append('%intarray CK_LevelMusic ' + ', '.join(map(str, music)) + '\n')
     # texts

@@ -338,6 +338,15 @@ static const KW_WorldDef kw_worldDefs[KW_NUM_WORLDS] = {
 		"The Mortimer finale, the end\nA fan game on Keen 5",
 		"A Commander Keen 5 fan game\n\nSend in the Clorts" KW_NOT_OURS,
 		"Send in the Clorts (get it from\nkeenwiki.shikadi.net) and your\nKeen 5 v1.4. Run kw_clorts.py;\nput its files in mods/clorts."},
+	// The Terror from Outer Space (Dr. Colossus, v1.0 2013): a Keen 4 patch
+	// mod. The player's copy of its files in play/mods/tfos, with our MOD.CK4
+	// (kwtools/kw_tfos.py); its rule changes are settings in the Keen 4 code,
+	// its repurposed aliens' routines in kw_tfos.c.
+	{"tfos", "Phaelox", 4, "mods/tfos", "MOD.CK4",
+		"The Terror from Outer Space",
+		"A fan game by Dr. Colossus, 2013",
+		"Created by Dr. Colossus\n\nA Commander Keen 4 fan game" KW_NOT_OURS,
+		"The Terror from Outer Space\n(get it from\nkeenwiki.shikadi.net) and put\nits files in mods/tfos."},
 };
 
 static CK_EpisodeDef *KW_EpisodeDef(int episode)
@@ -2087,6 +2096,7 @@ static int KW_ChronicleKey(int world)
 	case KW_RTTS:
 	case KW_AURORA: // ("After a long adventure, Keen returns home": after the journey home)
 	case KW_OCFLORE: // (a standalone trip, from the journey home on)
+	case KW_TFOS: // (a standalone trip of its own)
 		return KW_LastChronicleWorld();
 	case KW_CANMORE: // Craig's story goes on
 		if (KW_IsWorldPresent(KW_AURORA) && !KW_WorldIsSaved(KW_AURORA)) return KW_AURORA;
@@ -2450,7 +2460,7 @@ static const struct KW_FlightGroup
 	{"Spot's rescue",1,2,1,{KW_RTTS,KW_OSI}},
 	{"Craig's story",1,7,1,{KW_AURORA,KW_CANMORE,KW_SAINT,KW_PARTY,KW_REVIVAL,KW_REVIVALC,KW_FUTURE}},
 	{"Mortimer's end",1,3,1,{KW_PRISONER,KW_PRISONERR,KW_CLORTS}},
-	{"Further trips",1,1,0,{KW_OCFLORE}},
+	{"Further trips",1,2,0,{KW_OCFLORE,KW_TFOS}},
 	{NULL,1,1,0,{KW_MENU_SCENES}},
 };
 
@@ -2523,6 +2533,7 @@ static void KW_FlightRelationship(int world,char *text,size_t size)
 	case KW_PRISONER:relationship="After Bounty. Play as Keen.";break;
 	case KW_PRISONERR:relationship="After Bounty. Play as Rick.";break;
 	case KW_CLORTS:relationship="The finale's end. After PD.";break;
+	case KW_TFOS:relationship="A trip of its own.";break;
 	}
 	CK_Cross_strscpy(text,relationship,size);
 }
@@ -5586,6 +5597,11 @@ void KW_SelfTest(void)
 	// with the patches' rules and routines, run in every level, and each is
 	// hit by a shot once (Keen can't die meanwhile).
 	{
+		// KW_TFOS stays out of this exhaustive per-level creature loop: its mod
+		// reshuffles creatures' frames across most sprite lumps, so every level
+		// marks ~20 lumps (CK4_ExtraSpriteLumps) and decompressing that many
+		// sprites across all 18 levels makes this loop time out. A single level
+		// load (gameplay, and the boarding check below) caches them fine.
 		static const int patchWorlds[] = {KW_AURORA, KW_OCFLORE, KW_CANMORE, KW_SAINT, KW_PARTY, KW_REVIVAL, KW_REVIVALC, KW_FUTURE, KW_CLORTS};
 		for (int p = 0; p < 9; ++p)
 		{

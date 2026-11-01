@@ -1,0 +1,385 @@
+# The Terror from Outer Space (Dr. Colossus, 2013, v1.0) as a Keen Worlds world.
+# Written by kwtools/kw_tfos.py from the mod's CKPatch file; the data
+# files beside it are the player's copy of the mod. It runs on Keen 4.
+
+%string ca_tileInfo "KEEN4.TLI"
+
+%stringarray ck_str_levelNames
+	"Phaelox",
+	"Engine Room",
+	"Chemistry Lab",
+	"Reactor Core",
+	"Trogg Pod",
+	"Weaponry B",
+	"Cratom Refinery",
+	"Swamp",
+	"Three Towers",
+	"Mountain",
+	"Hidden Bunker",
+	"Volcano",
+	"Trogg Village",
+	"The Hills",
+	"Secret Cloning Lab",
+	"Radar Station",
+	"Explorer",
+	"Space Station",
+	"Megarocket",
+	"",
+	"",
+	""
+
+%stringarray ck_str_levelEntryText
+	"Keen explores\nPhaelox",
+	"Keen bursts into\nthe Engine Room",
+	"Keen enters the\nChemistry Lab",
+	"Keen melts down in\nthe Reactor Core",
+	"Keen drops into\nthe Trogg Pod",
+	"Keen shoots his way\nthrough the Weaponry",
+	"Keen rolls through\nthe Cratom Refinery",
+	"Keen trudges through\nthe Swamp",
+	"Keen visits the\nThree Towers",
+	"Keen crawls into\nthe Mountain",
+	"Keen seeks the\nHidden Bunker",
+	"Keen burns at the\nVolcano",
+	"Keen visits the\nTrogg Village",
+	"Keen runs to\nThe Hills",
+	"Keen investigates the\nSecret Cloning Lab",
+	"Keen scans the\nRadar Station",
+	"Keen scouts out the\nExplorer",
+	"Keen Keen floats to the\nSpace Station",
+	"Keen launches into the\nBean-with-Bacon\nMegarocket",
+	"",
+	"",
+	""
+
+%intarray CK_LevelMusic 0, 2, 3, 4, 1, 3, 3, 2, 3, 2, 1, 4, 2, 1, 3, 3, 2, 4, 4, -1, 2, 4
+
+%string ck4_str_cantSwim "I can't go!"
+%string ck4_str_councilThanks "Emergency shutdown\ninitiated.\n... \n... \nGenerator deactivated."
+%string ck4_str_councilThanks2 "Emergency shutdown\ninitiated.\n... \nOrbital Generator\ndeactivated."
+%string ck4_str_gotWetsuit "Cool!  I can breathe\nin space now!"
+%string ck4_str_lindsayMessage1 "There's a vorticon\ncar hidden in the\nmountain.\n"
+%string ck4_str_lindsayMessage2 "There's a\nSpace Suit\nhidden in the\nWeaponry!\n"
+%string ck4_str_lindsaySays "Vorticon Grunt says:\n"
+%string ck4_str_lindsayThanks1 "Thanks!"
+%string ck4_str_lindsayThanks2 "Thanks for the\nclue!\n"
+%string ck4_str_statusRescued "DISABLED"
+%string ck4_str_statusWetsuit ""
+%string ck_str_exitToMap "Exit to Phaelox"
+%string ck_str_statusCentilives "CRATOM"
+%string ck_str_statusLevel ""
+%string ck_str_storyText "Commander Keen\n\nThe Terror\nFrom Outer Space\n\nThe asteroids that\nsurround the planet\nPhaelox are known for\ntheir richness in rare\nCratom crystals.\n\nThis source was\nfirst discovered\nby the Vorticons\nwho soon began\nmining them.\n\nSeveral decades ago,\nwith the Cratom source\nnearly depleted,\nthe Vorticons powered\ndown their equipment\nand left.\n\nBut now, years later,\nthe outpost has once\nagain begun operation.\n\nThe reasons for this\nare as yet\nunknown.\n"
+%stringarray ck4_str_councilMessage
+	"The way to the\nasteroid is free!",
+	"Woo-hoo!\nAnother one!",
+	"No problemo.",
+	"Now to look for the\nnext Generator!\n ",
+	"Yeah!",
+	"Finally!\nThis is the last\none!",
+	"This is the last\none!       ",
+	"Your the last one,\nfella.  Let's both\nget back to the\nOracle chamber!"
+%stringarray ck_defaultHighScoreNames
+	"Id Software - '91",
+	"",
+	"Jason Blochowiak",
+	"Adrian Carmack",
+	"John Carmack",
+	"Tom Hall",
+	"John Romero",
+	""
+
+# The mod's changes to the program's rules, as settings
+# read the mod's own audio header and dictionary
+%string ca_audioHead "AUDIOHED.CK4"
+%string ca_audioDict "AUDIODCT.CK4"
+# Mushrooms jump less high
+%int CK4_MushroomJumpYVel -80
+# Mushrooms hop less high
+%int CK4_MushroomHopYVel -21
+# Wormmouths reach further right to bite
+%int CK4_WormmouthBiteRightMaxX 0x580
+# Wormmouths reach further left to bite
+%int CK4_WormmouthBiteLeftMinX -1280
+# the storm cloud drifts faster
+%int CK4_CloudXAccel 0xf
+# the Berkeloid's fireball starts higher
+%int CK4_BerkeloidFireballYOffset -1
+# the Berkeloid's fireball rises faster
+%int CK4_BerkeloidFireballYVelocity -28
+# the Berkeloid's fireball starts further right
+%int CK4_BerkeloidFireballXOffsetRight 0x100
+# the inchworm's foot sits lower
+%int CK4_InchwormFootYOffset 0xf00
+# Bounders bounce less high
+%int CK4_BounderBounceYVelocity -70
+# Princess Lindsey doesn't drift up and down
+%int CK4_LindseyFloatYAccel 0
+# Princess Lindsey floats in a tight band
+%int CK4_LindseyFloatYRadius 1
+# schoolfish swim slower sideways
+%int CK4_SchoolfishXVelocity 4
+# schoolfish swim slower up and down
+%int CK4_SchoolfishYVelocity 4
+# the storm cloud's bolt drops straight down
+%int CK4_CloudBoltXOffset 0
+# the storm cloud's bolt starts higher
+%int CK4_CloudBoltYOffset -1280
+# Licks leap higher on a long hop
+%int CK4_LickLongHopYVelocity -48
+# a shot only makes a Bounder hop, it can't be stunned (CK4_BounderCheckShot rewrite)
+%int CK4_BounderUnstunnable 1
+# Smirkies never teleport (CK4_SmirkyCol / CK4_SmirkyTeleport rewrites)
+%int CK4_SmirkyNoTeleport 1
+# Mimrocks follow Keen whichever way he faces (CK4_MimrockWait facing checks removed)
+%int CK4_MimrockIgnoresFacing 1
+# Mimrocks never sit back down once chasing (CK4_MimrockCheckJump rewrite)
+%int CK4_MimrockAlwaysChases 1
+# map markers 36-38 spawn flying birds by difficulty
+%int OC_FlyingBirdMarkers 1
+# flying birds never land
+%int CK4_BirdNeverLands 1
+# the walking bird stands on the ground
+%int CK4_BirdSpawnYOffset 0xE1
+# six of the Council win the game
+%int CK4_NumCouncilsToRescue 6
+# levels 21 and up are its ship levels
+%int ck_maxDoneLevel 20
+# its map has level doors up to level 21
+%int ck_maxEnterLevel 21
+# the swimming Keen clips normally
+%int CK4_SwimKeenClipNormal 1
+# play music on its extra levels too
+%int CK_NumMusicLevels 22
+
+%override "EPISODE.CK4"
+
+# Its sprite actions, as the patches leave them (Keen 4's own, frames changed)
+%action CK4_ACT_MapKeenFoot0 0x1492 @SPR_MAPKEEN_ONFOOT1 @SPR_MAPKEEN_ONFOOT1 UnscaledFrame 0 0 30 0 0 CK4_MapKeenFoot NULL CK_BasicDrawFunc1 CK4_ACT_MapKeenFoot0
+%action CK4_ACT_MapKeenFoot1 0x14B0 322 317 UnscaledOnce 0 1 60 0 0 NULL CK4_SlugCol CK_BasicDrawFunc3 CK4_ACT_SlugMove0
+%action CK4_ACT_MapKeenSwim0 0x14CE 0 0 ScaledOnce 1 0 10 0x10 0x10 CK4_MapKeenSwim NULL CK_BasicDrawFunc1 CK4_ACT_MapKeenSwim0
+%action CK4_ACT_CouncilWalk0 0x1FB8 @SPR_MEMBERSHUFFLEL1 @SPR_MEMBERSHUFFLER1 UnscaledOnce 0 1 10 0x40 0 CK4_CouncilWalk CK4_BerkeloidCol CK_BasicDrawFunc2 CK4_ACT_CouncilWalk1
+%action CK4_ACT_CouncilWalk1 0x1FD6 @SPR_MEMBERSHUFFLEL2 @SPR_MEMBERSHUFFLER2 UnscaledOnce 0 1 10 0x40 0 CK4_CouncilWalk CK4_BerkeloidCol CK_BasicDrawFunc2 CK4_ACT_CouncilWalk0
+%action CK4_ACT_CouncilPause 0x1FF4 @SPR_MEMBERTHINKL @SPR_MEMBERTHINKR UnscaledOnce 0 0 64 0x80 0 CK4_SpriteShoot CK4_BerkeloidCol CK_BasicDrawFunc1 CK4_ACT_CouncilWalk0
+%action CK4_ACT_SlugSliming0 0x204E @SPR_SLUGSQUIRTL @SPR_SLUGSQUIRTR UnscaledOnce 0 1 32 0x40 0 CK4_SpriteShoot CK4_SlugCol CK_BasicDrawFunc3 CK4_ACT_MapKeenFoot1
+%action CK4_ACT_SlugSlime0 0x20A8 @SPR_SLUGSLIME1 @SPR_SLUGSLIME1 UnscaledOnce 0 0 140 0 0 NULL CK4_MimrockCol CK_BasicDrawFunc1 CK4_ACT_SlugSlimeEvap0
+%action CK4_ACT_SlugSlimeEvap0 0x20C6 @SPR_SLUGSLIME2 @SPR_SLUGSLIME2 UnscaledOnce 0 0 60 0 0 NULL CK4_MimrockCol CK_BasicDrawFunc1 CK4_ACT_BerkeloidMove0
+%action CK4_ACT_Mushroom0 0x20E4 @SPR_MADMUSHROOML1 @SPR_MADMUSHROOMR1 UnscaledFrame 0 0 8 0 0 CK4_MushroomMove CK4_BerkeloidCol CK4_MushroomDraw CK4_ACT_Mushroom1
+%action CK4_ACT_Mushroom1 0x2102 @SPR_MADMUSHROOML2 @SPR_MADMUSHROOMR2 UnscaledFrame 0 0 8 0 0 CK4_MushroomMove CK4_BerkeloidCol CK4_MushroomDraw CK4_ACT_Mushroom0
+%action CK4_ACT_Egg0 0x2120 @SPR_EGG @SPR_EGG Frame 0 1 8 0 0 NULL TFOS_EggCol CK_BasicDrawFunc1 NULL
+%action CK4_ACT_Eggshell0 0x213E @SPR_BROKENEGG @SPR_BROKENEGG UnscaledOnce 0 0 30000 0 0 NULL NULL CK4_ProjectileDraw NULL
+%action CK4_ACT_EggshellBitA0 0x215C @SPR_EGGCHIP1 @SPR_EGGCHIP1 Frame 0 0 0 0 0 CK_Fall NULL CK4_ProjectileDraw NULL
+%action CK4_ACT_EggshellBitB0 0x217A @SPR_EGGCHIP2 @SPR_EGGCHIP2 Frame 0 0 0 0 0 CK_Fall NULL CK4_ProjectileDraw NULL
+%action CK4_ACT_EggshellBitC0 0x2198 @SPR_EGGCHIP3 @SPR_EGGCHIP3 Frame 0 0 0 0 0 CK_Fall NULL CK4_ProjectileDraw NULL
+%action CK4_ACT_BirdHatched0 0x21B6 @SPR_EGGBIRDWALKL1 @SPR_EGGBIRDWALKR1 UnscaledOnce 0 1 120 0x80 0 NULL CK4_BounderCheckShot CK_BasicDrawFunc2 CK4_ACT_BirdWalk1
+%action CK4_ACT_BirdWalk0 0x21D4 @SPR_EGGBIRDWALKL1 @SPR_EGGBIRDWALKR1 UnscaledOnce 0 1 7 0x80 0 NULL CK4_BounderCheckShot CK_BasicDrawFunc2 CK4_ACT_BirdWalk1
+%action CK4_ACT_BirdWalk1 0x21F2 @SPR_EGGBIRDWALKL2 @SPR_EGGBIRDWALKR2 UnscaledOnce 0 1 7 0x80 0 NULL CK4_BounderCheckShot CK_BasicDrawFunc2 CK4_ACT_BirdWalk2
+%action CK4_ACT_BirdWalk2 0x2210 @SPR_EGGBIRDWALKL3 @SPR_EGGBIRDWALKR3 UnscaledOnce 0 1 7 0x80 0 NULL CK4_BounderCheckShot CK_BasicDrawFunc2 CK4_ACT_BirdWalk3
+%action CK4_ACT_BirdWalk3 0x222E @SPR_EGGBIRDWALKL4 @SPR_EGGBIRDWALKR4 UnscaledOnce 0 1 7 0x80 0 CK4_InchwormMove CK4_BounderCheckShot CK_BasicDrawFunc2 CK4_ACT_BirdWalk0
+%action CK4_ACT_BirdRecover0 0x2300 378 378 UnscaledOnce 0 1 20 0 0 NULL CK4_BirdHatchedCol CK_BasicDrawFunc1 CK4_ACT_BirdRecover1
+%action CK4_ACT_BirdRecover2 0x233C 378 378 UnscaledOnce 0 1 20 0 0 NULL CK4_BirdHatchedCol CK_BasicDrawFunc1 CK4_ACT_BirdRecover3
+%action CK4_ACT_BirdRecover3 0x235A @SPR_EGGBIRDSTUN @SPR_EGGBIRDSTUN UnscaledOnce 0 1 20 0 0 CK4_BirdRecover CK4_BirdHatchedCol CK_BasicDrawFunc1 CK4_ACT_BirdFly0
+%action CK4_ACT_ArachnutStunned0 0x23F0 @SPR_ARACHNUTSTUN @SPR_ARACHNUTSTUN UnscaledOnce 0 1 240 0 0 NULL CK4_WormmouthCol CK_BasicDrawFunc1 CK4_ACT_ArachnutRecover0
+%action CK4_ACT_SkypestFly0 0x2486 @SPR_SKYPESTL1 447 UnscaledFrame 1 0 9 0 0 CK4_SkypestFly CK4_BerkeloidCol CK4_SkypestDraw CK4_ACT_SkypestFly1
+%action CK4_ACT_SkypestFly1 0x24A4 @SPR_SKYPESTL2 448 UnscaledFrame 1 0 9 0 0 CK4_SkypestFly CK4_BerkeloidCol CK4_SkypestDraw CK4_ACT_SkypestPreen1
+%action CK4_ACT_SkypestPreen0 0x24E0 446 450 UnscaledFrame 1 0 9 0 0 CK4_SkypestFly CK4_BerkeloidCol CK4_SkypestDraw CK4_ACT_SkypestFly0
+%action CK4_ACT_SkypestPreen1 0x24FE 445 449 UnscaledFrame 1 0 9 0 0 CK4_SkypestFly CK4_BerkeloidCol CK4_SkypestDraw CK4_ACT_SkypestPreen0
+%action CK4_ACT_SkypestPreen2 0x251C 349 349 UnscaledFrame 15 0 32 0 0 CK4_ArachnutSearch CK4_SkypestGroundCol CK4_CloudDraw CK4_ACT_SkypestPreen3
+%action CK4_ACT_SkypestPreen3 0x253A 354 354 UnscaledFrame 15 0 32 0 0 CK4_ArachnutSearch CK4_SkypestGroundCol CK4_CloudDraw CK4_ACT_SkypestPreen4
+%action CK4_ACT_SkypestPreen4 0x2558 348 348 UnscaledFrame 15 0 32 0 0 CK4_ArachnutSearch CK4_SkypestGroundCol CK4_CloudDraw CK4_ACT_SmirkyTele6
+%action CK4_ACT_SkypestPreen16 0x26C0 @SPR_SKYPESTREST @SPR_SKYPESTREST 15 15 15 9 120 160 CK4_WormmouthMove CK4_LickCheckShot CK_BasicDrawFunc2 CK4_ACT_WormmouthMove0
+%action CK4_ACT_WormmouthMove0 0x26DE @SPR_WORMOUTHHINT @SPR_WORMOUTHHINT 15 15 15 9 120 160 CK4_WormmouthMove CK4_LickCheckShot CK_BasicDrawFunc2 CK4_ACT_SkypestPreen16
+%action CK4_ACT_WormmouthPeep0 0x26FC @SPR_WORMOUTHPEEKL1 @SPR_WORMOUTHPEEKL1 UnscaledOnce 0 0 20 0 0 NULL CK4_LickCheckShot CK_BasicDrawFunc1 CK4_ACT_WormmouthPeep1
+%action CK4_ACT_WormmouthPeep1 0x271A @SPR_WORMOUTHPEEKL2 @SPR_WORMOUTHPEEKL2 UnscaledOnce 0 0 8 0 0 NULL CK4_LickCheckShot CK_BasicDrawFunc1 CK4_ACT_WormmouthPeep2
+%action CK4_ACT_WormmouthPeep2 0x2738 @SPR_WORMOUTHPEEKL1 @SPR_WORMOUTHPEEKL1 UnscaledOnce 0 0 20 0 0 CK4_WormmouthLookLeft CK4_LickCheckShot CK_BasicDrawFunc1 CK4_ACT_WormmouthPeep3
+%action CK4_ACT_WormmouthPeep3 0x2756 @SPR_WORMOUTHHINT @SPR_WORMOUTHHINT UnscaledOnce 0 0 8 0 0 NULL CK4_LickCheckShot CK_BasicDrawFunc1 CK4_ACT_WormmouthPeep4
+%action CK4_ACT_WormmouthPeep4 0x2774 @SPR_WORMOUTHPEEKR1 @SPR_WORMOUTHPEEKR1 UnscaledOnce 0 0 20 0 0 NULL CK4_LickCheckShot CK_BasicDrawFunc1 CK4_ACT_WormmouthPeep5
+%action CK4_ACT_WormmouthPeep5 0x2792 @SPR_WORMOUTHPEEKR2 @SPR_WORMOUTHPEEKR2 UnscaledOnce 0 0 8 0 0 NULL CK4_LickCheckShot CK_BasicDrawFunc1 CK4_ACT_WormmouthPeep6
+%action CK4_ACT_WormmouthPeep6 0x27B0 @SPR_WORMOUTHPEEKR1 @SPR_WORMOUTHPEEKR1 UnscaledOnce 0 0 20 0 0 CK4_WormmouthLookRight CK4_LickCheckShot CK_BasicDrawFunc1 CK4_ACT_WormmouthPeep7
+%action CK4_ACT_WormmouthPeep7 0x27CE @SPR_WORMOUTHHINT @SPR_WORMOUTHHINT UnscaledOnce 0 0 8 0 0 CK4_WormmouthGoToPlayer CK4_LickCheckShot CK_BasicDrawFunc1 CK4_ACT_WormmouthMove0
+%action CK4_ACT_WormmouthBite0 0x27EC @SPR_WORMOUTHBITEL1 @SPR_WORMOUTHBITER1 UnscaledOnce 0 0 8 0 0 NULL CK4_LickCheckShot CK_BasicDrawFunc1 CK4_ACT_WormmouthBite1
+%action CK4_ACT_WormmouthBite1 0x280A @SPR_WORMOUTHBITEL2 @SPR_WORMOUTHBITER2 UnscaledOnce 0 0 8 0 0 CK4_BerkeloidThrow CK4_LickCheckShot CK_BasicDrawFunc1 CK4_ACT_WormmouthBite2
+%action CK4_ACT_WormmouthBite2 0x2828 @SPR_WORMOUTHBITEL3 @SPR_WORMOUTHBITER3 UnscaledOnce 0 0 16 0 0 NULL CK4_LickCheckShot CK_BasicDrawFunc1 CK4_ACT_WormmouthBite3
+%action CK4_ACT_WormmouthBite3 0x2846 @SPR_WORMOUTHBITEL2 @SPR_WORMOUTHBITER2 UnscaledOnce 0 0 8 0 0 NULL CK4_LickCheckShot CK_BasicDrawFunc1 CK4_ACT_WormmouthBite4
+%action CK4_ACT_WormmouthBite4 0x2864 @SPR_WORMOUTHBITEL1 @SPR_WORMOUTHBITER1 UnscaledOnce 0 0 8 0 0 NULL CK4_LickCheckShot CK_BasicDrawFunc1 CK4_ACT_WormmouthMove0
+%action CK4_ACT_BerkeloidMove0 0x2AF8 @SPR_BERKEFLOATL1 @SPR_BERKEFLOATR1 ScaledOnce 0 1 6 8 0 CK4_BerkeloidMove CK4_MimrockAirCol CK4_BerkeloidDraw CK4_ACT_BerkeloidMove1
+%action CK4_ACT_BerkeloidMove1 0x2B16 @SPR_BERKEFLOATL2 @SPR_BERKEFLOATR2 ScaledOnce 0 1 6 8 0 CK4_BerkeloidMove CK4_MimrockAirCol CK4_BerkeloidDraw CK4_ACT_BerkeloidMove2
+%action CK4_ACT_BerkeloidMove2 0x2B34 @SPR_BERKEFLOATL3 @SPR_BERKEFLOATR3 ScaledOnce 0 1 6 8 0 CK4_BerkeloidMove CK4_MimrockAirCol CK4_BerkeloidDraw CK4_ACT_BerkeloidMove3
+%action CK4_ACT_BerkeloidMove3 0x2B52 @SPR_BERKEFLOATL4 @SPR_BERKEFLOATR4 ScaledOnce 0 1 6 8 0 CK4_BerkeloidMove CK4_MimrockAirCol CK4_BerkeloidDraw CK4_ACT_BerkeloidMove0
+%action CK4_ACT_BerkeloidThrow0 0x2B70 @SPR_BERKETHROWL1 @SPR_BERKETHROWR1 UnscaledOnce 0 0 6 0 0 CK_SetDraw CK4_MimrockAirCol CK4_BerkeloidHover CK4_ACT_BerkeloidThrow1
+%action CK4_ACT_BerkeloidThrow1 0x2B8E @SPR_BERKETHROWL1 @SPR_BERKETHROWR1 UnscaledOnce 0 0 6 0 0 CK_SetDraw CK4_MimrockAirCol CK4_BerkeloidHover CK4_ACT_BerkeloidThrow2
+%action CK4_ACT_BerkeloidThrow2 0x2BAC @SPR_BERKETHROWL1 @SPR_BERKETHROWR1 UnscaledOnce 0 0 6 0 0 CK_SetDraw CK4_MimrockAirCol CK4_BerkeloidHover CK4_ACT_BerkeloidThrow3
+%action CK4_ACT_BerkeloidThrow3 0x2BCA @SPR_BERKETHROWL1 @SPR_BERKETHROWR1 UnscaledOnce 0 0 6 0 0 CK_SetDraw CK4_MimrockAirCol CK4_BerkeloidHover CK4_ACT_BerkeloidThrow4
+%action CK4_ACT_BerkeloidThrow4 0x2BE8 @SPR_BERKETHROWL1 @SPR_BERKETHROWR1 UnscaledOnce 0 0 6 0 0 CK_SetDraw CK4_MimrockAirCol CK4_BerkeloidHover CK4_ACT_BerkeloidThrow5
+%action CK4_ACT_BerkeloidThrow5 0x2C06 @SPR_BERKETHROWL1 @SPR_BERKETHROWR1 UnscaledOnce 0 0 6 0 0 CK4_BerkeloidThrow CK4_MimrockAirCol CK4_BerkeloidHover CK4_ACT_BerkeloidThrow6
+%action CK4_ACT_BerkeloidThrow6 0x2C24 @SPR_BERKETHROWL2 @SPR_BERKETHROWR2 UnscaledOnce 0 0 6 0 0 CK_SetDraw CK4_MimrockAirCol CK4_BerkeloidHover CK4_ACT_BerkeloidThrow7
+%action CK4_ACT_BerkeloidThrow7 0x2C42 @SPR_BERKETHROWL2 @SPR_BERKETHROWR2 UnscaledOnce 0 0 6 0 0 CK_SetDraw CK4_MimrockAirCol CK4_BerkeloidHover CK4_ACT_BerkeloidThrow8
+%action CK4_ACT_BerkeloidThrow8 0x2C60 @SPR_BERKETHROWL2 @SPR_BERKETHROWR2 UnscaledOnce 0 0 6 0 0 CK_SetDraw CK4_MimrockAirCol CK4_BerkeloidHover CK4_ACT_BerkeloidThrow9
+%action CK4_ACT_BerkeloidThrow9 0x2C7E @SPR_BERKETHROWL2 @SPR_BERKETHROWR2 UnscaledOnce 0 0 6 0 0 CK_SetDraw CK4_MimrockAirCol CK4_BerkeloidHover CK4_ACT_BerkeloidThrow10
+%action CK4_ACT_BerkeloidThrow10 0x2C9C @SPR_BERKETHROWL2 @SPR_BERKETHROWR2 UnscaledOnce 0 0 6 0 0 CK_SetDraw CK4_MimrockAirCol CK4_BerkeloidHover CK4_ACT_BerkeloidThrow11
+%action CK4_ACT_BerkeloidThrow11 0x2CBA @SPR_BERKETHROWL2 @SPR_BERKETHROWR2 UnscaledOnce 0 0 6 0 0 CK4_BerkeloidThrowDone CK4_MimrockAirCol CK4_BerkeloidHover CK4_ACT_BerkeloidMove0
+%action CK4_ACT_FireballGround4 0x2D8C @SPR_BERKEFIREBURST2 @SPR_BERKEFIREBURST2 UnscaledOnce 0 0 12 0 0 NULL CK4_BerkeloidCol CK_BasicDrawFunc1 CK4_ACT_FireballGround1
+%action CK4_ACT_Inchworm0 0x2E9A @SPR_INCHWORML1 @SPR_INCHWORMR1 UnscaledOnce 0 1 14 0x80 0 CK4_InchwormMove CK4_BerkeloidCol CK_BasicDrawFunc2 CK4_ACT_Inchworm1
+%action CK4_ACT_Inchworm1 0x2EB8 @SPR_INCHWORML2 @SPR_INCHWORMR2 UnscaledOnce 0 1 14 0x80 0 CK4_InchwormMove CK4_BerkeloidCol CK_BasicDrawFunc2 CK4_ACT_Inchworm0
+%action CK4_ACT_Foot1 0x2EF4 332 332 Frame 0 0 30000 0 0 NULL CK4_FootCol CK_BasicDrawFunc1 NULL
+%action CK4_ACT_BounderStunned0 0x2F8A 497 497 Frame 0 0 0 0 0 CK_Fall NULL CK_BasicDrawFunc4 CK4_ACT_BounderStunned1
+%action CK4_ACT_Smirky0 0x31E2 @SPR_EATERSTAND1 340 UnscaledOnce 15 1 9 120 0 CK4_SmirkyTeleport TFOS_InchwormCol CK_BasicDrawFunc2 CK4_ACT_Smirky1
+%action CK4_ACT_Smirky1 0x3200 @SPR_EATERSTAND2 341 UnscaledOnce 15 1 9 120 0 CK4_SmirkyTeleport TFOS_InchwormCol CK_BasicDrawFunc2 CK4_ACT_Smirky0
+%action CK4_ACT_SmirkyTele0 0x321E 342 344 15 15 15 20 0 0 NULL TFOS_InchwormCol CK_BasicDrawFunc1 CK4_ACT_Smirky0
+%action CK4_ACT_SmirkyTele1 0x323C 319 319 UnscaledOnce 0 0 112 0 0 CK_Glide TFOS_MineCol CK_BasicDrawFunc1 CK4_ACT_Smirky0
+%action CK4_ACT_SmirkyTele2 0x325A 342 344 15 15 15 9 0 0 CK4_ArachnutSearch TFOS_InchwormCol CK_BasicDrawFunc1 CK4_ACT_StolenItem1
+%action CK4_ACT_SmirkyTele3 0x3278 346 346 UnscaledFrame 15 0 20 0 0 CK4_ArachnutSearch CK4_BerkeloidCol CK4_CloudDraw CK4_ACT_SmirkyTele4
+%action CK4_ACT_SmirkyTele4 0x3296 347 347 UnscaledFrame 15 0 10 0 0 CK4_ArachnutSearch CK4_BerkeloidCol CK4_CloudDraw CK4_ACT_SmirkyTele5
+%action CK4_ACT_SmirkyTele5 0x32B4 348 348 UnscaledFrame 15 0 32 0 0 CK4_ArachnutSearch CK4_SkypestGroundCol CK4_CloudDraw CK4_ACT_SkypestPreen2
+%action CK4_ACT_SmirkyTele6 0x32D2 347 347 UnscaledFrame 15 0 10 0 0 CK4_ArachnutSearch CK4_BerkeloidCol CK4_CloudDraw CK4_ACT_SmirkyTele7
+%action CK4_ACT_SmirkyTele7 0x32F0 346 346 UnscaledFrame 15 0 20 0 0 CK4_ArachnutSearch CK4_BerkeloidCol CK4_CloudDraw CK4_ACT_SmirkyJump2
+%action CK4_ACT_SmirkyJump0 0x330E 350 350 UnscaledFrame 15 1 6 170 0 NULL CK4_BerkeloidCol CK_BasicDrawFunc2 CK4_ACT_SmirkyJump1
+%action CK4_ACT_SmirkyJump1 0x332C 351 351 UnscaledFrame 15 1 6 170 0 NULL CK4_BerkeloidCol CK_BasicDrawFunc2 CK4_ACT_SmirkyJump3
+%action CK4_ACT_SmirkyJump2 0x334A 353 353 UnscaledFrame 15 1 8 170 0 CK4_ArachnutSearch CK4_BerkeloidCol CK_BasicDrawFunc2 CK4_ACT_SmirkyJump0
+%action CK4_ACT_SmirkyJump3 0x3368 352 352 UnscaledFrame 15 1 6 170 0 NULL CK4_BerkeloidCol CK_BasicDrawFunc2 CK4_ACT_StolenItem0
+%action CK4_ACT_SmirkyStunned0 0x3386 355 355 Frame 0 0 0 0 0 CK_Fall NULL CK_BasicDrawFunc4 CK4_ACT_SmirkyStunned1
+%action CK4_ACT_StolenItem0 0x33C2 353 353 UnscaledFrame 15 1 6 170 0 CK4_Miragia4 CK4_BerkeloidCol CK_BasicDrawFunc2 CK4_ACT_SmirkyJump0
+%action CK4_ACT_StolenItem1 0x33E0 343 345 15 15 15 9 0 0 CK4_BerkeloidThrow TFOS_InchwormCol CK_BasicDrawFunc1 CK4_ACT_StolenItem2
+%action CK4_ACT_StolenItem2 0x33FE 342 344 15 15 15 9 0 0 NULL TFOS_InchwormCol CK_BasicDrawFunc1 CK4_ACT_StolenItem3
+%action CK4_ACT_StolenItem3 0x341C 343 345 15 15 15 10 0 0 CK4_BerkeloidThrow TFOS_InchwormCol CK_BasicDrawFunc1 CK4_ACT_SmirkyTele0
+%action CK4_ACT_Mimrock0 0x343A 403 @SPR_MIMROCKSIT UnscaledOnce 0 1 20 0 0 CK4_MimrockWait CK4_BerkeloidCol CK_BasicDrawFunc2 CK4_ACT_Mimrock0
+%action CK4_ACT_MimrockWalk0 0x3458 @SPR_MIMROCKSNEAKL1 @SPR_MIMROCKSNEAKR1 UnscaledOnce 0 1 6 128 0 CK4_MimrockWait CK4_BerkeloidCol CK_BasicDrawFunc2 CK4_ACT_MimrockWalk1
+%action CK4_ACT_MimrockWalk1 0x3476 @SPR_MIMROCKSNEAKL2 @SPR_MIMROCKSNEAKR2 UnscaledOnce 0 1 6 128 0 CK4_MimrockCheckJump CK4_BerkeloidCol CK_BasicDrawFunc2 CK4_ACT_MimrockWalk2
+%action CK4_ACT_MimrockWalk2 0x3494 @SPR_MIMROCKSNEAKL3 @SPR_MIMROCKSNEAKR3 UnscaledOnce 0 1 6 128 0 CK4_MimrockCheckJump CK4_BerkeloidCol CK_BasicDrawFunc2 CK4_ACT_MimrockWalk3
+%action CK4_ACT_MimrockWalk3 0x34B2 @SPR_MIMROCKSNEAKL4 @SPR_MIMROCKSNEAKR4 UnscaledOnce 0 1 6 0x40 128 CK4_MimrockCheckJump CK4_BerkeloidCol CK_BasicDrawFunc2 CK4_ACT_MimrockWalk4
+%action CK4_ACT_MimrockWalk4 0x34D0 @SPR_MIMROCKSNEAKL1 @SPR_MIMROCKSNEAKR1 UnscaledOnce 0 1 6 128 0 CK4_MimrockCheckJump CK4_BerkeloidCol CK_BasicDrawFunc2 CK4_ACT_MimrockWalk5
+%action CK4_ACT_MimrockWalk5 0x34EE @SPR_MIMROCKSNEAKL2 @SPR_MIMROCKSNEAKR2 UnscaledOnce 0 1 6 128 0 CK4_MimrockCheckJump CK4_BerkeloidCol CK_BasicDrawFunc2 CK4_ACT_MimrockWalk0
+%action CK4_ACT_MimrockJump0 0x350C @SPR_MIMROCKBONKL1 @SPR_MIMROCKBONKR1 UnscaledFrame 0 0 24 0 0 CK_Fall2 CK4_SmirkyCol CK4_MimrockJumpDraw CK4_ACT_MimrockJump1
+%action CK4_ACT_MimrockJump1 0x352A @SPR_MIMROCKBONKL2 @SPR_MIMROCKBONKR2 UnscaledFrame 0 0 10 0 0 CK_Fall2 CK4_SmirkyCol CK4_MimrockJumpDraw CK4_ACT_MimrockJump2
+%action CK4_ACT_MimrockJump2 0x3548 @SPR_MIMROCKBONKL3 @SPR_MIMROCKBONKR3 Frame 0 0 10 0 0 CK_Fall2 CK4_SmirkyCol CK4_MimrockJumpDraw CK4_ACT_MimrockJump1
+%action CK4_ACT_MimrockBounce0 0x3566 @SPR_MIMROCKBONKL3 @SPR_MIMROCKBONKR3 Frame 0 0 10 0 0 CK_Fall CK4_SmirkyCol CK4_MimrockBounceDraw NULL
+%action CK4_ACT_DopefishBurp1 0x3638 @SPR_DOPEFISHBURP1 @SPR_DOPEFISHBURP1 UnscaledOnce 0 0 60 0 0 NULL NULL CK_BasicDrawFunc1 CK4_ACT_DopefishBurp2
+%action CK4_ACT_SchoolfishSwim0 0x3764 @SPR_SCHOOLFISHL1 @SPR_SCHOOLFISHR1 UnscaledFrame 0 0 20 0 0 CK4_SchoolfishMove CK4_SkypestAirCol CK4_FishDraw CK4_ACT_SchoolfishSwim1
+%action CK4_ACT_SchoolfishSwim1 0x3782 @SPR_SCHOOLFISHL2 @SPR_SCHOOLFISHR2 UnscaledFrame 0 0 20 0 0 CK4_SchoolfishMove CK4_SkypestAirCol CK4_FishDraw CK4_ACT_SchoolfishSwim0
+%action CK4_ACT_Sprite0 0x37A0 @SPR_SPRITEFACE @SPR_SPRITEFACE Frame 0 0 10 0 0 CK4_SpritePatrol CK4_LickCol CK_BasicDrawFunc1 CK4_ACT_Sprite0
+%action CK4_ACT_SpriteAiming0 0x37BE @SPR_SPRITELOOKL @SPR_SPRITELOOKR UnscaledOnce 0 0 5 0 0 CK4_SpriteAim CK4_LickCol CK_BasicDrawFunc1 CK4_ACT_Sprite0
+%action CK4_ACT_SpriteShooting0 0x37DC @SPR_SPRITESHOOTL @SPR_SPRITESHOOTR UnscaledOnce 0 0 40 0 0 CK4_SpriteShoot CK4_LickCol CK_BasicDrawFunc1 CK4_ACT_SpriteShooting1
+%action CK4_ACT_SpriteShooting1 0x37FA @SPR_SPRITESHOOTL @SPR_SPRITESHOOTR UnscaledOnce 0 0 30 0 0 NULL CK4_LickCol CK_BasicDrawFunc1 CK4_ACT_Sprite0
+%action CK4_ACT_SpriteBullet0 0x3818 @SPR_SPRITEFIRE1 @SPR_SPRITEFIRE1 ScaledOnce 0 0 5 0x40 0 NULL CK_LethalCol CK4_ProjectileDraw CK4_ACT_SpriteBullet1
+%action CK4_ACT_SpriteBullet1 0x3836 @SPR_SPRITEFIRE2 @SPR_SPRITEFIRE2 ScaledOnce 0 0 5 0x40 0 NULL CK_LethalCol CK4_ProjectileDraw CK4_ACT_SpriteBullet0
+%action CK4_ACT_SpriteBullet2 0x3854 @SPR_SPRITEFIRE3 @SPR_SPRITEFIRE3 UnscaledFrame 0 0 6 0 0 NULL NULL CK_BasicDrawFunc1 CK4_ACT_SpriteBullet3
+%action CK4_ACT_SpriteBullet3 0x3872 @SPR_SPRITEFIRE4 @SPR_SPRITEFIRE4 UnscaledFrame 0 0 6 0 0 NULL NULL CK_BasicDrawFunc1 CK4_ACT_SpriteBullet2
+%action CK4_ACT_Mine0 0x3890 442 @SPR_MINE UnscaledFrame 1 10 9 0 0 CK_AxisPlatform CK4_MushroomCol CK_BasicDrawFunc2 CK4_ACT_MineExplode0
+%action CK4_ACT_MineExplode0 0x38AE 451 @SPR_MINEBOOM1 UnscaledFrame 1 10 9 0 0 CK_AxisPlatform CK4_MushroomCol CK_BasicDrawFunc2 CK4_ACT_Mine0
+%action CK4_ACT_Lindsey1 0x3908 @SPR_LINDSEY2 @SPR_LINDSEY2 UnscaledFrame 0 0 20 0 0 CK4_LindseyFloat NULL CK_BasicDrawFunc1 CK4_ACT_Lindsey0
+%action CK4_ACT_Lindsey2 0x3926 337 337 Frame 0 0 52 0 0 CK_Fall NULL CK_BasicDrawFunc4 NULL
+%action CK4_ACT_DartGun0 0x3962 0 0 UnscaledOnce 0 0 150 0 0 TFOS_DartGun NULL NULL CK4_ACT_DartGun0
+%action CK4_ACT_DartUp0 0x39BC @SPR_DARTU1 @SPR_DARTU1 ScaledOnce 0 0 6 0 16 NULL NULL CK4_ProjectileDraw CK4_ACT_DartUp1
+%action CK4_ACT_DartUp1 0x39DA @SPR_DARTU2 @SPR_DARTU2 ScaledOnce 0 0 6 0 16 NULL NULL CK4_ProjectileDraw CK4_ACT_DartUp0
+%action CK4_ACT_DartDown0 0x39F8 @SPR_DARTD1 @SPR_DARTD1 ScaledOnce 0 0 6 0 48 NULL CK_LethalCol CK4_ProjectileDraw CK4_ACT_DartDown1
+%action CK4_ACT_DartDown1 0x3A16 @SPR_DARTD2 @SPR_DARTD2 ScaledOnce 0 0 6 0 48 NULL CK_LethalCol CK4_ProjectileDraw CK4_ACT_DartDown0
+%action KW_ACT_NewE8EE 0xE8EE 380 380 UnscaledOnce 0 0 1 0 0 CK4_Miragia2 NULL CK4_ProjectileDraw CK4_ACT_DartUp0
+
+# The sprite-cache lumps, widened so moved frames load with their creature
+%intarray lumpStarts
+	6,
+	88,
+	104,
+	110,
+	115,
+	124,
+	130,
+	227,
+	229,
+	231,
+	233,
+	235,
+	237,
+	239,
+	242,
+	251,
+	254,
+	309,
+	315,
+	325,
+	329,
+	333,
+	337,
+	356,
+	362,
+	367,
+	380,
+	388,
+	404,
+	421,
+	425,
+	431,
+	436,
+	443,
+	455,
+	469,
+	484,
+	491,
+	498,
+	503,
+	519
+%intarray lumpEnds
+	87,
+	103,
+	109,
+	114,
+	120,
+	128,
+	226,
+	228,
+	230,
+	232,
+	234,
+	236,
+	238,
+	240,
+	250,
+	252,
+	308,
+	314,
+	324,
+	328,
+	332,
+	337,
+	355,
+	361,
+	366,
+	379,
+	387,
+	403,
+	420,
+	424,
+	429,
+	439,
+	451,
+	456,
+	468,
+	483,
+	490,
+	497,
+	502,
+	518,
+	520
+
+# The lumps every level marks (its creatures borrow each other's frames)
+%int CK4_NumExtraSpriteLumps 20
+%intarray CK4_ExtraSpriteLumps
+	16,
+	18,
+	19,
+	20,
+	21,
+	22,
+	23,
+	24,
+	25,
+	26,
+	27,
+	28,
+	29,
+	30,
+	31,
+	32,
+	33,
+	34,
+	37,
+	39
