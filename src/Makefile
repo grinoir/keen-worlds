@@ -517,6 +517,16 @@ $(OBJDIR)/%.o: %.c $(SDL_DIR)
 	@mkdir -p $(dir $@)
 	$(CXX) $(SYSFLAGS) $(CXXFLAGS) $(SDL_CFLAGS) -c -MMD -o $@ $<
 
+# Craig's player sprites for the Megarocket (KW_CraigInShip) are derived from
+# the player's own Revival-of-Bliss Craig build and are never committed. Build
+# them here if that build is installed at the default path; otherwise write a
+# stub and the ship simply keeps Keen. Delete the header to regenerate.
+CRAIG_SHIP_SRC ?= ../../play/mods/revivalc
+CRAIG_SHIP_DICT ?= ../../play/EGADICT.CK4
+kw_craig_ship_sprites.h:
+	python3 ../kwtools/kw_craig_ship.py "$(CRAIG_SHIP_SRC)" "$(CRAIG_SHIP_DICT)" "$@"
+$(OBJDIR)/kw_habitat.o: kw_craig_ship_sprites.h
+
 $(OBJDIR)/windowsres.res: windowsres.rc
 	mkdir -p $(dir $@)
 	$(BINPREFIX)windres $< -O coff -o $@

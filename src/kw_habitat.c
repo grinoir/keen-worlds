@@ -503,6 +503,99 @@ static void KW_ChangeLevel(void)
 		KW_PlaceArt(&kw_colaArt);
 }
 
+// The Megarocket runs on Keen 4's graphics, so its hero is Keen. On Craig's own
+// worlds (KW_PlaysAsCraig) Craig is the pilot -- the ship computer already says
+// so -- and the hero aboard should be him too. Craig's player sprites are a
+// different size from Keen's, so once the level's graphics are cached we re-set
+// each used player frame's dimension entry and re-expand it from Craig's data
+// (baked by kwtools/kw_craig_ship.py, re-compressed with the ship's own graphics
+// dictionary). Graphics reload on every world change, so Keen returns by himself
+// the moment the ship flies anyone else.
+#include "kw_craig_ship_sprites.h"
+
+// Build one cached sprite from raw (already Huffman-expanded) pixel planes --
+// CAL_CacheSprite's work without the Huffman step, so the result is identical to
+// how the Craig build caches the same sprite. The dimension entry must already
+// hold Craig's size for this chunk (VH_GetSpriteTableEntry reads it).
+static void KW_CacheRawSprite(int chunk, const uint8_t *raw)
+{
+	VH_SpriteTableEntry sprite = VH_GetSpriteTableEntry(chunk - ca_gfxInfoE.offSprites);
+	size_t smallPlane = sprite.width * sprite.height;
+	size_t bigPlane = (sprite.width + 1) * sprite.height;
+	size_t fullSize = (smallPlane + (sprite.shifts - 1) * bigPlane) * 5;
+	MM_GetPtr(&ca_graphChunks[chunk], sizeof(VH_ShiftedSprite) + fullSize);
+	VH_ShiftedSprite *shifted = (VH_ShiftedSprite *)ca_graphChunks[chunk];
+	size_t off[5];
+	off[0] = 0;
+	off[1] = smallPlane * 5;
+	off[2] = off[1] + bigPlane * 5;
+	off[3] = off[2] + bigPlane * 5;
+	off[4] = off[3] + bigPlane * 5;
+	memcpy(shifted->data, raw, smallPlane * 5);
+	switch (sprite.shifts)
+	{
+	case 1:
+		for (int i = 0; i < 4; ++i)
+		{
+			shifted->sprShiftByteWidths[i] = sprite.width;
+			shifted->sprShiftOffset[i] = off[0];
+		}
+		break;
+	case 2:
+		for (int i = 0; i < 2; ++i)
+		{
+			shifted->sprShiftByteWidths[i] = sprite.width;
+			shifted->sprShiftOffset[i] = off[0];
+		}
+		for (int i = 2; i < 4; ++i)
+		{
+			shifted->sprShiftByteWidths[i] = sprite.width + 1;
+			shifted->sprShiftOffset[i] = off[1];
+		}
+		CAL_ShiftSprite(shifted->data, &shifted->data[off[1]], sprite.width, sprite.height, 4);
+		break;
+	case 4:
+		shifted->sprShiftByteWidths[0] = sprite.width;
+		shifted->sprShiftByteWidths[1] = sprite.width + 1;
+		shifted->sprShiftByteWidths[2] = sprite.width + 1;
+		shifted->sprShiftByteWidths[3] = sprite.width + 1;
+		shifted->sprShiftOffset[0] = off[0];
+		shifted->sprShiftOffset[1] = off[1];
+		shifted->sprShiftOffset[2] = off[2];
+		shifted->sprShiftOffset[3] = off[3];
+		CAL_ShiftSprite(shifted->data, &shifted->data[off[1]], sprite.width, sprite.height, 2);
+		CAL_ShiftSprite(shifted->data, &shifted->data[off[2]], sprite.width, sprite.height, 4);
+		CAL_ShiftSprite(shifted->data, &shifted->data[off[3]], sprite.width, sprite.height, 6);
+		break;
+	}
+}
+
+void KW_CraigInShip(void)
+{
+	if (KW_CurrentEpisode() != KW_SHIP || !KW_PlaysAsCraig(KW_BoardedFrom()))
+		return;
+	uint16_t *dims = (uint16_t *)ca_graphChunks[ca_gfxInfoE.hdrSprites];
+	if (!dims)
+		return;
+	// First set the sizes (no allocation, so the dimension chunk can't move).
+	for (int i = 0; i < KW_CRAIG_SHIP_SPRITES; ++i)
+	{
+		const KW_CraigShipSprite *s = &kw_craigShipSprites[i];
+		if (ca_graphChunks[s->chunk])
+			memcpy(&dims[(s->chunk - ca_gfxInfoE.offSprites) * 9], s->dims, sizeof(s->dims));
+	}
+	// Then rebuild each cached frame from Craig's raw pixels at its new size.
+	for (int i = 0; i < KW_CRAIG_SHIP_SPRITES; ++i)
+	{
+		const KW_CraigShipSprite *s = &kw_craigShipSprites[i];
+		if (!ca_graphChunks[s->chunk])
+			continue; // this frame isn't used in the ship
+		MM_FreePtr(&ca_graphChunks[s->chunk]);
+		KW_CacheRawSprite(s->chunk, &kw_craigShipSpriteData[s->offset]);
+		MM_SetPurge(&ca_graphChunks[s->chunk], 0); // keep it while aboard
+	}
+}
+
 // ---- Coming back ----
 // Keen re-enters a completed level from the opposite side to where he first
 // started — at its exit — so it looks like he walks back in. This is found

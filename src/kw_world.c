@@ -720,6 +720,16 @@ bool KW_TakeOutpostScene(void)
 #define KW_SAVE_BLOCK_ID "KWLD"
 static int kw_boardedFrom = KW_KEEN4; // the world the Megarocket stands on (see KW_ShipRoomFrame)
 
+int KW_BoardedFrom(void) { return kw_boardedFrom; }
+
+// The worlds you play as Craig, not Keen (Craig's story, told from his side).
+// The ship computer already addresses "Captain Craig" on these; the hero drawn
+// in the Megarocket follows (KW_CraigInShip, kw_habitat.c).
+bool KW_PlaysAsCraig(int world)
+{
+	return world == KW_AURORA || world == KW_CANMORE || world == KW_REVIVALC;
+}
+
 #define KW_SAVE_VERSION 7
 #define KW_LEVELS_EXTRA (CK_LEVELS_TRACKED - CK_LEVELS_SAVED)
 

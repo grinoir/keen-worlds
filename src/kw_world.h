@@ -129,6 +129,15 @@ void KW_ConstrainKeen5Dock(struct CK_object *mapKeen);
 // arrival is moved beside the Megarocket without changing ordinary entries.
 void KW_PlaceArrivalAtShip(void);
 
+// The world the Megarocket currently stands on, and whether that world is one
+// of Craig's (so the hero aboard the ship and on the map should be Craig).
+int KW_BoardedFrom(void);
+bool KW_PlaysAsCraig(int world);
+
+// After a level's graphics are cached: if the Megarocket is flying a Craig
+// world, re-cache the hero's sprites as Craig. A no-op otherwise.
+void KW_CraigInShip(void);
+
 // On a world map, Up near the launch spot asks to board the Megarocket.
 // Other buttons continue to enter ordinary level markers.
 void KW_TryLaunch(struct CK_object *mapKeen);

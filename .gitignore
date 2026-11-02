@@ -4,3 +4,5 @@ SDL-1.*
 bin*
 obj*
 __pycache__/
+# Craig's Megarocket sprites, derived from the player's own game, never committed
+src/kw_craig_ship_sprites.h

@@ -727,6 +727,10 @@ void CK_LoadLevel(bool doCache, bool silent)
 		}
 	}
 
+	// KEEN WORLDS: on Craig's own worlds he, not Keen, mans the Megarocket;
+	// re-cache the hero's sprites as Craig now the level's graphics are cached.
+	KW_CraigInShip();
+
 	// CA_CacheMarks(0);
 	if (doCache && !silent)
 		CK_BeginFadeDrawing();

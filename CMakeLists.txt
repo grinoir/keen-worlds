@@ -331,7 +331,19 @@ set(OMNISPEAK_CK6_SRCS
 	src/ck6_obj3.c
 )
 
+# Craig's player sprites for the Megarocket (KW_CraigInShip) are derived from
+# the player's own Revival-of-Bliss Craig build and are never committed. Build
+# them if that build is installed at the default path; otherwise a stub, and the
+# ship keeps Keen. Delete the header to regenerate.
+set(CRAIG_SHIP_SRC "${CMAKE_CURRENT_SOURCE_DIR}/../play/mods/revivalc" CACHE PATH "Revival-of-Bliss Craig build for the ship sprites")
+set(CRAIG_SHIP_DICT "${CMAKE_CURRENT_SOURCE_DIR}/../play/EGADICT.CK4" CACHE FILEPATH "The ship's graphics dictionary")
+add_custom_command(
+	OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/src/kw_craig_ship_sprites.h
+	COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/kwtools/kw_craig_ship.py "${CRAIG_SHIP_SRC}" "${CRAIG_SHIP_DICT}" ${CMAKE_CURRENT_SOURCE_DIR}/src/kw_craig_ship_sprites.h
+	COMMENT "Baking Craig's Megarocket sprites")
+
 set(OMNISPEAK_CK_SRCS
+	src/kw_craig_ship_sprites.h
 	src/ck_act.c
 	src/ck_act.h
 	src/ck_cross.c
