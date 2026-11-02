@@ -1,6 +1,6 @@
 """Write Keen Worlds' variable file for Aurora Bliss.
 
-    python3 kwtools/kw_aurora.py GAMEDIR omnispeak/data/keen4 play/mods/aurora
+    python3 kwtools/kw_aurora.py GAMEDIR omnispeak/data/keen4 play/mods/aurora [CRAIGDIR]
 
 GAMEDIR: the player's copy of Aurora Bliss v1.2 (Dave216, 2022-23; the
 files of m.dave216.aurora_bliss_v.1.2.k4.2023-08-23.zip, unpacked). It is a
@@ -12,11 +12,19 @@ that work); each change to the program's rules has a setting in the engine's
 Keen 4 code, listed in RULES with the patch it stands for, and the patched
 sprite actions are written out as %action lines (kw_patconv.py). Audit:
 research/ocflore-and-aurora-bliss.md in the workspace root.
+
+Aurora Bliss ships no Craig player sprite -- you walk as Keen -- but it is
+Craig's story, part one, so after the conversion this tool splices Craig's
+player sprite in (kw_craig_splice), taken from the already-converted Revival
+of Bliss Craig build. CRAIGDIR is that build's output (default: a sibling
+'revivalc' of the output dir); build revivalc first (kw_revival.py). If it is
+missing the splice is skipped with a warning and Aurora stays as Keen.
 """
 import os, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from kw_accumulators import convert
+import kw_craig_splice
 
 FILES = {'AUDIO.CK4': 'AUDIO.CK4', 'AUDIODCT.CK4': 'AUDIODCT.CK4', 'AUDIOHED.CK4': 'AUDIOHED.CK4',
          'EGADICT.CK4': 'EGADICT.CK4', 'EGAGRAPH.CK4': 'EGAGRAPH.CK4', 'EGAHEAD.CK4': 'EGAHEAD.CK4',
@@ -62,7 +70,7 @@ RULES = [
 ]
 
 
-def main(game, keen4, out):
+def main(game, keen4, out, craigdir=None):
     extra, handled = [], []
     for places, what, setting in RULES:
         handled += places
@@ -89,9 +97,17 @@ def main(game, keen4, out):
                 '# the Mad Mushroom, the schoolfish swim, the Dopefish, the stunned bounder\n'
                 '# recovers, the air-door fix)\n' + '\n'.join(actions) + '\n')
     print('%d actions' % len(actions))
+    # Craig's story begins as Craig: splice his player sprite in from the
+    # Revival of Bliss Craig build (its graphics share Aurora's dictionary).
+    craig = craigdir or os.path.join(os.path.dirname(os.path.abspath(out)), 'revivalc')
+    if os.path.exists(os.path.join(craig, 'EGAGRAPH.CK4')):
+        kw_craig_splice.main(out, craig)
+    else:
+        print('NOTE: %s has no EGAGRAPH.CK4; Craig not spliced (build revivalc '
+              'first, or pass CRAIGDIR). Aurora stays as Keen.' % craig)
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 4:
+    if len(sys.argv) not in (4, 5):
         sys.exit(__doc__)
     main(*sys.argv[1:])
