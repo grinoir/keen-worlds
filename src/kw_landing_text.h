@@ -9,7 +9,7 @@ static const struct { const char *id, *file, *text; } kw_landings[] = {
 	{"party", "LAND_PARTY.RAW", "Ship computer:\n\nYou have now landed in the\nShadowlands.\nThere is a party at the Tower\nof Dusk.\nYou are late.\nAgain."},
 	{"canmore", "LAND_CANMORE.RAW", "Ship computer:\n\nYou have now landed on Azura\nAstrid.\nThe pilot was Craig Canmore.\nI did not agree to this.\nKeen and Mortimer are tied up\nin the back, and they are not\nhappy.\nCraig, go and find your\nsister."},
 	{"ocflore", "LAND_OCFLORE.RAW", "Ship computer:\n\nYou have now landed on Ocflore\nV.\nBeware of the local water.\nThere is a lot of it.\nThe Ormch are waiting to meet\nyou.\nI do not trust them."},
-	{"aurora", "LAND_AURORA.RAW", "Ship computer:\n\nYou have now landed on Aurora\nBliss.\nAnd here we stay.\nMy Navi-Com is sticky with\nVorta Cola, and I cannot take\noff.\nPlease find the spare parts,\nand do not let Craig touch\nanything."},
+	{"aurora", "LAND_AURORA.RAW", "Ship computer:\n\nYou have now landed on Aurora\nBliss, Craig.\nAnd here we stay.\nYou spilled your Vorta Cola\nall over my Navi-Com, and now\nI cannot take off.\nGo and find the spare parts.\nAnd do not touch anything else\nof mine."},
 	{"rtts", "LAND_RTTS.RAW", "Ship computer:\n\nYou have now landed in the far\nShadowlands.\nBeware of the local scouts.\nThey are lost, they are\nhungry, and they all want your\nautograph."},
 	{"suburb", "LAND_SUBURB.RAW", "Ship computer:\n\nYou have now landed on Earth.\nYour own street.\nI am parked by the backyard\nclubhouse.\nPlease try to catch the bus\nthis time."},
 	{"alpham", "LAND_ALPHAM.RAW", "Ship computer:\n\nYou have now docked at the\nAlphamatic.\nVitaCorp's bigger armageddon\nmachine.\nPlease switch it off before we\nleave."},

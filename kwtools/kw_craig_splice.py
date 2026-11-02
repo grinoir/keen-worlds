@@ -18,6 +18,11 @@ HDR_SPRITES = 2   # the sprite-dimension table's chunk
 ENTRY = 18        # bytes per sprite (9 words)
 # Keen's own character sprites (stand/run/jump/shoot/pole/pogo/enter/climb/swim)
 KEEN = list(range(130, 164)) + list(range(167, 174)) + list(range(180, 215)) + list(range(309, 315))
+# Keen on the world map: 8 walk directions x 3 frames (SPR_MAPKEEN_WALK1_* ..+2),
+# chunks 254-277 in Keen 4 (same layout in the Craig build). Spliced into the
+# map too so Craig's story is Craig on the map as well, not just in levels. The
+# ship never uses these, so kw_craig_ship.py (which imports KEEN) leaves them out.
+MAP_KEEN = list(range(254, 278))
 
 def read_dict(path):
     d = open(path, 'rb').read()
@@ -78,12 +83,13 @@ def main(aur, rev):
         explen = struct.unpack_from('<I', blob, 0)[0]
         return explen, bytearray(huff_expand(blob[4:], explen, table))
     ae, atab = unpack(ac[HDR_SPRITES]); re_, rtab = unpack(rc[HDR_SPRITES])
-    for c in KEEN:
+    player = KEEN + MAP_KEEN  # in levels and on the world map
+    for c in player:
         s = c - OFFSPRITES
         atab[s*ENTRY:(s+1)*ENTRY] = rtab[s*ENTRY:(s+1)*ENTRY]
     ac[HDR_SPRITES] = struct.pack('<I', ae) + huff_compress(atab, table)
     # 2) the player pixel data
-    for c in KEEN:
+    for c in player:
         if rc[c] is not None: ac[c] = rc[c]
     # 3) rebuild EGAGRAPH + EGAHEAD
     gr = bytearray(); head = bytearray()
@@ -92,7 +98,8 @@ def main(aur, rev):
         else:
             o = len(gr); head += bytes([o & 0xFF, (o>>8) & 0xFF, (o>>16) & 0xFF]); gr += ch
     open(aur + '/EGAGRAPH.CK4', 'wb').write(gr); open(aur + '/EGAHEAD.CK4', 'wb').write(head)
-    print('Craig spliced into %s: %d player chunks + header entries (EGAGRAPH %d bytes)' % (aur, len(KEEN), len(gr)))
+    print('Craig spliced into %s: %d player chunks (%d map) + header entries (EGAGRAPH %d bytes)' % (
+        aur, len(player), len(MAP_KEEN), len(gr)))
 
 if __name__ == '__main__':
     if len(sys.argv) != 3: sys.exit(__doc__)
