@@ -275,6 +275,14 @@ const KW_Art kw_keenBunkArt = {
 	KW_KEENBUNK_ORIGIN_X, KW_KEENBUNK_ORIGIN_Y, KW_KEENBUNK_TILES_W, KW_KEENBUNK_TILES_H, KW_KEENBUNK_FRAMES,
 	&kw_keenbunkSlots[0][0][0], &kw_keenbunkTiles[0][0][0][0], -1, 0, NULL,
 };
+// Keen and Mortimer tied up (kwtools/kw_captives_art.py): on the Canmore journey
+// Craig flew them here as captives, "not happy", so the bunk holds the two of
+// them roped up instead of Keen asleep.
+#include "kw_captives_art.h"
+const KW_Art kw_captivesArt = {
+	KW_CAPTIVES_ORIGIN_X, KW_CAPTIVES_ORIGIN_Y, KW_CAPTIVES_TILES_W, KW_CAPTIVES_TILES_H, KW_CAPTIVES_FRAMES,
+	&kw_captivesSlots[0][0][0], &kw_captivesTiles[0][0][0][0], -1, 0, NULL,
+};
 static const KW_Art kw_shipArcadeArt = {
 	KW_SHIPARCADE_X, KW_SHIPARCADE_Y, 2, 1, 2,
 	&kw_shipArcadeSlots[0][0][0], &kw_shipArcadeTiles[0][0][0][0], -1, 35, NULL,
@@ -508,9 +516,15 @@ static void KW_ChangeLevel(void)
 	// (on top of the cabin's own art)
 	if (KW_CurrentEpisode() == KW_SHIP && ca_mapOn == 1 && KW_ColaOnConsole())
 		KW_PlaceArt(&kw_colaArt);
-	// Keen asleep in the aft bunk while Craig flies his own story.
-	if (KW_CurrentEpisode() == KW_SHIP && ca_mapOn == 1 && KW_PlaysAsCraig(KW_BoardedFrom()))
-		KW_PlaceArt(&kw_keenBunkArt);
+	// While Craig flies his own story, Keen is in the aft bunk -- dozing on most
+	// of his worlds, but on Canmore he and Mortimer are Craig's tied-up captives.
+	if (KW_CurrentEpisode() == KW_SHIP && ca_mapOn == 1)
+	{
+		if (KW_BoardedFrom() == KW_CANMORE)
+			KW_PlaceArt(&kw_captivesArt);
+		else if (KW_PlaysAsCraig(KW_BoardedFrom()))
+			KW_PlaceArt(&kw_keenBunkArt);
+	}
 }
 
 // The Megarocket runs on Keen 4's graphics, so its hero is Keen. On Craig's own

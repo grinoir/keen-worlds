@@ -3368,7 +3368,9 @@ static void KW_ShipRoomFrame(void)
 		if (KW_PlaysAsCraig(kw_boardedFrom))
 		{
 			SD_PlaySound(CK_SOUNDNUM(SOUND_NEEDKEYCARD));
-			KW_ShowCard("Keen is fast asleep\nin the bunk.\n\nCraig will have to\ndream another day.");
+			KW_ShowCard(kw_boardedFrom == KW_CANMORE
+				? "Keen and Mortimer are\ntied up on the bunk.\n\nNo dreaming for Craig."
+				: "Keen is fast asleep\nin the bunk.\n\nCraig will have to\ndream another day.");
 			return;
 		}
 		kw_dreamInOutpost = false;
