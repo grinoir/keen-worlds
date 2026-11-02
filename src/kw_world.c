@@ -2436,7 +2436,11 @@ static const struct KW_FlightGroup
 	{"Atroxian story",1,2,1,{KW_AREALM,KW_ALPHAMATIC}},
 	{"More levels",1,2,0,{KW_CK55,KW_ASYLUM}},
 	{"Spot's rescue",1,2,1,{KW_RTTS,KW_OSI}},
-	{"Craig's story",1,7,1,{KW_AURORA,KW_CANMORE,KW_SAINT,KW_PARTY,KW_REVIVAL,KW_REVIVALC,KW_FUTURE}},
+	{"Craig's story",1,6,1,{KW_AURORA,KW_CANMORE,KW_SAINT,KW_PARTY,KW_REVIVALC,KW_FUTURE}},
+	// Revival of Bliss ships as two builds of one game, the same battle played
+	// as Craig or as Keen. Craig's build is the story stop above (it is Craig's
+	// story); the Keen build stays as an optional way to replay the finale.
+	{"Revival, as Keen",1,1,0,{KW_REVIVAL}},
 	{"Mortimer's end",1,1,1,{KW_CLORTS}},
 	{"Further trips",1,2,0,{KW_OCFLORE,KW_TFOS}},
 	{NULL,1,1,0,{KW_MENU_SCENES}},
@@ -2505,8 +2509,8 @@ static void KW_FlightRelationship(int world,char *text,size_t size)
 	case KW_CANMORE:relationship="After Aurora Bliss. Craig flies.";break;
 	case KW_SAINT:relationship="If Craig dies on Azura Astrid.";break;
 	case KW_PARTY:relationship="If Craig lives (Myah's armour).";break;
-	case KW_REVIVAL:relationship="After Canmore. Keen's way.";break;
-	case KW_REVIVALC:relationship="After Canmore. Craig's way.";break;
+	case KW_REVIVALC:relationship="After Canmore. The final battle, as Craig.";break;
+	case KW_REVIVAL:relationship="The same battle, played as Keen. Optional.";break;
 	case KW_FUTURE:relationship="After Revival. Many years on.";break;
 	case KW_CLORTS:relationship="The finale's end. After Bounty.";break;
 	case KW_TFOS:relationship="A trip of its own.";break;
