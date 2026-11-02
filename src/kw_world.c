@@ -3364,6 +3364,13 @@ static void KW_ShipRoomFrame(void)
 	}
 	if (marker == KW_SHIP_BED)
 	{
+		// On Craig's worlds Keen has the bunk (and the dreaming); Craig can't.
+		if (KW_PlaysAsCraig(kw_boardedFrom))
+		{
+			SD_PlaySound(CK_SOUNDNUM(SOUND_NEEDKEYCARD));
+			KW_ShowCard("Keen is fast asleep\nin the bunk.\n\nCraig will have to\ndream another day.");
+			return;
+		}
 		kw_dreamInOutpost = false;
 		KW_Dream();
 		return;

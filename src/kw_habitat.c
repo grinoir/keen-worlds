@@ -268,6 +268,13 @@ const KW_Art kw_colaArt = {
 	KW_COLA_ORIGIN_X, KW_COLA_ORIGIN_Y, KW_COLA_TILES_W, KW_COLA_TILES_H, KW_COLA_FRAMES,
 	&kw_colaSlots[0][0][0], &kw_colaTiles[0][0][0][0], -1, 0, NULL,
 };
+// Keen dozing in the aft bunk (kwtools/kw_keenbunk_art.py), on Craig's worlds:
+// you play Craig, so Keen has the ship -- and the bunk, so Craig can't dream.
+#include "kw_keenbunk_art.h"
+const KW_Art kw_keenBunkArt = {
+	KW_KEENBUNK_ORIGIN_X, KW_KEENBUNK_ORIGIN_Y, KW_KEENBUNK_TILES_W, KW_KEENBUNK_TILES_H, KW_KEENBUNK_FRAMES,
+	&kw_keenbunkSlots[0][0][0], &kw_keenbunkTiles[0][0][0][0], -1, 0, NULL,
+};
 static const KW_Art kw_shipArcadeArt = {
 	KW_SHIPARCADE_X, KW_SHIPARCADE_Y, 2, 1, 2,
 	&kw_shipArcadeSlots[0][0][0], &kw_shipArcadeTiles[0][0][0][0], -1, 35, NULL,
@@ -501,6 +508,9 @@ static void KW_ChangeLevel(void)
 	// (on top of the cabin's own art)
 	if (KW_CurrentEpisode() == KW_SHIP && ca_mapOn == 1 && KW_ColaOnConsole())
 		KW_PlaceArt(&kw_colaArt);
+	// Keen asleep in the aft bunk while Craig flies his own story.
+	if (KW_CurrentEpisode() == KW_SHIP && ca_mapOn == 1 && KW_PlaysAsCraig(KW_BoardedFrom()))
+		KW_PlaceArt(&kw_keenBunkArt);
 }
 
 // The Megarocket runs on Keen 4's graphics, so its hero is Keen. On Craig's own
