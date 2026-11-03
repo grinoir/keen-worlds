@@ -52,7 +52,15 @@ void KW9_FriendMessage(void) // (not static: the scripted dialogue test calls it
 	IN_ClearKeysDown();
 	IN_WaitButton();
 
+	// Redraw the whole window for the reply, as CK4_ShowPrincessMessage does --
+	// not just paint the second face over the first. On a multi-buffer renderer
+	// an incomplete second draw left the two portraits doubled (one half out of
+	// the box); a fresh redraw keeps every buffer consistent.
+	US_CenterWindow(0x1A, 8);
+	US_SetWindowW(US_GetWindowW() - 0x30);
 	VHB_DrawBitmap(US_GetWindowW() + US_GetWindowX(), US_GetWindowY(), pic2);
+	US_SetPrintY(US_GetPrintY() + 0xC);
+	US_CPrint(text);
 	VH_UpdateScreen();
 	VL_DelayTics(30);
 	IN_ClearKeysDown();
