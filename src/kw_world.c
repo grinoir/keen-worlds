@@ -48,6 +48,20 @@ Licensed under the GNU GPL v2 or later, like the rest of Omnispeak.
 #include "kw_arealm.h"
 #include "kw_title_art.h"
 
+// MinGW (the Windows build) has no POSIX setenv/unsetenv; map them to _putenv,
+// which msvcrt copies the string, so the developer dialogue-test env toggles
+// below compile and work on Windows too.
+#ifdef _WIN32
+static int kw_putenv(const char *name, const char *value)
+{
+	char buf[256];
+	snprintf(buf, sizeof(buf), "%s=%s", name, value);
+	return _putenv(buf);
+}
+#define setenv(n, v, overwrite) kw_putenv((n), (v))
+#define unsetenv(n) kw_putenv((n), "")
+#endif
+
 extern const char *ck_episodeFile;
 extern CK_Difficulty ck_startingDifficulty;
 
