@@ -1628,7 +1628,7 @@ void FF_StateMachine(CK_object *ob)
 	{
 		ob->gfxChunk = (ob->xDirection > 0) ? state->chunkRight : state->chunkLeft;
 	}
-	if (ob->gfxChunk == -1)
+	if ((int16_t)ob->gfxChunk == -1)
 	{
 		ob->gfxChunk = 0;		// make it invisable this time
 	}
@@ -1684,7 +1684,7 @@ void FF_NewState(CK_object *ob, CK_action *state)
 	else if (state->chunkLeft)
 		ob->gfxChunk = state->chunkLeft;
 
-	if (ob->gfxChunk == -1)
+	if ((int16_t)ob->gfxChunk == -1)
 		ob->gfxChunk = 0;
 
 	ck_nextX = ck_nextY = 0;
@@ -1785,7 +1785,7 @@ void FF_ChangeState(CK_object *ob, CK_action *state)
 	if (state->chunkRight && ob->xDirection > 0) ob->gfxChunk = state->chunkRight;
 	else if (state->chunkLeft) ob->gfxChunk = state->chunkLeft;
 #endif
-	if (ob->gfxChunk == -1) ob->gfxChunk = 0;
+	if ((int16_t)ob->gfxChunk == -1) ob->gfxChunk = 0;
 
 	ob->visible = true;			// it will need to be redrawn this frame
 	ck_nextX = ck_nextY = 0;					// no movement

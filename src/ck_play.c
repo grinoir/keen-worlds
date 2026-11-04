@@ -25,6 +25,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "kw_habitat.h"
 #include "kw_music.h"
 #include "kw_osi.h"
+#include "kw_arealm.h"
+#include "kw_fitf.h"
 
 void AR_CheckpointFrame(void); // KEEN WORLDS: Atroxian Realm (kw_arealm.c)
 bool AR_IsActive(void);
@@ -835,6 +837,18 @@ void CK_OverlayForegroundTile(int fgTile, int overlayTile)
 // TODO: make this interoperable between episodes
 void CK_WallDebug()
 {
+	// KEEN WORLDS: Foray in the Forest and Atroxian Realm keep their slope
+	// pictures elsewhere (and FITF has other wall kinds), so this drew the
+	// wrong tiles there or quit the game (found by K1n9_Duk3)
+	if (FF_IsActive() || AR_IsActive())
+	{
+		VL_FixRefreshBuffer();
+		US_CenterWindow(24, 3);
+		US_PrintCentered("Not in this world");
+		VH_UpdateScreen();
+		IN_WaitButton();
+		return;
+	}
 	VL_FixRefreshBuffer();
 	US_CenterWindow(24, 3);
 	US_PrintCentered("WORKING");
@@ -865,9 +879,8 @@ void CK_WallDebug()
 			ti = TI_ForeRight(i) & 7;
 			if (ti > 1)
 			{
-				char buf[128];
-				sprintf(buf, "CK_WallDebug: East wall other than 1:%d", i);
-				Quit(buf);
+				// KEEN WORLDS: a mod's own wall kind; leave it unmarked rather
+				// than quit (was "CK_WallDebug: East wall other than 1")
 			}
 			else if (ti == 1)
 			{
@@ -877,9 +890,8 @@ void CK_WallDebug()
 			ti = TI_ForeLeft(i) & 7;
 			if (ti > 1)
 			{
-				char buf[128];
-				sprintf(buf, "CK_WallDebug: West wall other than 1:%d", i);
-				Quit(buf);
+				// KEEN WORLDS: a mod's own wall kind; leave it unmarked rather
+				// than quit (was "CK_WallDebug: West wall other than 1")
 			}
 			else if (ti == 1)
 			{
@@ -1169,6 +1181,12 @@ void CK_CheckKeys()
 	{
 		CK_ShowStatusWindow();
 		RF_ForceRefresh(); // Reanimate the tiles
+		SD_SetLastTimeCount(SD_GetTimeCount());
+	}
+	// KEEN WORLDS: Foray in the Forest's item detector (Right Shift; kw_fitf.c)
+	else if (FF_IsActive() && FF_DetectorKeys())
+	{
+		RF_ForceRefresh();
 		SD_SetLastTimeCount(SD_GetTimeCount());
 	}
 

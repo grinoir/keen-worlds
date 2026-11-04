@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "id_vh.h"
 #include "ck_def.h"
 #include "ck_play.h"
+#include "kw_dreams.h"
 
 #include <stdio.h>
 #include <stdlib.h> /* For abs() */
@@ -457,7 +458,8 @@ void CK_PhysUpdateNormalObj(CK_object *obj)
 				CK_PhysClipVert(obj);
 
 			//TODO: Handle keen NOT being pushed.
-			if (obj == ck_keenObj && (ck_currentEpisode->ep != EP_CK6 || !ck_keenIgnoreVertClip))
+			// KEEN WORLDS: every episode checks it (not just Keen 6), as in the originals
+			if (obj == ck_keenObj && !ck_keenIgnoreVertClip)
 			{
 				if (!obj->topTI && ck_deltaRects.unitY2 > 0)
 				{
@@ -718,8 +720,15 @@ void CK_PhysPushX(CK_object *pushee, CK_object *pusher)
 	}
 	// KEEN WORLDS: CK_PushXResetsY (K1n9_Duk3's fix in Canmore's Redemption):
 	// no height left over from whatever moved last
-	if (CK_INT(CK_PushXResetsY, 0))
+	// Keen Dreams always: its ClipToSpriteSide (KD_PLAY.C) moves Keen only by
+	// his own ymove, so a Carrot Courier doesn't drag him down mid-jump. And
+	// while pushed, the ledge "kludge" is off, so it can push him off an edge.
+	bool kd = KD_IsActive();
+	if (kd || CK_INT(CK_PushXResetsY, 0))
 		ck_nextY = 0;
+	bool oldIgnoreVertClip = ck_keenIgnoreVertClip;
+	if (kd)
+		ck_keenIgnoreVertClip = true;
 	int16_t deltaPosX = pusher->deltaPosX - pushee->deltaPosX;
 	int16_t deltaX_1 = pusher->clipRects.unitX2 - pushee->clipRects.unitX1;
 	int16_t deltaX_2 = pushee->clipRects.unitX2 - pusher->clipRects.unitX1;
@@ -731,6 +740,7 @@ void CK_PhysPushX(CK_object *pushee, CK_object *pusher)
 		if (pushee->currentAction->stickToGround)
 			ck_nextY = -deltaX_1 + 16;
 		CK_PhysUpdateNormalObj(pushee);
+		ck_keenIgnoreVertClip = oldIgnoreVertClip;
 		pushee->rightTI = 1;
 		return;
 	}
@@ -742,9 +752,11 @@ void CK_PhysPushX(CK_object *pushee, CK_object *pusher)
 		if (pushee->currentAction->stickToGround)
 			ck_nextY = deltaX_2 + 16;
 		CK_PhysUpdateNormalObj(pushee);
+		ck_keenIgnoreVertClip = oldIgnoreVertClip;
 		pushee->leftTI = 1;
 		return;
 	}
+	ck_keenIgnoreVertClip = oldIgnoreVertClip;
 }
 
 void CK_PhysPushY(CK_object *pushee, CK_object *pusher)
@@ -782,6 +794,62 @@ void CK_PhysPushXY(CK_object *passenger, CK_object *platform, bool squish)
 	if (FF_IsActive())
 	{
 		FF_ClipToSprite(passenger, platform, squish);
+		return;
+	}
+	// KEEN WORLDS: Keen Dreams has no platform riding (CK_KeenRidePlatform);
+	// its ClipToSprite (KD_PLAY.C) moves a rider along with the thing under
+	// him, which is how Keen rides the Canteloupe Carts (found by K1n9_Duk3)
+	if (KD_IsActive())
+	{
+		int16_t xmove = platform->deltaPosX - passenger->deltaPosX;
+		ck_nextX = ck_nextY = 0;
+		int16_t leftinto = platform->clipRects.unitX2 - passenger->clipRects.unitX1;
+		int16_t rightinto = passenger->clipRects.unitX2 - platform->clipRects.unitX1;
+		if (leftinto > 0 && leftinto <= xmove)
+		{
+			ck_nextX = leftinto;
+			int16_t wasOnFloor = passenger->topTI;
+			CK_PhysUpdateNormalObj(passenger);
+			if (!passenger->topTI)
+				passenger->topTI = wasOnFloor;
+			if (squish && passenger->leftTI)
+				KD_KillKeen();
+			passenger->rightTI = 1;
+			return;
+		}
+		if (rightinto > 0 && rightinto <= -xmove)
+		{
+			ck_nextX = -rightinto;
+			int16_t wasOnFloor = passenger->topTI;
+			CK_PhysUpdateNormalObj(passenger);
+			if (!passenger->topTI)
+				passenger->topTI = wasOnFloor;
+			if (squish && passenger->rightTI)
+				KD_KillKeen();
+			passenger->leftTI = 1;
+			return;
+		}
+		int16_t topinto = platform->clipRects.unitY2 - passenger->clipRects.unitY1;
+		int16_t bottominto = passenger->clipRects.unitY2 - platform->clipRects.unitY1;
+		if (bottominto > 0)
+		{
+			ck_nextY = -bottominto + 16;
+			ck_nextX = platform->deltaPosX;
+			int16_t sticks = passenger->currentAction->stickToGround;
+			passenger->currentAction->stickToGround = false;
+			int16_t wasOnFloor = passenger->topTI;
+			CK_PhysUpdateNormalObj(passenger);
+			if (!passenger->topTI)
+				passenger->topTI = wasOnFloor;
+			passenger->currentAction->stickToGround = sticks;
+			passenger->topTI = 25;
+		}
+		else if (topinto > 0)
+		{
+			ck_nextY = topinto;
+			CK_PhysUpdateNormalObj(passenger);
+			passenger->bottomTI = 25;
+		}
 		return;
 	}
 	int16_t dx = platform->deltaPosX - passenger->deltaPosX;

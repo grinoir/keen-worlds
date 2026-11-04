@@ -20,6 +20,9 @@
 %int ck5_mapElevators 0
 %int ck_minDoneLevel 1
 %int ck_maxDoneLevel 25 # levels the map marks as done
+%int CK5_MapMarsMinY 30000 # no Korath III: Keen 5's "steps out onto Korath III" on the map
+%string ck_str_exitToMap "Exit to Krisle" # (its KD_GAME.C; found by K1n9_Duk3)
+%int ck_maxEnterLevel 25 # its map entrances go to level 25, the crash site (AR_MAP.C; Keen 5 stops at 18)
 
 %stringarray ck_str_levelNames
 	"Krisle",
@@ -127,6 +130,10 @@
 
 %intarray CK_LevelMusic 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35
 %int CK_NumMusicLevels 36
+%int CK_StarWarsMusicLevel 29 # SCROLLING_STORY_MUS
+%intarray ck_starWarsPalette
+	0x00, 0x01, 0x02, 0x03, 0x04, 0x10, 0x06, 0x07,
+	0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x00
 
 # Chunk names the engine's shared code uses, as Atroxian Realm numbers them
 %int PIC_ARROWDIM 47
@@ -193,6 +200,13 @@
 %int SPR_MAPKEEN_WALK1_SW 279
 %int SPR_MAPKEEN_WALK1_NW 282
 %int SPR_MAPKEEN_WALK1_NE 285
+%int SPR_MAPKEEN_STAND_W 276
+%int SPR_MAPKEEN_WAVE1 288
+%int SPR_MAPKEEN_WAVE2 289
+%int SPR_FLAGFLAP1 315
+%int SPR_FLAGFLAP2 316
+%int SPR_FLAGFLAP3 317
+%int SPR_FLAGFLAP4 318
 %int SPR_GEM_A1 252
 %int SPR_GEM_B1 254
 %int SPR_GEM_C1 256

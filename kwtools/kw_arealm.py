@@ -48,7 +48,11 @@ ACTION_ALIASES = {
     'CK_ACT_item': 'CK5_act_item', 'CK_ACT_CentilifeNotify1': 'CK_ACT_VitalinNotify1',
     'CK_ACT_MapFlag0': 'CK5_ACT_MapFlag0', 'CK_ACT_MapFlagFlips0': 'CK5_ACT_MapFlagFlips0',
     'CK_ACT_MapKeenStart': 'CK5_ACT_MapKeenStart', 'CK_ACT_MapKeenWalk0': 'CK5_ACT_MapKeenWalk0',
-    'CK_ACT_NULL': 'CK_ACT_Null', 'CK_ACT_keenEnterDoor0': 'CK_ACT_keenEnterDoor1',
+    'CK_ACT_NULL': 'CK_ACT_Null',
+    # Its doors (KD_KEEN.C): a normal one starts at its keenEnterDoor2; its
+    # keenEnterDoor1 (with the long pause) is Keen 5's keenEnterSecurityDoor
+    # (found by K1n9_Duk3: every door had the pause)
+    'CK_ACT_keenEnterDoor0': 'CK_ACT_keenEnterDoor2', 'CK_ACT_keenEnterSecurityDoor': 'CK_ACT_keenEnterDoor1',
 }
 
 # Sound names Omnispeak's shared code plays -> Atroxian Realm's sound
@@ -103,6 +107,10 @@ CHUNKS = {
     'SPR_MAPKEEN_WALK1_N': 'WORLDKEENU1SPR', 'SPR_MAPKEEN_WALK1_S': 'WORLDKEEND1SPR',
     'SPR_MAPKEEN_WALK1_SE': 'WORLDKEENDR1SPR', 'SPR_MAPKEEN_WALK1_SW': 'WORLDKEENDL1SPR',
     'SPR_MAPKEEN_WALK1_NW': 'WORLDKEENUL1SPR', 'SPR_MAPKEEN_WALK1_NE': 'WORLDKEENUR1SPR',
+    # (the map Keen's first picture, before his action runs: its AR_MAP.C
+    # has WORLDKEENDR1SPR; Keen 5's number is a Spheremint here)
+    'SPR_MAPKEEN_STAND_W': 'WORLDKEENDR1SPR', 'SPR_MAPKEEN_WAVE1': 'WORLDKEENWAVE1SPR', 'SPR_MAPKEEN_WAVE2': 'WORLDKEENWAVE2SPR',
+    'SPR_FLAGFLAP1': 'FLAGWAVE1SPR', 'SPR_FLAGFLAP2': 'FLAGWAVE2SPR', 'SPR_FLAGFLAP3': 'FLAGWAVE3SPR', 'SPR_FLAGFLAP4': 'FLAGWAVE4SPR',
     'SPR_GEM_A1': 'REDGEM1SPR', 'SPR_GEM_B1': 'YELLOWGEM1SPR', 'SPR_GEM_C1': 'BLUEGEM1SPR', 'SPR_GEM_D1': 'GREENGEM1SPR',
     'SPR_100_PTS1': 'POINTS100ITEM1SPR', 'SPR_200_PTS1': 'POINTS200ITEM1SPR', 'SPR_500_PTS1': 'POINTS500ITEM1SPR',
     'SPR_1000_PTS1': 'POINTS1000ITEM1SPR', 'SPR_2000_PTS1': 'POINTS2000ITEM1SPR', 'SPR_5000_PTS1': 'POINTS5000ITEM1SPR',
@@ -297,7 +305,10 @@ def main():
                 '%string ca_audioInfoFile "AUDINFOE.CKD"\n%string ca_audioDict "AUDIODCT.CKD"\n'
                 '%int ca_audioUncompressed 1\n%string ca_audioFile "AUDIOT.CKD"\n%string ca_audioHead "AUDIOHED.CKD"\n\n')
         f.write('%%int CK_highScoreLevel %d\n%%int ck5_mapElevators 0\n' % names.index('HighScores'))
-        f.write('%int ck_minDoneLevel 1\n%int ck_maxDoneLevel 25 # levels the map marks as done\n\n')
+        f.write('%int ck_minDoneLevel 1\n%int ck_maxDoneLevel 25 # levels the map marks as done\n')
+        f.write('%int CK5_MapMarsMinY 30000 # no Korath III: Keen 5\'s "steps out onto Korath III" on the map\n'
+                '%string ck_str_exitToMap "Exit to Krisle" # (its KD_GAME.C; found by K1n9_Duk3)\n'
+                '%int ck_maxEnterLevel 25 # its map entrances go to level 25, the crash site (AR_MAP.C; Keen 5 stops at 18)\n\n')
         f.write('%stringarray ck_str_levelNames\n' + ',\n'.join('\t"%s"' % n for n in names) + '\n\n')
         # Its own "Keen enters" lines (AR_MISC.C), in the order of its table.
         misc = open(os.path.join(src, 'AR_MISC.C'), errors='replace').read()
@@ -316,7 +327,12 @@ def main():
                 % (texts['ck_levelEntryText_0b'], texts['ck_levelEntryText_25b']))
         # Its songs are in level order: level n plays song n; later ones are for texts.
         f.write('%intarray CK_LevelMusic ' + ', '.join(str(i) for i in range(aud[0])) + '\n')
-        f.write('%%int CK_NumMusicLevels %d\n\n' % aud[0])
+        f.write('%%int CK_NumMusicLevels %d\n' % aud[0])
+        # Its story scroller (CK_DrawStarWars, KD_INTER.C): its own palette and
+        # song (it had Keen 5's; found by K1n9_Duk3)
+        f.write('%int CK_StarWarsMusicLevel 29 # SCROLLING_STORY_MUS\n'
+                '%intarray ck_starWarsPalette\n\t0x00, 0x01, 0x02, 0x03, 0x04, 0x10, 0x06, 0x07,\n'
+                '\t0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x00\n\n')
         f.write('# Chunk names the engine\'s shared code uses, as Atroxian Realm numbers them\n')
         for name, val in CHUNKS.items():
             f.write('%%int %s %d\n' % (name, chunks[val] if isinstance(val, str) else val))

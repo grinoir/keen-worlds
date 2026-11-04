@@ -1187,7 +1187,7 @@ void KW_SwitchWorld(int world)
 	FF_LeaveWorld(); // the standard colours again (Foray in the Forest sets its own)
 
 	// Nothing may keep playing from the old world's audio data.
-	SD_MusicOff();
+	SD_ForgetMusic();
 	SD_StopSound();
 
 	// Swap the world: data files, then variables, then data files again
@@ -3072,6 +3072,10 @@ static void KW_DreamFadeOut(void)
 		VL_FadeToBlackTimed(14);
 		VL_DelayTics(28);
 	}
+	// The music stops and the AdLib comes back to full volume, as after a
+	// flight; left faded, all AdLib music and sound stayed silent after
+	// waking until the next flight (found by K1n9_Duk3)
+	KW_MusicQuiet();
 }
 
 // Keen Dreams Gold Edition runs in its own native companion, like the
@@ -3153,6 +3157,15 @@ static void KW_WakeUp(void)
 	if (kw_currentWorld != KW_DREAM)
 		return;
 	printf("KW_AUTODREAM: Keen wakes up\n");
+	// Woken inside a level, he plays it from the start next time, so it is
+	// settled as dying settles it: its bombs picked up go, its bombs thrown
+	// come back (else bombs could be farmed, or lost in the boss fight;
+	// found by K1n9_Duk3)
+	if (ca_mapOn != 0)
+	{
+		void KD_KeenDied(void);
+		KD_KeenDied();
+	}
 	KW_DreamFadeOut();
 	kw_shipUpUsed = true;
 	kw_dreamEnded = 1;
@@ -5442,6 +5455,8 @@ void KW_SelfTest(void)
 				QuitF("KW_SelfTest: Foray in the Forest map %d has no Keen!", lv);
 			KW_TestLevelSpritesCached("fitf", lv);
 			CK_DrawStatusWindow(); // its own window; the engine's would use Keen 5's pictures
+			void FF_TestDetector(void);
+			FF_TestDetector(); // and its item detector
 			bool god = ck_godMode;
 			ck_godMode = true;
 			KW_TestRunObjects(150);
@@ -5484,6 +5499,65 @@ void KW_SelfTest(void)
 				QuitF("KW_SelfTest: Foray in the Forest save in level %d: %s!", lv, wrong);
 		}
 		remove(kw_testSaveFile);
+		// Every song plays, KMF (most of them) and IMF alike: a few seconds of
+		// each through the music player, which must have read into it
+		{
+			void FF_StartMusic(uint16_t song, bool repeat);
+			void SDL_t0Service(void);
+			extern int sd_music_currentIndex;
+			extern const uint8_t *sd_music_data;
+			ID_MusicMode oldMode = SD_GetMusicMode();
+			int kmfSongs = 0;
+			if (SD_SetMusicMode(smm_AdLib))
+			{
+				for (int song = 0; song < CK_INT(CK_NumMusicLevels, 20); ++song)
+				{
+					FF_StartMusic(song, true);
+					for (int t = 0; t < 560 * 4; ++t)
+						SDL_t0Service();
+					if (sd_music_currentIndex <= 0)
+						QuitF("KW_SelfTest: Foray in the Forest song %d doesn't play!", song);
+					const uint8_t *chunk = (const uint8_t *)CA_audio[ca_audInfoE.startMusic + CK_INTELEMENT(CK_LevelMusic, song)];
+					if (chunk && !memcmp(chunk, "KMF\x1A", 4))
+					{
+						if (sd_music_data != chunk + 8)
+							QuitF("KW_SelfTest: Foray in the Forest song %d isn't played as KMF!", song);
+						++kmfSongs;
+					}
+				}
+				StopMusic();
+				SD_ForgetMusic();
+				printf("PASS: Foray in the Forest plays its %d songs (%d of them KMF)\n", CK_INT(CK_NumMusicLevels, 20), kmfSongs);
+			}
+			else
+				printf("NOTE: no AdLib here, so Foray in the Forest's songs were not played\n");
+			SD_SetMusicMode(oldMode);
+		}
+		// Every ending reads through, whatever Keen collected: its conditions
+		// choose the pages (a wrong page count quit with "Text not headed with ^P")
+		{
+			void CK_ShowTextPages(int textChunk, int song, bool blackBackground);
+			void FF_TestCollected(int bits, int cans);
+			const char *talk = getenv("KW_AUTOTALK");
+			char *oldTalk = talk ? strdup(talk) : NULL;
+			setenv("KW_AUTOTALK", "999999", 1); // no waiting for keys
+			static const int collected[][2] = {{0, 0}, {0x3F, 17}, {0x05, 3}};
+			for (int c = 0; c < 3; ++c)
+				for (int bonus = 0; bonus < 2; ++bonus)
+					for (int chunk = 7766; chunk <= 7771; ++chunk) // FF_T_END_WIN to FF_T_END_TRICKERY
+					{
+						FF_TestCollected(collected[c][0], collected[c][1]);
+						ck_gameState.levelsDone[20 /* MAP_BONUSLEVEL */] = bonus;
+						CK_ShowTextPages(chunk, -1, false);
+					}
+			FF_TestCollected(0, 0);
+			ck_gameState.levelsDone[20] = 0;
+			if (oldTalk)
+				setenv("KW_AUTOTALK", oldTalk, 1);
+			else
+				unsetenv("KW_AUTOTALK");
+			free(oldTalk);
+		}
 		// Arriving by Megarocket puts Keen beside the landed ship in its BwB level.
 		const KW_Ship *ffShip = KW_ShipFor(KW_FITF);
 		kw_placeArrivalAtShip = true;

@@ -202,6 +202,50 @@ static void FF_TextDelay(int tics)
 		IN_UserInput(tics, false);
 }
 
+// KEEN WORLDS: a picture on a page, cut off at the bottom of the page. The
+// Brainfucl's ending (FITF) has one reaching 59 pixels past it, which DOS drew
+// into unseen video memory but here wrote past the screen's (and crashed).
+static void CK_DrawPageBitmap(int x, int y, int chunk)
+{
+	VH_BitmapTableEntry dim = VH_GetBitmapTableEntry(chunk - ca_gfxInfoE.offBitmaps);
+	int w = dim.width * 8, h = dim.height, shown = 200 - y;
+	if (y < 0 || shown >= h)
+	{
+		VHB_DrawBitmap(x, y, chunk);
+		return;
+	}
+	if (shown <= 0)
+		return;
+	// its four planes, each only as far down as is shown
+	uint8_t *src = (uint8_t *)CA_GetGrChunk(chunk, 0, "Bitmap", true);
+	int plane = dim.width * h, cut = dim.width * shown;
+	uint8_t *crop = (uint8_t *)malloc(cut * 4);
+	if (!crop)
+		return;
+	for (int p = 0; p < 4; ++p)
+		memcpy(crop + p * cut, src + p * plane, cut);
+	x += VL_GetScrollX() & 8;
+	y += VL_GetScrollY();
+	if (VH_MarkUpdateBlock(x, y, x + w, y + shown))
+		VL_UnmaskedToScreen(crop, x, y, w, shown);
+	free(crop);
+}
+
+// A song the text started itself (^M). Its data goes with the text's cache
+// level, so it is stopped before that is freed (it played on, from freed memory).
+static bool ck_textStartedMusic;
+
+// ^In: when condition n is false, skip to the next ^I (or ^E)
+static void FF_HandleCondition(void)
+{
+	int num = ParseNumber();
+	RipToEOL();
+	if (!FF_TextCondition(num))
+		while (!(help_ptr[0] == '^' && CK_Cross_toupper(help_ptr[1]) == 'I') &&
+			!(help_ptr[0] == '^' && CK_Cross_toupper(help_ptr[1]) == 'E'))
+			help_ptr++;
+}
+
 // Its commands; false for one the games' viewer handles itself.
 static bool FF_HandleCommand(void)
 {
@@ -215,16 +259,9 @@ static bool FF_HandleCommand(void)
 		help_ptr++;
 		return true;
 	case 'I':
-	{
-		int num = ParseNumber();
-		RipToEOL();
-		if (!FF_TextCondition(num))
-			while (!(help_ptr[0] == '^' && CK_Cross_toupper(help_ptr[1]) == 'I') &&
-				!(help_ptr[0] == '^' && CK_Cross_toupper(help_ptr[1]) == 'E'))
-				help_ptr++;
+		FF_HandleCondition();
 		help_unitPending = true;
 		return true;
-	}
 	case 'M':
 		switch (CK_Cross_toupper(help_ptr[1]))
 		{
@@ -236,9 +273,11 @@ static bool FF_HandleCommand(void)
 			break;
 		case 'O':
 			FF_StartMusic(ParseNumber(), false);
+			ck_textStartedMusic = true;
 			break;
 		default:
 			FF_StartMusic(ParseNumber(), true);
+			ck_textStartedMusic = true;
 			break;
 		}
 		RipToEOL();
@@ -287,7 +326,16 @@ void HandleCommand(void)
 		w = ParseNumber();
 		h = ParseNumber();
 		// (Foray in the Forest: in a colour of its own, if one is given)
-		VHB_Bar(help_x, help_y, w, h, FF_IsActive() ? ParseHexNumber(HELP_BACKCOLOUR) : 4);
+		{
+			int colour = FF_IsActive() ? ParseHexNumber(HELP_BACKCOLOUR) : 4;
+			// KEEN WORLDS: kept on the page. A box reaching past it (one of
+			// FITF's endings has one) was drawn past the end of the screen's
+			// memory; DOS just wrote into video memory nobody saw.
+			int x = help_x < 0 ? 0 : help_x, y = help_y < 0 ? 0 : help_y;
+			int x2 = help_x + w > 320 ? 320 : help_x + w, y2 = help_y + h > 200 ? 200 : help_y + h;
+			if (x2 > x && y2 > y)
+				VHB_Bar(x, y, x2 - x, y2 - y, colour);
+		}
 		RipToEOL();
 		break;
 
@@ -360,7 +408,7 @@ void HandleCommand(void)
 		}
 		else
 		{
-		VHB_DrawBitmap(help_x & ~7, help_y, help_pic);
+		CK_DrawPageBitmap(help_x & ~7, help_y, help_pic);
 		bmpinfo = VH_GetBitmapTableEntry(help_pic - ca_gfxInfoE.offBitmaps);
 		w = bmpinfo.width * 8;
 		h = bmpinfo.height;
@@ -634,6 +682,14 @@ void CacheLayoutGraphics(void)
 			if (c == 'P')
 			{
 				help_num_pages++;
+			}
+			/* KEEN WORLDS: Foray in the Forest's conditions decide which pages
+			 * are shown, so count only those (its CacheLayoutGraphics; without
+			 * this its endings quit with "Text not headed with ^P") */
+			if (c == 'I' && FF_IsActive())
+			{
+				FF_HandleCondition();
+				continue;
 			}
 			/* If we've reached the end, rewind the help pointer and return */
 			if (c == 'E')
@@ -1133,8 +1189,11 @@ void CK_ShowTextPages(int textChunk, int song, bool blackBackground)
 	help_textStart = NULL;
 	MM_SetLock(&ca_graphChunks[textChunk], false);
 	MM_FreePtr(&ca_graphChunks[textChunk]);
-	if (song >= 0)
+	if (song >= 0 || ck_textStartedMusic)
 		StopMusic();
+	if (ck_textStartedMusic)
+		SD_ForgetMusic(); // (its data is freed with the cache level below)
+	ck_textStartedMusic = false;
 	CA_DownLevel();
 	IN_ClearKeysDown();
 	VL_ClearScreen(blackBackground ? 0 : 4);

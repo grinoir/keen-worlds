@@ -386,6 +386,10 @@ int sd_music_nextEventTime;
 int sd_music_trackSize;
 // Is music currently playing?
 bool sd_musicStarted;
+// KEEN WORLDS: the track is KMF (K1n9_Duk3's format, Foray in the Forest's
+// ID_SD.C): blocks of a word (low byte: how many register writes follow,
+// high byte: the delay after them) and the writes, two bytes each
+static bool sd_music_isKMF;
 
 typedef CK_PACKED_STRUCT(SD_MusicTrack
 {
@@ -412,7 +416,20 @@ static void SD_AL_MusicService()
 	if (!sd_musicStarted)
 		return;
 
-	while (sd_music_currentIndex < sd_music_trackSize)
+	while (sd_music_isKMF && sd_music_currentIndex + 2 <= sd_music_trackSize)
+	{
+		if (sd_music_nextEventTime > sd_music_currentTime)
+			break;
+		int count = sd_music_data[sd_music_currentIndex] | (sd_music_data[sd_music_currentIndex + 1] << 8);
+		sd_music_currentIndex += 2;
+		sd_music_nextEventTime = sd_music_currentTime + (count >> 8);
+		for (count &= 0xFF; count && sd_music_currentIndex + 2 <= sd_music_trackSize; --count)
+		{
+			sd_backend->alOut(sd_music_data[sd_music_currentIndex], sd_music_data[sd_music_currentIndex + 1]);
+			sd_music_currentIndex += 2;
+		}
+	}
+	while (!sd_music_isKMF && sd_music_currentIndex < sd_music_trackSize)
 	{
 		if (sd_music_nextEventTime > sd_music_currentTime)
 			break;
@@ -700,7 +717,21 @@ void SD_MusicOn(void)
 	if (!sd_backend)
 		return;
 	sd_backend->lock();
-	sd_musicStarted = true;
+	sd_musicStarted = sd_music_data != NULL; // KEEN WORLDS: not a forgotten song
+	sd_backend->unlock();
+}
+
+// KEEN WORLDS: stop the music and forget it, before its data is freed (a
+// later SD_MusicOn, like Foray in the Forest's ^MR, played the freed song)
+void SD_ForgetMusic(void)
+{
+	SD_MusicOff();
+	if (!sd_backend)
+		return;
+	sd_backend->lock();
+	sd_music_data = NULL;
+	sd_music_trackSize = 0;
+	sd_music_currentIndex = 0;
 	sd_backend->unlock();
 }
 
@@ -723,8 +754,18 @@ void SD_MusicOff(void)
 }
 
 // Start a specific music track.
+static void SD_StartMusicFormat(const uint8_t *data, uint16_t length, bool kmf);
+
 void SD_StartMusic(SD_MusicTrack *music)
 {
+	// KEEN WORLDS: a KMF song starts with "KMF\x1A", its rate (unused, as in
+	// FITF) and the size of its data; IMF ones with their size
+	const uint8_t *raw = (const uint8_t *)music;
+	if (raw[0] == 'K' && raw[1] == 'M' && raw[2] == 'F' && raw[3] == 0x1A)
+	{
+		SD_StartMusicFormat(raw + 8, raw[6] | (raw[7] << 8), true);
+		return;
+	}
 	SD_StartMusicData(music->data, music->length);
 }
 
@@ -732,12 +773,18 @@ void SD_StartMusic(SD_MusicTrack *music)
 // Keen Worlds cues which should not require replacing a player's AUDIO file.
 void SD_StartMusicData(const uint8_t *data, uint16_t length)
 {
+	SD_StartMusicFormat(data, length, false);
+}
+
+static void SD_StartMusicFormat(const uint8_t *data, uint16_t length, bool kmf)
+{
 	SD_MusicOff();
 	if (sd_musicMode == smm_AdLib)
 	{
 		if (!sd_backend)
 			return;
 		sd_backend->lock();
+		sd_music_isKMF = kmf;
 		sd_music_data = data;
 		sd_music_trackSize = length;
 		sd_music_currentIndex = 0;

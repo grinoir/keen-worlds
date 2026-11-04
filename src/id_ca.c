@@ -898,6 +898,12 @@ void CA_CacheGrChunk(int chunk)
 			spriteTable[i].xh = CK_Cross_SwapLE16(spriteTable[i].xh);
 			spriteTable[i].yh = CK_Cross_SwapLE16(spriteTable[i].yh);
 			spriteTable[i].shifts = CK_Cross_SwapLE16(spriteTable[i].shifts);
+			// KEEN WORLDS: ca_spriteShifts, a world whose sprites all say one
+			// shift but are drawn at any x (Foray in the Forest shifts its own
+			// on the fly): four shifted copies, so they move in 2-pixel steps,
+			// not 8 (found by K1n9_Duk3)
+			if (CK_INT(ca_spriteShifts, 0))
+				spriteTable[i].shifts = CK_INT(ca_spriteShifts, 0);
 		}
 	}
 	else if (chunk >= CK_CHUNKNUM(FON_MAINFONT) && chunk <= /*FON_WATCHFONT*/ CK_CHUNKNUM(FON_MAINFONT) + 2)

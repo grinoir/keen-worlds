@@ -658,9 +658,13 @@ void CK_UpdateFadeDrawing(void)
 	}
 }
 
+void FF_ApplyLevelPalette(void); // KEEN WORLDS (kw_fitf.c)
+void FF_DetectorAfterLevelLoad(void);
+
 void CK_BeginFadeDrawing(void)
 {
 	VL_FadeToBlack();
+	FF_ApplyLevelPalette(); // (black now: Foray in the Forest's new level colours)
 	ck_fadeDrawCounter = 0;
 	RF_SetDrawFunc(&CK_UpdateFadeDrawing);
 }
@@ -734,6 +738,10 @@ void CK_LoadLevel(bool doCache, bool silent)
 	// CA_CacheMarks(0);
 	if (doCache && !silent)
 		CK_BeginFadeDrawing();
+	else
+		FF_ApplyLevelPalette();
+	if (doCache && !silent && FF_IsActive())
+		FF_DetectorAfterLevelLoad(); // its item detector shows itself (kw_fitf.c)
 }
 
 // Cache Box Routines

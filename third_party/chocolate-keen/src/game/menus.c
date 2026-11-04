@@ -871,7 +871,7 @@ void CVort_draw_text_viewer_border() {
     CVort_engine_drawChar(0x2B, (text_viewer_bottom + 2) << 3, 3);
     for (uint16_t loopChar = 5; loopChar < 0x2B; loopChar++)
         CVort_engine_drawChar(loopChar, (text_viewer_bottom + 2) << 3, 2);
-    CVort_draw_string_sel(1, 5, text_viewer_bottom + 1, "       ESC to Exit /   to Read      ");
+    CVort_draw_string_sel(1, 5, text_viewer_bottom + 1, "       ESC to Exit / \x0F \x13 to Read      " /* KEEN WORLDS: the up and down arrows were lost (K1n9_Duk3) */);
     CVort_text_viewer_bkgrd(g_game.apogee_bmp_height, text_viewer_top_pos + 1, text_ptr, text_viewer_buffer, text_viewer_height);
 }
 

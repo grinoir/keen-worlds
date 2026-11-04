@@ -57,6 +57,7 @@ void SD_StopSound(void);
 void SD_WaitSoundDone(void);
 void SD_MusicOn(void);
 void SD_MusicOff(void);
+void SD_ForgetMusic(void);
 void SD_StartMusic(SD_MusicTrack *music);
 // Play an IMF event stream stored by the engine rather than in AUDIO.CKx.
 // The data must remain valid until another track is started.

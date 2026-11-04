@@ -32,6 +32,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ck4_ep.h"
 #include "ck5_ep.h"
 #include "kw_osi.h"
+#include "kw_arealm.h"
 void OSI_ShowGravityWarning();
 
 #include <stdio.h>
@@ -176,8 +177,16 @@ void CK_UpdateScoreBox(CK_object *scorebox)
 
 		// Dreams reserves six digits. Saturate the display without changing
 		// the actual score or writing past its field.
+		// KEEN WORLDS: the score travels between worlds, so it can outgrow any
+		// box (FITF's has 7 digits); show the largest number that fits rather
+		// than drawing past the box's image (found by K1n9_Duk3)
+		int digits = KD_IsActive() ? 6 : CK_INT(ck_scoreBoxScoreDigits, 9);
+		int maxShown = 1;
+		for (int i = 0; i < digits && i < 9; i++)
+			maxShown *= 10;
+		maxShown--;
 		int score = ck_gameState.keenScore;
-		if (KD_IsActive()) score = score < 0 ? 0 : score > 999999 ? 999999 : score;
+		score = score < 0 ? 0 : score > maxShown ? maxShown : score;
 		snprintf(buf, sizeof(buf), "%d", score);
 		len = strlen(buf);
 
@@ -644,8 +653,12 @@ void CK_MapFlagSpawn(int tileX, int tileY)
 	flag->zLayer = 3;
 	flag->type = CT_CLASS(MapFlag);
 	flag->active = OBJ_ACTIVE;
-	int xofs = ck_currentEpisode->ep == EP_CK4 ? 0x60 : ck_currentEpisode->ep == EP_CK5 ? -0x50 : ck_currentEpisode->ep == EP_CK6 ? 0xE0 : 0;
-	int yofs = ck_currentEpisode->ep == EP_CK4 ? -0x1E0 : ck_currentEpisode->ep == EP_CK5 ? -0x1E0 : ck_currentEpisode->ep == EP_CK6 ? -0x1A0 : 0;
+	// KEEN WORLDS: Atroxian Realm's flags stand as Keen 4's do (its AR_MAP.C)
+	bool k4Flags = ck_currentEpisode->ep == EP_CK4 || AR_IsActive();
+	int xofs = k4Flags ? 0x60 : ck_currentEpisode->ep == EP_CK5 ? -0x50 : ck_currentEpisode->ep == EP_CK6 ? 0xE0 : 0;
+	int yofs = k4Flags ? -0x1E0 : ck_currentEpisode->ep == EP_CK5 ? -0x1E0 : ck_currentEpisode->ep == EP_CK6 ? -0x1A0 : 0;
+	if (AR_IsActive())
+		flag->zLayer = PRIORITIES - 1;
 
 	flag->posX = (tileX << 8) + xofs;
 	flag->posY = (tileY << 8) + yofs;
@@ -678,8 +691,12 @@ void CK_FlippingFlagSpawn(int tileX, int tileY)
 	ck_flagTileSpotY = tileY;
 
 	// Destination coords
-	int xofs = ck_currentEpisode->ep == EP_CK4 ? 0x60 : (ck_currentEpisode->ep == EP_CK6 ? 0xE0 : 0);
-	int yofs = ck_currentEpisode->ep == EP_CK4 ? -0x260 : (ck_currentEpisode->ep == EP_CK6 ? -0x220 : 0);
+	// KEEN WORLDS: Atroxian Realm throws its flags as Keen 4 does (its
+	// CK_SpawnFlippingFlag); as a Keen 5 game it had no place or path to fly
+	// to here (found by K1n9_Duk3)
+	bool k4Flags = ck_currentEpisode->ep == EP_CK4 || AR_IsActive();
+	int xofs = k4Flags ? 0x60 : (ck_currentEpisode->ep == EP_CK6 ? 0xE0 : 0);
+	int yofs = k4Flags ? -0x260 : (ck_currentEpisode->ep == EP_CK6 ? -0x220 : 0);
 
 	obj->user1 = (tileX << G_T_SHIFT) + xofs;
 	obj->user2 = (tileY << G_T_SHIFT) + yofs;
@@ -689,7 +706,7 @@ void CK_FlippingFlagSpawn(int tileX, int tileY)
 
 	// Make a table of coordinates for the flag's path
 #ifdef WITH_KEEN4
-	if (ck_currentEpisode->ep == EP_CK4)
+	if (k4Flags)
 	{
 		for (int i = 0; i < 30; i++)
 		{
@@ -764,7 +781,7 @@ void CK_MapFlagFall(CK_object *obj)
 {
 	obj->user3 += SD_GetSpriteSync();
 
-	int timer = ck_currentEpisode->ep == EP_CK4 ? 50 : (ck_currentEpisode->ep == EP_CK6 ? 58 : 0);
+	int timer = ck_currentEpisode->ep == EP_CK4 ? 50 : (ck_currentEpisode->ep == EP_CK6 || AR_IsActive() ? 58 : 0);
 
 	if (obj->user3 > timer)
 		obj->user3 = timer;

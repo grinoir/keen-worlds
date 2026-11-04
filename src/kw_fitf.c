@@ -1289,6 +1289,31 @@ void FF_FrameEnd(void)
 	// a checkpoint touched this frame is saved now, with everything settled
 	if (ff_map.checkpointTouched)
 		FF_CheckpointSave(ff_map.checkpointTouched);
+
+	// The bonus level ends once everything in it is collected: the Lindseys
+	// vanish and a special one appears next to Keen, talks and ends the level
+	// (PlayLoop, CK_PLAY.C; missing until K1n9_Duk3 found the level couldn't end)
+	if (ca_mapOn == MAP_BONUSLEVEL && ff_map.itemsCollected == ff_map.itemsTotal)
+	{
+		extern void FF_LindseyVanish(CK_object *ob);
+		extern void FF_SpawnLindsey(int16_t tileX, int16_t tileY, int16_t num);
+		extern CK_object *FF_SpawnSmoke(int16_t x, int16_t y);
+		bool done = false;
+		for (CK_object *ob = ck_keenObj; ob; ob = ob->next)
+		{
+			if (ob->type == FF_CT_Lindsey)
+				FF_LindseyVanish(ob);
+			else if (ob->type == FF_CT_LindseySpecial)
+				done = true;
+		}
+		if (!done)
+		{
+			FF_SpawnLindsey(ck_keenObj->clipRects.tileX1 + 2, ck_keenObj->clipRects.tileY2, -1);
+			CK_object *smoke = FF_SpawnSmoke(RF_TileToUnit(ck_keenObj->clipRects.tileX1 + 2) - 8*16, RF_TileToUnit(ck_keenObj->clipRects.tileY2 - 1));
+			if (smoke)
+				smoke->type = FF_CT_LindseyVanish;	// faster smoke
+		}
+	}
 }
 
 // ---- How a level ends (the switch after PlayLoop in its GameLoop, and
@@ -1463,7 +1488,62 @@ void FF_UpdateCacheBox(void)
 // ---- Its status window (DrawStatusWindow in CK_PLAY.C) ----
 
 
-void FF_DrawStatusWindow(void)
+// (ClipSprite in CK_PLAY.C, as the status windows call it): eight rows of a
+// sprite, its top row cut off, in an 8-pixel high slot at y; in one colour,
+// or (colour < 0) in its own
+static void FF_ClipSprite(int x, int y, int chunk, int colour)
+{
+	CA_CacheGrChunk(chunk);
+	if (!ca_graphChunks[chunk])
+		return;
+	VH_SpriteTableEntry spr = VH_GetSpriteTableEntry(chunk - ca_gfxInfoE.offSprites);
+	VH_ShiftedSprite *shifted = VH_GetShiftedSprite(chunk);
+	int left = x + (spr.originX >> 4), top = y + (spr.originY >> 4) - 1;
+	int shift = (left & 7) / 2;
+	uint8_t *data = &shifted->data[shifted->sprShiftOffset[shift]];
+	int byteWidth = shifted->sprShiftByteWidths[shift];
+	// the rows inside the slot
+	int first = y - top, last = y + 8 - top;
+	if (first < 0)
+		first = 0;
+	if (last > spr.height)
+		last = spr.height;
+	if (last <= first)
+		return;
+	int rows = last - first, plane = byteWidth * spr.height, cut = byteWidth * rows;
+	uint8_t *crop = (uint8_t *)malloc(cut * 5);
+	if (!crop)
+		return;
+	for (int p = 0; p < 5; p++) // the mask, then the four colour planes
+		memcpy(crop + p * cut, data + p * plane + first * byteWidth, cut);
+	int sx = (left & ~7) + (VL_GetScrollX() & 8), sy = top + first + VL_GetScrollY();
+	if (VH_MarkUpdateBlock(sx, sy, sx + byteWidth * 8, sy + rows))
+	{
+		if (colour < 0)
+			VL_MaskedBlitToScreen(crop, sx, sy, byteWidth * 8, rows);
+		else
+			VL_1bppInvBlitToScreen(crop, sx, sy, byteWidth * 8, rows, colour);
+	}
+	free(crop);
+}
+
+// The six goodies, three in each row: in the status window in their own
+// colours once found, in the detector light grey; dark grey while missing
+static void FF_DrawGoodies(unsigned found, bool detector, int y1, int y2)
+{
+	for (int i = 0; i < 6; i++)
+	{
+		int x = detector ? (i < 3 ? 180 + 18 * i : 176 + 21 * (i - 3)) : 178 + 21 * (i % 3);
+		int colour = !(found & (1 << i)) ? 8 : detector ? 7 : -1;
+		FF_ClipSprite(x, i < 3 ? y1 : y2, FF_COLLECTIBLETEDDY1SPR + 2 * i, colour);
+	}
+}
+
+static void FF_DrawDetectorWindow(void);
+static bool ff_detectorShown; // the status window shows the item detector (FF_ShowDetector)
+
+// (DrawStatusWindowBackground in CK_PLAY.C)
+static void FF_DrawStatusBackground(void)
 {
 	int winX = 64, winY = 16, winW = 184, winH = 144, n;
 	VHB_DrawTile8(winX, winY, 36);
@@ -1481,6 +1561,16 @@ void FF_DrawStatusWindow(void)
 		VHB_DrawTile8(winX + winW, n, 40);
 	}
 	VHB_Bar(72, 24, 176, 136, 7);
+}
+
+void FF_DrawStatusWindow(void)
+{
+	if (ff_detectorShown)
+	{
+		FF_DrawDetectorWindow();
+		return;
+	}
+	FF_DrawStatusBackground();
 
 	int oldcolor = US_GetPrintColour();
 	uint16_t strW, strH;
@@ -1556,9 +1646,8 @@ void FF_DrawStatusWindow(void)
 	VHB_Bar(127, 127, 18, 10, 0);
 	CK_DrawLongRight(128, 128, 2, 6, ck_gameState.numCentilife);
 
-	// The six collectibles. TODO: the source draws eight rows of each
-	// sprite, dark grey while it is missing; here only those found, whole,
-	// and only if the sprite is in memory.
+	// The six collectibles: eight rows of each, light grey once found, dark
+	// grey while missing
 	US_SetPrintY(117);
 	US_SetWindowX(177);
 	US_SetWindowW(64);
@@ -1566,13 +1655,372 @@ void FF_DrawStatusWindow(void)
 	VHB_Bar(175, 127, 66, 10, 0);
 	VHB_Bar(175, 143, 66, 10, 0);
 	uint16_t bits = ff_state.collectiblesTotal | ff_map.collectiblesNew;
-	for (int i = 0; i < 6; i++)
-	{
-		int chunk = FF_COLLECTIBLETEDDY1SPR + 2 * i;
-		if ((bits & (1 << i)) && ca_graphChunks[chunk])
-			VHB_DrawSprite(182 - 4 + 21 * (i % 3), i < 3 ? 128 : 144, chunk);
-	}
+	FF_DrawGoodies(bits, false, 128, 144);
 	US_SetPrintColour(oldcolor);
+}
+
+// ---- The item detector (DrawDetectorWindow and its helpers in CK_PLAY.C,
+// K1n9_Duk3's): what is still to be found in the level, and a compass
+// arrow to the nearest of each kind in Keen's part of the level. ----
+
+typedef struct
+{
+	uint16_t x, y;
+	uint32_t dist; // all ones: nothing found
+} FF_DetectorInfo;
+
+static bool FF_Separated(unsigned v1, unsigned v2, unsigned separator)
+{
+	if (v1 > v2)
+	{
+		unsigned t = v1;
+		v1 = v2;
+		v2 = t;
+	}
+	return v1 < separator && separator < v2;
+}
+
+// (DistanceCheck): a point (in pixels) in Keen's part of the level, nearer
+// than the nearest so far, becomes the nearest
+static void FF_DistanceCheck(unsigned x, unsigned y, FF_DetectorInfo *info)
+{
+	unsigned px = ck_keenObj->clipRects.unitXmid >> 4;
+	unsigned py = (ck_keenObj->clipRects.unitY2 >> 4) - 16;
+	bool checkScrollBlocks = true;
+	switch (ca_mapOn)
+	{
+	case 4: // Secret Reservoir
+		if (py > 79*16 && FF_Separated(x, px, 59*16))
+			return;
+		break;
+	case 5: // Spike Village
+		if (px > 152*16 && FF_Separated(y, py, 20*16))
+			return;
+		break;
+	case 7: // Lost Mine
+		if (FF_Separated(y, py, 44*16)) // the Nisasi's part
+			return;
+		if (py > 44*16 && FF_Separated(x, px, 120*16))
+			return;
+		checkScrollBlocks = false;
+		break;
+	case 12: // Manara Samarra
+		if (py > 115*16)
+		{
+			if (FF_Separated(x, px, 33*16) || FF_Separated(x, px, 60*16) || FF_Separated(x, px, 111*16))
+				return;
+			if (px < 33*16 && FF_Separated(y, py, 132*16))
+				return;
+		}
+		break;
+	case MAP_SKOVLEVEL:
+		if (FF_Separated(y, py, 33*16))
+			return;
+		if (py > 33*16 && FF_Separated(x, px, 100*16))
+			return;
+		checkScrollBlocks = false;
+		break;
+	case MAP_TEMPLELEVEL:
+		if (py > 38*16 && ((px > 131*16 && FF_Separated(y, py, 53*16)) || FF_Separated(x, px, 62*16)))
+			return;
+		break;
+	case MAP_SLUGBUSTSLEVEL:
+		checkScrollBlocks = false;
+		break;
+	}
+	if (checkScrollBlocks && RF_CheckScrollBlock(x, y, px, py))
+		return;
+	// (16-bit differences, squared as signed numbers, as its distance())
+	int32_t dx = (int16_t)(x - px), dy = (int16_t)(y - py);
+	uint32_t dist = (uint32_t)(dx * dx + dy * dy);
+	if (dist < info->dist)
+	{
+		info->dist = dist;
+		info->x = x;
+		info->y = y;
+	}
+}
+
+static void FF_TileDistanceCheck(unsigned index, FF_DetectorInfo *info)
+{
+	unsigned w = CA_GetMapWidth();
+	FF_DistanceCheck(((index % w) << 4) + 8, ((index / w) << 4) + 8, info);
+}
+
+static void FF_ObjectDistanceCheck(CK_object *ob, FF_DetectorInfo *info)
+{
+	FF_DistanceCheck(ob->clipRects.unitXmid >> 4, (ob->clipRects.unitY1 >> 4) + 8, info);
+}
+
+// (GetCompassDirection and DrawCompassTile): tile 27 is a blank compass,
+// 28 + a direction its arrow
+static void FF_DrawCompassTile(int drawX, int drawY, const FF_DetectorInfo *info)
+{
+	if (info->x == 0xFFFF)
+	{
+		VHB_DrawTile8(drawX, drawY, 27);
+		return;
+	}
+	int x = (int16_t)(info->x - (ck_keenObj->clipRects.unitXmid >> 4));
+	int y = (int16_t)(info->y - ((ck_keenObj->clipRects.unitY2 >> 4) - 16));
+	int ax = x < 0 ? -x : x, ay = y < 0 ? -y : y;
+	IN_Direction dir;
+	if (ay > 2 * ax)
+		dir = y < 0 ? IN_dir_North : IN_dir_South;
+	else if (ax > 2 * ay)
+		dir = x < 0 ? IN_dir_West : IN_dir_East;
+	else if (y < 0)
+		dir = x < 0 ? IN_dir_NorthWest : IN_dir_NorthEast;
+	else
+		dir = x < 0 ? IN_dir_SouthWest : IN_dir_SouthEast;
+	VHB_DrawTile8(drawX, drawY, 28 + dir);
+}
+
+// (PrintNumbers): blanks are tile 6; too many digits, a row of tile zerotile+10
+static void FF_PrintNumbers(int x, int y, int digits, int zerotile, long value)
+{
+	char s[24];
+	snprintf(s, sizeof(s), "%ld", value);
+	int len = (int)strlen(s), i;
+	if (len > digits)
+	{
+		while (digits--)
+		{
+			VHB_DrawTile8(x, y, zerotile + 10);
+			x += 8;
+		}
+		return;
+	}
+	for (i = digits; i > len; i--, x += 8)
+		VHB_DrawTile8(x, y, 6);
+	for (; i > 0; i--, x += 8)
+		VHB_DrawTile8(x, y, zerotile + s[len - i] - 47);
+}
+
+static void FF_DrawDetectorWindow(void)
+{
+	FF_DetectorInfo drops, points, lives, ammo, keys[4], goodie, checkpoint;
+	FF_DetectorInfo *all[] = {&drops, &points, &lives, &ammo, &keys[0], &keys[1], &keys[2], &keys[3], &goodie, &checkpoint};
+	for (size_t i = 0; i < sizeof(all) / sizeof(all[0]); i++)
+		memset(all[i], 0xFF, sizeof(FF_DetectorInfo));
+	unsigned numLives = 0, numDrops = 0, keyBits = 0, collectibles = 0, numCheckpoints = 0;
+	long numPoints = 0;
+	extern uint16_t bonuspoints[];
+	char str[160];
+	uint16_t strW, strH;
+
+	FF_DrawStatusBackground();
+	int oldcolor = US_GetPrintColour();
+
+	// "ITEM DETECTOR (<key>)" and the level's name
+	US_SetPrintY(26);
+	US_SetWindowX(80);
+	US_SetWindowW(161);
+	US_SetPrintColour(15);
+	snprintf(str, sizeof(str), "%s%s%s", FF_String(FF_S_HUD1), "RSHFT", FF_String(FF_S_HUD2));
+	US_CPrint(str);
+	VHB_Bar(79 - 1, 38 - 1, 162 + 2, 18 + 2, 8);
+	VHB_Bar(79, 38, 162, 18, 0);
+	const char *name = FF_String(FF_S_LEVELNAME0 + ca_mapOn);
+	CK_MeasureMultiline(name, &strW, &strH);
+	US_SetPrintY((20 - strH) / 2 + 40 - 3);
+	US_SetPrintColour(12);
+	US_CPrint(name);
+	US_SetPrintColour(15);
+
+	if (ca_mapOn == 0)
+	{
+		// The world map: its picture, the part on screen and where Keen is
+		enum { IMAGEWIDTH = 160, IMAGEHEIGHT = 95, DRAW_X = 80, DRAW_Y = 60, CUT = 2 };
+		long mw = CA_GetMapWidth() - 2 * CUT, mh = CA_GetMapHeight() - 2 * CUT;
+#define FF_SCALE_X(u) ((int)(((((long)(u) - CUT * 256) * IMAGEWIDTH) / mw) / 256 + DRAW_X))
+#define FF_SCALE_Y(u) ((int)(((((long)(u) - CUT * 256) * IMAGEHEIGHT) / mh) / 256 + DRAW_Y))
+		VHB_Bar(DRAW_X - 1, DRAW_Y - 1, IMAGEWIDTH + 2, IMAGEHEIGHT + 2, 8);
+		VHB_Bar(DRAW_X, DRAW_Y, IMAGEWIDTH, IMAGEHEIGHT, 0);
+		CA_CacheGrChunk(FF_HELP_SCOREBOXPIC);
+		if (ca_graphChunks[FF_HELP_SCOREBOXPIC])
+			VHB_DrawBitmap(DRAW_X, DRAW_Y + 8, FF_HELP_SCOREBOXPIC);
+		int x = FF_SCALE_X(rf_scrollXUnit), y = FF_SCALE_Y(rf_scrollYUnit);
+		int x2 = FF_SCALE_X(rf_scrollXUnit + 320 * 16 - 1), y2 = FF_SCALE_Y(rf_scrollYUnit + 200 * 16 - 1);
+		if (y < DRAW_Y)
+			y = DRAW_Y;
+		VHB_Bar(x, y, x2 - x, 1, 12);
+		VHB_Bar(x, y, 1, y2 - y, 4);
+		VHB_Bar(x, y2, x2 - x, 1, 4);
+		VHB_Bar(x2, y, 1, y2 - y + 1, 12);
+		VHB_DrawTile8M(FF_SCALE_X(ck_keenObj->clipRects.unitXmid) - 3, FF_SCALE_Y(ck_keenObj->clipRects.unitY2 - 8 * 16) - 4, 9);
+#undef FF_SCALE_X
+#undef FF_SCALE_Y
+		US_SetPrintColour(oldcolor);
+		return;
+	}
+
+	// What is in the level: its tiles...
+	for (unsigned i = (unsigned)CA_GetMapWidth() * CA_GetMapHeight(); i--;)
+	{
+		switch (TI_ForeMisc(FF_MapAt(1, i)) & INTILE_TYPEMASK)
+		{
+		case MF_Centilife:
+			numDrops++;
+			FF_TileDistanceCheck(i, &drops);
+			break;
+		case MF_Points100: case MF_Points200: case MF_Points500:
+		case MF_Points1000: case MF_Points2000: case MF_Points5000:
+			numPoints += bonuspoints[(TI_ForeMisc(FF_MapAt(1, i)) & INTILE_TYPEMASK) + 4 - MF_Points100];
+			FF_TileDistanceCheck(i, &points);
+			break;
+		case MF_1UP:
+			numLives += ck_gameState.difficulty == D_Normal ? 2 : 1;
+			FF_TileDistanceCheck(i, &lives);
+			break;
+		case MF_AmmoStation:
+			if (FF_MapAt(2, i) == INFONUMBER_0)
+				break;
+			// fall through
+		case MF_Stunner:
+			FF_TileDistanceCheck(i, &ammo);
+			break;
+		}
+	}
+	// ...and its objects
+	for (CK_object *ob = ck_keenObj; ob; ob = ob->next)
+	{
+		if (ob->type == CT5_Item)
+		{
+			if (ob->user1 < 4)
+			{
+				keyBits |= 1 << ob->user1;
+				FF_ObjectDistanceCheck(ob, &keys[ob->user1]);
+			}
+			else if (ob->user1 == 10)
+			{
+				numLives += ck_gameState.difficulty == D_Normal ? 2 : 1;
+				FF_ObjectDistanceCheck(ob, &lives);
+			}
+			else if (ob->user1 == 11)
+				FF_ObjectDistanceCheck(ob, &ammo);
+			else
+			{
+				numPoints += bonuspoints[ob->user1];
+				FF_ObjectDistanceCheck(ob, &points);
+			}
+		}
+		else if (ob->type == FF_CT_Slug && ob->user1) // a slug carrying a donut
+		{
+			numPoints += bonuspoints[9];
+			FF_ObjectDistanceCheck(ob, &points);
+		}
+		else if (ob->type == FF_CT_Collectible)
+		{
+			collectibles |= ob->user1;
+			FF_ObjectDistanceCheck(ob, &goodie);
+		}
+		else if (ob->type == FF_CT_Checkpoint && !ob->user1) // not touched yet
+		{
+			numCheckpoints++;
+			FF_ObjectDistanceCheck(ob, &checkpoint);
+		}
+	}
+
+	US_SetPrintY(62);
+	US_SetWindowX(79);
+	US_SetWindowW(162);
+	VHB_Bar(79 - 1, 62 - 2, 162 + 2, 13, 8);
+	VHB_Bar(79, 62 - 1, 162, 11, 0);
+	US_SetPrintColour(12);
+	US_CPrint(FF_String(FF_S_ITEMSDETECTED));
+	US_SetPrintColour(15);
+
+	US_SetPrintY(77);
+	US_SetWindowX(89);
+	US_SetWindowW(64);
+	US_CPrint(FF_String(FF_S_POINTS));
+	VHB_Bar(94, 87, 59, 10, 0);
+	VHB_Bar(82, 87, 10, 10, 0);
+	FF_PrintNumbers(96, 88, 7, 16, numPoints);
+	VHB_Bar(103, 96, 1, 1, 8);
+	VHB_Bar(127, 96, 1, 1, 8);
+	FF_DrawCompassTile(83, 88, &points);
+
+	static const struct { int y; int string; } rows[] = {{105, FF_S_CHECKPOINTS}, {119, FF_S_LIVES}, {133, FF_S_DROPS}, {147, FF_S_AMMO}};
+	const unsigned counts[] = {numCheckpoints, numLives, numDrops, 0};
+	const FF_DetectorInfo *nearest[] = {&checkpoint, &lives, &drops, &ammo};
+	for (int r = 0; r < 4; r++)
+	{
+		int y = rows[r].y;
+		US_SetPrintX(116);
+		US_SetPrintY(y);
+		US_Print(FF_String(rows[r].string));
+		VHB_Bar(102 - 8, y - 1, 11 + 8, 10, 0);
+		VHB_Bar(90 - 8, y - 1, 10, 10, 0);
+		if (r < 3) // (no count for ammo)
+			FF_PrintNumbers(96, y, 2, 16, counts[r]);
+		FF_DrawCompassTile(83, y, nearest[r]);
+	}
+
+	US_SetPrintX(191);
+	US_SetPrintY(77);
+	US_Print(FF_String(FF_S_KEYS));
+	for (int i = 0, x = 167; i < 4; i++, x += 20)
+	{
+		VHB_Bar(x - 1, 87, 18, 8 + 2, 0);
+		FF_DrawCompassTile(x, 88, &keys[i]);
+		VHB_DrawTile8(x + 8, 88, (keyBits & (1 << i)) ? 5 : 4);
+	}
+
+	US_SetPrintY(122);
+	US_SetWindowX(174);
+	US_SetWindowW(64);
+	US_CPrint(FF_String(FF_S_GOODIES));
+	VHB_Bar(171, 132, 68, 10, 0);
+	VHB_Bar(171, 146, 68, 10, 0);
+	FF_DrawGoodies(collectibles, true, 133, 147);
+	FF_DrawCompassTile(172, 133, &goodie);
+
+	US_SetPrintColour(oldcolor);
+}
+
+// Show the item detector (CheckKeys in CK_PLAY.C): not on Expert. Due by
+// itself at the start of a level with things to find, as its "auto detect".
+static bool ff_detectorDue;
+
+bool FF_DetectorKeys(void)
+{
+	bool pressed = IN_GetKeyState(IN_SC_RightShift);
+	if (!pressed && (!ff_detectorDue || vl_screenFaded))
+		return false;
+	ff_detectorDue = false;
+	if (ck_gameState.difficulty == FF_D_Expert)
+	{
+		if (pressed)
+			SD_PlaySound(FF_REFILLUNITSND); // (its NOWAYSND)
+		IN_ClearKeysDown();
+		return true;
+	}
+	ff_detectorShown = true;
+	CK_ShowStatusWindow();
+	ff_detectorShown = false;
+	IN_ClearKeysDown();
+	return true;
+}
+
+// (KW_SelfTest: the detector and the status window drawn for this level)
+void FF_TestDetector(void)
+{
+	extern void *ck_statusSurface;
+	void *screen = VL_SetScreen(ck_statusSurface);
+	ff_detectorShown = true;
+	FF_DrawStatusWindow();
+	ff_detectorShown = false;
+	FF_DrawStatusWindow();
+	VL_SetScreen(screen);
+}
+
+void FF_DetectorAfterLevelLoad(void)
+{
+	ff_detectorDue = IN_DemoGetMode() == IN_Demo_Off && ff_map.itemsTotal &&
+		ca_mapOn != MAP_SLUGBUSTSLEVEL && ca_mapOn != MAP_TARDISLEVEL && ca_mapOn != MAP_BONUSLEVEL &&
+		ck_gameState.difficulty != FF_D_Expert && !getenv("KW_AUTOTALK");
 }
 
 // ---- The map's finished levels (PatchWorldMap in CK_GAME.C): entrances
@@ -1712,11 +2160,40 @@ void FF_LevelPalette(void)
 	VL_SetCustomColors(ff_palettes[n]);
 }
 
+// Its story scroller (StarWars, CK_DEMO.C): its own EGA palette over VGA
+// colours of its own, here as the sixteen colours they make. (It was shown
+// in Keen 5's palette; found by K1n9_Duk3.)
+static const uint8_t ff_starWarsColors[16][3] = {
+	{0x00, 0x00, 0x00}, // 0: signal 0x00
+	{0x10, 0x10, 0x65}, // 1: signal 0x01
+	{0x10, 0x65, 0x65}, // 2: signal 0x03
+	{0x10, 0x65, 0x10}, // 3: signal 0x02
+	{0x65, 0x38, 0x10}, // 4: signal 0x06
+	{0x65, 0x10, 0x10}, // 5: signal 0x04
+	{0x75, 0x75, 0x75}, // 6: signal 0x07
+	{0x38, 0x38, 0x38}, // 7: signal 0x18
+	{0xFF, 0xFF, 0xFF}, // 8: signal 0x1F
+	{0xFF, 0xFF, 0xFF}, // 9: signal 0x1F
+	{0xFF, 0xFF, 0xFF}, // 10: signal 0x1F
+	{0xFF, 0xFF, 0xFF}, // 11: signal 0x1F
+	{0xFF, 0xFF, 0xFF}, // 12: signal 0x1F
+	{0xFF, 0xFF, 0xFF}, // 13: signal 0x1F
+	{0xFF, 0xFF, 0xFF}, // 14: signal 0x1F
+	{0xFF, 0xFF, 0xFF}, // 15: signal 0x1F
+};
+
+void FF_StarWarsColors(void)
+{
+	VL_SetCustomColors(ff_starWarsColors);
+}
+
 // Leaving this world: the standard colours again.
 void FF_LeaveWorld(void)
 {
 	VL_SetCustomColors(NULL);
 }
+
+static bool ff_palettePending; // see FF_ScanInfoLayer
 
 // Its level setup: kw_ff_scan.c (ScanInfoPlane in CK_SPEC.C).
 void FF_ScanInfoPlane(void);
@@ -1728,6 +2205,17 @@ void FF_ScanInfoLayer(void)
 	if (!ff_state.maxammo)
 		FF_ApplyDifficulty(false); // arrived from another world
 	FF_ScanInfoPlane();
+	// The new level's colours wait for the screen to be black: set now, the
+	// old level faded out in them (its FadeOut reads the colours on screen;
+	// found by K1n9_Duk3). FF_ApplyLevelPalette, from CK_LoadLevel.
+	ff_palettePending = true;
+}
+
+void FF_ApplyLevelPalette(void)
+{
+	if (!ff_palettePending)
+		return;
+	ff_palettePending = false;
 	FF_LevelPalette();
 }
 

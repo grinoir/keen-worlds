@@ -1754,7 +1754,7 @@ void FF_T_PatPat(CK_object *ob)
 	uint16_t ydist;
 	bool gofast = false;
 
-	if (abs(ob->posX - ck_keenObj->posX) < 3*256)
+	if (FF_ABS(ob->posX - ck_keenObj->posX) < 3*256)
 	{
 		if (ob->user2 == 0)
 		{
@@ -2062,8 +2062,8 @@ void FF_T_XkyLickBounce(CK_object *ob)
 	dx = target->posX - ob->posX;
 	dy += target->posY - ob->posY;
 
-	if (((ob->user2 && abs(dx) < 0xA00) || 
-			(!ob->user2 && abs(dx) < 0x700)) && 
+	if (((ob->user2 && FF_ABS(dx) < 0xA00) || 
+			(!ob->user2 && FF_ABS(dx) < 0x700)) && 
 			dy < 0x300 && dy > -0x700 &&
 			!ob->user4)
 	{
@@ -2084,7 +2084,7 @@ void FF_T_XkyLickBounce(CK_object *ob)
 			}
 		}
 
-		if (abs(dx) < 0x300) 
+		if (FF_ABS(dx) < 0x300) 
 		{
 			ob->velX = ob->xDirection * 16;
 			ob->velY = -16;
@@ -2442,7 +2442,7 @@ void FF_ChemCountdown(CK_object *ob)
 	int16_t temp = 1;
 
 	// count down at 4x the speed if Keen is near:
-	if (abs(ck_keenObj->posX - ob->posX) < 10*256)
+	if (FF_ABS(ck_keenObj->posX - ob->posX) < 10*256)
 		temp <<= 2;
 
 	if (ob->user1 > temp)
@@ -2515,8 +2515,8 @@ void FF_T_ChemHidden(CK_object *ob)
 		// only log platforms and not the one it's currently sitting on!
 		if (o != FF_ObjFromUser(ob->user3) && o->type == FF_CT_LogPlatform
 			// log platform must not be farther than 16 tiles away from ob
-			&& abs(o->clipRects.tileXmid - ob->clipRects.tileXmid) <= 16
-			&& abs(o->clipRects.tileY1 - ob->clipRects.tileY2) <= 16)
+			&& FF_ABS(o->clipRects.tileXmid - ob->clipRects.tileXmid) <= 16
+			&& FF_ABS(o->clipRects.tileY1 - ob->clipRects.tileY2) <= 16)
 		{
 			// make sure to remember the first log platform we find,
 			// in case we don't find any others.
@@ -2787,7 +2787,7 @@ void FF_SpawnSalamander(int16_t tileX, int16_t tileY)
 
 void FF_SalamanderThink(CK_object *ob)
 {
-	if (abs(ob->clipRects.unitXmid - ck_keenObj->clipRects.unitXmid) < 6*256
+	if (FF_ABS(ob->clipRects.unitXmid - ck_keenObj->clipRects.unitXmid) < 6*256
 		&& (int16_t)(ob->clipRects.unitY1 - ck_keenObj->clipRects.unitY2) < 3*256
 		&& (int16_t)(ck_keenObj->clipRects.unitY1 - ob->clipRects.unitY2) < 2*256)
 	{
@@ -2961,8 +2961,8 @@ void FF_SpawnShrubbery(int16_t tileX, int16_t tileY)
 void FF_T_Shrubbery(CK_object *ob)
 {
 	// stand up if Keen is near:
-	if (abs((uint16_t)(ob->clipRects.unitY2 - ck_keenObj->clipRects.unitY2)) <= 3*256 
-		&& abs((uint16_t)(ob->posX - ck_keenObj->posX)) <= 5*256)
+	if (FF_ABS((uint16_t)(ob->clipRects.unitY2 - ck_keenObj->clipRects.unitY2)) <= 3*256 
+		&& FF_ABS((uint16_t)(ob->posX - ck_keenObj->posX)) <= 5*256)
 	{
 		CK_SetAction2(ob, CK_ACTION(FF_ACT_ShrubberyStandUp));
 		if (ck_keenObj->clipRects.unitXmid > ob->clipRects.unitXmid)
@@ -3020,8 +3020,8 @@ void FF_T_ShrubberyWalk(CK_object *ob)
 
 	// sit down when Keen is too far away
 	if (!CK_ObjectVisible(ob)
-		|| abs((uint16_t)(ob->clipRects.unitY2 - ck_keenObj->clipRects.unitY2)) > 3*256 
-		|| abs((uint16_t)(ob->posX - ck_keenObj->posX)) > 5*256)
+		|| FF_ABS((uint16_t)(ob->clipRects.unitY2 - ck_keenObj->clipRects.unitY2)) > 3*256 
+		|| FF_ABS((uint16_t)(ob->posX - ck_keenObj->posX)) > 5*256)
 	{
 		CK_SetAction2(ob, CK_ACTION(FF_ACT_ShrubberySitDown));
 	}
@@ -3149,7 +3149,7 @@ void FF_T_Bounder(CK_object *ob)
 
 #if BOUNDER_ACCELERATES
 	temp = ob->user2? BOUNDER_CHASE_VELX : BOUNDER_FLOAT_VELX;
-	if (ob->xDirection && ob->gfxChunk != FF_BOUNDERFLOATSHOTSPR && abs(ob->velX) <= temp)
+	if (ob->xDirection && ob->gfxChunk != FF_BOUNDERFLOATSHOTSPR && FF_ABS(ob->velX) <= temp)
 	{
 		if (temp == BOUNDER_FLOAT_VELX)
 		{
@@ -3196,7 +3196,7 @@ void FF_T_Bounder(CK_object *ob)
 			// chasing Keen
 			temp = xdist;
 
-			if (abs(xdist) > 15*256)
+			if (FF_ABS(xdist) > 15*256)
 				ob->user2 = false;	// stop chasing Keen
 
 			// we don't have a SIGN macro that leaves 0 as 0, so only use the macro on non-0 values
@@ -3234,7 +3234,7 @@ void FF_T_Bounder(CK_object *ob)
 #endif
 
 		// adjust amplitude based on xdist
-		ob->user3 = 1*256 - (abs(xdist) >> 2);
+		ob->user3 = 1*256 - (FF_ABS(xdist) >> 2);
 		if (ob->user3 < BOUNDER_MIN_AMPLITUDE)
 			ob->user3 = BOUNDER_MIN_AMPLITUDE;
 	}
@@ -3361,7 +3361,7 @@ void FF_SpawnTentacle(int16_t tileX, int16_t tileY)
 void FF_T_Tentacle(CK_object *ob)
 {
 	int16_t xdist =  ck_keenObj->clipRects.unitXmid - ob->clipRects.unitXmid;
-	if (abs(ob->posY - ck_keenObj->posY) < 6*256)
+	if (FF_ABS(ob->posY - ck_keenObj->posY) < 6*256)
 	{
 		if (xdist < 0 && xdist >= (int16_t)(-3.5*256))
 		{
@@ -3445,7 +3445,7 @@ void FF_T_PoleknawelLand(CK_object *ob)
 void FF_T_PoleknawelWalk(CK_object *ob)
 {
 	// Note: the distance from the middle of the tile in the following check should match the walking speed of the Poleknawel.
-	if (abs((ob->clipRects.unitXmid & 0xFF) - 256/2) <= 0x40	//middle of the hitbox is near the middle of the tile
+	if (FF_ABS((ob->clipRects.unitXmid & 0xFF) - 256/2) <= 0x40	//middle of the hitbox is near the middle of the tile
 		&& (TI_ForeMisc(FORESPOT(ob->clipRects.tileXmid, ob->clipRects.tileY2)) & INTILE_TYPEMASK) == MF_Pole)
 	{
 		ob->currentAction = CK_ACTION(FF_ACT_PoleknawelPole1);
@@ -3647,8 +3647,8 @@ void FF_SpawnKitten(int16_t tileX, int16_t tileY)
 void FF_T_KittenIdle(CK_object *ob)
 {
 	// start rolling when Keen is close:
-	if (abs(ck_keenObj->clipRects.unitXmid - ob->clipRects.unitXmid) < 8*256
-		&& abs(ck_keenObj->posY - ob->posY) < 3*256)
+	if (FF_ABS(ck_keenObj->clipRects.unitXmid - ob->clipRects.unitXmid) < 8*256
+		&& FF_ABS(ck_keenObj->posY - ob->posY) < 3*256)
 	{
 		FF_ObjDropNisasi(ob);
 		CK_SetAction2(ob, CK_ACTION(FF_ACT_KittenRoll1));
@@ -3666,8 +3666,8 @@ void FF_T_KittenIdle(CK_object *ob)
 void FF_T_KittenRoll(CK_object *ob)
 {
 	// stop rolling when too far away from Keen:
-	if (abs(ck_keenObj->clipRects.unitXmid - ob->clipRects.unitXmid) > 9*256
-		|| abs(ck_keenObj->posY - ob->posY) > 5*256)
+	if (FF_ABS(ck_keenObj->clipRects.unitXmid - ob->clipRects.unitXmid) > 9*256
+		|| FF_ABS(ck_keenObj->posY - ob->posY) > 5*256)
 	{
 		CK_SetAction2(ob, CK_ACTION(FF_ACT_KittenIdle1));
 	}
@@ -4216,8 +4216,8 @@ void FF_T_Yeti(CK_object *ob)
 	{
 		ob->user2 = 0;
 	}
-	else if (abs(ob->clipRects.unitXmid - ck_keenObj->clipRects.unitXmid) <= 4*256
-		&& abs(ob->posY - ck_keenObj->posY) <= 2*256)
+	else if (FF_ABS(ob->clipRects.unitXmid - ck_keenObj->clipRects.unitXmid) <= 4*256
+		&& FF_ABS(ob->posY - ck_keenObj->posY) <= 2*256)
 	{
 		// spawn a cloud that pushes the player back
 		CK_object *new_object = CK_GetNewObj(true);
@@ -4386,13 +4386,13 @@ void FF_T_TinyYetiRoll(CK_object *ob)
 		}
 
 		// don't let any tiny yeti move past the target position:
-		if (xmove > abs(xdist))
+		if (xmove > FF_ABS(xdist))
 		{
-			xmove = abs(xdist);
+			xmove = FF_ABS(xdist);
 		}
 
 		// stop moving when close to desired position:
-		if (abs(xdist) < 2*16)	// distance must be smaller than half the hitbox width of the tiny yeti!
+		if (FF_ABS(xdist) < 2*16)	// distance must be smaller than half the hitbox width of the tiny yeti!
 		{
 			if (ob->user2)
 			{
@@ -5035,7 +5035,7 @@ void FF_T_BirdFly(CK_object *ob)
 			if (ck_keenObj->gfxChunk == FF_KEENLOOKUPSPR
 				&& ob->velY == 0
 				&& ck_keenObj->clipRects.unitY1 > ob->clipRects.unitY2
-				&& abs(ob->clipRects.unitXmid - ck_keenObj->clipRects.unitXmid) < 256)
+				&& FF_ABS(ob->clipRects.unitXmid - ck_keenObj->clipRects.unitXmid) < 256)
 			{
 				SD_PlaySound(FF_BIRDLAYSEGGSND);
 				ob->currentAction = CK_ACTION(FF_ACT_BirdLayEgg);
@@ -5594,7 +5594,7 @@ void FF_T_SneakyTree(CK_object *ob)
 	}
 	else //if (ob->user1 == ST_LOOK)
 	{
-		int16_t xdist = abs(ob->clipRects.unitXmid - ck_keenObj->clipRects.unitXmid);
+		int16_t xdist = FF_ABS(ob->clipRects.unitXmid - ck_keenObj->clipRects.unitXmid);
 
 		if (ck_keenObj->xDirection < 0 && ck_keenObj->clipRects.unitX2 < ob->clipRects.unitX1)
 		{
@@ -5746,9 +5746,9 @@ void FF_T_CrocWalk(CK_object *ob)
 	ydist = ob->clipRects.unitY2 - ck_keenObj->clipRects.unitY2;
 
 	if (!ob->user4
-		&& abs(xdist) < 4*256
+		&& FF_ABS(xdist) < 4*256
 		//&& player->currentAction->stickToGround
-		&& abs(ydist) < 3*256)
+		&& FF_ABS(ydist) < 3*256)
 	{
 		ck_nextX = 0;	// no movement!
 		ob->gfxChunk = ob->xDirection < 0 ? FF_CROCOTRAPOPENL1SPR : FF_CROCOTRAPOPENR1SPR;
@@ -6695,7 +6695,7 @@ void FF_SpawnWarble(int16_t tileX, int16_t tileY)
 void FF_T_Warble(CK_object *ob)
 {
 	int16_t xdist = ob->clipRects.unitXmid - ck_keenObj->clipRects.unitXmid;
-	xdist = abs(xdist);
+	xdist = FF_ABS(xdist);
 	switch (ob->user1)
 	{
 	case WARBLE_HIDE:
@@ -7073,7 +7073,7 @@ void FF_T_Nisasi(CK_object *ob)
 		ck_nextY = grabbed->posY - ob->posY;
 		
 		// K1n9_Duk3 addition 2024-01-02: perform unclipped movement when more than 4 tiles away
-		if (abs(ck_nextX) > 4*256 || abs(ck_nextY) > 4*256)
+		if (FF_ABS(ck_nextX) > 4*256 || FF_ABS(ck_nextY) > 4*256)
 		{
 			FF_MoveObjHoriz(ob, ck_nextX);
 			FF_MoveObjVert(ob, ck_nextY);
@@ -7878,7 +7878,7 @@ inactive:
 			{
 				ck_nextX = maxspeed;
 			}
-			ck_nextY = abs(ck_nextX) + 16;	// manually push to floor
+			ck_nextY = FF_ABS(ck_nextX) + 16;	// manually push to floor
 		}
 		break;
 	case PG_AFTERUSE:
@@ -7970,7 +7970,7 @@ startuse:
 				ob->user1 = 0;
 			}
 		}
-		ck_nextY = abs(ck_nextX) + 16;	// manually push to floor
+		ck_nextY = FF_ABS(ck_nextX) + 16;	// manually push to floor
 	}
 }
 
@@ -8219,14 +8219,17 @@ enum {CLONE_POLEKNAWEL, CLONE_MOLET, CLONE_CHEMOLAIN, CLONE_NISASI, CLONE_JANITO
 #define SCAN_WIDTH 32	// width of the scan animation sprite, in pixels
 #define SCAN_YOFF -7
 #define SCAN_DIR IN_motion_Down	// should be either motion_Up or motion_Down
+// KEEN WORLDS: IN_motion_* are enum values, which #if reads as 0, so the
+// preprocessor tests below use this instead (1 = down, 0 = up). Keep it in step with SCAN_DIR.
+#define SCAN_DOWN 1
 #define SCAN_ANIM_DELAY 4	// delay for sprite change in tics (lower numbers -> faster animation)
 #define SCAN_MOVE_DELAY 2	// delay for movement (up/down)
 #define SCAN_INTERVAL (SCAN_HEIGHT*SCAN_MOVE_DELAY + 2*SCAN_WIDTH)	// time between the start of a scan and the start of the next scan
 
 // please don't modify this:
-#if (SCAN_DIR == IN_motion_Up)
+#if !SCAN_DOWN
 #define SCAN_START_Y (SCAN_YOFF*16)
-#elif (SCAN_DIR == IN_motion_Down)
+#elif SCAN_DOWN
 #define SCAN_START_Y ((SCAN_YOFF-SCAN_HEIGHT)*16)
 #else
 #error bad SCAN_DIR
@@ -8394,10 +8397,10 @@ void FF_T_CloneMachine(CK_object *ob)
 			clone->gfxChunk = ob->gfxChunk;
 			clone->actionTimer = ob->actionTimer - SD_GetSpriteSync();
 			CK_SetAction(clone, CK_ACTION(FF_ACT_CloneObj));
-#if (SCAN_DIR == IN_motion_Up)
+#if !SCAN_DOWN
 			clone->user2 = (VH_GetSpriteTableEntry(clone->gfxChunk - FF_STARTSPRITES).yh - VH_GetSpriteTableEntry(clone->gfxChunk - FF_STARTSPRITES).originY) >> G_P_SHIFT;
-#elif (SCAN_DIR == IN_motion_Down)
-			clone->user2 = SCAN_HEIGHT - (((VH_GetSpriteTableEntry(clone->gfxChunk - FF_STARTSPRITES).yh - VH_GetSpriteTableEntry(clone->gfxChunk - FF_STARTSPRITES).originY) >> G_P_SHIFT) - spritetable[clone->gfxChunk - FF_STARTSPRITES].height);
+#elif SCAN_DOWN
+			clone->user2 = SCAN_HEIGHT - (((VH_GetSpriteTableEntry(clone->gfxChunk - FF_STARTSPRITES).yh - VH_GetSpriteTableEntry(clone->gfxChunk - FF_STARTSPRITES).originY) >> G_P_SHIFT) - VH_GetSpriteTableEntry(clone->gfxChunk - FF_STARTSPRITES).height);
 #endif
 			clone->user1 |= 0x8000;	// hack to prevent clone object from animating
 			ob->user1 |= 0x8000;	// also prevent master object from animating
@@ -8579,7 +8582,7 @@ void FF_T_CloneObj(CK_object *ob)
 		if (ob->topTI)
 		{
 			ck_nextX = (16/2) * SD_GetSpriteSync() * ob->xDirection;
-			ck_nextY = abs(ck_nextX)+1;	// also push down (stick to ground)
+			ck_nextY = FF_ABS(ck_nextX)+1;	// also push down (stick to ground)
 			ob->velY = 0;
 		}
 		else
@@ -8616,9 +8619,9 @@ void FF_R_CloneObj(CK_object *ob)
 	}
 	else
 	{
-#if (SCAN_DIR == IN_motion_Up)
+#if !SCAN_DOWN
 		RF_PlaceSpriteClipped(&ob->sde, ob->posX, ob->posY, ob->gfxChunk, false, ob->zLayer, ob->user2);
-#elif (SCAN_DIR == IN_motion_Down)
+#elif SCAN_DOWN
 		RF_PlaceSpriteClipped(&ob->sde, ob->posX, ob->posY, ob->gfxChunk, false, ob->zLayer, -ob->user2);
 #endif
 	}
@@ -10397,8 +10400,8 @@ void FF_T_MummySpawner(CK_object *ob)
 
 void FF_MummyCheckForKeen(CK_object *ob)
 {
-	uint16_t xdist = abs(ck_keenObj->clipRects.unitXmid - ob->clipRects.unitXmid);
-	uint16_t ydist = abs(ck_keenObj->posY - ob->posY);
+	uint16_t xdist = FF_ABS(ck_keenObj->clipRects.unitXmid - ob->clipRects.unitXmid);
+	uint16_t ydist = FF_ABS(ck_keenObj->posY - ob->posY);
 
 	if (xdist < 5*256 && ydist < 2*256)
 	{
@@ -10585,7 +10588,7 @@ set_direction:
 void T_MummyLook(objtype *ob)
 {
 	int xdist = player->clipRects.unitXmid - ob->clipRects.unitXmid;
-	int ydist = abs(player->posY - ob->posY);
+	int ydist = FF_ABS(player->posY - ob->posY);
 
 	ob->actionTimer += tics;
 	if (ob->xDirection > 0)

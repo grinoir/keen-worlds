@@ -207,6 +207,10 @@ enum { push_none, push_down, push_up, push_left, push_right, push_side };
 		RF_AddSpriteDraw(sde, x, y, chunk, type, z); \
 		RF_PlaceSpriteDrawAfter(*(sde), RF_ConvertSpriteArray16BitOffsetToPtr(*(afterUser))); \
 	} while (0)
+// FITF's ABS() (CK_DEF.H) works on 16-bit ints: ABS((unsigned)(a - b)) is the
+// distance between a and b whichever is larger. Plain abs() on a uint16_t never
+// sees a negative number, so "Keen is above/left of me" reads as far away.
+#define FF_ABS(x) ((int16_t)(x) > 0 ? (int16_t)(x) : -(int16_t)(x))
 #define RF_PlaceSpriteClipped(sde, x, y, chunk, type, z, clip) \
 	RF_AddSpriteDrawEx(sde, x, y, chunk, type, z, (clip) > 0 ? (clip) : 0, (clip) < 0 ? -(clip) : 0, false)
 #define RF_PlaceSpriteAfterClipped(user, x, y, chunk, type, z, after, clipTop, clipBottom) \
@@ -242,6 +246,9 @@ void FF_JanitorSleepMonolog(void);
 void FF_JanitorStunnedMonolog(void);
 void FF_JanitorNisasiDialog(int16_t number);
 void FF_StartMusic(uint16_t song, bool repeat);
+void FF_LevelPalette(void);
+void FF_StarWarsColors(void);
+bool FF_DetectorKeys(void);
 void FF_DelayedFade(void);
 void FF_FadeOut(void);
 void FF_Jukebox(void);

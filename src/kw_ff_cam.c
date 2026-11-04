@@ -139,7 +139,10 @@ void FF_WorldScrollScreen( CK_object *keen )
 
 void FF_ScrollScreen(CK_object *ob)
 {
-	int16_t pxToMove, cmpAmt;
+	int16_t pxToMove;
+	// KEEN WORLDS: unsigned, as Borland compared it with the unsigned clip box
+	// (signed, it goes wrong below tile row 128)
+	uint16_t cmpAmt;
 	int16_t deltaX = 0, deltaY = 0;	// in Units
 
 	// Don't scroll when Keen got killed, so he can fall out at the bottom

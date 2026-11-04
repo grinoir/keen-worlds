@@ -29,6 +29,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ck_act.h"
 #include "kw_skip.h"
 #include "kw_music.h"
+// KEEN WORLDS: Foray in the Forest (kw_fitf.c)
+bool FF_IsActive(void);
+void FF_StartMusic(uint16_t song, bool repeat);
+void FF_LevelPalette(void);
+void FF_StarWarsColors(void);
 
 #include <stdlib.h>
 #include <string.h>
@@ -1514,7 +1519,14 @@ bool CK_DrawStarWarsEx(bool handleDemoKeys)
 		// Keen draws this to a separate surface, for fast copies.
 		VH_DrawBitmap(0, 0, CK_CHUNKNUM(PIC_STARWARS));
 
-		VL_SetPaletteFromArray(CK_INTARRAY(ck_starWarsPalette));
+		// KEEN WORLDS: Foray in the Forest's are VGA colours (kw_fitf.c)
+		if (FF_IsActive())
+		{
+			FF_StarWarsColors();
+			VL_SetDefaultPalette();
+		}
+		else
+			VL_SetPaletteFromArray(CK_INTARRAY(ck_starWarsPalette));
 	}
 
 	// At this point, Keen generates a set of buffers full of machine code,
@@ -1530,6 +1542,8 @@ bool CK_DrawStarWarsEx(bool handleDemoKeys)
 	{
 		if (ck_starWarsTextOverride)
 			KW_StartTitleMusic();
+		else if (FF_IsActive())
+			FF_StartMusic(CK_INT(CK_StarWarsMusicLevel, 0), false); // (its songs by number)
 		else
 			StartMusic(CK_INT(CK_StarWarsMusicLevel, 0));
 	}
@@ -1541,6 +1555,8 @@ bool CK_DrawStarWarsEx(bool handleDemoKeys)
 
 	VL_ClearScreen(0);
 	VL_SetScrollCoords(0, 0);
+	if (FF_IsActive())
+		FF_LevelPalette(); // its usual colours again
 	VL_SetDefaultPalette();
 	CA_ClearMarks();
 

@@ -420,7 +420,9 @@ def main():
         f.write('\n')
         # Song n is "level" n for the engine's StartMusic (see FF_SongFor in kw_fitf.c)
         f.write('%intarray CK_LevelMusic ' + ', '.join(str(i) for i in range(aud[0])) + '\n')
-        f.write('%%int CK_NumMusicLevels %d\n\n' % aud[0])
+        f.write('%%int CK_NumMusicLevels %d\n' % aud[0])
+        f.write('%int CK_StarWarsMusicLevel 22 # its story scroller plays kvee_Midnight_v5_slow (CK_DEMO.C)\n'
+                '%int ca_spriteShifts 4 # its sprites say 1 shift but move by the pixel (it shifts them on the fly)\n\n')
         f.write('# Chunk names the engine\'s shared code uses, as Foray in the Forest numbers them\n')
         for name, val in CHUNKS.items():
             if isinstance(val, str) and val not in chunks:

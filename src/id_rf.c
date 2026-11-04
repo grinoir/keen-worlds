@@ -217,6 +217,35 @@ void RF_SetScrollBlock(int tileX, int tileY, bool vertical)
 	}
 }
 
+// KEEN WORLDS: is there a scroll block between two points (in pixels)?
+// (RF_CheckScrollBlock, Foray in the Forest's ID_RF.C, for its item detector.
+// Its "vertical edges" are the x columns kept here as horizontal blocks.)
+bool RF_CheckScrollBlock(int x1, int y1, int x2, int y2)
+{
+	int lo = x1 >> 4, hi = x2 >> 4;
+	if (lo > hi)
+	{
+		int t = lo;
+		lo = hi;
+		hi = t;
+	}
+	for (int i = 0; i < rf_numHorzScrollBlocks; i++)
+		if (lo < rf_horzScrollBlocks[i] && rf_horzScrollBlocks[i] < hi)
+			return true;
+	lo = y1 >> 4;
+	hi = y2 >> 4;
+	if (lo > hi)
+	{
+		int t = lo;
+		lo = hi;
+		hi = t;
+	}
+	for (int i = 0; i < rf_numVertScrollBlocks; i++)
+		if (lo < rf_vertScrollBlocks[i] && rf_vertScrollBlocks[i] < hi)
+			return true;
+	return false;
+}
+
 void RFL_SetupOnscreenAnimList()
 {
 	rf_freeOnscreenAnimTile = rf_onscreenAnimTiles;

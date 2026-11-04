@@ -86,6 +86,7 @@ void RFL_MarkBlockDirty(int x, int y, int val, int page);
 uint8_t RFL_IsBlockDirty(int x, int y, int page);
 
 void RF_SetScrollBlock(int tileX, int tileY, bool vertical);
+bool RF_CheckScrollBlock(int x1, int y1, int x2, int y2);
 void RF_MarkTileGraphics();
 void RF_SetDrawFunc(void (*func)(void));
 void RF_Startup();

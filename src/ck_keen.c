@@ -456,7 +456,9 @@ bool CK_KeenPressUp(CK_object *obj)
 	// Are we pressing a switch?
 	if (tileMiscFlag == MISCFLAG_SWITCHPLATON || tileMiscFlag == MISCFLAG_SWITCHPLATOFF || tileMiscFlag == MISCFLAG_SWITCHBRIDGE)
 	{
-		int16_t destXunit = RF_TileToUnit(obj->clipRects.tileXmid) - 64;
+		// KEEN WORLDS: unsigned like posX, or a switch at tile x 128 or more is never
+		// reached and Keen slides towards it forever
+		uint16_t destXunit = RF_TileToUnit(obj->clipRects.tileXmid) - 64;
 		if (obj->posX == destXunit)
 		{
 			// Flip that switch!
